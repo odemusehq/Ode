@@ -28,6 +28,18 @@ export interface AgentLimits {
   budgetUsdPerRequest: number;
 }
 
+export interface LiveTimeouts {
+  /** Milliseconds. */
+  normal: number;
+  /** Milliseconds, for rendering audio and measuring the Master. */
+  long: number;
+}
+
+export interface MemorySettings {
+  halfLifeDays: number;
+  summaryMaxChars: number;
+}
+
 export class ConfigError extends Error {}
 
 /** Reads Ode's settings from the environment, loaded from the repo's .env (see .env.example). */
@@ -76,6 +88,8 @@ export class OdeConfig {
     readonly userDir: string,
     readonly roles: Record<Role, RoleConfig>,
     readonly limits: AgentLimits,
+    readonly liveTimeouts: LiveTimeouts,
+    readonly memory: MemorySettings,
   ) {}
 
   get repoDir(): string {
@@ -106,6 +120,14 @@ export class OdeConfig {
         subagentDepth: reader.number("ODE_SUBAGENT_DEPTH"),
         subagentsAtOnce: reader.number("ODE_SUBAGENTS_AT_ONCE"),
         budgetUsdPerRequest: reader.number("ODE_BUDGET_USD_PER_REQUEST"),
+      },
+      {
+        normal: reader.number("ODE_LIVE_TIMEOUT_SECONDS") * 1000,
+        long: reader.number("ODE_LIVE_LONG_TIMEOUT_SECONDS") * 1000,
+      },
+      {
+        halfLifeDays: reader.number("ODE_MEMORY_HALF_LIFE_DAYS"),
+        summaryMaxChars: reader.number("ODE_SUMMARY_MAX_CHARS"),
       },
     );
     reader.assertComplete();
