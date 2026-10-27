@@ -2,17 +2,17 @@ import { mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 import OpenAI from "openai";
 import sharp from "sharp";
-import type { RoleConfig } from "../shared/config";
+import type { RoleConfig } from "../../shared/config";
+import type { ImageGenerator } from "../capabilities";
 
 /** Image generation over an OpenAI-compatible /images/generations endpoint (Meta's included). */
-export class ImageGeneration {
+export class OpenAiCompatibleImageGenerator implements ImageGenerator {
   private readonly client: OpenAI;
 
   constructor(private readonly role: RoleConfig) {
     this.client = new OpenAI({ baseURL: role.baseUrl, apiKey: role.apiKey });
   }
 
-  /** Generates a square image and writes it as a PNG of `size` × `size` pixels. */
   async square(prompt: string, outPath: string, size: number): Promise<string> {
     const response = await this.client.images.generate({
       model: this.role.model,

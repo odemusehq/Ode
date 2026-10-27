@@ -1,26 +1,22 @@
 import OpenAI, { toFile } from "openai";
-import type { RoleConfig } from "../shared/config";
-import { Provider } from "./providers";
-import type { SpeechAudio } from "./speech-audio";
-import type { Transcript } from "./types";
+import type { RoleConfig } from "../../shared/config";
+import type { Transcriber } from "../capabilities";
+import type { SpeechAudio } from "../speech-audio";
+import type { Transcript } from "../types";
 
 interface MetaTranscriptResponse {
   transcript: string;
   turns: { startMs: number; endMs: number; transcript: string }[];
 }
 
-/** Words from a vocal or spoken recording: Meta's ASR endpoint, or any OpenAI-compatible /audio/transcriptions. */
-export class Transcription {
+/** Meta's ASR endpoint: multipart request with a JSON settings part and a mono 16-bit WAV. */
+export class MetaTranscriber implements Transcriber {
   constructor(
     private readonly role: RoleConfig,
     private readonly audio: SpeechAudio,
   ) {}
 
-  transcribe(audioPath: string): Promise<Transcript> {
-    return this.role.provider === Provider.Meta ? this.withMeta(audioPath) : this.withOpenAiCompatible(audioPath);
-  }
-
-  private async withMeta(audioPath: string): Promise<Transcript> {
+  async transcribe(audioPath: string): Promise<Transcript> {
     const form = new FormData();
     const settings = { mode: "ENDPOINTING", model: this.role.model, audioEncoding: "WAV" };
     form.append("request", new Blob([JSON.stringify(settings)], { type: "application/json" }));
@@ -37,10 +33,21 @@ export class Transcription {
       turns: result.turns.map((turn) => ({ start: turn.startMs / 1000, end: turn.endMs / 1000, text: turn.transcript })),
     };
   }
+}
 
-  private async withOpenAiCompatible(audioPath: string): Promise<Transcript> {
-    const client = new OpenAI({ baseURL: this.role.baseUrl, apiKey: this.role.apiKey });
-    const result = await client.audio.transcriptions.create({
+/** Any OpenAI-compatible /audio/transcriptions endpoint (a hosted service or a local Whisper server). */
+export class OpenAiCompatibleTranscriber implements Transcriber {
+  private readonly client: OpenAI;
+
+  constructor(
+    private readonly role: RoleConfig,
+    private readonly audio: SpeechAudio,
+  ) {
+    this.client = new OpenAI({ baseURL: role.baseUrl, apiKey: role.apiKey });
+  }
+
+  async transcribe(audioPath: string): Promise<Transcript> {
+    const result = await this.client.audio.transcriptions.create({
       model: this.role.model,
       file: await toFile(await this.audio.wav(audioPath), "audio.wav"),
       response_format: "verbose_json",
