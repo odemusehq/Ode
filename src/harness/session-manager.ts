@@ -21,8 +21,20 @@ export class SessionManager {
     return this.session;
   }
 
-  async switchTo(setId: string): Promise<void> {
+  /**
+   * Switches to the conversation of another Set. With carryOver (an unsaved Set that was just saved)
+   * the current conversation continues under the Set's new key.
+   */
+  async switchTo(setId: string, carryOver = false): Promise<void> {
     if (setId === this.key) return;
+    if (carryOver) {
+      const previous = this.key;
+      this.key = setId;
+      this.session.rekey((id) => void this.ids.update((saved) => ({ ...saved, [setId]: id })));
+      const id = this.session.id;
+      if (id) await this.ids.update(({ [previous]: _dropped, ...saved }) => ({ ...saved, [setId]: id }));
+      return;
+    }
     this.session.stop();
     const ids = await this.ids.read();
     this.key = setId;

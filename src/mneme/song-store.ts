@@ -71,13 +71,17 @@ export class SongStore {
     return join(this.dir, "release");
   }
 
+  /** True when the open Set was unsaved and `location` is the same Set after its first save. */
+  isFirstSave(location: SongLocation): boolean {
+    return Boolean(this.location && !this.location.filePath && location.filePath);
+  }
+
   /** Switches to the Set Live has open; moves unsaved data into the project on the first save. */
   async open(location: SongLocation): Promise<void> {
     if (this.location?.setId === location.setId && this.location.filePath === location.filePath) return;
-    const unsavedDir = join(this.paths.unsaved, location.setId);
-    const target = location.filePath ? projectOdeDir(location.filePath) : unsavedDir;
-    if (location.filePath && (await exists(unsavedDir)) && !(await exists(target))) {
-      await moveFolder(unsavedDir, target);
+    const target = location.filePath ? projectOdeDir(location.filePath) : join(this.paths.unsaved, location.setId);
+    if (this.isFirstSave(location) && (await exists(this.dir)) && !(await exists(target))) {
+      await moveFolder(this.dir, target);
     }
     this.location = location;
     this.dir = target;

@@ -43,11 +43,21 @@ export class OdeSession {
   constructor(
     private readonly deps: SessionDeps,
     private sessionId: string | null,
-    private readonly onSessionId: (id: string) => void,
+    private onSessionId: (id: string) => void,
   ) {}
+
+  /** Where to record this conversation's id from now on (used when an unsaved Set gets saved). */
+  rekey(onSessionId: (id: string) => void): void {
+    this.onSessionId = onSessionId;
+  }
 
   get isBusy(): boolean {
     return this.busy;
+  }
+
+  /** The agent runtime's id for this conversation, once it has started. */
+  get id(): string | null {
+    return this.sessionId;
   }
 
   async send(text: string): Promise<void> {

@@ -92,8 +92,10 @@ export class OdeApp {
   }
 
   private async onSetOpened(info: SetInfo): Promise<void> {
-    await this.song.open({ setId: info.setId, filePath: info.filePath });
-    await this.sessions.switchTo(info.setId);
+    const location = { setId: info.setId, filePath: info.filePath };
+    const firstSave = this.song.isFirstSave(location);
+    await this.song.open(location);
+    await this.sessions.switchTo(info.setId, firstSave);
   }
 
   private onSongChanged(sheet: LeadSheet): void {
