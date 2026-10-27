@@ -6,7 +6,7 @@ export type UiEvent =
   | { type: "message"; role: "user" | "assistant"; text: string }
   | { type: "text"; delta: string }
   | { type: "tool"; id: string; name: string; status: "started" | "done" | "error"; summary?: string }
-  | { type: "helper"; id: string; task: string; status: "started" | "done" }
+  | { type: "subagent"; id: string; task: string; status: "started" | "done" }
   | { type: "approval"; id: string; tool: string; summary: string; input: unknown }
   | { type: "approval-resolved"; id: string; decision: "allow" | "deny" }
   | { type: "busy"; busy: boolean }
@@ -15,4 +15,5 @@ export type UiEvent =
   | { type: "live-status"; status: LiveStatus }
   | { type: "song"; leadSheet: LeadSheet }
   | { type: "pointer"; pointer: LivePointer }
-  | { type: "meters"; tracks: { name: string; peak: number }[]; master?: { peak: number } };
+  /** Levels as Live draws its meters, 0 to 1 (not decibels). */
+  | { type: "meters"; tracks: { name: string; level: number }[]; master?: { level: number } };

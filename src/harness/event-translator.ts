@@ -69,10 +69,10 @@ export class EventTranslator {
   private fromSystem(message: Extract<SDKMessage, { type: "system" }>): UiEvent[] {
     const system = message as { subtype: string; task_id?: string; description?: string; status?: string };
     if (system.subtype === "task_started" && system.task_id) {
-      return [{ type: "helper", id: system.task_id, task: system.description ?? "", status: "started" }];
+      return [{ type: "subagent", id: system.task_id, task: system.description ?? "", status: "started" }];
     }
     if (system.subtype === "task_notification" && system.task_id) {
-      return [{ type: "helper", id: system.task_id, task: "", status: "done" }];
+      return [{ type: "subagent", id: system.task_id, task: "", status: "done" }];
     }
     return [];
   }

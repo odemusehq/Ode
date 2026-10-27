@@ -109,8 +109,8 @@ export class OdeApp {
   private onMeters(reading: MeterReading): void {
     this.bus.emit({
       type: "meters",
-      tracks: reading.tracks.map((track) => ({ name: track.name, peak: Math.max(track.left, track.right) })),
-      master: { peak: Math.max(reading.master.left, reading.master.right) },
+      tracks: reading.tracks.map((track) => ({ name: track.name, level: Math.max(track.left, track.right) })),
+      master: { level: Math.max(reading.master.left, reading.master.right) },
     });
   }
 }

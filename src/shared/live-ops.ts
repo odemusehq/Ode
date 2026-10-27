@@ -165,6 +165,7 @@ export interface SelectionInfo {
   isPlaying: boolean;
 }
 
+/** Output meters as Live draws them: 0 to 1 per channel, not decibels. */
 export interface MeterReading {
   tracks: { index: number; name: string; left: number; right: number }[];
   master: { left: number; right: number };

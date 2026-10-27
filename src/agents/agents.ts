@@ -21,7 +21,7 @@ export class OdeAgents {
   async subagent(): Promise<AgentDefinition> {
     return {
       description:
-        "A focused helper for one task: writing or revising lyrics, melodies, chords, drums, basslines, sounds or mix advice, reviewing a draft with fresh eyes, or updating what Ode knows about the artist. Give it the task, the material it needs, the skills to load and the format to return.",
+        "A subagent for one focused task: writing or revising lyrics, melodies, chords, drums, basslines, sounds or mix advice, reviewing a draft with fresh eyes, or updating what Ode knows about the artist. Give it the task, the material it needs, the skills to load and the format to return.",
       prompt: await readFile(new URL("./subagent.md", import.meta.url), "utf8"),
       tools: [...this.registry.namesFor("subagent"), ...OdeAgents.BUILT_IN_TOOLS],
       model: this.config.roles.subagent.model,
