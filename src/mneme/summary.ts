@@ -1,15 +1,10 @@
 import type { LivePointer, LiveStatus } from "../shared/live";
 import type { LeadSheet } from "../shared/song";
 import type { ResolvedPersonalisation } from "../shared/personalisation";
+import { noteName } from "../shared/notes";
 import type { Mneme } from "./artist";
 import type { PreferencesStore } from "./preferences";
 import type { SongStore } from "./song-store";
-
-const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-
-function noteName(midi: number): string {
-  return `${NOTE_NAMES[midi % 12]}${Math.floor(midi / 12) - 1}`;
-}
 
 /** The short summary of the artist, the song and the settings given to the model before each request. */
 export class ContextSummary {
