@@ -26,10 +26,14 @@ export interface TakeLaneRef {
   lane: number;
 }
 
+/** DeviceRef.index of the mixer of a track or chain; its parameters are volume (0), pan (1) and sends (2+). */
+export const MIXER_INDEX = -1;
+
 export interface DeviceRef {
   track: TrackRef;
-  /** Path through racks: chain indexes from the outer rack inwards. */
+  /** Path into racks as pairs, from the track inwards: [rack device index, chain index, rack device index, chain index, …]. */
   chain?: number[];
+  /** Device position in the track or innermost chain, or MIXER_INDEX for its mixer. */
   index: number;
 }
 

@@ -28,7 +28,7 @@ const applyAsOneUndoStep = defineTool({
   name: "apply_as_one_undo_step",
   changes: "set",
   description:
-    "Run several Live operations as one undo step, so the musician can undo the whole change at once (for example: create a track, create a clip with notes, rename a locator). Each call is { op, args } where op is one of the Live tool names and args are that tool's inputs. Results come back in order.",
+    "Run several Live operations as one undo step, so the musician can undo the whole change at once (for example: write notes into three clips, set four mixer levels, rename the locators). Each call is { op, args } where op is one of the Live tool names and args are that tool's inputs. Every reference is looked up before anything changes, so a call can't use something created by an earlier call in the same group: create new tracks or clips first, then group the edits. Results come back in order.",
   input: {
     calls: z
       .array(z.object({ op: z.enum(GROUPABLE_OPS), args: z.record(z.string(), z.unknown()) }))

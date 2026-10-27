@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ClipRef, DeviceRef, LocatorRef, ParameterRef, SceneRef, TrackRef } from "../../shared/live";
+import { MIXER_INDEX, type ClipRef, type DeviceRef, type LocatorRef, type ParameterRef, type SceneRef, type TrackRef } from "../../shared/live";
 
 const index = z.number().int().min(0);
 
@@ -30,10 +30,17 @@ export const TakeLaneRefSchema = z.object({ track: TrackRefSchema, lane: index.d
 export const DeviceRefSchema = z
   .object({
     track: TrackRefSchema,
-    chain: z.array(index).optional().describe("Path through racks: chain indexes from the outer rack inwards"),
-    index: index.describe("0-based position in the device chain"),
+    chain: z
+      .array(index)
+      .optional()
+      .describe("Path into racks as pairs, from the track inwards: [rack's device index, chain index, …]; leave out for devices directly on the track"),
+    index: z
+      .number()
+      .int()
+      .min(MIXER_INDEX)
+      .describe(`0-based device position on the track or in the innermost chain; ${MIXER_INDEX} for the mixer (parameters: 0 volume, 1 pan, 2+ sends)`),
   })
-  .describe("A device on a track, optionally inside a rack chain.");
+  .describe("A device on a track or inside a rack chain, or the track's or chain's mixer.");
 
 export const ParameterRefSchema = z.object({
   device: DeviceRefSchema,
@@ -91,8 +98,12 @@ export function clipLabel(clip: ClipRef): string {
 }
 
 export function deviceLabel(device: DeviceRef): string {
-  const chain = device.chain?.length ? ` inside chain ${device.chain.map((c) => c + 1).join(" › ")}` : "";
-  return `device ${device.index + 1}${chain} on ${trackLabel(device.track)}`;
+  const steps: string[] = [];
+  for (let i = 0; i + 1 < (device.chain?.length ?? 0); i += 2) {
+    steps.push(`rack ${device.chain![i]! + 1} › chain ${device.chain![i + 1]! + 1}`);
+  }
+  const where = `${trackLabel(device.track)}${steps.length ? ` (${steps.join(" › ")})` : ""}`;
+  return device.index === MIXER_INDEX ? `the mixer of ${where}` : `device ${device.index + 1} on ${where}`;
 }
 
 export function parameterLabel(parameter: ParameterRef): string {
