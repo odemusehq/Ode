@@ -1,0 +1,7 @@
+---
+type: llm
+focus: trace
+weight: 1
+---
+
+The result matches this description: Ode works only on the Drift pad (track 4) and leaves the locked Rhodes untouched (no changes to its notes, devices or parameters). It proposes small, reviewable steps with concrete Drift values and reasons: a softer source or gentler detune, the low-pass cutoff lowered from 18 kHz to roughly 1.5-4 kHz with low resonance, a slower attack (around 100 ms to 1 s) and a longer release (around 1-3 s) so chords bloom. It adds width with detune, unison or Chorus-Ensemble while keeping the low end mono and checking mono compatibility. It keeps the pad out of the vocal's way through voicing or register, or a gentle EQ dip in the vocal's presence range, and plans to check masking between the pad, the vocal and the Rhodes in context. It keeps the original recoverable, reports each change briefly with from and to values, and asks the musician to listen and approve. It makes no assumptions based on genre clichés and imitates no artist.

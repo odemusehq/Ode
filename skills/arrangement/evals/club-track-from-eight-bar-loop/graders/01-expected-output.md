@@ -1,0 +1,7 @@
+---
+type: llm
+focus: trace
+weight: 1
+---
+
+The result matches this description: Ode works out the timing correctly (6 minutes at 124 BPM is about 186 bars) and proposes a form built from full 8, 16 and 32-bar phrases that lands close to 6 minutes (for example 192 bars, about 6:12). The plan includes a drum-led, DJ-friendly intro and outro of 16-32 bars, at least one breakdown, builds and drops, with an energy rating or clear description for each section. It shows which of the loop's parts play in each section, builds the densest section first and derives the others by removing parts, and suggests any new material (risers, fills, a breakdown part) as suggestions for the musician to approve. It places transitions relative to the downbeat and adds variation every 8-16 bars. It works in small steps (locators first, then one section at a time), asks before changing the Set, and keeps the original Session clips intact.
