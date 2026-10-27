@@ -41,6 +41,9 @@ export interface PreferencesFile {
 
 export const STREAMING_TARGET: LoudnessTarget = { lufs: -14, truePeak: -1 };
 
+/** About an octave and a half where most voices overlap (the A below middle C to the D above the next C), for when the artist's range is unknown. */
+export const TYPICAL_VOCAL_RANGE: VocalRange = { low: 57, high: 74 };
+
 export const DEFAULT_PERSONALISATION: Personalisation = {
   genre: { mode: "detect" },
   spelling: { mode: "detect" },

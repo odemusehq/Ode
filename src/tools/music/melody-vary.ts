@@ -1,0 +1,27 @@
+import { z } from "zod";
+import { MelodyVariation } from "../../music/melody/melody-plan";
+import { varyMelody } from "../../music/melody/melody-varier";
+import { defineTool } from "../define";
+import { NotesInput, SeedInput } from "./schemas";
+
+export const melodyVaryTool = defineTool({
+  name: "melody_vary",
+  description: [
+    "Makes a variation of a melody that keeps its identity, for a second verse, a final chorus or an answer phrase.",
+    'how: "rhythm" (same pitches; some notes anticipated by an eighth, even pairs made dotted), "contour" (melodic',
+    'inversion by scale steps around the first note), "ending" (resolves to the tonic if it did not, or ends open on the',
+    'third or fifth if it did, approached by step and held longer) or "ornament" (passing tones across leaps and a',
+    "neighbour-note turn on long notes).",
+    "Inputs: notes (the melody); how; seed (optional, same seed, same variation).",
+    "Returns { notes }: the varied melody, starting where the original started.",
+  ].join(" "),
+  input: {
+    notes: NotesInput.min(1).describe("The melody to vary."),
+    how: z.enum(MelodyVariation).describe("What to vary."),
+    seed: SeedInput,
+  },
+  changes: "none",
+  async run({ notes, how, seed }) {
+    return { notes: varyMelody(notes, how, seed) };
+  },
+});

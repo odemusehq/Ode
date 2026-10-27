@@ -1,4 +1,4 @@
-import { STREAMING_TARGET } from "../../shared/personalisation";
+import { STREAMING_TARGET, TYPICAL_VOCAL_RANGE } from "../../shared/personalisation";
 import type { LoudnessTarget, VocalRange } from "../../shared/personalisation";
 
 /** Timings and limits of the UI. */
@@ -77,7 +77,7 @@ export const LOUDNESS_PRESETS: readonly LoudnessPreset[] = [
 export const VOCAL_RANGE_LIMITS: VocalRange = { low: 28, high: 96 };
 
 /** Starting point when the musician switches the vocal range from Detect to their own. */
-export const DEFAULT_CUSTOM_VOCAL_RANGE: VocalRange = { low: 48, high: 72 };
+export const DEFAULT_CUSTOM_VOCAL_RANGE: VocalRange = TYPICAL_VOCAL_RANGE;
 
 /** Starting point when the musician switches the loudness target from Detect to their own. */
 export const DEFAULT_CUSTOM_LOUDNESS: LoudnessTarget = STREAMING_TARGET;
