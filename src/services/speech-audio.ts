@@ -7,7 +7,7 @@ export class SpeechAudio {
 
   constructor(private readonly sampleRate: number) {}
 
-  async wav(path: string): Promise<Uint8Array> {
+  async wav(path: string): Promise<Uint8Array<ArrayBuffer>> {
     const audio = await decode(path);
     const mono = SpeechAudio.mix(audio.channels);
     return SpeechAudio.encodePcm16(this.resample(mono, audio.sampleRate), this.sampleRate);
@@ -54,7 +54,7 @@ export class SpeechAudio {
     return mono;
   }
 
-  private static encodePcm16(samples: Float32Array, sampleRate: number): Uint8Array {
+  private static encodePcm16(samples: Float32Array, sampleRate: number): Uint8Array<ArrayBuffer> {
     const bytes = new Uint8Array(44 + samples.length * 2);
     const view = new DataView(bytes.buffer);
     const text = (offset: number, value: string) => [...value].forEach((char, i) => view.setUint8(offset + i, char.charCodeAt(0)));

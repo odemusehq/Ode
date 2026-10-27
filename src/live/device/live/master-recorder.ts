@@ -6,10 +6,10 @@ const RECORDER_OUTLET = 1;
 /** Time for buffer~ to finish writing the WAV file after recording stops. */
 const WRITE_SETTLE_MS = 300;
 
-export interface MeasureRequest extends DeviceOpArgs["master_measure"] {
+export type MeasureRequest = DeviceOpArgs["master_measure"] & {
   /** Where to write the WAV; added by the device's network side. */
   path: string;
-}
+};
 
 /** Records the Master output to a WAV file, for loudness and spectrum measurement on the server. */
 export class MasterRecorder {

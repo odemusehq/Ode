@@ -13,7 +13,7 @@ export class AgentEnvironment {
     delete inherited.ANTHROPIC_API_KEY;
     delete inherited.ANTHROPIC_AUTH_TOKEN;
     // Anthropic's own API takes an API key header; other Anthropic-compatible endpoints take a bearer token.
-    const credential =
+    const credential: Record<string, string> =
       main.provider === Provider.Anthropic ? { ANTHROPIC_API_KEY: main.apiKey } : { ANTHROPIC_AUTH_TOKEN: main.apiKey };
     return {
       ...inherited,
