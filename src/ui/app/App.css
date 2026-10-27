@@ -39,6 +39,18 @@
   height: var(--logo-size);
 }
 
+.logo-lockup {
+  white-space: nowrap;
+}
+
+.logo-lockup__symbol {
+  width: var(--lockup-symbol-size);
+  height: var(--lockup-symbol-size);
+  margin-left: calc(-1 * var(--lockup-symbol-inset-left));
+  margin-right: calc(var(--lockup-gap) - var(--lockup-symbol-inset-right));
+  vertical-align: calc(-1 * var(--lockup-symbol-drop));
+}
+
 .status-bar {
   display: flex;
   flex-direction: column;

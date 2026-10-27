@@ -1,8 +1,8 @@
 /*
  * Ode design tokens. Every colour, font, size, radius, spacing and motion value lives here.
  *
- * Colours follow the OdeMuse palette, computed in OKLCH:
- * - brand: dark oklch(0.1825 0.0345 288.9), light #F7F7F7, cyan, violet and pink at L 0.73, C 0.138;
+ * Brand colours are the OdeMuse palette. The other colours are derived from it in OKLCH, so they sit
+ * with the brand (the dark is oklch(0.1825 0.0345 288.9), the accents L 0.73, C 0.138):
  * - neutrals: the dark's hue and chroma at other lightness values;
  * - status colours: the accents' lightness and chroma at the hues of green, orange and red;
  * - hovers: L 0.79, C 0.11; tints: L 0.30, C 0.05 (violet 0.06).
@@ -73,6 +73,8 @@
   --font-family-sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-family-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --font-weight-heading: 500;
+  /* Georama's cap height: 700 of 1000 units */
+  --cap-height-heading: 0.7em;
   --font-size-xs: 10px;
   --font-size-sm: 11px;
   --font-size-md: 13px;
@@ -117,6 +119,17 @@
   --toggle-height: 16px;
   --toggle-thumb: 12px;
   --logo-size: 22px;
+
+  /*
+   * Logo lockup, by the brand's logo rules: the whole note is as tall as the capitals with its bottom on the
+   * baseline, and the gap from its last band to the name is 0.15 cap heights. In the symbol's 96-unit square
+   * the note is 47.39 units tall, starts at x 8, its last band ends at x 87.70 and its bottom is at y 71.70.
+   */
+  --lockup-symbol-size: calc(var(--cap-height-heading) * 96 / 47.39);
+  --lockup-symbol-inset-left: calc(var(--lockup-symbol-size) * 8 / 96);
+  --lockup-symbol-inset-right: calc(var(--lockup-symbol-size) * 8.3 / 96);
+  --lockup-symbol-drop: calc(var(--lockup-symbol-size) * 24.3 / 96);
+  --lockup-gap: calc(var(--cap-height-heading) * 0.15);
   --scrollbar-size: 8px;
   --opacity-disabled: 0.45;
   --opacity-pulse-low: 0.3;
