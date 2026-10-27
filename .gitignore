@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+src/live/extension/dist/
+src/live/device/dist/
+__pycache__/
+*.log
+.DS_Store
