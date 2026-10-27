@@ -1,0 +1,41 @@
+.ode-meter {
+  display: flex;
+  min-width: 0;
+}
+
+.ode-meter--vertical {
+  justify-content: center;
+  height: var(--meter-length);
+}
+
+.ode-meter__track {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--color-meter-track);
+}
+
+.ode-meter--horizontal .ode-meter__track {
+  width: 100%;
+  height: var(--meter-thickness);
+}
+
+.ode-meter--vertical .ode-meter__track {
+  width: var(--meter-thickness);
+  height: 100%;
+}
+
+.ode-meter__fill {
+  position: absolute;
+  inset: 0;
+  background: var(--color-meter-level);
+  transition: clip-path var(--motion-meter) linear;
+}
+
+.ode-meter--horizontal .ode-meter__fill {
+  clip-path: inset(0 calc(100% - var(--meter-level)) 0 0);
+}
+
+.ode-meter--vertical .ode-meter__fill {
+  clip-path: inset(calc(100% - var(--meter-level)) 0 0 0);
+}

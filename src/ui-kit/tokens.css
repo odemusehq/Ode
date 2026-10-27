@@ -1,0 +1,163 @@
+/*
+ * Ode design tokens. Every colour, font, size, radius, spacing and motion value lives here.
+ *
+ * Colours follow the OdeMuse palette, computed in OKLCH:
+ * - brand: dark oklch(0.1825 0.0345 288.9), light #F7F7F7, cyan, violet and pink at L 0.73, C 0.138;
+ * - neutrals: the dark's hue and chroma at other lightness values;
+ * - status colours: the accents' lightness and chroma at the hues of green, orange and red;
+ * - hovers: L 0.79, C 0.11; tints: L 0.30, C 0.05 (violet 0.06).
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* Brand */
+  --brand-dark: #120f20;
+  --brand-light: #f7f7f7;
+  --brand-cyan: #0bb8e9;
+  --brand-violet: #a598f9;
+
+  /* Neutrals */
+  --color-bg: var(--brand-dark);
+  --color-surface: #1b192b;
+  --color-surface-raised: #252235;
+  --color-surface-hover: #2e2c40;
+  --color-surface-sunken: #0b0819;
+  --color-border: #373549;
+  --color-border-strong: #626076;
+  --color-text: var(--brand-light);
+  --color-text-muted: #b6b4cd;
+  --color-text-disabled: #706f85;
+  --color-backdrop: rgb(11 8 25 / 0.6);
+
+  /* Accents: violet for primary actions and active states, cyan for focus, selection, links and information */
+  --color-accent: var(--brand-violet);
+  --color-accent-hover: #b8affd;
+  --color-on-accent: var(--brand-dark);
+  --color-accent-tint: #2d284a;
+  --color-highlight: var(--brand-cyan);
+  --color-highlight-hover: #63c9f0;
+  --color-highlight-tint: #0a3341;
+
+  /* Status */
+  --color-success: #60c078;
+  --color-success-tint: #1a3520;
+  --color-warning: #e2943c;
+  --color-warning-tint: #3f2810;
+  --color-danger: #f2827b;
+  --color-danger-hover: #f99e97;
+  --color-on-danger: var(--brand-dark);
+  --color-danger-tint: #442321;
+  --color-neutral-tint: var(--color-surface-raised);
+
+  /* Meters */
+  --color-meter-track: var(--color-surface-sunken);
+  --color-meter-level: var(--color-success);
+
+  /* Piano roll */
+  --color-roll-white-key: #201e30;
+  --color-roll-black-key: #171426;
+  --color-roll-bar-line: #4c4a5f;
+  --color-roll-beat-line: #2d2b3e;
+  --color-roll-note: var(--color-accent);
+  --color-roll-note-edge: var(--brand-dark);
+  --color-roll-note-muted: var(--color-text-disabled);
+  --roll-note-min-opacity: 0.45;
+
+  /* Scrollbars */
+  --color-scrollbar-thumb: #474559;
+  --color-scrollbar-thumb-hover: #57556b;
+
+  /* Typography: Georama Medium for headings, Instrument Sans for text */
+  --font-family-heading: "Georama", "Instrument Sans", system-ui, sans-serif;
+  --font-family-sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-family-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-weight-heading: 500;
+  --font-size-xs: 10px;
+  --font-size-sm: 11px;
+  --font-size-md: 13px;
+  --font-size-lg: 15px;
+  --font-size-xl: 18px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 600;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.45;
+  --letter-spacing-caps: 0.06em;
+
+  /* Spacing */
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 12px;
+  --space-6: 16px;
+  --space-7: 24px;
+  --space-8: 32px;
+
+  /* Radii and borders */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 8px;
+  --radius-round: 999px;
+  --border-width: 1px;
+  --border-width-strong: 2px;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 1px;
+  --shadow-raised: 0 1px 3px rgb(0 0 0 / 0.45);
+
+  /* Control sizes */
+  --control-height: 28px;
+  --control-height-sm: 22px;
+  --control-min-width: 64px;
+  --icon-size: 16px;
+  --icon-stroke: 1.75;
+  --dot-size: 8px;
+  --toggle-width: 30px;
+  --toggle-height: 16px;
+  --toggle-thumb: 12px;
+  --logo-size: 22px;
+  --scrollbar-size: 8px;
+  --opacity-disabled: 0.45;
+  --opacity-pulse-low: 0.3;
+
+  /* Layout */
+  --header-height: 40px;
+  --content-max-width: 880px;
+  --chat-input-min-height: 36px;
+  --chat-input-max-height: 160px;
+  --chat-user-max-width: 85%;
+  --fact-min-width: 120px;
+  --details-max-height: 240px;
+  --cover-size: 240px;
+  --mixer-strip-width: 56px;
+  --strip-message-lines: 3;
+
+  /* Meter */
+  --meter-thickness: 8px;
+  --meter-length: 140px;
+
+  /* Piano roll */
+  --piano-roll-beat-width: 20px;
+  --piano-roll-row-height: 9px;
+  --piano-roll-keys-width: 34px;
+  --piano-roll-lyric-height: 34px;
+  --piano-roll-max-height: 360px;
+
+  /* Chord chart */
+  --chord-bars-per-row: 4;
+  --chord-bar-height: 48px;
+
+  /* Motion */
+  --motion-fast: 120ms;
+  --motion-meter: 60ms;
+  --motion-pulse: ode-pulse 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-meter: 0ms;
+    --motion-pulse: none;
+  }
+}

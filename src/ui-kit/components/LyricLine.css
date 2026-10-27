@@ -1,0 +1,109 @@
+.ode-lyric {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.ode-lyric__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.ode-lyric__rhyme {
+  display: flex;
+  justify-content: center;
+  flex: none;
+  width: var(--control-height);
+}
+
+.ode-lyric__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.ode-lyric__count {
+  flex: none;
+  min-width: var(--control-height);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  text-align: right;
+}
+
+.ode-lyric__count--uncertain {
+  color: var(--color-warning);
+}
+
+.ode-lyric__actions {
+  display: flex;
+  flex: none;
+  gap: var(--space-1);
+}
+
+.ode-lyric__words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  padding-left: calc(var(--control-height) + var(--space-3));
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.ode-lyric__word {
+  display: inline-flex;
+  align-items: flex-end;
+}
+
+.ode-lyric__word--uncertain .ode-lyric__syllable-text {
+  text-decoration: underline dashed var(--color-warning);
+  text-underline-offset: var(--space-1);
+}
+
+.ode-lyric__word--options .ode-lyric__syllable-text {
+  text-decoration: underline dotted var(--color-highlight);
+  text-underline-offset: var(--space-1);
+}
+
+.ode-lyric__syllable {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: var(--line-height-tight);
+}
+
+.ode-lyric__syllable + .ode-lyric__syllable .ode-lyric__syllable-text::before {
+  content: "·";
+  color: var(--color-text-disabled);
+}
+
+.ode-lyric__syllable--stressed {
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+}
+
+.ode-lyric__mark {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-disabled);
+}
+
+.ode-lyric__syllable--stressed .ode-lyric__mark {
+  color: var(--color-accent);
+}
+
+.ode-lyric__notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0 0 0 calc(var(--control-height) + var(--space-3));
+  list-style: none;
+  font-size: var(--font-size-sm);
+}
+
+.ode-lyric__note {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
