@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import type { ProxyOptions } from "vite";
-import { loadConfig } from "./src/shared/config";
+import { loadConfig } from "./src/shared/config.ts";
 
 const EVENT_STREAM = "text/event-stream";
 
