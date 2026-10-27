@@ -1,4 +1,4 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
@@ -35,6 +35,12 @@ export async function tempFile(extension: string): Promise<string> {
   await mkdir(TEMP_ROOT, { recursive: true });
   const clean = extension.startsWith(".") ? extension : `.${extension}`;
   return join(TEMP_ROOT, `${randomUUID()}${clean}`);
+}
+
+/** A fresh, empty folder in Ode's temp folder. */
+export async function tempDir(): Promise<string> {
+  await mkdir(TEMP_ROOT, { recursive: true });
+  return mkdtemp(join(TEMP_ROOT, "work-"));
 }
 
 export async function ensureDir(path: string): Promise<string> {

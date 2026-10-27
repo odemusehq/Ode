@@ -8,7 +8,7 @@ export enum Provider {
   Fal = "fal",
   Modal = "modal",
   ElevenLabs = "elevenlabs",
-  Stability = "stability",
+  SelfHosted = "self-hosted",
 }
 
 export function asProvider(value: string): Provider | null {

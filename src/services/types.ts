@@ -26,8 +26,8 @@ export interface Services {
   separateStem(audioPath: string, describe: string, outDir: string): Promise<{ target: string; rest: string }>;
   /** Singing voice: writes a WAV of a demo vocal in the artist's voice to outPath. */
   singDemoVocal(input: DemoVocalInput, outPath: string): Promise<string>;
-  /** Sound generation: writes a WAV of a generated sound to outPath. */
-  generateSound(prompt: string, seconds: number, outPath: string): Promise<string>;
+  /** Sound generation: writes the generated sound next to outPath and returns its path. */
+  generateSound(prompt: string, seconds: number, outPath: string, loop?: boolean): Promise<string>;
   /** Which roles are configured in .env. */
   available(): Record<Role, boolean>;
 }
