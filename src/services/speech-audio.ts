@@ -1,5 +1,4 @@
-import { readFile } from "node:fs/promises";
-import decode from "audio-decode";
+import { decode } from "../music/audio/decode";
 
 /** Converts any audio file Live or a provider produces into the mono 16-bit WAV speech services expect. */
 export class SpeechAudio {
@@ -9,8 +8,8 @@ export class SpeechAudio {
   constructor(private readonly sampleRate: number) {}
 
   async wav(path: string): Promise<Uint8Array> {
-    const audio = await decode(await readFile(path));
-    const mono = SpeechAudio.mix(audio.channelData);
+    const audio = await decode(path);
+    const mono = SpeechAudio.mix(audio.channels);
     return SpeechAudio.encodePcm16(this.resample(mono, audio.sampleRate), this.sampleRate);
   }
 
