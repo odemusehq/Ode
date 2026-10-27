@@ -85,6 +85,7 @@ export class OdeConfig {
     readonly port: number,
     readonly bridgePort: number,
     readonly liveApp: string,
+    readonly abletonUserLibrary: string,
     readonly userDir: string,
     readonly roles: Record<Role, RoleConfig>,
     readonly limits: AgentLimits,
@@ -114,6 +115,7 @@ export class OdeConfig {
       reader.number("ODE_PORT"),
       reader.number("ODE_BRIDGE_PORT"),
       reader.required("ODE_LIVE_APP"),
+      reader.path("ODE_ABLETON_USER_LIBRARY"),
       reader.path("ODE_USER_DIR"),
       roles,
       {
