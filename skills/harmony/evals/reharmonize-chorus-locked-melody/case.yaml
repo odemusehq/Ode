@@ -1,0 +1,13 @@
+schema_version: "1.1"
+name: reharmonize-chorus-locked-melody
+expected_outcome: |
+  Ode leaves the locked melody unchanged and offers two or three reharmonizations, ordered from subtle
+  to bold, each as a bar-by-bar chord chart in chord symbols spelled correctly for D major. Every new
+  chord holds the given melody note (F♯4, E4, D4, B3) as a chord tone or a suitable colour tone, and
+  the answer says what that note is in the new chord (for example E as the 5th of A or the 3rd of
+  C♯m7, B as the 3rd of G or the 5th of Em). The options use established devices such as inversions or
+  slash chords for a moving bass line, diatonic substitutes, added sevenths or ninths, a secondary
+  dominant or a borrowed chord, each explained in one sentence of musical terms. It notes that the
+  melody's other, weak-beat notes also need checking against any altered or borrowed chord, or asks
+  for them. If three options are given, one is clearly labelled as outside the musician's usual style.
+  It does not present the fit as checked unless a check actually ran.

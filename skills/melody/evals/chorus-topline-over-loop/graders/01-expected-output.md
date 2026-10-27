@@ -1,0 +1,18 @@
+---
+type: llm
+focus: trace
+weight: 1
+---
+
+The result matches this description: Ode gives two or three distinct chorus topline options over Am
+- F - C - G (one chord per bar, 92 BPM), each written as note names with rhythm or note lengths so
+they can be played back. Each option has a short motif that repeats and varies, sits clearly higher
+than the verse (tessitura above C4-G4) while staying inside A3-E5, puts chord tones on strong beats
+with passing or neighbour tones between them, follows larger leaps with steps in the other
+direction, leaves breaths between phrases, and ends phrases open or closed on purpose. Each option
+has a one- or two-sentence explanation in musical terms (contour, range, rhythm, where the high
+point and the hook fall). If three options are given, one is clearly labelled as outside the
+musician's usual style. Because the lyrics come later, it gives for each option a guide for writing
+words (how many notes each phrase has and which notes are strong). It does not claim that range,
+harmony fit or prosody was checked unless a check actually ran, does not imitate an existing song,
+and asks at most one question.
