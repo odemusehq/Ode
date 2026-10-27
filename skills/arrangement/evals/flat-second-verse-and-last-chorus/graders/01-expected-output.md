@@ -1,7 +1,0 @@
----
-type: llm
-focus: trace
-weight: 1
----
-
-The result matches this description: Ode diagnoses the problem through energy across the sections (for example by rating each section and showing that verse 2 matches verse 1 and the final chorus matches chorus 2, so there is no contrast or lift). It proposes concrete, bar-specific changes for verse 2 (such as a different or half-time drum pattern, a counter-melody in the gaps between vocal phrases, removing a part, or shortening it to 8 bars) and for the final chorus (such as backing-vocal harmonies or doubles, an octave lift in an unlocked instrument, extra percussion, wider stereo, a drop-out or short silence before it, or a stripped first half). It offers three options and clearly labels one as outside the artist's usual style. It leaves the locked piano and lead vocal unchanged (no edits to their notes, clips or devices) and arranges around them. It proposes small, reviewable steps, explains each briefly and asks for approval before changing the Set.
