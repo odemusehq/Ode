@@ -1,0 +1,18 @@
+---
+type: llm
+focus: trace
+weight: 1
+---
+
+The result matches this description: Ode explains the structural prosody problem: six lines of about
+the same length in tidy couplets with perfect rhymes (AABBCC) feel settled and resolved, and their
+shape is close to the chorus's 8-syllable lines, so the bridge resolves before the last chorus
+instead of giving contrast and tension. It suggests specific structural changes, such as varying
+line lengths (shorter lines to build urgency, or one long line that spills over), an odd number of
+lines or an unrhymed last line so the bridge leans into the final chorus, near rhymes or a different
+scheme, or a change of tense or point of view for contrast. It deals with the melodic peak: the
+song's highest note on "it", a function word with a short vowel at the end of a line, should move to
+an important word with an open vowel, by moving the note or rewriting line 5. It offers two or three
+options that keep the musician's own images (the packed car, the petrol station sign), explains
+briefly, follows UK spelling, and does not present syllable counts or prosody results as checked
+unless a check actually ran.

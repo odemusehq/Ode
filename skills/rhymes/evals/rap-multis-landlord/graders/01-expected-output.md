@@ -1,0 +1,17 @@
+---
+type: llm
+focus: trace
+weight: 1
+---
+
+The result matches this description: Ode gives two or three alternative 4-bar passages (complete
+numbered bars, not a word list) about the landlord ignoring the mould while the rent goes up, with
+concrete details from that situation. The passages use multisyllabic rhymes that echo the vowel
+sounds and stress pattern of "broken promises", often spanning more than one word, plus internal
+rhymes, while keeping every bar on the subject instead of letting the rhymes drag the lines into
+nonsense. Rhyme groups are marked and labelled only as a check reports them, or clearly marked as
+unchecked if no check ran, and any rhyme that depends on bending the pronunciation is flagged
+honestly with a delivery note. It follows the musician's UK spelling and vocabulary ("mould",
+"flat"), does not invent facts about the musician beyond what they gave, does not borrow other
+artists' lines or flows, and, if three options are given, labels one as outside the musician's usual
+style.
