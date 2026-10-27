@@ -28,6 +28,10 @@ export interface OdeTool<S extends z.ZodRawShape = z.ZodRawShape> {
   input: S;
   changes: ToolChange;
   run: (input: z.infer<z.ZodObject<S>>, ctx: ToolContext) => Promise<unknown>;
+  /** One plain sentence describing a change, shown when asking the musician for approval. */
+  describe?: (input: z.infer<z.ZodObject<S>>) => string;
+  /** Keep this tool's definition always in the model's context (otherwise it is found through tool search). */
+  alwaysLoad?: boolean;
 }
 
 export function defineTool<S extends z.ZodRawShape>(tool: OdeTool<S>): OdeTool<S> {
