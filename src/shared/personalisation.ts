@@ -1,0 +1,92 @@
+import { z } from "zod";
+
+export type Accent = "uk" | "us";
+
+export interface VocalRange {
+  /** MIDI note numbers. */
+  low: number;
+  high: number;
+}
+
+export interface LoudnessTarget {
+  lufs: number;
+  truePeak: number;
+}
+
+export type Detectable<T> =
+  | { mode: "detect"; detected?: { value: T; confidence: number } }
+  | { mode: "set"; value: T };
+
+export interface Personalisation {
+  genre: Detectable<string>;
+  spelling: Detectable<Accent>;
+  pronunciation: Detectable<Accent>;
+  vocalRange: Detectable<VocalRange>;
+  loudnessTarget: Detectable<LoudnessTarget>;
+}
+
+export interface ResolvedPersonalisation {
+  genre: string | null;
+  spelling: Accent;
+  pronunciation: Accent;
+  vocalRange: VocalRange | null;
+  loudnessTarget: LoudnessTarget;
+}
+
+export interface PreferencesFile {
+  personalisation: Personalisation;
+  /** Tool names the musician allowed to run without asking. */
+  allowedChanges: string[];
+}
+
+export const STREAMING_TARGET: LoudnessTarget = { lufs: -14, truePeak: -1 };
+
+export const DEFAULT_PERSONALISATION: Personalisation = {
+  genre: { mode: "detect" },
+  spelling: { mode: "detect" },
+  pronunciation: { mode: "detect" },
+  vocalRange: { mode: "detect" },
+  loudnessTarget: { mode: "detect" },
+};
+
+export const DEFAULT_PREFERENCES: PreferencesFile = {
+  personalisation: DEFAULT_PERSONALISATION,
+  allowedChanges: [],
+};
+
+export function resolveDetectable<T>(value: Detectable<T> | undefined, fallback: T): T {
+  if (!value) return fallback;
+  if (value.mode === "set") return value.value;
+  return value.detected ? value.detected.value : fallback;
+}
+
+function detectableSchema<T extends z.ZodType>(inner: T) {
+  return z.union([
+    z.object({
+      mode: z.literal("detect"),
+      detected: z.object({ value: inner, confidence: z.number() }).optional(),
+    }),
+    z.object({ mode: z.literal("set"), value: inner }),
+  ]);
+}
+
+const accentSchema = z.enum(["uk", "us"]);
+const vocalRangeSchema = z.object({ low: z.number(), high: z.number() });
+const loudnessSchema = z.object({ lufs: z.number(), truePeak: z.number() });
+
+export const PersonalisationSchema = z.object({
+  genre: detectableSchema(z.string()),
+  spelling: detectableSchema(accentSchema),
+  pronunciation: detectableSchema(accentSchema),
+  vocalRange: detectableSchema(vocalRangeSchema),
+  loudnessTarget: detectableSchema(loudnessSchema),
+});
+
+/** Song-level overrides: any subset of the artist-level settings. */
+export const PersonalisationOverridesSchema = PersonalisationSchema.partial();
+export type PersonalisationOverrides = z.infer<typeof PersonalisationOverridesSchema>;
+
+export const PreferencesFileSchema = z.object({
+  personalisation: PersonalisationSchema,
+  allowedChanges: z.array(z.string()),
+});
