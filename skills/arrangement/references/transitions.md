@@ -71,7 +71,7 @@ How to build and place common transitions in Live. A transition signals that a c
 ## Delay throws
 
 - Send just the last word of a vocal phrase (or a single hit) to a delay with higher feedback, so the echo carries across the gap into the next section.
-- Without automation: copy that one word to a separate track sent fully to the delay return, and leave the main vocal's send as it is.
+- Without automation: put that one word as its own clip on a new audio track sent fully to the delay return, and leave the main vocal's send as it is.
 - Filter the repeats (high-pass 300–500 Hz, low-pass 4–6 kHz) so they sit behind the next section.
 
 ## Tape stops
@@ -88,14 +88,10 @@ How to build and place common transitions in Live. A transition signals that a c
 
 ## Vocal pickups
 
-A vocal line that begins before the downbeat (a pickup) pulls the listener into the next section, often more naturally than any effect. When the melody allows, starting a chorus line on the last beat or two of the pre-chorus is a strong transition by itself. Changing melody and lyrics is the musician's call; suggest it rather than doing it.
+A vocal line that begins before the downbeat (a pickup) pulls the listener into the next section, often more naturally than any effect. When the melody allows, starting a chorus line on the last beat or two of the pre-chorus is a strong transition by itself. While the topline is still MIDI, the melody and lyrics skills can add the pickup in place and check it like any melodic change; a recorded vocal stays as it was sung.
 
 ## When you can't write automation
 
-Give the musician exact instructions they can draw in a minute:
-- the track and the device or parameter (for example, "Auto Filter frequency on the Music group");
-- the start and end positions in bars and beats;
-- the start and end values, and the curve (straight, or slow at first and fast at the end);
-- what should happen on the downbeat (back to the original value instantly).
+Most transitions don't need automation: a fill, a drop-out, a clip that stops a beat early, a riser or reverse cymbal cut to length, a crash on the downbeat. A sound can carry the movement too: a riser sample trimmed to the build, a synth note whose envelopes rise over the whole build, an Auto Filter whose synced LFO does the sweep.
 
-Example: "Music group, Auto Filter high-pass frequency: 30 Hz at bar 57, rising to 800 Hz at bar 64 beat 4, curving upward near the end; back to 30 Hz on bar 65, beat 1."
+When a move really needs automation you can't write, make the rest of the change and end the result line with the one move to draw, in a few words: the track and parameter, the bars, the start and end values. For example: "draw Auto Filter 30 Hz → 800 Hz on the Music group over bars 57–64, back to 30 Hz on bar 65".

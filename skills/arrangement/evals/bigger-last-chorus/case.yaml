@@ -1,0 +1,26 @@
+schema_version: "1.1"
+name: bigger-last-chorus
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  Mode: Auto (the default). A G major pop song at 100 BPM, arranged in the Arrangement with locators:
+  Intro (beat 0), Verse 1 (16), Chorus 1 (48), Verse 2 (80), Chorus 2 (112, bars 29–36), Outro (144).
+  Drums, Bass, Keys, Pad (MIDI) and Lead Vox (audio) play per-section clips. Chorus 2's clips are the
+  same as Chorus 1's, and Verse 2 already has the pad, so the last chorus doesn't lift. The playhead
+  is at the start of Chorus 2 with nothing else selected, and the musician typed "Make the last chorus
+  bigger".
+
+  Ode makes Chorus 2 bigger in place, as one undo step, by moving several levers at once in the clips
+  already there: for example the Chorus 2 drum clip's hats moved to sixteenths or opened up, a crash
+  added on beat 112 (the Drum Rack has a crash pad), the Chorus 2 keys or pad doubled an octave up
+  where it stays clear of the vocal, more movement in the Chorus 2 bass clip. It may build contrast
+  before the chorus by taking the pad out of Verse 2 (or part of it) or dropping the drums and bass for
+  the last beat of Verse 2. Every new or moved note is in G major. Chorus 1, Verse 1 and the locators
+  stay as they were, and no clip, track, scene or take is duplicated to keep or offer an alternative.
+
+  Ode checks the energy of Chorus 2 against Chorus 1 and Verse 2 (what plays, the drums' note density,
+  the highest register, and short-term loudness on the Master when it can measure), checks every
+  written or moved note against G major, and checks that the changes sit on the bar grid with the
+  arrival on beat 112. It doesn't start playback for listening. Ode asks no question and replies in one
+  line, for example: "Last chorus bigger: hats in sixteenths, crash on the downbeat, bass in octaves,
+  pad out of verse 2 · above chorus 1 on three levers, all in key, lands on bar 29."

@@ -5,7 +5,7 @@ How to write a brief the image model can turn into artwork that fits the song, h
 ## Contents
 - Finding the images in a song
 - Brief template
-- Worked brief with three directions
+- Worked example: three briefs, three images
 - Turning references into general qualities
 - If the musician wants text
 - Refining a direction
@@ -17,7 +17,7 @@ How to write a brief the image model can turn into artwork that fits the song, h
 - **Read the lyrics for pictures:** objects, places, weather, times of day, colours, actions. One strong, specific image beats a collage of everything in the song.
 - **Read the music for mood:** a slow, sparse song suggests calm, open compositions; a dense, fast one suggests energy, contrast and movement. A warm, saturated sound suggests warm colours; a cold, clean one suggests cooler, cleaner images.
 - **Read the title:** sometimes it is the image; sometimes the best cover shows something next to the title rather than illustrating it literally.
-- **Ask what the song means to the musician** if the lyrics are abstract; the cover can carry what the words leave unsaid.
+- **When the lyrics are abstract,** use the lead sheet's theme and story; the cover can carry what the words leave unsaid.
 - Avoid genre shorthand (a sad song doesn't have to be blue and rainy). Choose from this song's own details.
 
 ## Brief template
@@ -37,15 +37,15 @@ Text: none (or the exact title and artist name, if the musician asks)
 Format: square, 3000 × 3000 pixels, RGB; must read at thumbnail size
 ```
 
-## Worked brief with three directions
+## Worked example: three briefs, three images
 
 An original example song: "Lantern Season", about leaving a hometown at the end of summer, mid-tempo, acoustic guitar and soft synths, warm and slightly melancholic. Lyric images: a ferry at dusk, paper lanterns on a railing, a suitcase that won't close.
 
 1. **Ferry at dusk.** Photograph from the back of a ferry, the town shrinking on the horizon, orange and lilac sky, lots of empty space above, soft film grain. Subject small and off-centre, so the distance is the feeling.
 2. **Lanterns close up.** A tight shot of three paper lanterns on a rusted railing, one unlit, warm light against deep blue dusk, shallow focus. Simple, reads clearly as a thumbnail.
-3. **Outside your usual style:** a cut-paper collage of a half-closed suitcase spilling a summer landscape (sea, lanterns, a ferry) in flat, bright colours on an off-white background. Playful rather than wistful; a departure from the artist's usual photographic covers.
+3. **Suitcase collage.** A cut-paper collage of a half-closed suitcase spilling a summer landscape (sea, lanterns, a ferry) in flat, bright colours on an off-white background. Playful rather than wistful.
 
-All three: no text, square, 3000 × 3000. Ask which to develop, then refine one element at a time.
+All three: no text, square, 3000 × 3000. One image per brief goes to the Release tab for the musician to pick. The collage departs from the artist's usual photographic covers, so the result line says so.
 
 ## Turning references into general qualities
 
@@ -61,28 +61,27 @@ When the musician says "like [artist]'s cover" or names a specific record, descr
 
 Example: "like a minimalist photographic cover" becomes "candid photograph, muted colour, a single subject, a lot of empty space, natural light" — then the subject and scene come from this song's own lyrics.
 
-If a request can only be met by recreating a specific cover, say so kindly and offer directions built from its general qualities instead.
+If a request can only be met by recreating a specific cover, make covers from its general qualities instead, and say in the result line that they are built from its qualities, not copied.
 
 ## If the musician wants text
 
 - Use the exact title and artist name as in the metadata; platforms reject artwork whose text doesn't match.
 - Keep it legible at thumbnail size: large, high contrast, away from busy areas of the image.
 - Keep it to the title and artist name; no release dates, "out now", URLs or social handles.
-- Image models often misspell text; check every letter, and if needed, have the image made without text and set the type as a separate step.
+- Image models often misspell text, and the image can't be read back to check it: give the exact title and artist in the brief, and say in the result line that the lettering needs a look.
 
 ## Refining a direction
 
 - Change one thing at a time: the palette, the crop, the light, the subject's position. Several changes at once make it hard to tell what helped.
-- Check each version at thumbnail size and next to the musician's previous covers.
 - Keep every version the musician has seen, so they can go back.
-- When the musician chooses, check the final file against the store rules below.
+- When the musician picks one, check its brief against the store rules below.
 
 ## Rights
 
 - Use an image model or service whose terms allow commercial use and leave the musician the rights to the artwork.
 - Don't feed it someone else's photograph or artwork as a base unless the musician has the rights to it.
 - People who appear recognisably in a cover need to have given permission.
-- Note in the clearance list how the artwork was made (generated, from what brief, or the photographer or artist who made it), for the credits and the clearance check.
+- Write in the clearance list how the artwork was made (generated, from what brief, or the photographer or artist who made it), for the credits and the clearance check.
 
 ## Common store rules
 

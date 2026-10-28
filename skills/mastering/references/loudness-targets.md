@@ -8,7 +8,7 @@ What the numbers mean, how normalisation works, and typical targets per platform
 - Streaming platforms
 - Formats without normalisation
 - Choosing a target
-- Explaining it to the musician
+- If the musician asks why
 
 ## What the measurements mean
 
@@ -51,7 +51,7 @@ Typical values as commonly published or reported:
 | Club and DJ use | No normalisation; DJs set levels by ear and by gain. Dense dance masters often land around −9 to −6 LUFS integrated, but only when they still sound clean. Big systems expose distortion: a slightly quieter, cleaner master often sounds bigger. Keep true peak below 0 dBTP with a margin. |
 | CD | 16-bit, 44.1 kHz, dithered. Loudness is an artistic choice; keep the true peak below 0 dBTP with a small margin (around −0.3 to −1 dBTP). |
 | Downloads and lossless stores | Usually the same master as streaming. |
-| Vinyl | Ask the cutting engineer. Usually a separate master with less limiting, controlled sibilance and harsh highs, and mono low end. |
+| Vinyl | The cutting engineer's specification decides. Usually a separate master with less limiting, controlled sibilance and harsh highs, and mono low end. |
 | Broadcast | The broadcaster normalises to its own standard (for example −23 LUFS under EBU R128 in Europe, −24 LKFS under ATSC A/85 in the US); deliver whatever their specification asks for. |
 | Sync (film, TV, adverts) | Deliver to the requested specification; instrumental and stem versions are often requested too. |
 
@@ -63,10 +63,8 @@ Typical values as commonly published or reported:
 4. Raise loudness until either the target is reached or the music starts to suffer (punch lost, distortion, the chorus no longer bigger than the verse). Stop at whichever comes first.
 5. Make a separate master only when there is a real reason: a club version, a vinyl cut, a CD with a different loudness.
 
-Never present a loudness figure as checked unless it was measured on the master, and measure the exported file as well as the playback.
+Never present a loudness figure as checked unless it was measured on the master, and measure exported files too when they are available.
 
-## Explaining it to the musician
+## If the musician asks why
 
-A plain explanation usually works best:
-
-"Streaming services turn every song to about the same loudness. If we push this master much louder than around −14 LUFS, Spotify and YouTube will just turn it down, and we'll have lost punch for nothing. If you want it to feel louder next to other songs, the bigger win is in the mix: a clearer low end and a more forward vocal. For the club version we can go louder, as long as the kick stays clean."
+Answer in two or three sentences, for example: "Streaming services play every song at about the same loudness, so a master pushed far past −14 LUFS just gets turned down, with its punch lost for nothing. To sound louder next to other songs, a clearer low end and a more forward vocal in the mix do more. A club version can go louder as long as the kick stays clean."

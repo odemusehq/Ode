@@ -1,0 +1,24 @@
+schema_version: "1.1"
+name: pad-covers-vocal-fix
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  Mode: Auto (the default). An E minor song at 120 BPM at the mix stage: Drums, Bass, Guitar, Pad and
+  Lead Vox are all audio tracks, with Verse (beats 0–32) and Chorus (beats 32–64). The Pad plays only
+  in the chorus; its EQ Eight has band 1 on as a low cut at 200 Hz and bands 2–4 off. The Lead Vox has
+  its own EQ Eight and Compressor. The musician selected the Pad's chorus clip and tapped the Mix tab's
+  problem line "Pad covers the vocal at 3 kHz · Fix".
+
+  Ode measures masking between the Pad and the Lead Vox over the chorus (beats 32–64) to confirm the
+  collision near 3 kHz, then fixes it in place, as one undo step: on the Pad's existing EQ Eight it
+  switches on an unused band as a bell cut of roughly 2–4 dB at about 2.5–3.5 kHz with a broad Q
+  (about 0.7–2), and it may lower the Pad's fader by up to about 1.5 dB. It adds no second EQ to the
+  Pad, leaves the Lead Vox's devices as they are, and creates or duplicates no track, clip, return or
+  device.
+
+  After the change it measures with something that includes the cut (the Master in the chorus, or the
+  Pad soloed and measured on the Master with the solos put back afterwards) and checks that nothing
+  clips, with the Master's true peak below 0 dBTP. It doesn't start playback for listening. Ode asks no
+  question and replies in one line whose figures all come from measurements taken after the change,
+  for example: "Pad cut 3 dB at 3 kHz on its EQ Eight, where it masked the vocal · Master peaks −5.6
+  dBFS in the chorus, no clipping."

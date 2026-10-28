@@ -1,0 +1,24 @@
+schema_version: "1.1"
+name: master-for-streaming
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  Mode: Auto (the default). A finished B♭ major pop mix at 104 BPM, 52 bars (beats 0–208, about two
+  minutes): Drums, Bass and Keys (MIDI), Lead Vox and BV (audio), a reverb and a delay return, and
+  locators from Intro to Outro with three choruses. The Main track holds only the Ode device. The
+  musician selected the Master and tapped "Master for streaming".
+
+  Ode measures the Master first (integrated loudness over the whole song, and the loudest chorus's
+  short-term loudness and true peak), then builds the chain in place on the Main track, as one undo
+  step, before the Ode device, which stays last: typically EQ Eight (a gentle low cut around 20–30 Hz,
+  small tonal moves of 0.5–1.5 dB), Glue Compressor (ratio 2, attack 10 or 30 ms, auto release, about
+  1–2 dB of gain reduction) and a Limiter with a −1 dB ceiling, its gain raised until the song reaches
+  about −14 LUFS integrated or the limiter starts flattening the peaks. Nothing outside the Main track
+  changes, and there is one chain with one limiter.
+
+  After its last change Ode measures again over the whole song: integrated loudness within ±1 LU of
+  −14 LUFS and true peak at or below −1 dBTP, with the chorus still louder than the verse; when a target
+  can't be met cleanly, the reply says which one. It doesn't start playback for listening. Ode asks no
+  question and replies in one line with the measured numbers, for example: "Mastered for streaming: EQ
+  Eight, Glue 1.5 dB, Limiter at −1 dBTP · −14.1 LUFS integrated, −1.2 dBTP, chorus still 2 LU above
+  the verse."

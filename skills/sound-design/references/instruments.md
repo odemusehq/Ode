@@ -129,4 +129,4 @@ Welcome whenever the musician has them. Most follow the same structure (oscillat
 
 - Read the parameter names and current values before changing anything.
 - Start from a preset close to the target; presets made by the instrument's designers often use features that are hard to find by hand.
-- Note which instruments and presets the musician reaches for, and prefer them in later suggestions.
+- Note which instruments and presets the musician reaches for, and prefer them in later takes.

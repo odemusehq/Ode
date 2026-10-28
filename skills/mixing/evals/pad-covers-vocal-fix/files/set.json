@@ -1,0 +1,891 @@
+{
+  "takenAt": "2026-10-28T16:05:33.000Z",
+  "song": {
+    "tempo": 120,
+    "gridQuantization": 4,
+    "gridIsTriplet": false,
+    "rootNote": 4,
+    "scaleName": "Minor",
+    "scaleMode": true,
+    "scaleIntervals": [0, 2, 3, 5, 7, 8, 10],
+    "scenes": [{"index": 0, "name": "", "tempo": 120, "signatureNumerator": 4, "signatureDenominator": 4}],
+    "locators": [{"index": 0, "name": "Verse", "time": 0}, {"index": 1, "name": "Chorus", "time": 32}]
+  },
+  "tracks": [
+    {
+      "index": 0,
+      "name": "Drums",
+      "kind": "audio",
+      "color": 16725558,
+      "mute": false,
+      "solo": false,
+      "arm": false,
+      "mutedViaSolo": false,
+      "groupTrack": null,
+      "clipSlots": [{"slot": 0, "clip": null}],
+      "arrangementClips": [
+        {
+          "ref": {"track": {"index": 0}, "start": 0},
+          "kind": "audio",
+          "name": "Drums",
+          "color": 16725558,
+          "muted": false,
+          "startTime": 0,
+          "endTime": 64,
+          "duration": 64,
+          "startMarker": 0,
+          "endMarker": 64,
+          "looping": false,
+          "loopStart": 0,
+          "loopEnd": 64,
+          "filePath": "Samples/Imported/Drums stem.wav",
+          "warping": true,
+          "warpMode": 0,
+          "warpMarkers": [{"sampleTime": 0, "beatTime": 0}, {"sampleTime": 32.0, "beatTime": 64}]
+        }
+      ],
+      "takeLanes": [],
+      "mixer": {
+        "volume": {"index": 0, "name": "Track Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.85, "valueItems": [], "value": 0.85},
+        "panning": {"index": 1, "name": "Track Panning", "min": -1, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+        "sends": [
+          {"index": 2, "name": "Send A", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.05, "valueItems": [], "value": 0.05},
+          {"index": 3, "name": "Send B", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0}
+        ]
+      },
+      "devices": [
+        {
+          "index": 0,
+          "name": "Glue Compressor",
+          "className": "GlueCompressor",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "Threshold", "min": -40, "max": 0, "isQuantized": false, "defaultValue": -12, "valueItems": [], "value": -12},
+            {"index": 2, "name": "Ratio", "min": 0, "max": 2, "isQuantized": true, "defaultValue": 0, "valueItems": ["2", "4", "10"], "value": 0},
+            {
+              "index": 3,
+              "name": "Attack",
+              "min": 0,
+              "max": 6,
+              "isQuantized": true,
+              "defaultValue": 5,
+              "valueItems": ["0.01 ms", "0.1 ms", "0.3 ms", "1 ms", "3 ms", "10 ms", "30 ms"],
+              "value": 5
+            },
+            {
+              "index": 4,
+              "name": "Release",
+              "min": 0,
+              "max": 6,
+              "isQuantized": true,
+              "defaultValue": 6,
+              "valueItems": ["0.1 s", "0.2 s", "0.4 s", "0.6 s", "0.8 s", "1.2 s", "Auto"],
+              "value": 6
+            },
+            {"index": 5, "name": "Makeup", "min": 0, "max": 20, "isQuantized": false, "defaultValue": 2, "valueItems": [], "value": 2},
+            {"index": 6, "name": "Dry/Wet", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 1, "valueItems": [], "value": 1},
+            {"index": 7, "name": "Soft Clip", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 0, "valueItems": ["Off", "On"], "value": 0}
+          ]
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "name": "Bass",
+      "kind": "audio",
+      "color": 16149507,
+      "mute": false,
+      "solo": false,
+      "arm": false,
+      "mutedViaSolo": false,
+      "groupTrack": null,
+      "clipSlots": [{"slot": 0, "clip": null}],
+      "arrangementClips": [
+        {
+          "ref": {"track": {"index": 1}, "start": 0},
+          "kind": "audio",
+          "name": "Bass DI",
+          "color": 16149507,
+          "muted": false,
+          "startTime": 0,
+          "endTime": 64,
+          "duration": 64,
+          "startMarker": 0,
+          "endMarker": 64,
+          "looping": false,
+          "loopStart": 0,
+          "loopEnd": 64,
+          "filePath": "Samples/Recorded/Bass DI 0002.wav",
+          "warping": true,
+          "warpMode": 1,
+          "warpMarkers": [{"sampleTime": 0, "beatTime": 0}, {"sampleTime": 32.0, "beatTime": 64}]
+        }
+      ],
+      "takeLanes": [],
+      "mixer": {
+        "volume": {"index": 0, "name": "Track Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.8, "valueItems": [], "value": 0.8},
+        "panning": {"index": 1, "name": "Track Panning", "min": -1, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+        "sends": [
+          {"index": 2, "name": "Send A", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+          {"index": 3, "name": "Send B", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0}
+        ]
+      },
+      "devices": [
+        {
+          "index": 0,
+          "name": "EQ Eight",
+          "className": "Eq8",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "Output Gain", "min": -12, "max": 12, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 2, "name": "Scale", "min": -200, "max": 200, "isQuantized": false, "defaultValue": 100, "valueItems": [], "value": 100},
+            {"index": 3, "name": "1 Filter On A", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {
+              "index": 4,
+              "name": "1 Filter Type A",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 1,
+              "valueItems": ["Low Cut 48", "Low Cut 12", "Low Shelf", "Bell", "Notch", "High Shelf", "High Cut 12", "High Cut 48"],
+              "value": 1
+            },
+            {"index": 5, "name": "1 Frequency A", "min": 10, "max": 22000, "isQuantized": false, "defaultValue": 30, "valueItems": [], "value": 30},
+            {"index": 6, "name": "1 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 7, "name": "1 Resonance A", "min": 0.1, "max": 18, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71},
+            {"index": 8, "name": "2 Filter On A", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 0, "valueItems": ["Off", "On"], "value": 0},
+            {
+              "index": 9,
+              "name": "2 Filter Type A",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 3,
+              "valueItems": ["Low Cut 48", "Low Cut 12", "Low Shelf", "Bell", "Notch", "High Shelf", "High Cut 12", "High Cut 48"],
+              "value": 3
+            },
+            {"index": 10, "name": "2 Frequency A", "min": 10, "max": 22000, "isQuantized": false, "defaultValue": 250, "valueItems": [], "value": 250},
+            {"index": 11, "name": "2 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 12, "name": "2 Resonance A", "min": 0.1, "max": 18, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71},
+            {
+              "index": 13,
+              "name": "3 Filter On A",
+              "min": 0,
+              "max": 1,
+              "isQuantized": true,
+              "defaultValue": 0,
+              "valueItems": ["Off", "On"],
+              "value": 0
+            },
+            {
+              "index": 14,
+              "name": "3 Filter Type A",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 3,
+              "valueItems": ["Low Cut 48", "Low Cut 12", "Low Shelf", "Bell", "Notch", "High Shelf", "High Cut 12", "High Cut 48"],
+              "value": 3
+            },
+            {
+              "index": 15,
+              "name": "3 Frequency A",
+              "min": 10,
+              "max": 22000,
+              "isQuantized": false,
+              "defaultValue": 1000,
+              "valueItems": [],
+              "value": 1000
+            },
+            {"index": 16, "name": "3 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 17, "name": "3 Resonance A", "min": 0.1, "max": 18, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71},
+            {
+              "index": 18,
+              "name": "4 Filter On A",
+              "min": 0,
+              "max": 1,
+              "isQuantized": true,
+              "defaultValue": 0,
+              "valueItems": ["Off", "On"],
+              "value": 0
+            },
+            {
+              "index": 19,
+              "name": "4 Filter Type A",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 5,
+              "valueItems": ["Low Cut 48", "Low Cut 12", "Low Shelf", "Bell", "Notch", "High Shelf", "High Cut 12", "High Cut 48"],
+              "value": 5
+            },
+            {
+              "index": 20,
+              "name": "4 Frequency A",
+              "min": 10,
+              "max": 22000,
+              "isQuantized": false,
+              "defaultValue": 8000,
+              "valueItems": [],
+              "value": 8000
+            },
+            {"index": 21, "name": "4 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 22, "name": "4 Resonance A", "min": 0.1, "max": 18, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71}
+          ]
+        },
+        {
+          "index": 1,
+          "name": "Compressor",
+          "className": "Compressor2",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "Threshold", "min": -70, "max": 6, "isQuantized": false, "defaultValue": -18, "valueItems": [], "value": -18},
+            {"index": 2, "name": "Ratio", "min": 1, "max": 100, "isQuantized": false, "defaultValue": 4, "valueItems": [], "value": 4},
+            {"index": 3, "name": "Attack", "min": 0.01, "max": 300, "isQuantized": false, "defaultValue": 10, "valueItems": [], "value": 10},
+            {"index": 4, "name": "Release", "min": 1, "max": 3000, "isQuantized": false, "defaultValue": 100, "valueItems": [], "value": 100},
+            {
+              "index": 5,
+              "name": "Auto Release On/Off",
+              "min": 0,
+              "max": 1,
+              "isQuantized": true,
+              "defaultValue": 0,
+              "valueItems": ["Off", "On"],
+              "value": 0
+            },
+            {"index": 6, "name": "Output Gain", "min": -36, "max": 36, "isQuantized": false, "defaultValue": 2, "valueItems": [], "value": 2},
+            {"index": 7, "name": "Knee", "min": 0, "max": 18, "isQuantized": false, "defaultValue": 6, "valueItems": [], "value": 6},
+            {"index": 8, "name": "Dry/Wet", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 1, "valueItems": [], "value": 1},
+            {
+              "index": 9,
+              "name": "Model",
+              "min": 0,
+              "max": 2,
+              "isQuantized": true,
+              "defaultValue": 0,
+              "valueItems": ["Peak", "RMS", "Expand"],
+              "value": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "name": "Guitar",
+      "kind": "audio",
+      "color": 15527148,
+      "mute": false,
+      "solo": false,
+      "arm": false,
+      "mutedViaSolo": false,
+      "groupTrack": null,
+      "clipSlots": [{"slot": 0, "clip": null}],
+      "arrangementClips": [
+        {
+          "ref": {"track": {"index": 2}, "start": 0},
+          "kind": "audio",
+          "name": "Guitar",
+          "color": 15527148,
+          "muted": false,
+          "startTime": 0,
+          "endTime": 64,
+          "duration": 64,
+          "startMarker": 0,
+          "endMarker": 64,
+          "looping": false,
+          "loopStart": 0,
+          "loopEnd": 64,
+          "filePath": "Samples/Recorded/Guitar 0003.wav",
+          "warping": true,
+          "warpMode": 1,
+          "warpMarkers": [{"sampleTime": 0, "beatTime": 0}, {"sampleTime": 32.0, "beatTime": 64}]
+        }
+      ],
+      "takeLanes": [],
+      "mixer": {
+        "volume": {"index": 0, "name": "Track Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.74, "valueItems": [], "value": 0.74},
+        "panning": {"index": 1, "name": "Track Panning", "min": -1, "max": 1, "isQuantized": false, "defaultValue": -0.35, "valueItems": [], "value": -0.35},
+        "sends": [
+          {"index": 2, "name": "Send A", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.15, "valueItems": [], "value": 0.15},
+          {"index": 3, "name": "Send B", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0}
+        ]
+      },
+      "devices": [
+        {
+          "index": 0,
+          "name": "EQ Eight",
+          "className": "Eq8",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "Output Gain", "min": -12, "max": 12, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 2, "name": "Scale", "min": -200, "max": 200, "isQuantized": false, "defaultValue": 100, "valueItems": [], "value": 100},
+            {"index": 3, "name": "1 Filter On A", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {
+              "index": 4,
+              "name": "1 Filter Type A",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 1,
+              "valueItems": ["Low Cut 48", "Low Cut 12", "Low Shelf", "Bell", "Notch", "High Shelf", "High Cut 12", "High Cut 48"],
+              "value": 1
+            },
+            {"index": 5, "name": "1 Frequency A", "min": 10, "max": 22000, "isQuantized": false, "defaultValue": 110, "valueItems": [], "value": 110},
+            {"index": 6, "name": "1 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 7, "name": "1 Resonance A", "min": 0.1, "max": 18, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71},
+            {"index": 8, "name": "2 Filter On A", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {
+              "index": 9,
+              "name": "2 Filter Type A",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 3,
+              "valueItems": ["Low Cut 48", "Low Cut 12", "Low Shelf", "Bell", "Notch", "High Shelf", "High Cut 12", "High Cut 48"],
+              "value": 3
+            },
+            {"index": 10, "name": "2 Frequency A", "min": 10, "max": 22000, "isQuantized": false, "defaultValue": 350, "valueItems": [], "value": 350},
+            {"index": 11, "name": "2 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": -2, "valueItems": [], "value": -2},
+            {"index": 12, "name": "2 Resonance A", "min": 0.1, "max": 18, "isQuantized": false, "defaultValue": 1.0, "valueItems": [], "value": 1.0},
+            {
+              "index": 13,
+              "name": "3 Filter On A",
+              "min": 0,
+              "max": 1,
+              "isQuantized": true,
+              "defaultValue": 0,
+              "valueItems": ["Off", "On"],
+              "value": 0
+            },
+            {
+              "index": 14,
+              "name": "3 Filter Type A",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 3,
+              "valueItems": ["Low Cut 48", "Low Cut 12", "Low Shelf", "Bell", "Notch", "High Shelf", "High Cut 12", "High Cut 48"],
+              "value": 3
+            },
+            {
+              "index": 15,
+              "name": "3 Frequency A",
+              "min": 10,
+              "max": 22000,
+              "isQuantized": false,
+              "defaultValue": 2000,
+              "valueItems": [],
+              "value": 2000
+            },
+            {"index": 16, "name": "3 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 17, "name": "3 Resonance A", "min": 0.1, "max": 18, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71},
+            {
+              "index": 18,
+              "name": "4 Filter On A",
+              "min": 0,
+              "max": 1,
+              "isQuantized": true,
+              "defaultValue": 0,
+              "valueItems": ["Off", "On"],
+              "value": 0
+            },
+            {
+              "index": 19,
+              "name": "4 Filter Type A",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 5,
+              "valueItems": ["Low Cut 48", "Low Cut 12", "Low Shelf", "Bell", "Notch", "High Shelf", "High Cut 12", "High Cut 48"],
+              "value": 5
+            },
+            {
+              "index": 20,
+              "name": "4 Frequency A",
+              "min": 10,
+              "max": 22000,
+              "isQuantized": false,
+              "defaultValue": 9000,
+              "valueItems": [],
+              "value": 9000
+            },
+            {"index": 21, "name": "4 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 22, "name": "4 Resonance A", "min": 0.1, "max": 18, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71}
+          ]
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "name": "Pad",
+      "kind": "audio",
+      "color": 10208397,
+      "mute": false,
+      "solo": false,
+      "arm": false,
+      "mutedViaSolo": false,
+      "groupTrack": null,
+      "clipSlots": [{"slot": 0, "clip": null}],
+      "arrangementClips": [
+        {
+          "ref": {"track": {"index": 3}, "start": 32},
+          "kind": "audio",
+          "name": "Pad",
+          "color": 10208397,
+          "muted": false,
+          "startTime": 32,
+          "endTime": 64,
+          "duration": 32,
+          "startMarker": 0,
+          "endMarker": 32,
+          "looping": false,
+          "loopStart": 0,
+          "loopEnd": 32,
+          "filePath": "Samples/Recorded/Pad resample 0001.wav",
+          "warping": true,
+          "warpMode": 2,
+          "warpMarkers": [{"sampleTime": 0, "beatTime": 0}, {"sampleTime": 16.0, "beatTime": 32}]
+        }
+      ],
+      "takeLanes": [],
+      "mixer": {
+        "volume": {"index": 0, "name": "Track Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.85, "valueItems": [], "value": 0.85},
+        "panning": {"index": 1, "name": "Track Panning", "min": -1, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+        "sends": [
+          {"index": 2, "name": "Send A", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.2, "valueItems": [], "value": 0.2},
+          {"index": 3, "name": "Send B", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0}
+        ]
+      },
+      "devices": [
+        {
+          "index": 0,
+          "name": "EQ Eight",
+          "className": "Eq8",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "Output Gain", "min": -12, "max": 12, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 2, "name": "Scale", "min": -200, "max": 200, "isQuantized": false, "defaultValue": 100, "valueItems": [], "value": 100},
+            {"index": 3, "name": "1 Filter On A", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {
+              "index": 4,
+              "name": "1 Filter Type A",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 1,
+              "valueItems": ["Low Cut 48", "Low Cut 12", "Low Shelf", "Bell", "Notch", "High Shelf", "High Cut 12", "High Cut 48"],
+              "value": 1
+            },
+            {"index": 5, "name": "1 Frequency A", "min": 10, "max": 22000, "isQuantized": false, "defaultValue": 200, "valueItems": [], "value": 200},
+            {"index": 6, "name": "1 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 7, "name": "1 Resonance A", "min": 0.1, "max": 18, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71},
+            {"index": 8, "name": "2 Filter On A", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 0, "valueItems": ["Off", "On"], "value": 0},
+            {
+              "index": 9,
+              "name": "2 Filter Type A",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 3,
+              "valueItems": ["Low Cut 48", "Low Cut 12", "Low Shelf", "Bell", "Notch", "High Shelf", "High Cut 12", "High Cut 48"],
+              "value": 3
+            },
+            {"index": 10, "name": "2 Frequency A", "min": 10, "max": 22000, "isQuantized": false, "defaultValue": 400, "valueItems": [], "value": 400},
+            {"index": 11, "name": "2 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 12, "name": "2 Resonance A", "min": 0.1, "max": 18, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71},
+            {
+              "index": 13,
+              "name": "3 Filter On A",
+              "min": 0,
+              "max": 1,
+              "isQuantized": true,
+              "defaultValue": 0,
+              "valueItems": ["Off", "On"],
+              "value": 0
+            },
+            {
+              "index": 14,
+              "name": "3 Filter Type A",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 3,
+              "valueItems": ["Low Cut 48", "Low Cut 12", "Low Shelf", "Bell", "Notch", "High Shelf", "High Cut 12", "High Cut 48"],
+              "value": 3
+            },
+            {
+              "index": 15,
+              "name": "3 Frequency A",
+              "min": 10,
+              "max": 22000,
+              "isQuantized": false,
+              "defaultValue": 1200,
+              "valueItems": [],
+              "value": 1200
+            },
+            {"index": 16, "name": "3 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 17, "name": "3 Resonance A", "min": 0.1, "max": 18, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71},
+            {
+              "index": 18,
+              "name": "4 Filter On A",
+              "min": 0,
+              "max": 1,
+              "isQuantized": true,
+              "defaultValue": 0,
+              "valueItems": ["Off", "On"],
+              "value": 0
+            },
+            {
+              "index": 19,
+              "name": "4 Filter Type A",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 5,
+              "valueItems": ["Low Cut 48", "Low Cut 12", "Low Shelf", "Bell", "Notch", "High Shelf", "High Cut 12", "High Cut 48"],
+              "value": 5
+            },
+            {
+              "index": 20,
+              "name": "4 Frequency A",
+              "min": 10,
+              "max": 22000,
+              "isQuantized": false,
+              "defaultValue": 8000,
+              "valueItems": [],
+              "value": 8000
+            },
+            {"index": 21, "name": "4 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 22, "name": "4 Resonance A", "min": 0.1, "max": 18, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71}
+          ]
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "name": "Lead Vox",
+      "kind": "audio",
+      "color": 8912743,
+      "mute": false,
+      "solo": false,
+      "arm": false,
+      "mutedViaSolo": false,
+      "groupTrack": null,
+      "clipSlots": [{"slot": 0, "clip": null}],
+      "arrangementClips": [
+        {
+          "ref": {"track": {"index": 4}, "start": 0},
+          "kind": "audio",
+          "name": "Verse vox",
+          "color": 8912743,
+          "muted": false,
+          "startTime": 0,
+          "endTime": 32,
+          "duration": 32,
+          "startMarker": 0,
+          "endMarker": 32,
+          "looping": false,
+          "loopStart": 0,
+          "loopEnd": 32,
+          "filePath": "Samples/Recorded/Lead Vox 0006.wav",
+          "warping": true,
+          "warpMode": 1,
+          "warpMarkers": [{"sampleTime": 0, "beatTime": 0}, {"sampleTime": 16.0, "beatTime": 32}]
+        },
+        {
+          "ref": {"track": {"index": 4}, "start": 32},
+          "kind": "audio",
+          "name": "Chorus vox",
+          "color": 8912743,
+          "muted": false,
+          "startTime": 32,
+          "endTime": 64,
+          "duration": 32,
+          "startMarker": 0,
+          "endMarker": 32,
+          "looping": false,
+          "loopStart": 0,
+          "loopEnd": 32,
+          "filePath": "Samples/Recorded/Lead Vox 0007.wav",
+          "warping": true,
+          "warpMode": 1,
+          "warpMarkers": [{"sampleTime": 0, "beatTime": 0}, {"sampleTime": 16.0, "beatTime": 32}]
+        }
+      ],
+      "takeLanes": [],
+      "mixer": {
+        "volume": {"index": 0, "name": "Track Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.82, "valueItems": [], "value": 0.82},
+        "panning": {"index": 1, "name": "Track Panning", "min": -1, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+        "sends": [
+          {"index": 2, "name": "Send A", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.28, "valueItems": [], "value": 0.28},
+          {"index": 3, "name": "Send B", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.12, "valueItems": [], "value": 0.12}
+        ]
+      },
+      "devices": [
+        {
+          "index": 0,
+          "name": "EQ Eight",
+          "className": "Eq8",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "Output Gain", "min": -12, "max": 12, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 2, "name": "Scale", "min": -200, "max": 200, "isQuantized": false, "defaultValue": 100, "valueItems": [], "value": 100},
+            {"index": 3, "name": "1 Filter On A", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {
+              "index": 4,
+              "name": "1 Filter Type A",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 0,
+              "valueItems": ["Low Cut 48", "Low Cut 12", "Low Shelf", "Bell", "Notch", "High Shelf", "High Cut 12", "High Cut 48"],
+              "value": 0
+            },
+            {"index": 5, "name": "1 Frequency A", "min": 10, "max": 22000, "isQuantized": false, "defaultValue": 90, "valueItems": [], "value": 90},
+            {"index": 6, "name": "1 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 7, "name": "1 Resonance A", "min": 0.1, "max": 18, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71},
+            {"index": 8, "name": "2 Filter On A", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {
+              "index": 9,
+              "name": "2 Filter Type A",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 3,
+              "valueItems": ["Low Cut 48", "Low Cut 12", "Low Shelf", "Bell", "Notch", "High Shelf", "High Cut 12", "High Cut 48"],
+              "value": 3
+            },
+            {"index": 10, "name": "2 Frequency A", "min": 10, "max": 22000, "isQuantized": false, "defaultValue": 250, "valueItems": [], "value": 250},
+            {"index": 11, "name": "2 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": -2, "valueItems": [], "value": -2},
+            {"index": 12, "name": "2 Resonance A", "min": 0.1, "max": 18, "isQuantized": false, "defaultValue": 1.2, "valueItems": [], "value": 1.2},
+            {
+              "index": 13,
+              "name": "3 Filter On A",
+              "min": 0,
+              "max": 1,
+              "isQuantized": true,
+              "defaultValue": 0,
+              "valueItems": ["Off", "On"],
+              "value": 0
+            },
+            {
+              "index": 14,
+              "name": "3 Filter Type A",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 3,
+              "valueItems": ["Low Cut 48", "Low Cut 12", "Low Shelf", "Bell", "Notch", "High Shelf", "High Cut 12", "High Cut 48"],
+              "value": 3
+            },
+            {
+              "index": 15,
+              "name": "3 Frequency A",
+              "min": 10,
+              "max": 22000,
+              "isQuantized": false,
+              "defaultValue": 1500,
+              "valueItems": [],
+              "value": 1500
+            },
+            {"index": 16, "name": "3 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 17, "name": "3 Resonance A", "min": 0.1, "max": 18, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71},
+            {
+              "index": 18,
+              "name": "4 Filter On A",
+              "min": 0,
+              "max": 1,
+              "isQuantized": true,
+              "defaultValue": 1,
+              "valueItems": ["Off", "On"],
+              "value": 1
+            },
+            {
+              "index": 19,
+              "name": "4 Filter Type A",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 5,
+              "valueItems": ["Low Cut 48", "Low Cut 12", "Low Shelf", "Bell", "Notch", "High Shelf", "High Cut 12", "High Cut 48"],
+              "value": 5
+            },
+            {
+              "index": 20,
+              "name": "4 Frequency A",
+              "min": 10,
+              "max": 22000,
+              "isQuantized": false,
+              "defaultValue": 10000,
+              "valueItems": [],
+              "value": 10000
+            },
+            {"index": 21, "name": "4 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": 1.5, "valueItems": [], "value": 1.5},
+            {"index": 22, "name": "4 Resonance A", "min": 0.1, "max": 18, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71}
+          ]
+        },
+        {
+          "index": 1,
+          "name": "Compressor",
+          "className": "Compressor2",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "Threshold", "min": -70, "max": 6, "isQuantized": false, "defaultValue": -20, "valueItems": [], "value": -20},
+            {"index": 2, "name": "Ratio", "min": 1, "max": 100, "isQuantized": false, "defaultValue": 4, "valueItems": [], "value": 4},
+            {"index": 3, "name": "Attack", "min": 0.01, "max": 300, "isQuantized": false, "defaultValue": 3, "valueItems": [], "value": 3},
+            {"index": 4, "name": "Release", "min": 1, "max": 3000, "isQuantized": false, "defaultValue": 70, "valueItems": [], "value": 70},
+            {
+              "index": 5,
+              "name": "Auto Release On/Off",
+              "min": 0,
+              "max": 1,
+              "isQuantized": true,
+              "defaultValue": 0,
+              "valueItems": ["Off", "On"],
+              "value": 0
+            },
+            {"index": 6, "name": "Output Gain", "min": -36, "max": 36, "isQuantized": false, "defaultValue": 3, "valueItems": [], "value": 3},
+            {"index": 7, "name": "Knee", "min": 0, "max": 18, "isQuantized": false, "defaultValue": 6, "valueItems": [], "value": 6},
+            {"index": 8, "name": "Dry/Wet", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 1, "valueItems": [], "value": 1},
+            {
+              "index": 9,
+              "name": "Model",
+              "min": 0,
+              "max": 2,
+              "isQuantized": true,
+              "defaultValue": 0,
+              "valueItems": ["Peak", "RMS", "Expand"],
+              "value": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "returnTracks": [
+    {
+      "index": 0,
+      "name": "A-Plate",
+      "kind": "return",
+      "color": 13684944,
+      "mute": false,
+      "solo": false,
+      "arm": false,
+      "mutedViaSolo": false,
+      "groupTrack": null,
+      "clipSlots": [],
+      "arrangementClips": [],
+      "takeLanes": [],
+      "mixer": {
+        "volume": {"index": 0, "name": "Track Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.85, "valueItems": [], "value": 0.85},
+        "panning": {"index": 1, "name": "Track Panning", "min": -1, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+        "sends": []
+      },
+      "devices": [
+        {
+          "index": 0,
+          "name": "Reverb",
+          "className": "Reverb",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "PreDelay", "min": 0.5, "max": 250, "isQuantized": false, "defaultValue": 30, "valueItems": [], "value": 30},
+            {"index": 2, "name": "In LowCut On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 3, "name": "In HighCut On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 4, "name": "Decay Time", "min": 200, "max": 60000, "isQuantized": false, "defaultValue": 1800, "valueItems": [], "value": 1800},
+            {"index": 5, "name": "Room Size", "min": 0.22, "max": 500, "isQuantized": false, "defaultValue": 60, "valueItems": [], "value": 60},
+            {"index": 6, "name": "Dry/Wet", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 1, "valueItems": [], "value": 1}
+          ]
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "name": "B-Delay",
+      "kind": "return",
+      "color": 13684944,
+      "mute": false,
+      "solo": false,
+      "arm": false,
+      "mutedViaSolo": false,
+      "groupTrack": null,
+      "clipSlots": [],
+      "arrangementClips": [],
+      "takeLanes": [],
+      "mixer": {
+        "volume": {"index": 0, "name": "Track Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.85, "valueItems": [], "value": 0.85},
+        "panning": {"index": 1, "name": "Track Panning", "min": -1, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+        "sends": []
+      },
+      "devices": [
+        {
+          "index": 0,
+          "name": "Delay",
+          "className": "Delay",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "L Sync", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {
+              "index": 2,
+              "name": "L 16th",
+              "min": 0,
+              "max": 7,
+              "isQuantized": true,
+              "defaultValue": 2,
+              "valueItems": ["1", "2", "3", "4", "5", "6", "8", "16"],
+              "value": 2
+            },
+            {"index": 3, "name": "Feedback", "min": 0, "max": 0.95, "isQuantized": false, "defaultValue": 0.3, "valueItems": [], "value": 0.3},
+            {"index": 4, "name": "Filter On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 5, "name": "Filter Freq", "min": 50, "max": 18000, "isQuantized": false, "defaultValue": 1500, "valueItems": [], "value": 1500},
+            {"index": 6, "name": "Filter Width", "min": 0.5, "max": 9, "isQuantized": false, "defaultValue": 4, "valueItems": [], "value": 4},
+            {"index": 7, "name": "Dry/Wet", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 1, "valueItems": [], "value": 1}
+          ]
+        }
+      ]
+    }
+  ],
+  "main": {
+    "index": 0,
+    "name": "Main",
+    "kind": "main",
+    "color": 0,
+    "mute": false,
+    "solo": false,
+    "arm": false,
+    "mutedViaSolo": false,
+    "groupTrack": null,
+    "clipSlots": [],
+    "arrangementClips": [],
+    "takeLanes": [],
+    "mixer": {
+      "volume": {"index": 0, "name": "Track Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.85, "valueItems": [], "value": 0.85},
+      "panning": {"index": 1, "name": "Track Panning", "min": -1, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+      "sends": []
+    },
+    "devices": [
+      {
+        "index": 0,
+        "name": "Ode",
+        "className": "MxDeviceAudioEffect",
+        "isRack": false,
+        "parameters": [
+          {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+          {"index": 1, "name": "Again", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 0, "valueItems": ["Off", "On"], "value": 0},
+          {"index": 2, "name": "Undo", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 0, "valueItems": ["Off", "On"], "value": 0}
+        ]
+      }
+    ]
+  },
+  "transport": {"playing": false, "time": 32, "loop": {"on": false, "start": 32, "length": 32}, "signature": {"numerator": 4, "denominator": 4}},
+  "selection": {"track": {"index": 3}, "clip": {"track": {"index": 3}, "start": 32}, "scene": null, "time": 32, "isPlaying": false}
+}

@@ -18,7 +18,7 @@ Starting values and reasons for each device on a master. Mastering moves are sma
 - **First in the chain:** trim the input so the following stages see a sensible level (peaks around −6 to −3 dBFS).
 - **Bass Mono:** only if the mix has wide low end that shouldn't be there; set it low (around 80–120 Hz) and check that intentionally wide low parts aren't harmed. Better fixed in the mix.
 - **Width:** small changes only (around 90–110%); check mono after any change.
-- **Last in the chain, while comparing:** lower the gain after the limiter to match the unprocessed loudness for fair comparisons, then remove it.
+- **After the limiter, while comparing:** lower the gain to match the unprocessed loudness for a fair comparison, then remove it.
 
 ## EQ Eight
 
@@ -89,13 +89,14 @@ Shaving the sharpest peaks before the limiter lets the limiter work less, which 
 
 ## Order and gain staging
 
-Typical order: Utility (trim) → EQ Eight (corrective) → Glue Compressor → Multiband Dynamics (if needed) → Saturator or Roar (optional) → EQ Eight (tonal) → clipper (optional) → Limiter.
+Typical order: Utility (trim) → EQ Eight (corrective) → Glue Compressor → Multiband Dynamics (if needed) → Saturator or Roar (optional) → EQ Eight (tonal) → clipper (optional) → Limiter → the Ode device.
 
+- The Ode device stays last on the Master: it measures what reaches it, so every mastering device goes before it.
 - Swap the compressor and the corrective EQ if a problem frequency is driving the compressor.
 - After each stage, match its output to its input so bypassing it only changes the tone, not the level.
 
 ## Things to keep off the master
 
 - Monitoring tools: room correction, headphone correction or speaker simulation belong to monitoring only; switch them off or remove them before exporting.
-- Analysers and meters are harmless, but make sure nothing after the limiter changes the level.
+- Analysers and meters are harmless, but make sure nothing between the limiter and the Ode device changes the level.
 - A Utility left in mono or at a reduced gain after a check.

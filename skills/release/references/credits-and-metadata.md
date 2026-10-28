@@ -44,7 +44,7 @@ Samples or interpolations used (source, owner, clearance status):
 Notes:
 ```
 
-Suggest that every writer signs before release; disagreements are far easier to settle before the song earns anything.
+Every writer signing before release matters: disagreements are far easier to settle before the song earns anything. While splits are missing, the credits mark them missing.
 
 ## Codes explained
 
@@ -72,7 +72,7 @@ Suggest that every writer signs before release; disagreements are far easier to 
 
 ## Clearance list
 
-Keep one entry for every element that wasn't played or programmed from scratch by the musician and their collaborators:
+The clearance list lives in the lead sheet's notes, so it travels with the song. Keep one entry for every element that wasn't played or programmed from scratch by the musician and their collaborators, with an element whose source is unknown marked "to clear":
 
 ```
 Element:        <e.g. vocal chop in chorus, crackle texture, kick one-shot, cover art>
@@ -84,24 +84,23 @@ Credit needed:  <yes, and how / no>
 
 ## Full clearance check
 
-Before upload, go through every item and confirm with the musician:
+Ode checks each condition below from the Set, the lead sheet and what the musician has said. A condition that fails, or that nobody has confirmed, is a risk to the release: the result line names it plainly with what would resolve it, worst first.
 
-- [ ] Every sample from someone else's recording is cleared for both the recording and the composition, or has been replaced.
-- [ ] Every sound isolated from a recording comes from a recording the musician owns or has cleared.
-- [ ] Every library sample or loop is used within its licence.
-- [ ] Every generated element (sounds, artwork, any generated vocal kept in the final song) comes from a model or service whose terms allow commercial use and leave the musician the rights.
-- [ ] People recognisable on the artwork have given permission.
-- [ ] Featured artists and collaborators have approved the release and their credits.
-- [ ] Splits are agreed, ideally on a signed split sheet.
-- [ ] The musician knows how to answer the distributor's questions about samples and AI tools, from the clearance list.
-
-Anything unchecked is a risk to the release; say plainly what it is and what would resolve it.
+- Every sample from someone else's recording is cleared for both the recording and the composition, or has been replaced.
+- Every sound isolated from a recording comes from a recording the musician owns or has cleared.
+- Every library sample or loop is used within its licence.
+- Every generated element (sounds, artwork, any generated vocal kept in the final song) comes from a model or service whose terms allow commercial use and leave the musician the rights.
+- People recognisable on the artwork have given permission.
+- Featured artists and collaborators have approved the release and their credits.
+- Splits are agreed, ideally on a signed split sheet.
+- The clearance list is complete enough for the musician to answer the distributor's questions about samples and AI tools.
 
 ## The release folder
 
-Keep everything for the release together in the project's release folder:
+Everything for the release stays together in the project's release folder:
 - master files for each version (main, clean, instrumental), named with title, version and format;
 - the final artwork, plus every version the musician saw;
 - the lyric sheet (and the clean version's, if different);
-- credits, split information and metadata;
-- the clearance list.
+- credits, split information and metadata.
+
+The clearance list stays in the lead sheet's notes, next to the song it belongs to.

@@ -68,7 +68,7 @@ The same devices in a different order make a different sound.
 | Sweep in a build | High-pass moved from about 30 Hz up to 300–1000 Hz over the build, or a low-pass opening from 300 Hz to fully open | Removing or revealing the lows and highs signals that something is coming |
 | Telephone or radio sound | Band-pass around 1–2 kHz, fairly narrow | Strips lows and highs so the sound feels small and distant |
 
-Sweeps over several bars usually need automation; if you can't write it yourself, give the musician the start and end bars and values.
+Sweeps over several bars usually need automation. When you can't write it, get the movement from the device itself (a slow synced LFO, the envelope follower) or from a sound cut to the length of the build, or end the result line with the one move to draw: the parameter, the bars, and the start and end values.
 
 ## Delays
 
@@ -128,4 +128,4 @@ Effects become new instruments when printed to audio:
 2. Edit the audio: reverse, re-pitch, cut out the best second, crossfade a loop.
 3. Load the result into Simpler or a Drum Rack pad and play it.
 
-This is how a vocal word becomes a pad, a reverb tail becomes a riser, or a distorted noise burst becomes a snare layer. Note the source of the original audio, so its rights carry over to the new sound.
+This is how a vocal word becomes a pad, a reverb tail becomes a riser, or a distorted noise burst becomes a snare layer. Write the original audio's source in the lead sheet's notes, so its rights carry over to the new sound.

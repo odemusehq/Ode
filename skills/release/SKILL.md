@@ -1,72 +1,95 @@
 ---
 name: release
-description: Prepare a finished song for release — cover art briefs that fit the song (3000 × 3000, no text unless asked, never imitating another artist's artwork), the lyric sheet, credits and splits information to gather, metadata (title, artists, genre, explicit flag, ℗ and © lines, ISRC and UPC from the distributor), rights and clearance of samples and generated material, and checking every file before upload. Use this whenever the musician talks about releasing, distributing, uploading or putting a song out, asks for cover art or artwork, a lyric sheet, credits, splits, songwriter or publishing information, ISRC or UPC codes, metadata, or what they need before release day, even if they don't say "release".
+description: Prepare a finished song for release as files, without changing the Set — cover art as three or four images to pick from (square, 3000 × 3000, built from this song's own images, no text unless asked, never imitating another artist's artwork), the lyric sheet from the Lyrics tab, credits with what is known and every gap marked, and a clearance check of every sample, isolated sound and generated element in the song — then report in one line what was made and what still stands in the way of release. Use this whenever the musician taps Release or asks for cover art, artwork, a lyric sheet, credits, splits, songwriter or publishing details, ISRC or UPC codes, metadata, or what they need before putting a song out, even if they don't say "release".
 ---
 
 # Release
 
-Release preparation turns a finished master into everything a distributor and the listening platforms need: artwork, lyrics, credits, metadata and checked files, with every element cleared so the musician keeps the right to publish their song. Ode prepares and checks this material and writes the release files after the musician approves them; the musician uploads through their own distributor.
+Release preparation turns a finished song into what a distributor and the listening platforms need: artwork, lyrics, credits and metadata, with every element cleared so the musician keeps the right to publish their song. Ode makes these as files in the project's release folder and shows them in the Release tab; it doesn't change the Set, and the musician uploads through their own distributor.
 
-Distributors and platforms each have their own requirements and style rules, and they change from time to time. The guidance below covers what is commonly required; check the musician's distributor for the exact current specification.
+Distributors and platforms each have their own requirements, and they change from time to time; the guidance below covers what is commonly asked.
 
-## How to work
+## The loop
 
-1. **Gather what already exists:** the lead sheet (title, what the song is about, the lyric sheet), the final master files, notes on where samples and generated sounds came from, and what you know about the artist (artist name, past releases, preferences).
-2. **Ask only for what's missing**, in one short, grouped list: legal names, roles, collecting society details, distributor, release date.
-3. **Never invent facts.** Credits, splits, codes, dates and society numbers come from the musician or their distributor. Mark anything unknown clearly as missing rather than guessing.
-4. **Draft, then let the musician approve** each item (the brief, the lyric sheet, the credits, the metadata) before writing it to the release files. Leave locked parts alone: if a locked lyric differs from what was sung on the final vocal, point it out rather than editing it.
-5. **Run the checks** at the end of this skill before the musician uploads.
+1. **Read.** The lead sheet: title, what the song is about (theme, story, mood, hook), the lyric lines by section, credits, locked lines, and the notes on where samples and generated sounds came from. The Set, from the project map: every element that wasn't played or programmed from scratch — each audio clip's file, each Simpler and Drum Rack sample, anything isolated or generated. What Ode knows about the artist (artist name, past covers, dislikes) and the spelling set in Personalisation.
+2. **Decide** three or four cover directions from this song's own images and mood, what the lyric sheet holds, what the credits can say from known facts, and the clearance status of every element.
+3. **Make the files**; the Set stays exactly as it is:
+   - **Cover art:** one image per brief, three or four in all, so the musician picks in the Release tab. Every version stays in the release folder.
+   - **The lyric sheet,** from the lead sheet's lines.
+   - **The credits,** from the lead sheet and what the musician has said, with every unknown fact marked missing; the Release tab's short form asks the musician for those.
+   - **The clearance list,** in the lead sheet's notes: every sampled, isolated or generated element with its source, its rights and its status.
+4. **Verify** with the checks below, fixing what Ode can fix; what only the musician can resolve goes in the result line, worst first.
+5. **Let them see it.** The Release tab shows the covers to pick from and the files; nothing plays.
+6. **Report in one line:** what was made, then " · " and what was checked or still blocks release. For example:
+   - "Release files ready: 4 covers to pick from, lyric sheet, credits with 5 gaps · vocal chop has no known source: clear it or replace it before upload."
+   - "3 new covers, warmer, with the title in large type · briefs spell the title as in the metadata; the lettering needs a look."
+   - "Lyric sheet updated to the Lyrics tab: verse 2 rewritten, repeats written out · UK spelling, no explicit lines."
 
-Splits, contracts and sample clearance are agreements between people. Record what the musician tells you, point out what's missing or risky, and suggest professional advice for disputes or negotiations; don't give legal advice.
+**Again** on cover art makes three or four new images from different briefs; the earlier ones stay in the folder.
+
+**Outside the usual style.** When a cover departs from the artist's usual artwork (painted where their covers are photographs, bright where they are muted), the result line says so.
+
+## Checks
+
+| Check | Correct when |
+|---|---|
+| Cover briefs | Each brief comes from this song (its title, story, lyric images, mood); asks for a square 3000 × 3000 RGB image; has no text unless the musician asked, and any text spells the title and artist exactly as in the metadata; names nothing stores reject (logos, brands, other artists' names or likeness, URLs, "out now"); describes one clear subject that reads at thumbnail size |
+| Lyric sheet | Matches the lead sheet line for line, with section labels; every repeat written out in full as sung; spelling as set in Personalisation; the title identical to the lead sheet's |
+| Originality | No lyric line flagged as a likely quotation; clichés are a note, not a blocker |
+| Credits | Every name and role comes from the lead sheet or the musician; splits, when given, add up to 100%; nothing invented |
+| Clearance | Every element in the Set is on the clearance list with a known source. Anything taken from someone else's recording that isn't cleared, and anything whose source is unknown, is flagged |
+| Explicit | Any explicit line means the release is flagged explicit, and a clean version needs its own lyric sheet |
+
+When a recording of the final vocal exists, compare a transcription of it with the lead sheet; lines sung differently are named in the result line, because the lyric sheet must match the recording and only the musician knows which version is right.
+
+## Questions
+
+Never ask for facts in prose and never invent them: credits, splits, codes and dates come from the musician or their distributor, and the missing ones are marked in the Release tab's short form. The usual defaults (no text on the cover, the Personalisation spelling) need no question. Ask one line with buttons only when the answer changes what you make.
 
 ## Rights and clearance
 
 Ode is for songs the musician will publish commercially, so every element of the release has to be theirs to publish.
 
-- **Generated material** (cover art, generated sounds, a demo vocal kept in the final song): only use it when it comes from models or services whose terms allow commercial use and leave the musician the rights to the results.
-- **Samples isolated from recordings** are only cleared if the musician owns the source recording or has cleared it. A sound taken from someone else's record needs clearance, usually for both the recording and the composition, or it should be replaced before release.
-- **Library samples and loops** come with a licence; most sample packs allow use inside a song, but check the terms when unsure.
-- **Keep a clearance list** of every generated or sampled element: what it is, where it came from (source recording, library, or generated and from what description), and its clearance status. It feeds the credits and the final clearance check.
-- **If the distributor asks whether AI tools were used,** the musician answers according to its terms; the clearance list gives them an accurate picture of which parts were generated.
+- **Generated material** (cover art, generated sounds, a demo vocal kept in the final song) is usable only when it comes from models or services whose terms allow commercial use and leave the musician the rights to the results.
+- **Sounds isolated from recordings** are cleared only when the musician owns the source recording or has cleared it. A sound taken from someone else's record needs clearance, usually for both the recording and the composition, or replacing before release.
+- **Library samples and loops** come with a licence; most sample packs, and the sounds that come with Live, allow use inside a song.
+- **A sample with no known source** is treated as not cleared until the musician says where it came from.
+- **If the distributor asks whether AI tools were used,** the musician answers under its terms; the clearance list shows which parts were generated.
 
 Uncleared samples are a common reason releases are taken down after they go out, so flag them plainly and early.
 
-## Cover art briefs
+## Cover art
 
 The image model creates artwork from a brief, so the brief decides the result. A good brief comes from the song, not from a generic idea of the genre.
 
-**Principles**
-- **Start from the song:** its theme and story, the strongest images in the musician's lyrics, the title, the mood and the feel of the music (tempo, density, warmth).
-- **No text unless the musician asks.** If they want text, use the exact title and artist name as in the metadata; platforms reject artwork whose text doesn't match.
+- **Start from the song:** its theme and story, the strongest images in the lyrics, the title, the mood and the feel of the music (tempo, density, warmth). When the lyrics are abstract, the lead sheet's theme and story carry the cover.
+- **No text unless the musician asks.** When they do, use the exact title and artist name as in the metadata; platforms reject artwork whose text doesn't match.
 - **Format:** square, 3000 × 3000 pixels, RGB, JPG or PNG, the size most distributors ask for.
-- **Works small:** most listeners see the cover as a thumbnail. One clear subject and strong contrast read at that size; fine detail and small elements don't.
-- **Never imitate another artist's artwork.** When the musician says "like [artist]'s cover", turn it into general qualities (photographic or painted, colour or black and white, close-up or wide, minimal or busy, candid or staged) and build something new from those.
-- **Avoid what stores reject:** logos and brands, other artists' names or likeness, real people without permission, URLs, social handles, prices or "new single" text, blurry or pixelated images, and imagery the platforms don't allow.
-- **Offer three directions,** each a short paragraph, with one clearly labelled as outside the artist's usual style, judged from their past covers and stated preferences, never from their name, gender, age, nationality or genre clichés.
-- **Keep every version** the musician sees, so they can go back to an earlier one.
+- **Works small:** most listeners see the cover as a thumbnail. One clear subject and strong contrast read at that size; fine detail doesn't.
+- **Never imitate another artist's artwork.** "Like [artist]'s cover" becomes general qualities (photographic or painted, colour or black and white, close-up or wide, minimal or busy, candid or staged) and something new built from them.
+- **Avoid what stores reject:** logos and brands, other artists' names or likeness, real people without permission, URLs, social handles, prices or "new single" text, and imagery the platforms don't allow.
+- **Vary the three or four directions** in one clear way each (subject, medium, colour, framing), so picking one is easy.
 
-**Brief fields:** song (title, one-line essence, key lyric images, mood words), subject, setting, composition, colour palette, light, medium and style, texture, what to avoid, text (none unless asked), and format. A full template, a worked brief and a store-rules checklist are in `references/cover-art-briefs.md`.
+**Brief fields:** song (title, one-line essence, key lyric images, mood words), subject, setting, composition, colour palette, light, medium and style, texture, what to avoid, text (none unless asked) and format. A template, a worked example and the store rules are in `references/cover-art-briefs.md`.
 
 ## Lyric sheet
 
-- **Lyrics as sung on the final recording,** not the last draft; check them against the vocal (a transcription of the final vocal helps) and resolve differences with the musician.
-- **Section labels** (Verse 1, Pre-Chorus, Chorus, Bridge, Outro) on the printable lyric sheet. Lyric services often want plain lines without labels; follow the distributor's guidance.
-- **Write repeats out in full,** line by line as sung, rather than "Chorus x2"; lyric services generally require it.
-- **Consistent spelling** in UK or US English as set in Personalisation, consistent capitalisation (first word of each line), light and consistent punctuation.
+- **The words as sung on the final recording,** with section labels (Verse 1, Pre-Chorus, Chorus, Bridge, Outro) on the printable sheet; lyric services often want plain lines without labels, so follow the distributor's guidance.
+- **Repeats written out in full,** line by line as sung, never "Chorus x2".
+- **Consistent spelling** in UK or US English as set in Personalisation, a capital at the start of each line, light and consistent punctuation.
 - **Backing lines and ad-libs** in parentheses only when they are clearly part of the song.
-- **Explicit content:** if any line contains explicit language, the release must be flagged explicit; a clean version needs its own lyric sheet matching its edits.
-- The title on the lyric sheet matches the metadata exactly.
+- **The title** matches the metadata exactly.
 
 ## Credits and splits
 
-Gather this information; don't decide any of it.
+Gather this information; never decide any of it.
 
-- **Songwriters:** legal names (and artist names if different), what each wrote (lyrics, music, or both), and the agreed split of the composition, adding up to 100%. Suggest a split sheet signed by every writer before release.
-- **Publishing:** each writer's publisher (or "self-published"), collecting society or performing rights organisation, and IPI number if they have one.
-- **The recording:** who owns the master, the producers and any producer royalty agreement, featured artists, performers (vocals, instruments), and engineers (recording, mixing, mastering).
-- **Samples and generated elements:** the clearance list from above.
+- **Songwriters:** legal names (and artist names if different), what each wrote (lyrics, music or both), and the agreed split of the composition, adding up to 100%. A split sheet signed by every writer before release avoids disputes later.
+- **Publishing:** each writer's publisher (or self-published), collecting society, and IPI number if they have one.
+- **The recording:** who owns the master, the producers and any producer agreement, featured artists, performers, and the recording, mixing and mastering engineers.
+- **Samples and generated elements:** from the clearance list.
 
-Credits name people and companies with their roles. How to mention tools and AI assistance is the musician's decision within the distributor's terms. Field-by-field details and a split sheet template are in `references/credits-and-metadata.md`.
+Credits name people and companies with their roles; how to mention tools and AI assistance is the musician's decision within the distributor's terms. Splits, contracts and sample clearance are agreements between people: record what the musician says, point out what is missing or risky, and leave legal advice to professionals. Field-by-field details and a split sheet template are in `references/credits-and-metadata.md`.
 
 ## Metadata
 
@@ -76,47 +99,27 @@ Credits name people and companies with their roles. How to mention tools and AI 
 | Primary artist | Exactly as on the artist's existing releases, so the song lands on the right artist profile |
 | Featured artists | In the field the distributor uses for them, spelled as on their own profiles |
 | Songwriters, producers | From the credits |
-| Genre and subgenre | As the musician chooses; don't infer it from who they are |
+| Genre and subgenre | As the musician chooses; never inferred from who they are |
 | Language | Language of the lyrics, or instrumental |
-| Explicit flag | Explicit if any line needs it; the clean version flagged clean |
+| Explicit flag | Explicit if any line needs it; a clean version flagged clean |
 | ℗ line | Year and owner of the sound recording |
 | © line | Year and owner of the composition or artwork, as the distributor defines it |
-| ISRC | One per recording, from the distributor or the national ISRC agency; a new code for each different version (mix, edit, instrumental); the same recording keeps its code on later releases |
-| UPC or EAN | One per release (single, EP, album), usually provided by the distributor |
+| ISRC | One per recording, from the distributor or the national ISRC agency; a new code for each different version; the same recording keeps its code on later releases |
+| UPC or EAN | One per release (single, EP, album), usually from the distributor |
 | ISWC | Identifies the composition; assigned through a publisher or collecting society; optional at upload |
-| Release date, label | Label name or the artist's own label name if self-released |
-| Lyrics | From the approved lyric sheet |
+| Release date, label | The label's name, or the artist's own label name if self-released |
 
-## Checking files before upload
+## Files before upload
 
-**Audio**
-- The correct, approved master of each version; format, bit depth and sample rate as the distributor asks (commonly WAV, 16 or 24-bit, 44.1 kHz or higher).
-- Loudness and true peak measured on the exported file and as intended.
-- Clean start and end: no clicks, no cut-off tail, a sensible amount of silence.
-- Clean version: every explicit word muted or replaced, same length and timing as the main version where possible, its own ISRC.
-
-**Artwork**
-- 3000 × 3000 pixels, square, RGB, JPG or PNG, within the distributor's file-size limit.
-- No text unless intended; any text matches the metadata exactly; nothing from the store-rules checklist.
-- Still reads at thumbnail size.
-
-**Everything else**
-- Lyric sheet matches the final recording.
-- Title, artist names and spellings identical across artwork, lyric sheet, credits and metadata.
-- Credits complete; splits agreed by everyone involved.
-- Clearance list complete; no uncleared sample or generated element left in the song.
-- Uploaded well before the release date; many services' editorial pitching needs the release in their system weeks ahead.
-- Copies of everything saved in the project's release folder.
-
-## Worked examples
-
-**Cover art brief.** A song about keeping a long-distance relationship alive through late-night phone calls, slow and hazy, with tape hiss. The musician asks for something "like" a famous minimalist photographic cover. Translate that to qualities: candid photography, muted colour, a single subject, lots of empty space. Three directions: (1) a phone screen's glow lighting a dark bedroom ceiling, grainy, muted blues; (2) an empty night-bus window with city lights smeared by rain, soft focus; (3) **outside your usual style:** a hand-painted, flat-colour illustration of two distant windows lit at night, warm orange on deep navy. No text, 3000 × 3000. Ask which direction to develop and whether they want the title on it.
-
-**Credits gathering.** A song co-written with a friend who wrote the chorus melody, produced and mixed by the musician, with a vinyl crackle from a sample pack and a vocal chop from an old soul record. Ask for both writers' legal names, collecting societies and IPI numbers, and the split they agreed (suggest a split sheet); note the musician as producer and mixing engineer. Check the sample pack's licence for the crackle. Flag the soul vocal chop clearly: it needs clearance for both the recording and the composition before release, or it should be replaced, for example by re-recording the phrase or generating a replacement from a service whose terms allow commercial use. Record each source in the clearance list.
+What the distributor will check, and Ode checks first where it can:
+- **Audio:** the approved master of each version, in the format the distributor asks (commonly WAV, 16 or 24-bit, 44.1 kHz or higher), with loudness and true peak measured as intended, a clean start and end, and a clean version with every explicit word removed and its own ISRC.
+- **Artwork:** 3000 × 3000, square, RGB, JPG or PNG, within the distributor's file-size limit.
+- **Everything else:** title, artist names and spellings identical across artwork, lyric sheet, credits and metadata; credits complete and splits agreed; no uncleared element left in the song; copies of everything in the project's release folder.
+- Uploading well before the release date helps: editorial pitching on many services needs the release in their system weeks ahead.
 
 ## Reference files
 
 | File | Read when |
 |---|---|
-| `references/cover-art-briefs.md` | Writing a cover art brief, turning "like [artist]'s cover" into general qualities, or checking artwork against common store rules |
-| `references/credits-and-metadata.md` | Gathering credits and splits, explaining ISRC, UPC, ISWC or IPI, preparing a split sheet, or doing the full pre-upload clearance check |
+| `references/cover-art-briefs.md` | Writing cover briefs, turning "like [artist]'s cover" into general qualities, or checking a brief against common store rules |
+| `references/credits-and-metadata.md` | Gathering credits and splits, explaining ISRC, UPC, ISWC or IPI, the split sheet template, or the full clearance check |
