@@ -1,0 +1,46 @@
+# Publishes a GitHub release when a version tag is pushed. `npm version patch|minor|major` makes the tag: it runs
+# the typecheck and the tests, bumps the version, commits "Release x.y.z", tags vx.y.z and pushes both.
+#
+# Releases are built on a self-hosted runner on the Mac that holds the Ableton Extensions SDK: the Live extension
+# is built with it, and the SDK can't be uploaded to GitHub. The runner's .env sets ODE_SDK_DIR to the SDK folder.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Link the Extensions SDK beside the checkout, where package.json expects it
+        run: |
+          if [ ! -d "$ODE_SDK_DIR" ]; then
+            echo "::error::Set ODE_SDK_DIR in the runner's .env to the Ableton Extensions SDK folder"
+            exit 1
+          fi
+          ln -sfn "$ODE_SDK_DIR" "../$(basename "$ODE_SDK_DIR")"
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run release:package -- "$GITHUB_REF_NAME"
+      - run: npm run --silent release:notes > "$RUNNER_TEMP/notes.md"
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" release/*.zip --verify-tag --title "Ode ${GITHUB_REF_NAME#v}" --notes-file "$RUNNER_TEMP/notes.md"
