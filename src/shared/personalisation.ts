@@ -2,6 +2,16 @@ import { z } from "zod";
 
 export type Accent = "uk" | "us";
 
+/** How Ode applies changes, like Claude Code's permission modes. */
+export enum Mode {
+  /** Ode changes what it is sure about and asks when it can't tell what the musician wants. */
+  Auto = "auto",
+  /** Ode asks before every change to the Set. */
+  Manual = "manual",
+  /** Ode applies everything straight away and plays it. */
+  LetMeHearIt = "let-me-hear-it",
+}
+
 export interface VocalRange {
   /** MIDI note numbers. */
   low: number;
@@ -35,8 +45,7 @@ export interface ResolvedPersonalisation {
 
 export interface PreferencesFile {
   personalisation: Personalisation;
-  /** Tool names the musician allowed to run without asking. */
-  allowedChanges: string[];
+  mode: Mode;
 }
 
 export const STREAMING_TARGET: LoudnessTarget = { lufs: -14, truePeak: -1 };
@@ -54,7 +63,7 @@ export const DEFAULT_PERSONALISATION: Personalisation = {
 
 export const DEFAULT_PREFERENCES: PreferencesFile = {
   personalisation: DEFAULT_PERSONALISATION,
-  allowedChanges: [],
+  mode: Mode.Auto,
 };
 
 export function resolveDetectable<T>(value: Detectable<T> | undefined, fallback: T): T {
@@ -91,5 +100,5 @@ export type PersonalisationOverrides = z.infer<typeof PersonalisationOverridesSc
 
 export const PreferencesFileSchema = z.object({
   personalisation: PersonalisationSchema,
-  allowedChanges: z.array(z.string()),
+  mode: z.enum(Mode).default(Mode.Auto),
 });

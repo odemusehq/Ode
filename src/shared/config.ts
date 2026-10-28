@@ -38,6 +38,20 @@ export interface LiveTimeouts {
 export interface MemorySettings {
   halfLifeDays: number;
   summaryMaxChars: number;
+  /** Size limit of the compact project map sent with every request. */
+  mapMaxChars: number;
+}
+
+export interface VersionSettings {
+  /** A full snapshot is stored every this many versions, so restoring stays fast. */
+  snapshotEvery: number;
+  /** History groups consecutive versions by the same author made within this many minutes. */
+  groupMinutes: number;
+}
+
+export interface ReleaseSettings {
+  /** How many cover art images Ode makes for the musician to pick from. */
+  coverChoices: number;
 }
 
 export class ConfigError extends Error {}
@@ -91,6 +105,8 @@ export class OdeConfig {
     readonly limits: AgentLimits,
     readonly liveTimeouts: LiveTimeouts,
     readonly memory: MemorySettings,
+    readonly versions: VersionSettings,
+    readonly release: ReleaseSettings,
   ) {}
 
   get repoDir(): string {
@@ -130,7 +146,13 @@ export class OdeConfig {
       {
         halfLifeDays: reader.number("ODE_MEMORY_HALF_LIFE_DAYS"),
         summaryMaxChars: reader.number("ODE_SUMMARY_MAX_CHARS"),
+        mapMaxChars: reader.number("ODE_MAP_MAX_CHARS"),
       },
+      {
+        snapshotEvery: reader.number("ODE_VERSION_SNAPSHOT_EVERY"),
+        groupMinutes: reader.number("ODE_VERSION_GROUP_MINUTES"),
+      },
+      { coverChoices: reader.number("ODE_COVER_ART_CHOICES") },
     );
     reader.assertComplete();
     return config;

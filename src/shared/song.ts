@@ -83,16 +83,6 @@ export const LeadSheetSchema = z.object({
 });
 export type LeadSheet = z.infer<typeof LeadSheetSchema>;
 
-export const HISTORY_KINDS = ["suggested", "kept", "changed", "rejected"] as const;
-
-export const HistoryEntrySchema = z.object({
-  time: z.string(),
-  kind: z.enum(HISTORY_KINDS),
-  what: z.string(),
-  detail: z.unknown().optional(),
-  reason: z.string().optional(),
-});
-export type HistoryEntry = z.infer<typeof HistoryEntrySchema>;
 
 export function emptyLeadSheet(): LeadSheet {
   return LeadSheetSchema.parse({});

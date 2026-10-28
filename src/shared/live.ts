@@ -125,6 +125,7 @@ export const EXTENSION_OPS = [
   "render_track_audio",
   "import_into_project",
   "apply_as_one_undo_step",
+  "set_snapshot",
 ] as const;
 export type ExtensionOp = (typeof EXTENSION_OPS)[number];
 
@@ -148,8 +149,17 @@ export const DEVICE_OPS = [
   "selection_get",
   "track_meters_get",
   "master_measure",
+  "transport_get",
 ] as const;
 export type DeviceOp = (typeof DEVICE_OPS)[number];
+
+/** Events the Ode device sends without being asked. */
+export type DeviceEventName = "set" | "meters" | "selection" | "command";
+
+/** The device's Again and Undo controls (mappable to a key or a MIDI controller in Live). */
+export interface DeviceCommand {
+  name: "undo" | "again";
+}
 
 export const BRIDGE_OPS = ["browser_search", "browser_load", "plugin_list"] as const;
 export type BridgeOp = (typeof BRIDGE_OPS)[number];
@@ -183,6 +193,8 @@ export interface LiveStatus {
 }
 
 export interface LiveLink {
+  /** What the musician does to connect it, in plain words. */
+  readonly fix: string;
   connected(): boolean;
   call<R = unknown>(op: string, args: unknown, timeoutMs?: number): Promise<R>;
 }

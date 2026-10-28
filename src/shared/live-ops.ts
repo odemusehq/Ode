@@ -14,6 +14,7 @@ import type {
   TakeLaneRef,
   TrackRef,
 } from "./live";
+import type { SetContents } from "./set-snapshot";
 
 export type TrackKind = "midi" | "audio" | "group" | "return" | "main";
 
@@ -29,6 +30,7 @@ export interface TrackSummary {
   name: string;
   kind: TrackKind;
   tag?: string;
+  color: number;
   mute: boolean;
   solo: boolean;
   arm: boolean;
@@ -79,6 +81,8 @@ export interface ClipInfo {
   looping: boolean;
   loopStart: number;
   loopEnd: number;
+  /** MIDI clips in a snapshot: every note. */
+  notes?: Note[];
 }
 
 export interface ClipSlotInfo {
@@ -165,6 +169,14 @@ export interface SelectionInfo {
   isPlaying: boolean;
 }
 
+export interface TransportState {
+  playing: boolean;
+  /** Playhead in beats. */
+  time: number;
+  loop: { on: boolean; start: number; length: number };
+  signature: { numerator: number; denominator: number };
+}
+
 /** Output meters as Live draws them: 0 to 1 per channel, not decibels. */
 export interface MeterReading {
   tracks: { index: number; name: string; left: number; right: number }[];
@@ -245,6 +257,7 @@ export interface ExtensionOpArgs {
   render_track_audio: { track: TrackRef; start: number; end: number };
   import_into_project: { filePath: string };
   apply_as_one_undo_step: { calls: { op: ExtensionOp; args: unknown }[] };
+  set_snapshot: Record<string, never>;
 }
 
 export interface ExtensionOpResults {
@@ -301,6 +314,7 @@ export interface ExtensionOpResults {
   render_track_audio: { path: string };
   import_into_project: { path: string };
   apply_as_one_undo_step: { results: unknown[] };
+  set_snapshot: SetContents;
 }
 
 export interface DeviceOpArgs {
@@ -324,6 +338,7 @@ export interface DeviceOpArgs {
   track_meters_get: Record<string, never>;
   /** Records the Master output for `seconds` (playing from `from` beats if play is true) to a WAV. */
   master_measure: { seconds: number; play?: boolean; from?: number };
+  transport_get: Record<string, never>;
 }
 
 export interface DeviceOpResults {
@@ -346,6 +361,7 @@ export interface DeviceOpResults {
   selection_get: SelectionInfo;
   track_meters_get: MeterReading;
   master_measure: { path: string; seconds: number };
+  transport_get: TransportState;
 }
 
 export interface BridgeOpArgs {
