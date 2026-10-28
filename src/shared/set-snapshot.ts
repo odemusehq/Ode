@@ -35,3 +35,13 @@ export interface SetSnapshot extends SetContents {
   selection: SelectionInfo;
   sheet?: LeadSheet;
 }
+
+/** The Ode device's name in Live, as the Max for Live preset installs it. */
+export const ODE_DEVICE_NAME = "Ode";
+/** Live's class name for a Max for Live audio effect. */
+export const MAX_AUDIO_EFFECT_CLASS = "MxDeviceAudioEffect";
+
+/** True for the Ode device itself, which a restore must never remove, move or replace. */
+export function isOdeDevice(device: Pick<DeviceSnapshot, "name" | "className">): boolean {
+  return device.className === MAX_AUDIO_EFFECT_CLASS && device.name === ODE_DEVICE_NAME;
+}

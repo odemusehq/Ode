@@ -150,11 +150,12 @@ export const DEVICE_OPS = [
   "track_meters_get",
   "master_measure",
   "transport_get",
+  "clip_slot_fire",
 ] as const;
 export type DeviceOp = (typeof DEVICE_OPS)[number];
 
 /** Events the Ode device sends without being asked. */
-export type DeviceEventName = "set" | "meters" | "selection" | "command";
+export type DeviceEventName = "set" | "selection" | "command";
 
 /** The device's Again and Undo controls (mappable to a key or a MIDI controller in Live). */
 export interface DeviceCommand {

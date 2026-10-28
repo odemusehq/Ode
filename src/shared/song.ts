@@ -25,13 +25,6 @@ export const ChordEventSchema = z.object({
 });
 export type ChordEvent = z.infer<typeof ChordEventSchema>;
 
-export const LyricLineSchema = z.object({
-  id: z.string(),
-  text: z.string(),
-  locked: z.boolean().optional(),
-});
-export type LyricLine = z.infer<typeof LyricLineSchema>;
-
 export const SectionSchema = z.object({
   id: z.string(),
   kind: z.enum(SECTION_KINDS),
@@ -39,7 +32,6 @@ export const SectionSchema = z.object({
   /** Arrangement position in beats. */
   startBeat: z.number(),
   lengthBeats: z.number(),
-  lines: z.array(LyricLineSchema).default([]),
   chords: z.array(ChordEventSchema).default([]),
 });
 export type Section = z.infer<typeof SectionSchema>;
@@ -71,9 +63,14 @@ export const LeadSheetSchema = z.object({
   title: z.string().default(""),
   intent: IntentSchema.default({}),
   settings: PersonalisationOverridesSchema.default({}),
-  tempo: z.number().optional(),
-  key: z.object({ root: z.number(), scale: z.string() }).optional(),
-  timeSignature: z.object({ numerator: z.number(), denominator: z.number() }).optional(),
+  /**
+   * The song's lyrics as one text that the musician and Ode both edit: one sung line per line, blank lines
+   * between stanzas; a line in square brackets, such as "[Chorus]", is a label and isn't sung.
+   */
+  lyrics: z.string().default(""),
+  /** Goes up by one with every save of the lyrics, so edits made at the same time can be merged. */
+  lyricsRevision: z.number().int().min(0).default(0),
+  /** The song's form and chords; tempo, key and time signature are read from Live. */
   sections: z.array(SectionSchema).default([]),
   links: z.array(ClipLinkSchema).default([]),
   /** Things the musician asked Ode never to change (free text or tags). */
@@ -82,7 +79,6 @@ export const LeadSheetSchema = z.object({
   notes: z.array(z.string()).default([]),
 });
 export type LeadSheet = z.infer<typeof LeadSheetSchema>;
-
 
 export function emptyLeadSheet(): LeadSheet {
   return LeadSheetSchema.parse({});

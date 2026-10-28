@@ -186,8 +186,13 @@ export interface MeterReading {
 export interface SetInfo {
   /** Path of the .als file, or null for an unsaved Set. */
   filePath: string | null;
-  /** Stable id stored in the Ode device for this Set. */
+  /** The file path once saved; before that, an id made when the Set was loaded. */
   setId: string;
+  /**
+   * Made each time the Ode device loads, so it changes when a Set is opened. The same instance with a new file
+   * path means the Set open in Live was saved under a new name or folder (Save As), not that another Set opened.
+   */
+  instance: string;
 }
 
 export interface BrowserItem {
@@ -339,6 +344,8 @@ export interface DeviceOpArgs {
   /** Records the Master output for `seconds` (playing from `from` beats if play is true) to a WAV. */
   master_measure: { seconds: number; play?: boolean; from?: number };
   transport_get: Record<string, never>;
+  /** Launches a Session clip, as clicking its play button does. */
+  clip_slot_fire: { track: TrackRef; slot: number };
 }
 
 export interface DeviceOpResults {
@@ -362,6 +369,7 @@ export interface DeviceOpResults {
   track_meters_get: MeterReading;
   master_measure: { path: string; seconds: number };
   transport_get: TransportState;
+  clip_slot_fire: { fired: true };
 }
 
 export interface BridgeOpArgs {

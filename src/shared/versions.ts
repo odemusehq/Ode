@@ -33,11 +33,11 @@ export type SongField = "tempo" | "key" | "signature" | "locators" | "scenes";
 export type TrackField = "present" | "name" | "mute" | "solo" | "arm" | "color";
 export type ClipField = "present" | "notes" | "name" | "muted" | "color" | "loop" | "audio";
 export type DeviceField = "present" | "parameter";
-/** The lead sheet: one section (its lines, chords, name or place), or everything else in it. */
-export type SheetField = "section" | "details";
+/** The lead sheet: the lyrics text, one section (its chords, name or place), or everything else in it. */
+export type SheetField = "lyrics" | "section" | "details";
 
-/** The lead sheet without its sections and the musician's settings: title, intent, links, locks, credits, notes. */
-export type SheetDetails = Omit<LeadSheet, "sections" | "version" | "settings">;
+/** The lead sheet without its lyrics, sections and the musician's settings: title, intent, links, locks, credits, notes. */
+export type SheetDetails = Omit<LeadSheet, "lyrics" | "lyricsRevision" | "sections" | "version" | "settings">;
 
 /**
  * What a change applies to. Devices are addressed like DeviceRef: chain pairs from the track inwards,
@@ -48,7 +48,7 @@ export type ChangeTarget =
   | { scope: "track"; track: TrackKey; field: TrackField }
   | { scope: "clip"; track: TrackKey; clip: ClipKey; field: ClipField }
   | { scope: "device"; track: TrackKey; chain: number[]; index: number; field: DeviceField; parameter?: number }
-  /** A section by its id (before and after are Sections), or the SheetDetails. */
+  /** The lyrics (before and after are the texts), a section by its id (Sections), or the SheetDetails. */
   | { scope: "sheet"; field: SheetField; section?: string };
 
 /** One difference between two snapshots, with both sides so it can be shown and undone. */
@@ -84,6 +84,8 @@ export interface VersionDetail {
   version: Version;
   tracks: { track: string; changes: SetChange[] }[];
   song: SetChange[];
+  /** Quarter-note beats per bar in the Set at this version, for drawing its notes. */
+  beatsPerBar: number;
 }
 
 export interface RestoreResult {

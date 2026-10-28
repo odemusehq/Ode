@@ -1,68 +1,40 @@
 // HTTP API between the UI and the local server. All paths are relative to the server origin.
-import type { Role } from "./config";
-import type { LeadSheet } from "./song";
 import type { LiveStatus } from "./live";
-import type { ArtistFact } from "./memory";
-import type { LyricsAnalysis, MelodySetting } from "./lyrics";
-import type { Mode, Personalisation, PreferencesFile, ResolvedPersonalisation } from "./personalisation";
+import type { LyricsSaved, LyricsState, LyricsWrite } from "./lyrics";
+import type { Mode } from "./personalisation";
 import type { Suggestion } from "./events";
 import type { RestoreResult, VersionDetail, VersionListItem } from "./versions";
 
 export const API = {
-  chat: "/api/chat", // POST ChatRequest → { ok: true } (a typed line or a tapped suggestion)
+  chat: "/api/chat", // POST ChatRequest → { ok: true } (a typed line, spoken words or a tapped suggestion)
   stop: "/api/stop", // POST → { ok: true }
   events: "/api/events", // GET server-sent events of UiEvent
-  approval: (id: string) => `/api/approvals/${encodeURIComponent(id)}`, // POST ApprovalRequest → { ok: true }
-  song: "/api/song", // GET → LeadSheet; PUT LeadSheet → LeadSheet
-  preferences: "/api/preferences", // GET → PreferencesResponse; PUT PreferencesUpdate → PreferencesResponse
-  memory: "/api/memory", // GET → ArtistFact[]; POST MemoryAdd → ArtistFact
-  memoryItem: (id: string) => `/api/memory/${encodeURIComponent(id)}`, // DELETE → { ok: true }
-  lyricsAnalyze: "/api/lyrics/analyze", // POST LyricsAnalyzeRequest → LyricsAnalysis
-  lyricsMelody: "/api/lyrics/melody", // POST MelodyRequest → MelodySetting (the section's lines under the selected clip's notes)
   status: "/api/status", // GET → StatusResponse
-  release: "/api/release", // GET → ReleaseResponse
-  releaseFile: (name: string) => `/api/release/file/${encodeURIComponent(name)}`, // GET file
-  releaseCover: "/api/release/cover", // POST CoverChoice → ReleaseResponse (the picked image becomes cover.png)
-  livePointer: "/api/live/pointer", // POST LivePointer (from the extension)
-  liveRead: "/api/live/read", // POST LiveReadRequest → result of a read-only Live operation (UI)
-  livePending: "/api/live/pending", // GET → LiveRequest[] (extension fallback when its connection was closed)
-  liveResults: "/api/live/results", // POST LiveResponse[] (extension fallback)
+  approval: (id: string) => `/api/approvals/${encodeURIComponent(id)}`, // POST ApprovalRequest → { ok: true }
+  question: (id: string) => `/api/questions/${encodeURIComponent(id)}`, // POST QuestionAnswer → { ok: true }
+  lyrics: "/api/lyrics", // GET → LyricsState; PUT LyricsWrite → LyricsSaved (merged when Ode saved in between)
+  releaseFile: (name: string) => `/api/release/file/${encodeURIComponent(name)}`, // GET a release file (cover art shown in a question)
   versions: "/api/versions", // GET → VersionListItem[] (newest first)
+  versionsCheck: "/api/versions/check", // POST → VersionListItem | null (saves the musician's hand edits now, when Ode is idle)
   version: (id: string) => `/api/versions/${encodeURIComponent(id)}`, // GET → VersionDetail
   versionRestore: (id: string) => `/api/versions/${encodeURIComponent(id)}/restore`, // POST RestoreRequest → RestoreResult
   versionName: (id: string) => `/api/versions/${encodeURIComponent(id)}/name`, // POST VersionNameRequest → VersionListItem
-  versionCopy: (id: string) => `/api/versions/${encodeURIComponent(id)}/copy`, // POST → CopyResult
-  undo: "/api/undo", // POST → RestoreResult (back to the version before Ode's last change, no confirmation)
-  again: "/api/again", // POST → { ok: true } (another take of Ode's last change, in place)
-  question: (id: string) => `/api/questions/${encodeURIComponent(id)}`, // POST QuestionAnswer → { ok: true }
-  suggestions: "/api/suggestions", // GET → Suggestion[] for the current selection
+  versionCopy: (id: string) => `/api/versions/${encodeURIComponent(id)}/copy`, // POST → CopyResult (a copy of the project at that version)
+  copyNow: "/api/copy", // POST → CopyResult (saves the hand edits, then copies the project as it is now)
+  undo: "/api/undo", // POST VersionRequest → RestoreResult (back to the version before that change by Ode)
+  again: "/api/again", // POST VersionRequest → { ok: true } (another take of that change by Ode, in place)
+  why: "/api/why", // POST VersionRequest → { ok: true } (the answer arrives as an "answer" event)
   mode: "/api/mode", // PUT ModeRequest → { mode: Mode }
   speech: "/api/speech", // POST a mono WAV of the musician speaking → { text } (also sent to Ode as a request)
+  livePointer: "/api/live/pointer", // POST LivePointer (from the extension)
+  livePending: "/api/live/pending", // GET → LiveRequest[] (extension fallback when its connection was closed)
+  liveResults: "/api/live/results", // POST LiveResponse[] (extension fallback)
 } as const;
 
-/** Read-only Live operations the UI may call directly. */
-export const UI_READ_OPS = [
-  "song_get",
-  "track_get",
-  "take_lane_get",
-  "clip_slot_get",
-  "clip_get",
-  "midi_clip_get_notes",
-  "audio_clip_get",
-  "device_get",
-  "parameter_get",
-  "mixer_get",
-  "rack_get_chains",
-  "simpler_get_sample",
-  "scene_get",
-  "selection_get",
-  "track_meters_get",
-] as const;
-
-export interface LiveReadRequest {
-  op: (typeof UI_READ_OPS)[number];
-  args: unknown;
-}
+/** The cover art the release uses, in the release folder. */
+export const COVER_FILE = "cover.png";
+/** The cover art choices Ode makes: cover-1.png, cover-2.png… */
+export const COVER_CHOICE = /^cover-(\d+)\.png$/;
 
 export interface ChatRequest {
   text: string;
@@ -72,51 +44,25 @@ export interface ApprovalRequest {
   decision: "allow" | "deny";
 }
 
-export interface PreferencesResponse extends PreferencesFile {
-  resolved: ResolvedPersonalisation;
-}
-
-export interface PreferencesUpdate {
-  personalisation?: Partial<Personalisation>;
-  mode?: Mode;
-}
-
-export interface MemoryAdd {
-  topic: string;
-  value: string;
-}
-
-export interface LyricsAnalyzeRequest {
-  lines: string[];
-}
-
-export interface MelodyRequest {
-  /** The section's id in the lead sheet. */
-  section: string;
+export interface QuestionAnswer {
+  choice: string;
 }
 
 export interface StatusResponse {
   live: LiveStatus;
-  roles: Record<Role, boolean>;
-  projectDir: string | null;
   busy: boolean;
+  /** False while Ode does work Stop can't interrupt (Undo, a restore). */
+  stoppable: boolean;
   mode: Mode;
+  /** The song's title, or the Set's file name when it has none. */
+  title: string;
   /** History groups consecutive versions by the same author within this many minutes. */
   versionGroupMinutes: number;
 }
 
-export interface ReleaseResponse {
-  files: { name: string; size: number }[];
-}
-
-/** The cover art the release uses, in the release folder. */
-export const COVER_FILE = "cover.png";
-/** The cover art choices Ode makes: cover-1.png, cover-2.png… */
-export const COVER_CHOICE = /^cover-(\d+)\.png$/;
-
-/** One of the cover art images Ode made (cover-1.png, cover-2.png…). */
-export interface CoverChoice {
-  file: string;
+/** Undo, Again and Why? name the change by Ode they are about; a change that is no longer the newest is refused. */
+export interface VersionRequest {
+  versionId: string;
 }
 
 /** Restoring deletes the later versions, so the musician must have confirmed it. */
@@ -133,12 +79,8 @@ export interface CopyResult {
   path: string;
 }
 
-export interface QuestionAnswer {
-  choice: string;
-}
-
 export interface ModeRequest {
   mode: Mode;
 }
 
-export type { LeadSheet, ArtistFact, LyricsAnalysis, MelodySetting, Suggestion, RestoreResult, VersionDetail, VersionListItem };
+export type { LyricsSaved, LyricsState, LyricsWrite, Suggestion, RestoreResult, VersionDetail, VersionListItem };
