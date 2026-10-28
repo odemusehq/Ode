@@ -1,0 +1,17 @@
+schema_version: "1.1"
+name: lift-chorus-melody-in-place
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  In Auto mode (the default), with the Lead Vocal clip "Chorus vox" selected and "Chorus doesn't lift"
+  typed, Ode reads the verse and chorus melodies, the chords in the Keys clips and the lead sheet: the
+  chorus lyric (8, 7, 8 and 7 syllables, one note each) and the singer's range, A3 to E5. The chorus
+  melody sits around C4 to G4, no higher than the verse (C4 to A4). Ode rewrites the notes of "Chorus
+  vox" in place, raising its tessitura a third to a fifth above the verse with the peak on a stressed
+  word, while keeping its rhythm and one note per syllable (or a melisma it chose), chord tones on beats
+  1 and 3, and every note inside A3 to E5. The verse melody, the lyric lines and every other clip stay
+  as they were, and nothing is copied into a new clip, track or take. Ode checks key, range, chord tones
+  on strong beats and leaps, plus syllable fit, prosody and singability for each chorus line, plays the
+  chorus after its turn and replies in one line, for example: "Chorus topline up a fourth on the same
+  rhythm, peaking on 'map' · in key, inside your range, every stress on a strong beat." No question is
+  asked.

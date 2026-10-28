@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: chorus-harmony-on-bv-track
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  In Auto mode (the default), with the Lead Vocal clip "Chorus vox" selected and "Add a harmony" tapped,
+  Ode reads the chorus lead melody (F#3 to D4), its lyric, the chords in the Keys clip (G, D, A, Bm, G,
+  D, A, A), the singer's range in the lead sheet (A2 to E4) and the tracks, including the empty "BVs"
+  MIDI track the musician set up. A third above would put the harmony on F#4 under "once", above the
+  range, so Ode writes the line below the lead: mostly a third below, moved to chord tones where the
+  parallel note would clash (for example on beat 3 of the chorus's third bar and beat 1 of its fourth),
+  as one new clip on the BVs track covering the chorus (song beats 32 to 64), singing the lead's words
+  and rhythm without crossing it. The Lead Vocal clip, the recorded Lead Vox audio and the lyric lines
+  stay as they were; no track is created or duplicated and nothing else changes. Ode checks range, chord
+  tones on strong beats and held notes, intervals against the lead, crossing and singability, plays the
+  chorus after its turn and replies in one line, for example: "Harmony a third below the lead on the
+  chorus, on the BVs track · inside your range, chord tones on strong beats, never crosses the lead."
+  No question is asked.

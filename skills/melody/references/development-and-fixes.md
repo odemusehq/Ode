@@ -47,7 +47,7 @@ The listener hears the same idea six times in different forms and never feels it
 | Boring | exact repetition with no change; every phrase ends the same way | change one ending; use a sequence; vary one phrase's rhythm or length |
 | Hard to sing | unrecovered leaps; awkward intervals; high for too long; no breaths | replace leaps with steps or chord-tone thirds; lower the tessitura; add rests; open vowels on high notes |
 | Wordy or rushed | too many syllables per bar at this tempo | cut syllables, or spread the line over more bars with longer notes on key words |
-| Sounds wrong against the chords | unresolved non-chord tones on strong beats; a note a half step above a chord tone | move the strong-beat note to a chord tone, resolve by step, or suggest a different chord (harmony skill) |
+| Sounds wrong against the chords | unresolved non-chord tones on strong beats; a note a half step above a chord tone | move the strong-beat note to a chord tone, resolve by step, or change the chord (harmony skill) |
 | Wanders | no clear high point, no clear cadences | choose one peak per section; pair phrases as question and answer |
 | Static | repeated notes without rhythmic interest | add syncopation, or one leap to a key word |
 | Busy against the groove | the melody copies the hi-hat subdivision | fewer, longer notes; leave space around the snare |
@@ -61,7 +61,7 @@ Repeated sections should stay recognisable and still feel like progress:
 - keep the hook's rhythm and first notes untouched;
 - vary in small ways: a pickup, a passing note, a held note instead of two short ones, the last phrase lifted to a higher ending;
 - in the final chorus, add a higher alternative line or ad-libs above the hook rather than rewriting the hook (the vocals skill covers this);
-- say exactly which bars differ so the musician can compare.
+- edit the repeated section's own clip in place, and name the bars that differ in the result line.
 
 ## 5. Countermelodies and riffs
 

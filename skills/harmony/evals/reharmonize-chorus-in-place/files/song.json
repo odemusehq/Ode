@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "title": "Open All the Windows",
+  "intent": {"theme": "letting a shut-in life back out", "mood": "hopeful, a little reckless", "hook": "Open all the windows"},
+  "settings": {"genre": {"mode": "set", "value": "pop"}, "vocalRange": {"mode": "set", "value": {"low": 55, "high": 74}}},
+  "tempo": 84,
+  "key": {"root": 3, "scale": "Major"},
+  "timeSignature": {"numerator": 4, "denominator": 4},
+  "sections": [
+    {
+      "id": "chorus-1",
+      "kind": "chorus",
+      "name": "Chorus 1",
+      "startBeat": 0,
+      "lengthBeats": 32,
+      "lines": [
+        {"id": "chorus-1-1", "text": "Open all the windows"},
+        {"id": "chorus-1-2", "text": "let the morning in"},
+        {"id": "chorus-1-3", "text": "open all the windows"},
+        {"id": "chorus-1-4", "text": "let the noise begin"}
+      ],
+      "chords": [
+        {"beat": 0, "lengthBeats": 4, "symbol": "Eb"},
+        {"beat": 4, "lengthBeats": 4, "symbol": "Bb"},
+        {"beat": 8, "lengthBeats": 4, "symbol": "Cm"},
+        {"beat": 12, "lengthBeats": 4, "symbol": "Ab"},
+        {"beat": 16, "lengthBeats": 4, "symbol": "Eb"},
+        {"beat": 20, "lengthBeats": 4, "symbol": "Bb"},
+        {"beat": 24, "lengthBeats": 4, "symbol": "Cm"},
+        {"beat": 28, "lengthBeats": 4, "symbol": "Ab"}
+      ]
+    }
+  ],
+  "links": [],
+  "locked": [],
+  "credits": [],
+  "notes": []
+}

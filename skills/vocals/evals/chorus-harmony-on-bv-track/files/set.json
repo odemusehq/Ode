@@ -1,0 +1,731 @@
+{
+  "song": {
+    "tempo": 104,
+    "gridQuantization": 8,
+    "gridIsTriplet": false,
+    "rootNote": 2,
+    "scaleName": "Major",
+    "scaleMode": true,
+    "scaleIntervals": [0, 2, 4, 5, 7, 9, 11],
+    "scenes": [{"index": 0, "name": "", "tempo": 104, "signatureNumerator": 4, "signatureDenominator": 4}],
+    "locators": [{"index": 0, "name": "Verse 1", "time": 0}, {"index": 1, "name": "Chorus 1", "time": 32}]
+  },
+  "tracks": [
+    {
+      "index": 0,
+      "name": "Drums",
+      "kind": "midi",
+      "color": -1,
+      "mute": false,
+      "solo": false,
+      "arm": false,
+      "devices": [
+        {
+          "index": 0,
+          "name": "Drum Rack",
+          "className": "DrumRackDevice",
+          "isRack": true,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "Macro 1", "min": 0, "max": 127, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 2, "name": "Macro 2", "min": 0, "max": 127, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 3, "name": "Macro 3", "min": 0, "max": 127, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 4, "name": "Macro 4", "min": 0, "max": 127, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 5, "name": "Macro 5", "min": 0, "max": 127, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 6, "name": "Macro 6", "min": 0, "max": 127, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 7, "name": "Macro 7", "min": 0, "max": 127, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+            {"index": 8, "name": "Macro 8", "min": 0, "max": 127, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0}
+          ],
+          "chains": [
+            {
+              "index": 0,
+              "devices": [
+                {
+                  "index": 0,
+                  "name": "Simpler",
+                  "className": "Simpler",
+                  "isRack": false,
+                  "parameters": [
+                    {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+                    {"index": 1, "name": "Transpose", "min": -48, "max": 48, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+                    {"index": 2, "name": "Detune", "min": -50, "max": 50, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+                    {"index": 3, "name": "Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71}
+                  ],
+                  "sample": "/Users/musician/Music/Ableton/User Library/Samples/Drums/Kick Punch.wav"
+                }
+              ],
+              "receivingNote": 36
+            },
+            {
+              "index": 1,
+              "devices": [
+                {
+                  "index": 0,
+                  "name": "Simpler",
+                  "className": "Simpler",
+                  "isRack": false,
+                  "parameters": [
+                    {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+                    {"index": 1, "name": "Transpose", "min": -48, "max": 48, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+                    {"index": 2, "name": "Detune", "min": -50, "max": 50, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+                    {"index": 3, "name": "Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71}
+                  ],
+                  "sample": "/Users/musician/Music/Ableton/User Library/Samples/Drums/Snare Tight.wav"
+                }
+              ],
+              "receivingNote": 38
+            },
+            {
+              "index": 2,
+              "devices": [
+                {
+                  "index": 0,
+                  "name": "Simpler",
+                  "className": "Simpler",
+                  "isRack": false,
+                  "parameters": [
+                    {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+                    {"index": 1, "name": "Transpose", "min": -48, "max": 48, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+                    {"index": 2, "name": "Detune", "min": -50, "max": 50, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+                    {"index": 3, "name": "Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71}
+                  ],
+                  "sample": "/Users/musician/Music/Ableton/User Library/Samples/Drums/Hat Closed 02.wav"
+                }
+              ],
+              "receivingNote": 42
+            },
+            {
+              "index": 3,
+              "devices": [
+                {
+                  "index": 0,
+                  "name": "Simpler",
+                  "className": "Simpler",
+                  "isRack": false,
+                  "parameters": [
+                    {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+                    {"index": 1, "name": "Transpose", "min": -48, "max": 48, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+                    {"index": 2, "name": "Detune", "min": -50, "max": 50, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
+                    {"index": 3, "name": "Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.71, "valueItems": [], "value": 0.71}
+                  ],
+                  "sample": "/Users/musician/Music/Ableton/User Library/Samples/Drums/Hat Open 01.wav"
+                }
+              ],
+              "receivingNote": 46
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "name": "Glue Compressor",
+          "className": "Device",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "Threshold", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.62, "valueItems": [], "value": 0.62},
+            {"index": 2, "name": "Ratio", "min": 0, "max": 2, "isQuantized": true, "defaultValue": 1, "valueItems": ["2", "4", "10"], "value": 1},
+            {"index": 3, "name": "Makeup", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.3, "valueItems": [], "value": 0.3}
+          ]
+        }
+      ],
+      "mutedViaSolo": false,
+      "groupTrack": null,
+      "clipSlots": [{"slot": 0, "clip": null}],
+      "arrangementClips": [
+        {
+          "ref": {"track": {"index": 0}, "start": 0},
+          "kind": "midi",
+          "name": "Verse",
+          "color": 16149507,
+          "muted": false,
+          "startTime": 0,
+          "endTime": 32,
+          "duration": 32,
+          "startMarker": 0,
+          "endMarker": 4,
+          "looping": true,
+          "loopStart": 0,
+          "loopEnd": 4,
+          "notes": [
+            {"pitch": 36, "start": 0.0, "duration": 0.25, "velocity": 108},
+            {"pitch": 42, "start": 0.0, "duration": 0.25, "velocity": 108},
+            {"pitch": 42, "start": 0.5, "duration": 0.25, "velocity": 91},
+            {"pitch": 38, "start": 1.0, "duration": 0.25, "velocity": 115},
+            {"pitch": 42, "start": 1.0, "duration": 0.25, "velocity": 109},
+            {"pitch": 42, "start": 1.5, "duration": 0.25, "velocity": 92},
+            {"pitch": 36, "start": 2.0, "duration": 0.25, "velocity": 110},
+            {"pitch": 42, "start": 2.0, "duration": 0.25, "velocity": 110},
+            {"pitch": 36, "start": 2.5, "duration": 0.25, "velocity": 93},
+            {"pitch": 42, "start": 2.5, "duration": 0.25, "velocity": 93},
+            {"pitch": 38, "start": 3.0, "duration": 0.25, "velocity": 108},
+            {"pitch": 42, "start": 3.0, "duration": 0.25, "velocity": 111},
+            {"pitch": 42, "start": 3.5, "duration": 0.25, "velocity": 94}
+          ]
+        },
+        {
+          "ref": {"track": {"index": 0}, "start": 32},
+          "kind": "midi",
+          "name": "Chorus",
+          "color": 16149507,
+          "muted": false,
+          "startTime": 32,
+          "endTime": 64,
+          "duration": 32,
+          "startMarker": 0,
+          "endMarker": 4,
+          "looping": true,
+          "loopStart": 0,
+          "loopEnd": 4,
+          "notes": [
+            {"pitch": 36, "start": 0.0, "duration": 0.25, "velocity": 108},
+            {"pitch": 42, "start": 0.0, "duration": 0.25, "velocity": 108},
+            {"pitch": 42, "start": 0.5, "duration": 0.25, "velocity": 91},
+            {"pitch": 38, "start": 1.0, "duration": 0.25, "velocity": 115},
+            {"pitch": 42, "start": 1.0, "duration": 0.25, "velocity": 109},
+            {"pitch": 36, "start": 1.5, "duration": 0.25, "velocity": 92},
+            {"pitch": 42, "start": 1.5, "duration": 0.25, "velocity": 92},
+            {"pitch": 36, "start": 2.0, "duration": 0.25, "velocity": 110},
+            {"pitch": 42, "start": 2.0, "duration": 0.25, "velocity": 110},
+            {"pitch": 36, "start": 2.5, "duration": 0.25, "velocity": 93},
+            {"pitch": 42, "start": 2.5, "duration": 0.25, "velocity": 93},
+            {"pitch": 38, "start": 3.0, "duration": 0.25, "velocity": 108},
+            {"pitch": 42, "start": 3.0, "duration": 0.25, "velocity": 111},
+            {"pitch": 46, "start": 3.5, "duration": 0.25, "velocity": 86}
+          ]
+        }
+      ],
+      "takeLanes": [],
+      "mixer": {
+        "volume": {"index": 0, "name": "Track Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.85, "valueItems": [], "value": 0.85},
+        "panning": {"index": 1, "name": "Track Panning", "min": -1, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0.0},
+        "sends": []
+      }
+    },
+    {
+      "index": 1,
+      "name": "Bass",
+      "kind": "midi",
+      "color": -1,
+      "mute": false,
+      "solo": false,
+      "arm": false,
+      "devices": [
+        {
+          "index": 0,
+          "name": "Operator",
+          "className": "Device",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "Filter Freq", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.42, "valueItems": [], "value": 0.42},
+            {"index": 2, "name": "Filter Res", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.18, "valueItems": [], "value": 0.18},
+            {"index": 3, "name": "Glide Time", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.0, "valueItems": [], "value": 0.0},
+            {"index": 4, "name": "Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.7, "valueItems": [], "value": 0.7}
+          ]
+        }
+      ],
+      "mutedViaSolo": false,
+      "groupTrack": null,
+      "clipSlots": [{"slot": 0, "clip": null}],
+      "arrangementClips": [
+        {
+          "ref": {"track": {"index": 1}, "start": 0},
+          "kind": "midi",
+          "name": "Verse bass",
+          "color": 3101346,
+          "muted": false,
+          "startTime": 0,
+          "endTime": 32,
+          "duration": 32,
+          "startMarker": 0,
+          "endMarker": 16,
+          "looping": true,
+          "loopStart": 0,
+          "loopEnd": 16,
+          "notes": [
+            {"pitch": 38, "start": 0, "duration": 1.5, "velocity": 102},
+            {"pitch": 38, "start": 1.5, "duration": 0.5, "velocity": 99},
+            {"pitch": 38, "start": 2, "duration": 1.5, "velocity": 104},
+            {"pitch": 38, "start": 3.5, "duration": 0.5, "velocity": 101},
+            {"pitch": 33, "start": 4, "duration": 1.5, "velocity": 101},
+            {"pitch": 33, "start": 5.5, "duration": 0.5, "velocity": 98},
+            {"pitch": 33, "start": 6, "duration": 1.5, "velocity": 103},
+            {"pitch": 33, "start": 7.5, "duration": 0.5, "velocity": 100},
+            {"pitch": 35, "start": 8, "duration": 1.5, "velocity": 103},
+            {"pitch": 35, "start": 9.5, "duration": 0.5, "velocity": 100},
+            {"pitch": 35, "start": 10, "duration": 1.5, "velocity": 96},
+            {"pitch": 35, "start": 11.5, "duration": 0.5, "velocity": 102},
+            {"pitch": 31, "start": 12, "duration": 1.5, "velocity": 96},
+            {"pitch": 31, "start": 13.5, "duration": 0.5, "velocity": 102},
+            {"pitch": 31, "start": 14, "duration": 1.5, "velocity": 98},
+            {"pitch": 31, "start": 15.5, "duration": 0.5, "velocity": 104}
+          ]
+        },
+        {
+          "ref": {"track": {"index": 1}, "start": 32},
+          "kind": "midi",
+          "name": "Chorus bass",
+          "color": 3101346,
+          "muted": false,
+          "startTime": 32,
+          "endTime": 64,
+          "duration": 32,
+          "startMarker": 0,
+          "endMarker": 32,
+          "looping": false,
+          "loopStart": 0,
+          "loopEnd": 32,
+          "notes": [
+            {"pitch": 31, "start": 0, "duration": 1.5, "velocity": 99},
+            {"pitch": 31, "start": 1.5, "duration": 0.5, "velocity": 96},
+            {"pitch": 31, "start": 2, "duration": 1.5, "velocity": 101},
+            {"pitch": 31, "start": 3.5, "duration": 0.5, "velocity": 98},
+            {"pitch": 38, "start": 4, "duration": 1.5, "velocity": 98},
+            {"pitch": 38, "start": 5.5, "duration": 0.5, "velocity": 104},
+            {"pitch": 38, "start": 6, "duration": 1.5, "velocity": 100},
+            {"pitch": 38, "start": 7.5, "duration": 0.5, "velocity": 97},
+            {"pitch": 33, "start": 8, "duration": 1.5, "velocity": 97},
+            {"pitch": 33, "start": 9.5, "duration": 0.5, "velocity": 103},
+            {"pitch": 33, "start": 10, "duration": 1.5, "velocity": 99},
+            {"pitch": 33, "start": 11.5, "duration": 0.5, "velocity": 96},
+            {"pitch": 35, "start": 12, "duration": 1.5, "velocity": 99},
+            {"pitch": 35, "start": 13.5, "duration": 0.5, "velocity": 96},
+            {"pitch": 35, "start": 14, "duration": 1.5, "velocity": 101},
+            {"pitch": 35, "start": 15.5, "duration": 0.5, "velocity": 98},
+            {"pitch": 31, "start": 16, "duration": 1.5, "velocity": 101},
+            {"pitch": 31, "start": 17.5, "duration": 0.5, "velocity": 98},
+            {"pitch": 31, "start": 18, "duration": 1.5, "velocity": 103},
+            {"pitch": 31, "start": 19.5, "duration": 0.5, "velocity": 100},
+            {"pitch": 38, "start": 20, "duration": 1.5, "velocity": 100},
+            {"pitch": 38, "start": 21.5, "duration": 0.5, "velocity": 97},
+            {"pitch": 38, "start": 22, "duration": 1.5, "velocity": 102},
+            {"pitch": 38, "start": 23.5, "duration": 0.5, "velocity": 99},
+            {"pitch": 33, "start": 24, "duration": 1.5, "velocity": 99},
+            {"pitch": 33, "start": 25.5, "duration": 0.5, "velocity": 96},
+            {"pitch": 33, "start": 26, "duration": 1.5, "velocity": 101},
+            {"pitch": 33, "start": 27.5, "duration": 0.5, "velocity": 98},
+            {"pitch": 33, "start": 28, "duration": 1.5, "velocity": 104},
+            {"pitch": 33, "start": 29.5, "duration": 0.5, "velocity": 101},
+            {"pitch": 33, "start": 30, "duration": 1.5, "velocity": 97},
+            {"pitch": 33, "start": 31.5, "duration": 0.5, "velocity": 103}
+          ]
+        }
+      ],
+      "takeLanes": [],
+      "mixer": {
+        "volume": {"index": 0, "name": "Track Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.85, "valueItems": [], "value": 0.85},
+        "panning": {"index": 1, "name": "Track Panning", "min": -1, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0.0},
+        "sends": []
+      }
+    },
+    {
+      "index": 2,
+      "name": "Keys",
+      "kind": "midi",
+      "color": -1,
+      "mute": false,
+      "solo": false,
+      "arm": false,
+      "devices": [
+        {
+          "index": 0,
+          "name": "Electric",
+          "className": "Device",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "M Stiffness", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.4, "valueItems": [], "value": 0.4},
+            {"index": 2, "name": "F Tine Vol", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.55, "valueItems": [], "value": 0.55},
+            {"index": 3, "name": "Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.68, "valueItems": [], "value": 0.68}
+          ]
+        }
+      ],
+      "mutedViaSolo": false,
+      "groupTrack": null,
+      "clipSlots": [{"slot": 0, "clip": null}],
+      "arrangementClips": [
+        {
+          "ref": {"track": {"index": 2}, "start": 0},
+          "kind": "midi",
+          "name": "Verse keys",
+          "color": 8940772,
+          "muted": false,
+          "startTime": 0,
+          "endTime": 32,
+          "duration": 32,
+          "startMarker": 0,
+          "endMarker": 16,
+          "looping": true,
+          "loopStart": 0,
+          "loopEnd": 16,
+          "notes": [
+            {"pitch": 54, "start": 0, "duration": 3.9, "velocity": 80},
+            {"pitch": 57, "start": 0, "duration": 3.9, "velocity": 80},
+            {"pitch": 62, "start": 0, "duration": 3.9, "velocity": 83},
+            {"pitch": 52, "start": 4, "duration": 3.9, "velocity": 83},
+            {"pitch": 57, "start": 4, "duration": 3.9, "velocity": 81},
+            {"pitch": 61, "start": 4, "duration": 3.9, "velocity": 83},
+            {"pitch": 54, "start": 8, "duration": 3.9, "velocity": 83},
+            {"pitch": 59, "start": 8, "duration": 3.9, "velocity": 81},
+            {"pitch": 62, "start": 8, "duration": 3.9, "velocity": 81},
+            {"pitch": 55, "start": 12, "duration": 3.9, "velocity": 81},
+            {"pitch": 59, "start": 12, "duration": 3.9, "velocity": 83},
+            {"pitch": 62, "start": 12, "duration": 3.9, "velocity": 83}
+          ]
+        },
+        {
+          "ref": {"track": {"index": 2}, "start": 32},
+          "kind": "midi",
+          "name": "Chorus keys",
+          "color": 8940772,
+          "muted": false,
+          "startTime": 32,
+          "endTime": 64,
+          "duration": 32,
+          "startMarker": 0,
+          "endMarker": 32,
+          "looping": false,
+          "loopStart": 0,
+          "loopEnd": 32,
+          "notes": [
+            {"pitch": 55, "start": 0, "duration": 3.9, "velocity": 81},
+            {"pitch": 59, "start": 0, "duration": 3.9, "velocity": 83},
+            {"pitch": 62, "start": 0, "duration": 3.9, "velocity": 83},
+            {"pitch": 54, "start": 4, "duration": 3.9, "velocity": 81},
+            {"pitch": 57, "start": 4, "duration": 3.9, "velocity": 81},
+            {"pitch": 62, "start": 4, "duration": 3.9, "velocity": 80},
+            {"pitch": 52, "start": 8, "duration": 3.9, "velocity": 80},
+            {"pitch": 57, "start": 8, "duration": 3.9, "velocity": 83},
+            {"pitch": 61, "start": 8, "duration": 3.9, "velocity": 80},
+            {"pitch": 54, "start": 12, "duration": 3.9, "velocity": 80},
+            {"pitch": 59, "start": 12, "duration": 3.9, "velocity": 83},
+            {"pitch": 62, "start": 12, "duration": 3.9, "velocity": 83},
+            {"pitch": 55, "start": 16, "duration": 3.9, "velocity": 83},
+            {"pitch": 59, "start": 16, "duration": 3.9, "velocity": 80},
+            {"pitch": 62, "start": 16, "duration": 3.9, "velocity": 80},
+            {"pitch": 54, "start": 20, "duration": 3.9, "velocity": 83},
+            {"pitch": 57, "start": 20, "duration": 3.9, "velocity": 83},
+            {"pitch": 62, "start": 20, "duration": 3.9, "velocity": 81},
+            {"pitch": 52, "start": 24, "duration": 3.9, "velocity": 81},
+            {"pitch": 57, "start": 24, "duration": 3.9, "velocity": 80},
+            {"pitch": 61, "start": 24, "duration": 3.9, "velocity": 81},
+            {"pitch": 52, "start": 28, "duration": 3.9, "velocity": 83},
+            {"pitch": 57, "start": 28, "duration": 3.9, "velocity": 81},
+            {"pitch": 61, "start": 28, "duration": 3.9, "velocity": 83}
+          ]
+        }
+      ],
+      "takeLanes": [],
+      "mixer": {
+        "volume": {"index": 0, "name": "Track Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.85, "valueItems": [], "value": 0.74},
+        "panning": {"index": 1, "name": "Track Panning", "min": -1, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0.0},
+        "sends": []
+      }
+    },
+    {
+      "index": 3,
+      "name": "Lead Vocal",
+      "kind": "midi",
+      "color": -1,
+      "mute": false,
+      "solo": false,
+      "arm": false,
+      "devices": [
+        {
+          "index": 0,
+          "name": "Wavetable",
+          "className": "Device",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "Osc 1 Pos", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.3, "valueItems": [], "value": 0.3},
+            {"index": 2, "name": "Filter 1 Freq", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.48, "valueItems": [], "value": 0.48},
+            {"index": 3, "name": "Filter 1 Res", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.1, "valueItems": [], "value": 0.1},
+            {"index": 4, "name": "Amp Attack", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.08, "valueItems": [], "value": 0.08},
+            {"index": 5, "name": "Amp Release", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.35, "valueItems": [], "value": 0.35},
+            {"index": 6, "name": "Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.7, "valueItems": [], "value": 0.7}
+          ]
+        }
+      ],
+      "mutedViaSolo": false,
+      "groupTrack": null,
+      "clipSlots": [{"slot": 0, "clip": null}],
+      "arrangementClips": [
+        {
+          "ref": {"track": {"index": 3}, "start": 0},
+          "kind": "midi",
+          "name": "Verse vox",
+          "color": 13959168,
+          "muted": false,
+          "startTime": 0,
+          "endTime": 32,
+          "duration": 32,
+          "startMarker": 0,
+          "endMarker": 32,
+          "looping": false,
+          "loopStart": 0,
+          "loopEnd": 32,
+          "notes": [
+            {"pitch": 50, "start": 0.5, "duration": 0.5, "velocity": 97},
+            {"pitch": 54, "start": 1.0, "duration": 0.5, "velocity": 96},
+            {"pitch": 52, "start": 1.5, "duration": 0.5, "velocity": 96},
+            {"pitch": 54, "start": 2.0, "duration": 0.5, "velocity": 97},
+            {"pitch": 52, "start": 2.5, "duration": 0.5, "velocity": 96},
+            {"pitch": 50, "start": 3.0, "duration": 0.5, "velocity": 96},
+            {"pitch": 49, "start": 3.5, "duration": 0.5, "velocity": 97},
+            {"pitch": 52, "start": 4.0, "duration": 2.0, "velocity": 99},
+            {"pitch": 50, "start": 8.0, "duration": 0.5, "velocity": 98},
+            {"pitch": 52, "start": 8.5, "duration": 0.5, "velocity": 99},
+            {"pitch": 54, "start": 9.0, "duration": 0.5, "velocity": 96},
+            {"pitch": 50, "start": 9.5, "duration": 1.5, "velocity": 97},
+            {"pitch": 52, "start": 11.0, "duration": 0.5, "velocity": 98},
+            {"pitch": 54, "start": 11.5, "duration": 0.5, "velocity": 99},
+            {"pitch": 55, "start": 12.0, "duration": 2.0, "velocity": 99},
+            {"pitch": 50, "start": 16.5, "duration": 0.5, "velocity": 96},
+            {"pitch": 54, "start": 17.0, "duration": 0.5, "velocity": 100},
+            {"pitch": 52, "start": 17.5, "duration": 0.5, "velocity": 99},
+            {"pitch": 54, "start": 18.0, "duration": 0.5, "velocity": 96},
+            {"pitch": 52, "start": 18.5, "duration": 0.5, "velocity": 100},
+            {"pitch": 50, "start": 19.0, "duration": 0.5, "velocity": 99},
+            {"pitch": 49, "start": 19.5, "duration": 0.5, "velocity": 96},
+            {"pitch": 52, "start": 20.0, "duration": 2.0, "velocity": 98},
+            {"pitch": 50, "start": 24.5, "duration": 0.5, "velocity": 100},
+            {"pitch": 54, "start": 25.0, "duration": 1.0, "velocity": 99},
+            {"pitch": 54, "start": 26.0, "duration": 1.0, "velocity": 100},
+            {"pitch": 52, "start": 27.0, "duration": 0.5, "velocity": 97},
+            {"pitch": 50, "start": 27.5, "duration": 0.5, "velocity": 97},
+            {"pitch": 50, "start": 28.0, "duration": 2.0, "velocity": 99}
+          ]
+        },
+        {
+          "ref": {"track": {"index": 3}, "start": 32},
+          "kind": "midi",
+          "name": "Chorus vox",
+          "color": 13959168,
+          "muted": false,
+          "startTime": 32,
+          "endTime": 64,
+          "duration": 32,
+          "startMarker": 0,
+          "endMarker": 32,
+          "looping": false,
+          "loopStart": 0,
+          "loopEnd": 32,
+          "notes": [
+            {"pitch": 59, "start": 0.0, "duration": 1.0, "velocity": 99},
+            {"pitch": 57, "start": 1.0, "duration": 1.0, "velocity": 96},
+            {"pitch": 62, "start": 2.0, "duration": 1.0, "velocity": 100},
+            {"pitch": 59, "start": 3.0, "duration": 1.0, "velocity": 96},
+            {"pitch": 57, "start": 4.0, "duration": 1.0, "velocity": 98},
+            {"pitch": 59, "start": 5.0, "duration": 1.0, "velocity": 97},
+            {"pitch": 57, "start": 6.0, "duration": 1.0, "velocity": 99},
+            {"pitch": 61, "start": 8.0, "duration": 1.0, "velocity": 97},
+            {"pitch": 59, "start": 9.0, "duration": 1.0, "velocity": 99},
+            {"pitch": 57, "start": 10.0, "duration": 1.0, "velocity": 96},
+            {"pitch": 59, "start": 11.0, "duration": 1.0, "velocity": 100},
+            {"pitch": 59, "start": 12.0, "duration": 1.0, "velocity": 96},
+            {"pitch": 57, "start": 13.0, "duration": 1.0, "velocity": 98},
+            {"pitch": 54, "start": 14.0, "duration": 1.0, "velocity": 98},
+            {"pitch": 59, "start": 16.0, "duration": 1.0, "velocity": 98},
+            {"pitch": 57, "start": 17.0, "duration": 1.0, "velocity": 100},
+            {"pitch": 62, "start": 18.0, "duration": 1.0, "velocity": 99},
+            {"pitch": 59, "start": 19.0, "duration": 1.0, "velocity": 99},
+            {"pitch": 57, "start": 20.0, "duration": 1.0, "velocity": 97},
+            {"pitch": 59, "start": 21.0, "duration": 1.0, "velocity": 96},
+            {"pitch": 62, "start": 22.0, "duration": 1.0, "velocity": 96},
+            {"pitch": 57, "start": 25.0, "duration": 0.5, "velocity": 99},
+            {"pitch": 59, "start": 25.5, "duration": 0.5, "velocity": 96},
+            {"pitch": 61, "start": 26.0, "duration": 1.0, "velocity": 97},
+            {"pitch": 59, "start": 27.0, "duration": 1.0, "velocity": 99},
+            {"pitch": 57, "start": 28.0, "duration": 1.0, "velocity": 96},
+            {"pitch": 59, "start": 29.0, "duration": 1.0, "velocity": 100},
+            {"pitch": 57, "start": 30.0, "duration": 2.0, "velocity": 97}
+          ]
+        }
+      ],
+      "takeLanes": [],
+      "mixer": {
+        "volume": {"index": 0, "name": "Track Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.85, "valueItems": [], "value": 0.62},
+        "panning": {"index": 1, "name": "Track Panning", "min": -1, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0.0},
+        "sends": []
+      }
+    },
+    {
+      "index": 4,
+      "name": "Lead Vox",
+      "kind": "audio",
+      "color": -1,
+      "mute": false,
+      "solo": false,
+      "arm": false,
+      "devices": [
+        {
+          "index": 0,
+          "name": "EQ Eight",
+          "className": "Device",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "1 Filter On A", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 2, "name": "1 Frequency A", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.21, "valueItems": [], "value": 0.21},
+            {"index": 3, "name": "1 Gain A", "min": -15, "max": 15, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0}
+          ]
+        },
+        {
+          "index": 1,
+          "name": "Compressor",
+          "className": "Device",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "Threshold", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.55, "valueItems": [], "value": 0.55},
+            {"index": 2, "name": "Ratio", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.6, "valueItems": [], "value": 0.6},
+            {"index": 3, "name": "Attack", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.2, "valueItems": [], "value": 0.2},
+            {"index": 4, "name": "Release", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.4, "valueItems": [], "value": 0.4}
+          ]
+        },
+        {
+          "index": 2,
+          "name": "Reverb",
+          "className": "Device",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "Decay Time", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.45, "valueItems": [], "value": 0.45},
+            {"index": 2, "name": "Dry/Wet", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.15, "valueItems": [], "value": 0.15}
+          ]
+        }
+      ],
+      "mutedViaSolo": false,
+      "groupTrack": null,
+      "clipSlots": [{"slot": 0, "clip": null}],
+      "arrangementClips": [
+        {
+          "ref": {"track": {"index": 4}, "start": 0},
+          "kind": "audio",
+          "name": "Lead Vox V1",
+          "color": 1090798,
+          "muted": false,
+          "startTime": 0,
+          "endTime": 30,
+          "duration": 30,
+          "startMarker": 0,
+          "endMarker": 30,
+          "looping": false,
+          "loopStart": 0,
+          "loopEnd": 30,
+          "filePath": "/Users/musician/Music/Ableton/Projects/Half the Streetlights Project/Samples/Recorded/Lead Vox V1 comp.wav",
+          "warping": true,
+          "warpMode": 4,
+          "warpMarkers": [{"sampleTime": 0, "beatTime": 0}, {"sampleTime": 17.3077, "beatTime": 30}]
+        },
+        {
+          "ref": {"track": {"index": 4}, "start": 32},
+          "kind": "audio",
+          "name": "Lead Vox Ch1",
+          "color": 1090798,
+          "muted": false,
+          "startTime": 32,
+          "endTime": 64,
+          "duration": 32,
+          "startMarker": 0,
+          "endMarker": 32,
+          "looping": false,
+          "loopStart": 0,
+          "loopEnd": 32,
+          "filePath": "/Users/musician/Music/Ableton/Projects/Half the Streetlights Project/Samples/Recorded/Lead Vox Ch1 comp.wav",
+          "warping": true,
+          "warpMode": 4,
+          "warpMarkers": [{"sampleTime": 0, "beatTime": 0}, {"sampleTime": 18.4615, "beatTime": 32}]
+        }
+      ],
+      "takeLanes": [],
+      "mixer": {
+        "volume": {"index": 0, "name": "Track Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.85, "valueItems": [], "value": 0.84},
+        "panning": {"index": 1, "name": "Track Panning", "min": -1, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0.0},
+        "sends": []
+      }
+    },
+    {
+      "index": 5,
+      "name": "BVs",
+      "kind": "midi",
+      "color": -1,
+      "mute": false,
+      "solo": false,
+      "arm": false,
+      "devices": [
+        {
+          "index": 0,
+          "name": "Wavetable",
+          "className": "Device",
+          "isRack": false,
+          "parameters": [
+            {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
+            {"index": 1, "name": "Osc 1 Pos", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.3, "valueItems": [], "value": 0.3},
+            {"index": 2, "name": "Filter 1 Freq", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.48, "valueItems": [], "value": 0.48},
+            {"index": 3, "name": "Filter 1 Res", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.1, "valueItems": [], "value": 0.1},
+            {"index": 4, "name": "Amp Attack", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.08, "valueItems": [], "value": 0.08},
+            {"index": 5, "name": "Amp Release", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.35, "valueItems": [], "value": 0.35},
+            {"index": 6, "name": "Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.7, "valueItems": [], "value": 0.7}
+          ]
+        }
+      ],
+      "mutedViaSolo": false,
+      "groupTrack": null,
+      "clipSlots": [{"slot": 0, "clip": null}],
+      "arrangementClips": [],
+      "takeLanes": [],
+      "mixer": {
+        "volume": {"index": 0, "name": "Track Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.85, "valueItems": [], "value": 0.7},
+        "panning": {"index": 1, "name": "Track Panning", "min": -1, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0.0},
+        "sends": []
+      }
+    }
+  ],
+  "returnTracks": [],
+  "main": {
+    "index": 0,
+    "name": "Main",
+    "kind": "main",
+    "color": -1,
+    "mute": false,
+    "solo": false,
+    "arm": false,
+    "devices": [
+      {
+        "index": 0,
+        "name": "Ode",
+        "className": "Device",
+        "isRack": false,
+        "parameters": [
+          {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1}
+        ]
+      }
+    ],
+    "mutedViaSolo": false,
+    "groupTrack": null,
+    "clipSlots": [],
+    "arrangementClips": [],
+    "takeLanes": [],
+    "mixer": {
+      "volume": {"index": 0, "name": "Track Volume", "min": 0, "max": 1, "isQuantized": false, "defaultValue": 0.85, "valueItems": [], "value": 0.85},
+      "panning": {"index": 1, "name": "Track Panning", "min": -1, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0.0},
+      "sends": []
+    }
+  },
+  "takenAt": "2026-10-28T14:12:05.000Z",
+  "transport": {
+    "playing": false,
+    "time": 32,
+    "loop": {"on": false, "start": 32, "length": 32},
+    "signature": {"numerator": 4, "denominator": 4}
+  },
+  "selection": {
+    "track": {"index": 3},
+    "clip": {"track": {"index": 3}, "start": 32},
+    "scene": null,
+    "time": 32,
+    "isPlaying": false
+  }
+}

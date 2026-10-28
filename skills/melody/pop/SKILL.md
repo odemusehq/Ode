@@ -1,16 +1,16 @@
 ---
 name: melody-pop
-description: Pop topline craft on top of the general melody skill — hook placement and repetition, contrast between verse, pre-chorus and chorus over a looped chord progression, conversational verse rhythm, post-chorus and instrumental hooks, title placement and pop sub-style tendencies. Read this whenever the song or the requested topline is pop or pop-leaning (dance-pop, synth-pop, pop ballad, indie-pop, pop R&B), or the musician wants something catchier, a bigger chorus, a post-chorus hook, or verse and chorus that sound different over the same chords.
+description: Pop topline craft on top of the melody skill, for editing pop melodies in place — the hook in the chorus's first two bars, the title on a strong, long or high note, verse and chorus that differ in at least two ways over a looped progression, pre-choruses that rise and end open, narrow post-chorus hooks and pop sub-style tendencies, each with the check that proves it. Read this whenever the song or the topline is pop or pop-leaning (dance-pop, synth-pop, pop ballad, indie-pop, pop R&B), or the musician asks for something catchier, a bigger chorus, a post-chorus hook, or verse and chorus that sound different over the same chords.
 ---
 
 # Pop melody
 
-Only what is specific to pop. The general craft — motif, contour, range, chord tones, phrasing, prosody — is in the melody skill, and the same conventions apply (scientific pitch, lengths in beats of 4/4).
+Only what is specific to pop. The loop (read, decide, change in place, verify, let them hear it, report in one line), the general checks and the craft are in the melody skill, with the same conventions (scientific pitch, lengths in beats of 4/4).
 
 ## What pop listeners expect
 
 - **The hook early and often.** The chorus states its hook within its first two bars; the title usually sits there, on the last line, or both.
-- **Repetition as a feature.** A pop chorus often contains only two melodic ideas, each repeated. What feels too simple on paper usually feels right on the second listen.
+- **Repetition as a feature.** A pop chorus often holds only two melodic ideas, each repeated. What looks too simple on paper usually feels right on the second listen.
 - **A clear lift** from verse to chorus, in register, rhythm or both.
 - **Mostly syllabic, conversational word setting**, with short melismas on vowels or the title.
 
@@ -24,7 +24,7 @@ Many pop songs loop the same two to four chords through verse and chorus, so the
 - **Density** — words per bar.
 - **Contour** — a static or wave-like verse; a chorus that arches to a peak.
 
-Worked example over one loop, `| Am | F | C | G |` at 100 BPM.
+Example over one loop, `| Am | F | C | G |` at 100 BPM.
 
 Verse — low, repeated notes, starting on beat 2, speech-like:
 
@@ -50,7 +50,7 @@ The verse spans A3–E4 and ends open on D4. The chorus spans E4–C5; its rhyth
 
 - Lift with a rising contour, a fragmented motif, or rhythmic acceleration (shorter phrases, notes closer together).
 - End open, on a held note or a cut-off that leaves a short gap — often a beat or two of silence — before the chorus downbeat. The gap makes the chorus land harder.
-- Keep its peak below the chorus peak, or the chorus will sound like a step down.
+- Keep its peak below the chorus peak, or the chorus sounds like a step down.
 
 ## Placing the hook and the title
 
@@ -61,7 +61,7 @@ The verse spans A3–E4 and ends open on D4. The chorus spans E4–C5; its rhyth
 ## Post-chorus and instrumental hooks
 
 - A post-chorus repeats a short hook — a chant, a wordless vowel line, or a repeated fragment of the title — over the chorus chords or an instrumental drop.
-- Keep it singable on first listen: narrow range (often a third to a fifth), strong rhythm, lots of repetition.
+- Keep it singable on first listen: narrow range (a third to a fifth), strong rhythm, lots of repetition.
 - In dance-pop the chorus may hand over to an instrumental hook (a synth lead or a chopped vocal). It is still a melody: write it with the same motif rules, often on pentatonic notes so it fits every chord of the loop.
 
 ## Pop phrasing habits
@@ -69,11 +69,11 @@ The verse spans A3–E4 and ends open on D4. The chorus spans E4–C5; its rhyth
 - **Conversational verses**: repeated notes, speech rhythm, syncopated sixteenths at mid tempos.
 - **Pentatonic hooks**: the major and minor pentatonic scales avoid half steps, so hooks built on them are easy to sing and sit over most chords of a loop.
 - **Anticipations**: arriving on the "and" of 4 before the barline is the default pop push into a new bar.
-- **The last chorus** often adds a higher alternative line, a long held note or ad-libs above the hook; keep the original hook recognisable underneath (the vocals skill covers stacking and ad-libs).
+- **The last chorus** often adds a higher alternative line, a long held note or ad-libs above the hook; keep the original hook recognisable underneath (the vocals skill writes those parts).
 
 ## Sub-style tendencies
 
-These are qualities, not rules; use them to frame options, never to assume what the artist wants.
+Qualities, not rules: use them to choose a take, never to assume what the artist wants.
 
 | Sub-style | Melody tendencies |
 |---|---|
@@ -83,13 +83,23 @@ These are qualities, not rules; use them to frame options, never to assume what 
 | Indie-pop | narrower range, talk-sung verses, modal colours (Dorian, Mixolydian), less obvious peaks |
 | Pop R&B | syncopation, colour tones such as 9ths, short melismas on key words, runs saved for ad-libs |
 
-## Outside the usual style
+## Trying something outside the usual style
 
-When you offer three options, make one clearly outside the artist's habit and label it. If they usually write a high, belted chorus, try a low, rhythmic, chant-like one; if their verses are always wordy, try a sparse verse with long notes; if every hook starts on the downbeat, start one off the beat.
+On Again, or when the artist's habit is the thing that isn't working, try the opposite of the habit: a low, rhythmic, chant-like chorus for an artist who belts high; a sparse verse of long notes for one whose verses are always wordy; a hook that starts off the beat for one whose hooks always start on the downbeat. The result line then says "outside your usual style".
 
-## Check (pop-specific)
+## Checks for pop
 
-- Is the hook in the chorus's first two bars, and does the title land on a strong, long or high note?
-- Do verse and chorus differ in at least two ways, beyond the lyric?
-- Does the pre-chorus end open and stay below the chorus peak?
-- Could someone sing the post-chorus hook after one listen?
+Run these with the melody skill's checks.
+
+| Check | Correct when |
+|---|---|
+| Hook | the chorus states its hook within its first two bars, and the title lands on a strong beat, a long note or the high point |
+| Contrast | verse and chorus differ in at least two of register, rhythm, phrase length, density and contour, not only in the lyric |
+| Pre-chorus | ends open (on 2, 4, 5 or 7, or over a non-tonic chord) and its peak stays below the chorus peak |
+| Post-chorus | stays within a fifth, and its idea repeats at least twice |
+
+## Result lines
+
+- "Hook moved to the chorus downbeat and repeated in bar 3 · title on the long high note, verse and chorus now differ in register and rhythm."
+- "Pre-chorus now climbs by step and stops a beat early · ends open on the 5th, below the chorus peak."
+- "Post-chorus hook on 'oh' over the drop, three notes inside a fourth · in key over every chord of the loop."

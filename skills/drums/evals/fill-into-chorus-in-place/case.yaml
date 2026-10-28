@@ -1,0 +1,17 @@
+schema_version: "1.1"
+name: fill-into-chorus-in-place
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  In Auto mode (the default), with the Drums clip "Verse" selected and "Fill into the chorus" tapped,
+  Ode reads the Drum Rack's pads (kick 36, snare 38, clap 39, closed hat 42, open hat 46, crash 49; no
+  toms), the verse and chorus drum clips, and the lead vocal, whose last verse word runs from beat 1 to
+  the "and" of 2 in bar 8 (song beats 28 to 29.5). It edits in place: the last bar of the existing
+  "Verse" clip gets a fill that starts after that word, on beats 3 and 4 of bar 8, using only pads the
+  kit has (typically a snare build with rising velocity and a kick), and beat 1 of the existing "Chorus"
+  clip gets a crash with its kick. Bars 1 to 7 of the verse are untouched, no note runs past the end of
+  the verse clip, and no clip, track or take is created. Ode checks the pads, the landing on the
+  downbeat, the gap after the vocal line and the loop end, plays from a bar before the fill after its
+  turn, and replies in one line, for example: "Fill into the chorus: snare run on beats 3–4 of bar 8,
+  crash with the kick on the downbeat · lands on 1, after the vocal's last word, only pads the kit
+  has." No question is asked.

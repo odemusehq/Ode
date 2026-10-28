@@ -1,74 +1,76 @@
 ---
 name: vocals-demo-vocal
-description: Make a demo vocal — the song's lyric and melody sung in the artist's own voice — so the musician can hear the song before recording it. Covers consent (only the artist's own voice, only with their clear agreement), the short clean recording of their singing it needs, the musician's rights to the result, preparing lyric and melody so the demo sounds right, placing it in the Set, and what to listen for. Read this whenever the musician wants to hear the song sung in their voice, asks for a demo or guide vocal, asks whether Ode can sing in their voice or in someone else's, or wants to change or withdraw the recording of their voice.
+description: Make a demo vocal — the song's lyric and melody sung in the artist's own voice and placed on the "Demo vocal" track — so the musician can hear the song before recording it, only after their clear yes to using their voice, in every mode including Let me hear it. Covers the consent question and what it must say, the short clean recording it needs, the musician's rights to the result, checking the lyric setting, range and pronunciation before singing, and placing the demo without touching their recordings. Read this whenever the musician wants to hear the song sung in their voice, asks for a demo or guide vocal, asks whether Ode can sing in their voice or in someone else's, or wants to change or withdraw the recording of their voice.
 ---
 
 # Demo vocal
 
-A demo vocal lets the artist hear their song sung in their own voice before they record it: to judge the key and range, the prosody, the phrasing and how clearly the lyric comes across, and to have a guide to sing along with in the session. It is a guide for writing and recording. The released vocal is normally the artist's real performance, so say that plainly when you offer a demo.
+A demo vocal lets the artist hear their song sung in their own voice before they record it: to judge the key and range, the prosody, the phrasing and how clearly the lyric comes across, and to have a guide to sing along with in the session. It is a guide for writing and recording; the released vocal is normally the artist's real performance.
 
-## Only the artist's own voice, only with consent
+The loop is the vocals skill's (read, decide, change in place, verify, let them hear it, report in one line), with one step that no mode skips: consent.
 
-- Use only the voice of the person who agrees to it, in the conversation. Never use anyone else's voice — a bandmate, a featured singer, a well-known artist — and never imitate a known singer, even when asked. If a bandmate wants a demo in their voice, they agree for themselves, with their own recording.
-- Before saving or using any recording of the artist's voice, explain in plain words:
-  - what is needed: a short recording of their singing (10–30 seconds of clean singing works best);
-  - what it is for: singing demo vocals of their own songs for them, and nothing else;
-  - where it is kept: in their own Ode folder on their computer, together with a record that they agreed;
-  - that they can withdraw their consent at any time; from then on the recording is not used, and you tell them where it is so they can delete it.
-- Wait for a clear yes. "Sing it in my voice" is a request; confirm it in one sentence, for example: "To sing it in your voice I'll save about 20 seconds of your singing from the 'Voice Ref' track in your Ode folder and use it only for your demo vocals; you can withdraw that whenever you like. OK?"
-- If they say no or aren't sure, offer alternatives: hear the melody on an instrument, or record a quick scratch vocal themselves.
-- If they ask for someone else's voice or sound, decline briefly and offer their own voice. Qualities of delivery — breathy, belted, close and quiet — belong to their performance and the mix, not to copying a person.
+## Only the artist's own voice, only after their yes
+
+- Use only the voice of the person who agrees to it. Never anyone else's — a bandmate, a featured singer, a well-known artist — and never imitate a known singer, even when asked. A bandmate who wants a demo in their own voice agrees for themselves, with their own recording.
+- If no recording of the artist's voice is saved with their consent yet, saving one is the first step, and it always asks them first — in Auto, in Manual and in Let me hear it alike. Consent is a rights matter, not a speed setting.
+- The question is one line with Agree and Not now, and says what is kept and why: "To sing it in your voice I'll keep about 20 seconds of your singing from 'Voice Ref' in your Ode folder, only for your own demos; you can withdraw it any time. · Agree · Not now".
+- Nothing is recorded, saved, rendered or sung in their voice before that yes. "Sing it in my voice" is a request, not the yes.
+- On Not now, or no clear answer, make no demo; the result line says so, and that the guide melody can still be heard on its own track.
+- A request for someone else's voice or sound gets one line: demos are sung only in the artist's own voice. Qualities of delivery — breathy, belted, close and quiet — belong to the performance and the mix, not to copying a person.
+- If they withdraw consent, the recording is never used again; the result line says where it is kept so they can delete it.
 
 ## The musician keeps the rights
 
 - Ode is used to make music for release, and the musician keeps all rights to publish their song. Demo vocals made from their voice belong to them like the rest of their material.
-- Any model used to sing the demo or to turn it into the artist's voice must allow commercial use and leave the artist the rights to the results. If the musician asks, say so plainly. If you have reason to think the configured model doesn't meet this, tell the musician before making a demo.
-- The recording of their voice is personal: use it only to sing their demo vocals — never for other people's songs, never for words they haven't approved, never shared.
+- The model that sings the demo must allow commercial use and leave the artist the rights to the results. If there is reason to think the configured model doesn't, the result line says so instead of making the demo.
+- The recording of their voice is personal: it is used only to sing their own demo vocals — never for other people's songs, never for words they haven't approved, never shared.
 
 ## The voice recording
 
 - Clean and dry: no reverb, delay, pitch correction or doubles; no backing track bleeding into the microphone; a quiet room; one singer.
 - 10–30 seconds of continuous singing in a comfortable part of their range, with a mix of vowels and some movement in pitch. Sung, not spoken; it doesn't have to be this song.
-- On its own audio track in the Arrangement, so it can be taken from a clear range of bars.
+- On its own audio track in the Arrangement, so it can be taken from a clear range of bars. If there is no such recording yet, the result line says what to record.
 
-## Prepare the lyric and the melody
+## How Ode makes the demo
 
-The demo can only be as good as the setting it sings, so prepare it as if a singer were about to read it:
+### 1. Read
 
-- Set the lyric to the melody, every syllable on its note or notes (several notes for a melisma), and check the setting agrees with the syllable counts on the lyric sheet.
-- Check prosody: stressed syllables on strong beats.
-- Check the melody stays inside the singer's range; a demo pushed outside it sounds strained and misleads everyone.
-- Leave rests for breaths between phrases.
-- Mark words whose pronunciation the checks couldn't confirm, and tell the musician they may come out wrong.
-- Start with one section, usually the chorus: short demos are quicker to make and to judge.
+- The section to sing (the selected one; the chorus when nothing is selected — short demos are quicker to make and to judge), its lyric lines from the lead sheet, and the melody notes they are sung on.
+- The singer's range, the accent setting, and whether a consented recording of their voice is already saved.
 
-## Placing it in the Set
+### 2. Decide and prepare
 
-- Put the demo on a new audio track with a clear name, such as "Demo Vocal – Chorus", lined up with the section it sings.
+Prepare the setting as if a singer were about to read it: every syllable on its note or notes (several notes for a melisma), a rest for a breath between phrases.
+
+### 3. Change the Set
+
+- After consent, render the demo and place it on an audio track called "Demo vocal", lined up with the section it sings. If that track already holds a demo at those bars, the new one takes its place there; the history keeps the old one.
 - Never replace, overwrite or move the artist's recorded vocals or any other clip.
-- As with every change, say in one sentence what will be added and get the musician's approval first.
 
-## What to listen for
+### 4. Verify, before singing
 
-Listen with the musician and talk about:
+| Check | Correct when |
+|---|---|
+| Consent | a recording of this artist's own voice is saved with their yes |
+| Syllables | each line has as many notes as one of its syllable counts, or melismas chosen on purpose, and the demo uses that same reading |
+| Prosody | the prosody check finds no stressed syllable on a weaker note than an unstressed neighbour |
+| Singability | the singability check finds no closed vowel on a high held note and no consonant cluster on a very short note |
+| Range | every note sits inside the singer's range; a demo pushed outside it sounds strained and misleads everyone |
+| Pronunciation | words whose pronunciation the checks couldn't confirm are named in the result line, never reported as checked |
+| Rights | the singing model allows commercial use and leaves the artist the rights |
 
-- **key and range** — any strain at the top or mumbling at the bottom;
-- **prosody** — do the stressed syllables land, does any word sound wrongly stressed;
-- **phrasing and breath** — is there time to breathe, does any line run too long;
-- **lyric clarity** — can the words be understood, especially on high and fast notes;
-- **fit** — how the voice sits with the chords, the arrangement and the hook.
+Fix the setting until the checks pass (the melody and prosody skills cover how), then sing.
 
-Turn what you hear into small, specific suggestions (a note, a word, a rest), and make a new demo of only the section that changed.
+### 5. Let them hear it
+
+Ode plays the section when your turn ends; you don't start playback.
+
+### 6. Report in one line
+
+- "Demo vocal of the chorus on 'Demo vocal' · syllables fit every note, stresses on strong beats, inside your range."
+- "Demo of verse 1 in your voice · 'Lisbon' pronunciation not certain, everything else checked."
+- "No demo made: your voice is used only with your yes · nothing recorded or saved."
 
 ## Be honest about its limits
 
-A demo vocal is an approximation. Timing, pronunciation and expression will differ from a real performance, and a mispronounced word may come from the model rather than the lyric. Use it to make decisions, then let the artist's own performance take over.
-
-## Check (demo-vocal-specific)
-
-- The artist clearly agreed to the use of their own voice, and the recording is theirs.
-- Nothing imitates another singer.
-- The model used allows commercial use and leaves the artist the rights to the result.
-- The lyric setting, prosody and range were checked before making the demo.
-- The demo sits on a new, clearly named track; nothing existing was changed.
-- The musician knows the demo is a guide, and that the released vocal is normally their own performance.
+A demo vocal is an approximation. Timing, pronunciation and expression will differ from a real performance, and a mispronounced word may come from the model rather than the lyric. When something in the demo comes from the model rather than the song, the result line says so briefly.

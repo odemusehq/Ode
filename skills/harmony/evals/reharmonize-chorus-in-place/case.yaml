@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: reharmonize-chorus-in-place
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  In Auto mode (the default), with the Keys clip "Chorus keys" selected and "Less predictable chords"
+  tapped, Ode reads the chorus chords (an Eb – Bb – Cm – Ab loop played as root-position block triads
+  over a left-hand root), the lead vocal melody, the bassline and the lead sheet. It rewrites the notes
+  of "Chorus keys" in place with a fresher progression (for example inversions, sevenths, a secondary
+  dominant or a borrowed chord) chosen so every melody note on beats 1 and 3 is a note of its chord (a
+  borrowed Abm in bar 8 would clash with the held C), voiced with common tones held and no thirds below
+  C3. Where the new chords need it, the bass notes on the chord changes are moved in the existing Bass
+  clip, keeping its rhythm, and the chorus chord chart in the lead sheet is updated in place, spelled for
+  Eb major. The melody and every other clip stay as they were, and nothing is copied into a new clip,
+  track or take. Ode checks melody fit, clashes, voice leading, register, bass agreement and spelling,
+  plays the chorus after its turn and replies in one line, for example: "Chorus now Ebmaj7 – Gm7 – Cm7 –
+  Abmaj7 … with the bass following · every melody note on 1 and 3 fits, voices move by step, nothing
+  muddy below C3." No question is asked and no list of options is given.

@@ -1,11 +1,11 @@
 ---
 name: harmony-pop
-description: Pop chord craft on top of the general harmony skill — four-chord loops and how to rotate, re-voice and re-bass them, making sections contrast when the chords barely change, pre-chorus lifts, pop colours (add9, sus, slash chords, borrowed ♭VII, ♭VI and iv), modal pop loops, bridges and final-chorus key changes. Read this whenever the song is pop or pop-leaning (dance-pop, synth-pop, pop-rock, pop ballad, indie-pop, pop R&B), or the musician says their loop or chorus chords feel predictable or every section sounds the same.
+description: Pop chord craft on top of the harmony skill, for changing pop chords in place — four-chord loops and how to rotate, re-voice and re-bass them, making sections contrast when the chords barely change, pre-chorus lifts, pop colours (add9, sus, slash chords, borrowed ♭VII, ♭VI and iv), modal pop loops, bridges and final-chorus key changes, each with the check that proves it. Read this whenever the song is pop or pop-leaning (dance-pop, synth-pop, pop-rock, pop ballad, indie-pop, pop R&B), or the musician says their loop or chorus chords feel predictable or every section sounds the same.
 ---
 
 # Pop harmony
 
-Only what is specific to pop. Function, cadences, borrowing, voicing and the checks are in the harmony skill.
+Only what is specific to pop. The loop (read, decide, change in place, verify, let them hear it, report in one line), function, cadences, borrowing, voicing and the general checks are in the harmony skill.
 
 ## Loops are normal
 
@@ -24,13 +24,13 @@ The same four chords feel different depending on where the loop starts and which
 
 ## Making sections contrast over the same loop
 
-Use one or two of these per section change:
+When "every section sounds the same", change one or two of these per section boundary, in the section's own chord and bass clips:
 
 1. **Start the loop on another chord** in the chorus: verse `Am – F – C – G`, chorus `F – C – G – Am`.
 2. **Change the harmonic rhythm**: two bars per chord in the verse, one in the chorus.
 3. **Change the bass**: hold a tonic pedal under the verse (`Am – F/A – C/A – G/A`) and release it in the chorus; or use inversions for a stepwise line (`C – G/B – Am – F`).
 4. **Change the voicing and register**: low, close voicings in the verse; wide, high ones in the chorus.
-5. **Take the chords out**: bass and vocal only in the verse, chords entering at the pre-chorus.
+5. **Take the chords out**: bass and vocal only in the verse, chords entering at the pre-chorus (the arrangement skill mutes or removes the part; ask before deleting it).
 6. **Add one new chord in one place**: a borrowed iv or ♭VII in the last bar before the chorus.
 
 ## Pre-chorus
@@ -67,8 +67,8 @@ Use one or two of these per section change:
 ## Final-chorus key change
 
 - Up a half or whole step at the chorus downbeat, prepared by the new key's V or ii–V, or unprepared for a punch.
-- Check the melody against the singer's range first: the chorus peak moves up too.
-- Other ways to lift without a key change: higher voicings, the full band entering, chords dropping out for the first half then returning, a countermelody or extra vocal harmony.
+- It moves every part, so it is a question unless the musician asked for it, and the melody must pass the range check in the new key.
+- Other ways to lift without a key change: higher voicings, the full band entering, chords dropping out for the first half then returning, a countermelody or an extra vocal harmony.
 
 ## Minimal harmony
 
@@ -80,14 +80,25 @@ Avoid the "minor means sad" shortcut. Many heartbroken pop songs sit on bright m
 
 ## Worked example
 
-The musician's chorus loop `| C | G | Am | F |` also runs under the verse, and everything sounds the same. Three directions, each checked against the existing melody before presenting:
+The musician selects the verse keys and types "every section sounds the same": the loop `| C | G | Am | F |` runs under verse and chorus alike. Ode keeps the chorus as it is and changes the verse: a tonic pedal in the bass (`C – G/C – Am/C – F/C`) and low, close voicings in the keys, edited in the verse's own bass and keys clips; the lead sheet's verse chart becomes the slash chords. The chorus's root-position bass now sounds like a release.
 
-1. **Closest**: keep the loop; put the verse over a tonic pedal (`C – G/C – Am/C – F/C`), add a pre-chorus `| Dm7 | Em7 | Fmaj7 | Gsus4 G |`, and let the chorus release into root position.
-2. **Colour**: keep the verse; start the chorus on IV — `| F | C/E | Dm7 | Gsus4 G |` — so it lifts and keeps moving instead of landing, and borrow Fm for the final chorus line.
-3. **Outside your usual style** (labelled): a Dorian-coloured verse in A minor, `| Am7 | D9 | Am7 | D9 |`, then the chorus back on `C – G – Am – F`. The D major chord's F♯ makes the verse sound lifted; check that the verse melody has no F natural.
+Result line: "Verse now over a C pedal with low, close voicings, chorus unchanged · melody fits every chord, verse and chorus differ in bass and register."
 
-## Check (pop-specific)
+Other takes for Again: start the chorus on IV (`| F | C/E | Dm7 | Gsus4 G |`) so it lifts and keeps moving; or a Dorian-coloured verse in A minor, `| Am7 | D9 | Am7 | D9 |` — the D chord's F♯ needs a verse melody with no F natural, and for an artist who never leaves the major key it is outside the usual style, so the result line says so.
 
-- Do the sections contrast in something besides the lyric (start chord, bass, harmonic rhythm, voicing, density)?
-- Does the pre-chorus avoid landing on I just before the chorus?
-- If there is a key change, does the melody stay inside the singer's range?
+## Checks for pop
+
+Run these with the harmony skill's checks.
+
+| Check | Correct when |
+|---|---|
+| Contrast | neighbouring sections differ in something besides the lyric: start chord, bass, harmonic rhythm, voicing or density |
+| Pre-chorus | its last chord is not I, so the chorus downbeat is the release |
+| Turnaround | a repeating chorus ends its first pass on V or IV |
+| Key change | after one, the melody passes the range check in the new key |
+
+## Result lines
+
+- "Pre-chorus now climbs Dm7 – Em7 – Fmaj7 – Gsus4 G under a rising bass · melody fits, ends on V into the chorus."
+- "Last chorus line borrows Fm before the final C · no A natural in the melody there, bass on F, chart updated."
+- "Chorus loop now starts on F instead of C · same chords, melody fits, verse and chorus now differ in where the loop lands."

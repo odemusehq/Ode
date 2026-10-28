@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "title": "Half the Streetlights",
+  "intent": {"theme": "a goodbye that nobody says out loud", "mood": "quiet, late at night", "pointOfView": "first person", "hook": "Say it once and say it slow"},
+  "settings": {
+    "genre": {"mode": "set", "value": "indie pop"},
+    "vocalRange": {"mode": "set", "value": {"low": 45, "high": 64}}
+  },
+  "tempo": 104,
+  "key": {"root": 2, "scale": "Major"},
+  "timeSignature": {"numerator": 4, "denominator": 4},
+  "sections": [
+    {
+      "id": "verse-1",
+      "kind": "verse",
+      "name": "Verse 1",
+      "startBeat": 0,
+      "lengthBeats": 32,
+      "lines": [
+        {"id": "verse-1-1", "text": "Bus shelter glowing like a screen"},
+        {"id": "verse-1-2", "text": "rain is writing on the road"},
+        {"id": "verse-1-3", "text": "you laugh at something on your phone"},
+        {"id": "verse-1-4", "text": "I don't ask what it was"}
+      ],
+      "chords": [
+        {"beat": 0, "lengthBeats": 4, "symbol": "D"},
+        {"beat": 4, "lengthBeats": 4, "symbol": "A"},
+        {"beat": 8, "lengthBeats": 4, "symbol": "Bm"},
+        {"beat": 12, "lengthBeats": 4, "symbol": "G"},
+        {"beat": 16, "lengthBeats": 4, "symbol": "D"},
+        {"beat": 20, "lengthBeats": 4, "symbol": "A"},
+        {"beat": 24, "lengthBeats": 4, "symbol": "Bm"},
+        {"beat": 28, "lengthBeats": 4, "symbol": "G"}
+      ]
+    },
+    {
+      "id": "chorus-1",
+      "kind": "chorus",
+      "name": "Chorus 1",
+      "startBeat": 32,
+      "lengthBeats": 32,
+      "lines": [
+        {"id": "chorus-1-1", "text": "Say it once and say it slow"},
+        {"id": "chorus-1-2", "text": "half the streetlights turning low"},
+        {"id": "chorus-1-3", "text": "say it once before I go"},
+        {"id": "chorus-1-4", "text": "and the quiet starts to grow"}
+      ],
+      "chords": [
+        {"beat": 0, "lengthBeats": 4, "symbol": "G"},
+        {"beat": 4, "lengthBeats": 4, "symbol": "D"},
+        {"beat": 8, "lengthBeats": 4, "symbol": "A"},
+        {"beat": 12, "lengthBeats": 4, "symbol": "Bm"},
+        {"beat": 16, "lengthBeats": 4, "symbol": "G"},
+        {"beat": 20, "lengthBeats": 4, "symbol": "D"},
+        {"beat": 24, "lengthBeats": 4, "symbol": "A"},
+        {"beat": 28, "lengthBeats": 4, "symbol": "A"}
+      ]
+    }
+  ],
+  "links": [],
+  "locked": [],
+  "credits": [],
+  "notes": []
+}

@@ -1,11 +1,11 @@
 ---
 name: song-form-pop
-description: Pop song structure on top of the general song-form skill — reaching the first chorus early, short intros, verse–pre-chorus–chorus with post-chorus, shortened second verses, bridges and middle 8s, final-chorus lifts, dance-pop and ballad shapes, and lengths that suit streaming and radio. Read this whenever the song is pop or pop-leaning (dance-pop, synth-pop, pop-rock, pop R&B, pop ballad) and the musician is planning or fixing its structure, its length, the order of sections or how fast it gets to the chorus.
+description: Pop song structure on top of the song-form skill, for planning and fixing pop forms in place — reaching the first chorus early, short intros, verse–pre-chorus–chorus with post-chorus, shortened second verses, bridges and middle 8s, final-chorus lifts, dance-pop and ballad shapes, and lengths that suit streaming and radio, each with the check that proves it. Read this whenever the song is pop or pop-leaning (dance-pop, synth-pop, pop-rock, pop R&B, pop ballad) and the musician wants to plan or fix its structure, its length, the order of sections or how fast it gets to the chorus.
 ---
 
 # Pop song form
 
-Only what is specific to pop. Section roles, timing, the energy curve, contrast and locators are in the song-form skill.
+Only what is specific to pop. The loop (read, decide, change in place, verify, let them hear it, report in one line), section roles, timing, the energy curve, contrast and locators are in the song-form skill.
 
 ## Get to the hook early
 
@@ -16,19 +16,21 @@ Pop listeners decide quickly. The voice usually enters within the first few bars
 - a 2- or 4-bar pre-chorus;
 - opening with the chorus or the post-chorus hook.
 
+For "get to the chorus sooner", shorten what carries no lyric first (the intro, an instrumental gap); shortening a verse that carries lyric lines removes part of the song, which is the song-form skill's one question.
+
 ## The usual shapes
 
 - **Standard**: Intro – Verse 1 – Pre-Chorus – Chorus – Verse 2 – Pre-Chorus – Chorus – Bridge – Chorus – Outro.
 - **With post-chorus**: each chorus followed by a 4–8-bar post-chorus hook; the post-chorus can replace the instrumental gap before the next verse.
 - **Double chorus**: the last chorus played twice, the second time with extra vocal parts or a lift.
 - **Short second verse**: verse 2 halved (4 or 8 bars) to reach chorus 2 sooner.
-- **Chorus first**: chorus (or its hook) as the opening, then verse 1.
+- **Chorus first**: the chorus (or its hook) as the opening, then verse 1.
 
-Typical length is about 2:30 to 3:30, but follow the musician's target: ballads run longer, and many dance-pop songs are shorter.
+Typical length is about 2:30 to 3:30; the musician's target and their own songs come first. Ballads run longer, and many dance-pop songs are shorter.
 
 ## Verse 2 should feel like progress
 
-Same melody, new lyric — and something new in the arrangement: a different drum pattern, a countermelody, backing-vocal responses, or one new instrument. Shorter is often better than a full repeat.
+Same melody, new lyric — and something new in the arrangement: a different drum pattern, a countermelody, backing-vocal answers, or one new instrument. Shorter is often better than a full repeat.
 
 ## Bridge or middle 8
 
@@ -38,7 +40,7 @@ Same melody, new lyric — and something new in the arrangement: a different dru
 
 ## The final chorus
 
-Make it the biggest moment: extra vocal harmonies and ad-libs, a new top line above the hook, the full band after a breakdown, a stripped first half then everything in, a double chorus, or a key change (check the singer's range first). A one- or two-beat drum stop just before it makes the downbeat hit harder.
+Make it the biggest moment: extra vocal harmonies and ad-libs, a new top line above the hook, the full band after a breakdown, a stripped first half then everything in, a double chorus, or a key change (which moves every part and needs the singer's range checked). A one- or two-beat drum stop just before it makes the downbeat hit harder.
 
 ## Endings
 
@@ -68,7 +70,7 @@ Example at 120 BPM (one bar = 2 s):
 | Outro | 93 | 4 | 3:04 |
 | End | 97 | — | 3:12 |
 
-Halving verse 2 to 4 bars would save 8 seconds at this tempo.
+Halving verse 2 to 4 bars saves 8 seconds at this tempo.
 
 ## Pop ballad
 
@@ -91,13 +93,24 @@ Example at 72 BPM (one bar ≈ 3.33 s):
 | Outro | 59 | 4 | 3:13 |
 | End | 63 | — | 3:27 |
 
-## Outside the usual style
+## Trying something outside the usual style
 
-When offering three forms, make one clearly different from the artist's habit and label it. If they always write verse–pre-chorus–chorus, try verse and chorus only with a post-chorus hook; if every song opens with a verse, open with the chorus; if every bridge is quiet, make one that builds.
+On Again, or when the artist's habit is what makes the song drag, try a shape they don't usually write: verse and chorus only with a post-chorus hook for someone who always writes pre-choruses; the chorus first for someone who always opens with a verse; a bridge that builds for someone whose bridges are always quiet. The result line then says "outside your usual style".
 
-## Check (pop-specific)
+## Checks for pop
 
-- Time to the first chorus, and total length against the musician's target.
-- Verse 2 adds something new or is shorter.
-- The bridge brings real contrast.
-- The final chorus is the biggest moment of the song.
+Run these with the song-form skill's checks.
+
+| Check | Correct when |
+|---|---|
+| First chorus | starts within about 45–60 seconds, or the musician's own target |
+| Length | the total sits near the musician's target, otherwise about 2:30–3:30 (longer for ballads) |
+| Verse 2 | adds something new in the arrangement, or is shorter than verse 1 |
+| Bridge | differs from the rest in at least two ways (chords, feel, density, lyric angle) |
+| Final chorus | has the highest energy of the song |
+
+## Result lines
+
+- "Intro cut from 8 bars to 4, so chorus 1 lands at 0:41 · phrases whole, locators and lead sheet moved with it."
+- "Verse 2 halved to 8 bars · chorus 2 now at 1:28, song 2:58, energy still rising to the last chorus."
+- "Double chorus at the end, the second time with the post-chorus hook on top · 3:20, final chorus now the peak."

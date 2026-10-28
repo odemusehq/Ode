@@ -1,0 +1,16 @@
+schema_version: "1.1"
+name: lock-to-kick-in-place
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  In Auto mode (the default), with the Bass clip "Bass A" selected and "Lock to the kick" tapped, Ode
+  reads the kick notes in the Drums clip "Beat A" (beat 1, the "and" of 2 and the "and" of 3 in every
+  bar, plus the "a" of 4 in bar 4), the snare on 2 and 4, and the chords in the Keys clip (Am, F, C, G).
+  It rewrites the notes of "Bass A" in place: each bar starts on its chord's root with the kick on beat
+  1, the other notes start with kick hits or are passing or approach notes in the last beat, and the
+  notes on beat 2, where the snare plays, are gone. No clip, track or take is added, and the Drums and
+  Keys clips stay exactly as they were. Before replying, Ode checks the roots on the chord changes, the
+  key (A minor, approach notes allowed), the note starts against the real kick notes and the register
+  (E1 to C3). Ode plays the bars it changed after its turn and replies in one line, for example:
+  "Bass now hits with the kick on 1, the 'and' of 2 and the 'and' of 3 · roots on every chord, in key,
+  nothing below E1." No question is asked.

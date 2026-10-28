@@ -129,7 +129,7 @@ A secondary ii–V puts the target's own ii before its dominant: Em7–A7–Dm7,
 | To III (C → E) | common tone E | `C – B7 – E` |
 | Back home | a pivot, or restate the original key at a new section | — |
 
-Before suggesting any upward key change, check the melody's highest notes against the singer's range.
+Before any upward key change, check the melody's highest notes against the singer's range.
 
 ## 8. Spelling
 

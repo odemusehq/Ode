@@ -1,15 +1,15 @@
 ---
 name: drums-hip-hop
-description: Hip-hop drum programming on top of the general drums skill — boom bap swing with hard snares and ghost kicks, trap half-time feel with hi-hat rolls and triplets, drill and lo-fi qualities, the 808 as kick and bass, leaving room for the rapper, stops and beat switches, and how hooks and verses differ. Read this whenever the track is hip-hop or rap-led (boom bap, trap, drill, lo-fi, any beat for a rapper), uses an 808, or the musician asks for hi-hat rolls, a dusty swung feel, or a beat switch.
+description: Hip-hop drum programming on top of the drums skill, for editing beats in place — boom bap swing with hard snares and ghost kicks, trap half-time feel with hi-hat rolls and triplets, drill and lo-fi qualities, the 808 as kick and bass, room for the rapper, stops and beat switches, and how hooks and verses differ, each with the check that proves it. Read this whenever the track is hip-hop or rap-led (boom bap, trap, drill, lo-fi, any beat for a rapper), uses an 808, or the musician asks for hi-hat rolls, a dusty swung feel, a stop under a line or a beat switch.
 ---
 
 # Hip-hop drums
 
-Only what is specific to hip-hop. Grid notation, velocities and the General MIDI note map are in the drums skill.
+Only what is specific to hip-hop. The loop (read, decide, change in place, verify, let them hear it, report in one line), grid notation, velocities, the note map and the general checks are in the drums skill.
 
 ## Leave room for the voice
 
-Rap is rhythmically dense, so the drums give the pocket rather than competing with the words. Keep the mid-range clear, keep patterns steady enough for the rapper to lock to, and save the busiest moments for gaps between lines.
+Rap is rhythmically dense, so the drums give the pocket rather than competing with the words. Keep the mid-range clear, keep patterns steady enough for the rapper to lock to, and save the busiest moments for the gaps between lines — read the vocal's notes or the recorded vocal's clips to find them.
 
 ## Boom bap
 
@@ -47,12 +47,12 @@ On beat 4, replace the hats with a roll: six sixteenth-note triplets, or eight t
 
 ## The 808
 
-In trap and drill the 808 is both kick and bass. Write its notes with the bass skill, which covers tuning, note length and slides. If a separate kick plays too, tune it to the 808 and place the two so they hit together or alternate, never smearing into each other.
+In trap and drill the 808 is both kick and bass; its notes are written with the bass skill (tuning, note length, slides). If a separate kick plays too, tune it to the 808 and place the two so they hit together or alternate, never smearing into each other.
 
 ## Stops, switches, hooks and verses
 
-- **Stops**: drop the drums for a beat or a bar under a punchline or the last word of a line, then bring them back on the downbeat.
-- **Beat switch**: a new pattern, tempo feel or kit for the last verse or the outro gives contrast without a bridge.
+- **Stops**: the drums drop out for a beat or a bar under a punchline or the last word of a line, then come back on the downbeat — remove those notes from the clip in place.
+- **Beat switch**: a new pattern, tempo feel or kit for the last verse or the outro gives contrast without a bridge. It is new material for that section, so it goes in that section's own clip.
 - **Hooks** (usually 8 bars) can add elements: open hats, extra percussion, layered claps. **Verses** (usually 16 bars) stay sparser so the words read clearly; vary the pattern every four bars.
 
 ## Velocity
@@ -60,9 +60,20 @@ In trap and drill the 808 is both kick and bass. Write its notes with the bass s
 - Boom bap: steady, hard snares, softer ghost notes, swung hats with uneven accents.
 - Trap: rolls that rise or fall in velocity, steady claps, 808 velocity mostly constant.
 
-## Check (hip-hop-specific)
+## Checks for hip-hop
 
-- The pocket leaves space for the vocal, with nothing busy under the key words.
-- Snare placement matches the feel: 2 and 4 for boom bap, beat 3 for half-time trap.
-- The pattern changes slightly every four bars.
-- The 808 and any separate kick are tuned and placed together.
+Run these with the drums skill's checks.
+
+| Check | Correct when |
+|---|---|
+| Room for the voice | no fill, roll or extra hit lands on the start of a key word in the vocal; the busiest moments fall in the gaps between lines |
+| Snare placement | 2 and 4 for boom bap; beat 3 for half-time trap and drill feels |
+| Variation | the pattern changes slightly at least every four bars |
+| 808 and kick | a separate kick and the 808 start together or alternate; neither rings across the other |
+| Rolls | rolls sit on weak beats or the end of a bar, and their velocities rise or fall rather than staying flat |
+
+## Result lines
+
+- "Hat rolls on beat 4 of bars 2 and 4, rising in velocity · clap still on 3, rolls clear of the rapper's lines."
+- "Stop under the punchline in bar 8: drums out for beat 4, back on the downbeat · lands on 1, nothing else changed."
+- "Boom bap swing to 58% on hats and ghost snares, snare a touch late · kick still with the bass, loop ends clean."
