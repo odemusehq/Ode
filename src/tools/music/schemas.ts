@@ -44,6 +44,6 @@ export const TimeSignatureInput = z
     numerator: z.number().int().min(1).max(MAX_NUMERATOR),
     denominator: z.literal(DENOMINATORS),
   })
-  .describe("Time signature, e.g. { numerator: 6, denominator: 8 }. Leave out to use the song's (4/4 if unknown).");
+  .describe("Time signature, e.g. { numerator: 6, denominator: 8 }. Leave out to use Live's.");
 
 export const SeedInput = z.number().int().min(0).optional().describe("Same seed, same result; change it for a different take.");

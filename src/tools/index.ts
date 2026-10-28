@@ -1,5 +1,7 @@
 import { createSdkMcpServer, tool, type McpSdkServerConfigWithInstance } from "@anthropic-ai/claude-agent-sdk";
+import { z } from "zod";
 import type { AnyTool, ToolContext } from "./define";
+import { RefNames } from "./live/ref-names";
 import { liveTools } from "./live";
 import { deviceTools } from "./device";
 import { browserTools } from "./browser";
@@ -31,10 +33,14 @@ const GROUPS: ReadonlyArray<readonly [ToolServer, readonly AnyTool[]]> = [
 /** Every Ode tool, served to the agent runtime as in-process MCP servers. */
 export class ToolRegistry {
   private readonly byFullName = new Map<string, AnyTool>();
+  private readonly byName = new Map<string, AnyTool>();
 
   constructor(private readonly ctx: ToolContext) {
     for (const [server, tools] of GROUPS) {
-      for (const definition of tools) this.byFullName.set(ToolRegistry.fullName(server, definition.name), definition);
+      for (const definition of tools) {
+        this.byFullName.set(ToolRegistry.fullName(server, definition.name), definition);
+        this.byName.set(definition.name, definition);
+      }
     }
   }
 
@@ -50,6 +56,20 @@ export class ToolRegistry {
 
   find(fullName: string): AnyTool | undefined {
     return this.byFullName.get(fullName);
+  }
+
+  /**
+   * The tool's one-line description of a call (by its full or short name), with what it touches named from the latest
+   * snapshot of the Set: "Bass · EQ Eight · 1 Frequency A to 200". Undefined for a tool without one, or for input the
+   * tool wouldn't accept.
+   */
+  describe(name: string, input: unknown): string | undefined {
+    const definition = this.byFullName.get(name) ?? this.byName.get(name);
+    if (!definition?.describe) return undefined;
+    const parsed = z.object(definition.input).safeParse(input);
+    if (!parsed.success) return undefined;
+    const line = definition.describe(parsed.data, new RefNames(this.ctx.snapshots.latest)).trim();
+    return line || undefined;
   }
 
   /** Subagents get every tool except those that change the Set or Mneme and those only the main agent uses. */

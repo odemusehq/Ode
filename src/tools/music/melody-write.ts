@@ -38,7 +38,8 @@ export const melodyWriteTool = defineTool({
     "density (notes per beat, 0.5–4); motifBars (optional length of the repeated motif); chords (optional chord events",
     "to fit, from beat 0); lyrics (optional lines to set, each line gets an equal share of the bars and its syllables",
     "decide the note count); range (optional MIDI low/high, defaults to the artist's vocal range); key (optional, defaults",
-    "to the song's key or the chords' key); timeSignature (optional); seed (same seed, same melody).",
+    "to Live's key when Scale Mode is on, else the chords' key); timeSignature (optional, defaults to Live's); seed (same seed,",
+    "same melody).",
     "Returns { notes, key, range, beatsPerBar }: notes start at beat 0 of the clip.",
   ].join(" "),
   input: {

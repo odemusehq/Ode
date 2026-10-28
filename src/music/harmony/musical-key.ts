@@ -1,6 +1,6 @@
 import { Interval, Mode, Note } from "tonal";
 
-/** A key as stored in the lead sheet and read from Live: root pitch class (0 = C) and scale name. */
+/** A key as Live holds it: root pitch class (0 = C) and scale name. */
 export interface KeySpec {
   root: number;
   scale: string;
@@ -74,7 +74,7 @@ export class MusicalKey {
     return `${this.tonicName} ${name}`;
   }
 
-  /** The key in the lead sheet's form, with Live's scale names. */
+  /** The key in Live's form, with Live's scale names. */
   get spec(): KeySpec {
     const scale =
       this.mode === "ionian" ? "Major" : this.mode === "aeolian" ? "Minor" : this.mode.charAt(0).toUpperCase() + this.mode.slice(1);

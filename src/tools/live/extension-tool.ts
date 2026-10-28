@@ -1,13 +1,14 @@
 import type { z } from "zod";
 import type { ExtensionOp } from "../../shared/live";
 import { defineTool, type OdeTool, type ToolChange } from "../define";
+import type { RefNames } from "./ref-names";
 
 interface ExtensionToolSpec<S extends z.ZodRawShape> {
   op: ExtensionOp;
   description: string;
   input: S;
   changes?: ToolChange;
-  describe?: (input: z.infer<z.ZodObject<S>>) => string;
+  describe?: (input: z.infer<z.ZodObject<S>>, names: RefNames) => string;
   alwaysLoad?: boolean;
 }
 

@@ -6,27 +6,35 @@ import type { SetSnapshot } from "../shared/set-snapshot";
 import type { Services } from "../services/types";
 import type { SongStore, SongVersions } from "../mneme/song-store";
 import type { Mneme } from "../mneme/artist";
+import type { LyricsStore } from "../mneme/lyrics-store";
 import type { PreferencesStore } from "../mneme/preferences";
+import type { RefNames } from "./live/ref-names";
 
-/** What a tool changes: nothing, the Live Set, or Mneme. In Manual mode, changes to the Set wait for the musician. */
+/** What a tool changes: nothing, the Live Set, or Mneme (the lyrics, the lead sheet, memory, settings, release files). */
 export type ToolChange = "none" | "set" | "memory";
 
 /** Reads the whole Set: every track, device and clip, plus the transport and the selection. */
 export interface SetReader {
   /** Throws "Ode can't read the Set: …" with the fix when Live isn't reachable. */
   read(): Promise<SetSnapshot>;
+  /** The most recent snapshot read, or null before the first one (or after another Set opened). */
+  readonly latest: SetSnapshot | null;
 }
 
 /** One-line questions to the musician, each with two to four answers. */
 export interface MusicianQuestions {
-  /** The answer the musician tapped, or null when they stopped Ode instead. */
-  ask(text: string, options: string[]): Promise<string | null>;
+  /**
+   * The answer the musician tapped, or null when they stopped Ode instead. `images`, when given, are file names in the
+   * release folder shown as the answers, one per option and in the same order.
+   */
+  ask(text: string, options: string[], images?: string[]): Promise<string | null>;
 }
 
 export interface ToolContext {
   config: OdeConfig;
   live: LiveConnections;
   song: SongStore;
+  lyrics: LyricsStore;
   versions: SongVersions;
   snapshots: SetReader;
   questions: MusicianQuestions;
@@ -44,8 +52,11 @@ export interface OdeTool<S extends z.ZodRawShape = z.ZodRawShape> {
   input: S;
   changes: ToolChange;
   run: (input: z.infer<z.ZodObject<S>>, ctx: ToolContext) => Promise<unknown>;
-  /** One plain sentence describing a change, shown while Ode works and when asking the musician to apply it. */
-  describe?: (input: z.infer<z.ZodObject<S>>) => string;
+  /**
+   * One line describing a call, shown while Ode works and when asking the musician to apply it, with what it touches
+   * named from the latest snapshot: "Bass · EQ Eight · 1 Frequency A to 200".
+   */
+  describe?: (input: z.infer<z.ZodObject<S>>, names: RefNames) => string;
   /** Keep this tool's definition always in the model's context (otherwise it is found through tool search). */
   alwaysLoad?: boolean;
   /** Only the main agent gets this tool (for example, asking the musician a question). */

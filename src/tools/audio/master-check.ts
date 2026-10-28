@@ -4,23 +4,23 @@ import { defineTool } from "../define";
 import { measurementReport } from "./report";
 import type { DeviceOpArgs, DeviceOpResults } from "../../shared/live-ops";
 
-/** Seconds of the Master recorded when no length is given. */
+/** Seconds of the Main track recorded when no length is given. */
 const DEFAULT_MEASURE_SECONDS = 30;
 const MS_PER_SECOND = 1000;
 
 export const masterCheckTool = defineTool({
   name: "master_check",
   description: [
-    "Measures the Master while the song plays and checks it against the musician's loudness target from Personalisation (for example −14 LUFS integrated and a −1 dBTP true-peak ceiling for streaming).",
+    "Measures the Main track while the song plays and checks it against the musician's loudness target setting (for example −14 LUFS integrated and a −1 dBTP true-peak ceiling for streaming).",
     "Use it while building or tuning a mastering chain, and whenever the musician asks if the song is loud enough or ready for release; never judge loudness without it.",
-    `It starts playback from \`from\` (beats; leave out to play from the current position), records the Master output for \`seconds\` (default ${DEFAULT_MEASURE_SECONDS}; choose a representative stretch such as the loudest chorus, or the whole song for a final check) through the Ode device, then measures loudness to ITU-R BS.1770-4 and EBU R128, true peak, sample peak and spectrum.`,
+    `It starts playback from \`from\` (beats; leave out to play from the current position), records the Main track's output for \`seconds\` (default ${DEFAULT_MEASURE_SECONDS}; choose a representative stretch such as the loudest chorus, or the whole song for a final check) through the Ode device, then measures loudness to ITU-R BS.1770-4 and EBU R128, true peak, sample peak and spectrum.`,
     "ok is true when integrated loudness is within ±1 LU of the target and the true peak is at or below the ceiling.",
     "advice holds plain steps: how far to move the limiter's gain or ceiling, notes on loudness range, and tonal-balance hints from the spectrum (compare with a reference track before acting on those).",
     "Returns { ok, advice: string[], target: { integratedLufs, truePeakDbtp }, readings: { durationSeconds, sampleRate, channels, loudness: { integratedLufs, momentaryMaxLufs, shortTermMaxLufs, rangeLu }, truePeakDbtp, samplePeakDbfs, spectrum: { tiltDbPerOctave, strongestBand, regions } } }; readings are null when nothing was heard.",
-    "Needs the Ode device on the Master track. Changes nothing in the Set; it only starts playback.",
+    "Needs the Ode device on the Main track. Changes nothing in the Set; it only starts playback.",
   ].join(" "),
   input: {
-    seconds: z.number().positive().optional().describe(`How long to record the Master, in seconds (default ${DEFAULT_MEASURE_SECONDS}).`),
+    seconds: z.number().positive().optional().describe(`How long to record the Main track, in seconds (default ${DEFAULT_MEASURE_SECONDS}).`),
     from: z.number().min(0).optional().describe("Beat to start playback from; leave out to play from the current position."),
   },
   changes: "none",

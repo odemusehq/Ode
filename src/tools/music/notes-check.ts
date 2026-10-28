@@ -16,8 +16,8 @@ export const notesCheckTool = defineTool({
     "sounding there; onsets that don't line up with another part, such as the kick; notes with no Drum Rack pad; and leaps",
     "wider than a limit. It also gives the lowest, highest and average pitch, to compare how high two sections sit.",
     "Use it after changing notes, on the clip's notes as they are now (midi_clip_get_notes), and fix what it lists before",
-    "reporting; only the checks whose inputs you give run (the key check uses the song's key when key is left out).",
-    "Inputs: notes; key (optional); range or vocal (true checks the singer's range from Personalisation); chords (events in",
+    "reporting; only the checks whose inputs you give run (the key check uses Live's key when key is left out and Scale Mode is on).",
+    "Inputs: notes; key (optional); range or vocal (true checks the singer's vocal range setting); chords (events in",
     "the same beats as the notes); lockTo with lockPitch (the other part's notes, and the one pitch of them to use, such as",
     "36 for a Drum Rack kick); pads (the Drum Rack's pad notes, from device_get); maxLeap (semitones); timeSignature.",
     "Returns { notes, lowest, highest, averagePitch, key, range, chordTones, lock, pads, leaps, passed }: notes are given",
@@ -28,7 +28,7 @@ export const notesCheckTool = defineTool({
     notes: NotesInput.min(1).describe("The part's notes."),
     key: KeyInput.optional(),
     range: RangeInput.optional(),
-    vocal: z.boolean().optional().describe("Check against the singer's range from Personalisation (when range is left out)."),
+    vocal: z.boolean().optional().describe("Check against the singer's vocal range setting (when range is left out)."),
     chords: ChordsInput.optional(),
     lockTo: NotesInput.optional().describe("Notes of the part to line up with, in the same beats."),
     lockPitch: z.number().int().min(0).max(MIDI_MAX).optional().describe("Only this pitch of lockTo counts, such as 36 for the kick."),
@@ -50,6 +50,6 @@ export const notesCheckTool = defineTool({
       pads: input.pads,
       maxLeap: input.maxLeap,
     });
-    return key ? check : { ...check, keyNote: "No key given and none in the lead sheet: pass the key from the project map." };
+    return key ? check : { ...check, keyNote: "No key given and Scale Mode is off in Live: pass the key from the project map." };
   },
 });

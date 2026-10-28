@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MIXER_INDEX, type ClipRef, type DeviceRef, type LocatorRef, type ParameterRef, type SceneRef, type TrackRef } from "../../shared/live";
+import { MIXER_INDEX } from "../../shared/live";
 
 const index = z.number().int().min(0);
 
@@ -82,41 +82,3 @@ export const nameFields = {
     .optional()
     .describe("Short tag Ode adds to the name so it can find this object again after it moves (record it in the lead sheet's links)"),
 };
-
-export function trackLabel(track: TrackRef): string {
-  if ("index" in track) return `track ${track.index + 1}`;
-  if ("name" in track) return `track "${track.name}"`;
-  if ("tag" in track) return `the track tagged ${track.tag}`;
-  if ("main" in track) return "the Main track";
-  return `return track ${track.returnIndex + 1}`;
-}
-
-export function clipLabel(clip: ClipRef): string {
-  if ("tag" in clip) return `the clip tagged ${clip.tag}`;
-  if ("slot" in clip) return `the clip in slot ${clip.slot + 1} of ${trackLabel(clip.track)}`;
-  return `the Arrangement clip at beat ${clip.start} on ${trackLabel(clip.track)}`;
-}
-
-export function deviceLabel(device: DeviceRef): string {
-  const steps: string[] = [];
-  for (let i = 0; i + 1 < (device.chain?.length ?? 0); i += 2) {
-    steps.push(`rack ${device.chain![i]! + 1} › chain ${device.chain![i + 1]! + 1}`);
-  }
-  const where = `${trackLabel(device.track)}${steps.length ? ` (${steps.join(" › ")})` : ""}`;
-  return device.index === MIXER_INDEX ? `the mixer of ${where}` : `device ${device.index + 1} on ${where}`;
-}
-
-export function parameterLabel(parameter: ParameterRef): string {
-  const name = typeof parameter.parameter === "string" ? `"${parameter.parameter}"` : `parameter ${parameter.parameter + 1}`;
-  return `${name} of ${deviceLabel(parameter.device)}`;
-}
-
-export function sceneLabel(scene: SceneRef): string {
-  return "index" in scene ? `scene ${scene.index + 1}` : `scene "${scene.name}"`;
-}
-
-export function locatorLabel(locator: LocatorRef): string {
-  if ("index" in locator) return `locator ${locator.index + 1}`;
-  if ("name" in locator) return `locator "${locator.name}"`;
-  return `the locator at beat ${locator.time}`;
-}

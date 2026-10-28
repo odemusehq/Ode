@@ -4,6 +4,7 @@ import { drumGrooveWriteTool } from "./drum-groove-write";
 import { harmonizeTool } from "./harmonize";
 import { harmonyVocalsWriteTool } from "./harmony-vocals-write";
 import { lyricsAnalyzeTool } from "./lyrics-analyze";
+import { lyricsFitMelodyTool } from "./lyrics-fit-melody";
 import { melodyVaryTool } from "./melody-vary";
 import { melodyWriteTool } from "./melody-write";
 import { notesCheckTool } from "./notes-check";
@@ -28,6 +29,7 @@ export const musicTools: AnyTool[] = [
   prosodyCheckTool,
   singabilityCheckTool,
   setLyricsToMelodyTool,
+  lyricsFitMelodyTool,
   melodyWriteTool,
   melodyVaryTool,
   harmonizeTool,

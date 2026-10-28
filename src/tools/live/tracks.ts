@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { extensionTool } from "./extension-tool";
-import { ArrangementClipRefSchema, DeviceRefSchema, LoopSchema, NoteSchema, TrackRefSchema, deviceLabel, nameFields, trackLabel } from "./schemas";
+import { SetWording } from "../../mneme/set-diff";
+import { ArrangementClipRefSchema, DeviceRefSchema, LoopSchema, NoteSchema, TrackRefSchema, nameFields } from "./schemas";
 
 export const trackTools = [
   extensionTool({
@@ -21,10 +22,15 @@ export const trackTools = [
       solo: z.boolean().optional(),
       arm: z.boolean().optional().describe("Arm the track for recording"),
     },
-    describe: ({ track, ...changes }) =>
-      `Change ${trackLabel(track)}: ${Object.entries(changes)
-        .map(([key, value]) => `${key} → ${String(value)}`)
-        .join(", ")}.`,
+    describe: ({ track, name, mute, solo, arm }, names) => {
+      const changes = [
+        name === undefined ? "" : `rename to ${name}`,
+        mute === undefined ? "" : mute ? "mute" : "unmute",
+        solo === undefined ? "" : solo ? "solo" : "unsolo",
+        arm === undefined ? "" : arm ? "arm" : "disarm",
+      ].filter((change) => change.length > 0);
+      return `${names.track(track)} · ${SetWording.list(changes) || "no change"}`;
+    },
   }),
   extensionTool({
     op: "track_create_midi_clip",
@@ -38,8 +44,8 @@ export const trackTools = [
       notes: z.array(NoteSchema).optional(),
       ...nameFields,
     },
-    describe: ({ track, start, length, notes, name }) =>
-      `Create a MIDI clip${name ? ` "${name}"` : ""} on ${trackLabel(track)} at beat ${start}, ${length} beats long${notes ? ` with ${notes.length} notes` : ""}.`,
+    describe: ({ track, start, length, notes, name }, names) =>
+      `${names.track(track)} · new MIDI clip${name ? ` ${name}` : ""} in ${names.span(start, start + length)}${notes ? ` with ${SetWording.count(notes.length, "note")}` : ""}`,
   }),
   extensionTool({
     op: "track_create_audio_clip",
@@ -55,28 +61,28 @@ export const trackTools = [
       loop: LoopSchema.optional(),
       ...nameFields,
     },
-    describe: ({ track, start, name }) => `Place an audio clip${name ? ` "${name}"` : ""} on ${trackLabel(track)} at beat ${start}.`,
+    describe: ({ track, start, name }, names) => `${names.track(track)} · new audio clip${name ? ` ${name}` : ""} at ${names.position(start)}`,
   }),
   extensionTool({
     op: "track_delete_clip",
     changes: "set",
     description: "Delete an Arrangement clip. For Session clips use clip_slot_delete_clip.",
     input: { clip: z.union([ArrangementClipRefSchema, z.object({ tag: z.string().min(1) })]) },
-    describe: ({ clip }) => ("tag" in clip ? `Delete the clip tagged ${clip.tag}.` : `Delete the Arrangement clip at beat ${clip.start} on ${trackLabel(clip.track)}.`),
+    describe: ({ clip }, names) => `${names.clip(clip)} · delete`,
   }),
   extensionTool({
     op: "track_clear_range",
     changes: "set",
     description: "Delete everything on a track between two Arrangement beats; clips crossing the edges are shortened to the edge.",
     input: { track: TrackRefSchema, start: z.number().min(0), end: z.number().positive() },
-    describe: ({ track, start, end }) => `Clear ${trackLabel(track)} from beat ${start} to beat ${end}.`,
+    describe: ({ track, start, end }, names) => `${names.track(track)} · clear ${names.span(start, end)}`,
   }),
   extensionTool({
     op: "track_create_take_lane",
     changes: "set",
     description: "Add a take lane to a track (used for comping recordings).",
     input: { track: TrackRefSchema, name: z.string().min(1).optional() },
-    describe: ({ track }) => `Add a take lane to ${trackLabel(track)}.`,
+    describe: ({ track, name }, names) => `${names.track(track)} · new take lane${name ? ` ${name}` : ""}`,
   }),
   extensionTool({
     op: "track_insert_device",
@@ -88,20 +94,20 @@ export const trackTools = [
       device: z.string().min(1).describe("Exact name of the built-in Live device"),
       index: z.number().int().min(0).optional().describe("0-based position in the chain; default: the end"),
     },
-    describe: ({ track, device }) => `Add ${device} to ${trackLabel(track)}.`,
+    describe: ({ track, device }, names) => `${names.track(track)} · add ${device}`,
   }),
   extensionTool({
     op: "track_delete_device",
     changes: "set",
     description: "Remove a device from a track's device chain.",
     input: { device: DeviceRefSchema },
-    describe: ({ device }) => `Remove ${deviceLabel(device)}.`,
+    describe: ({ device }, names) => `${names.device(device)} · remove`,
   }),
   extensionTool({
     op: "track_duplicate_device",
     changes: "set",
     description: "Duplicate a device; the copy goes right after the original.",
     input: { device: DeviceRefSchema },
-    describe: ({ device }) => `Duplicate ${deviceLabel(device)}.`,
+    describe: ({ device }, names) => `${names.device(device)} · duplicate`,
   }),
 ];

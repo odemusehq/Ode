@@ -35,13 +35,14 @@ const applyAsOneUndoStep = defineTool({
       .array(z.object({ op: z.enum(GROUPABLE_OPS), args: z.record(z.string(), z.unknown()) }))
       .min(1),
   },
-  describe: ({ calls }) =>
+  describe: ({ calls }, names) =>
     calls
       .map((call) => {
         const definition = byName.get(call.op);
-        return definition?.describe?.(call.args as never) ?? call.op;
+        const args = definition ? z.object(definition.input).safeParse(call.args) : undefined;
+        return args?.success ? (definition?.describe?.(args.data, names) ?? call.op) : call.op;
       })
-      .join(" "),
+      .join("; "),
   run: async ({ calls }, ctx) => {
     const checked = calls.map((call) => {
       const definition = byName.get(call.op);

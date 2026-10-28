@@ -19,7 +19,7 @@ export const drumGrooveWriteTool = defineTool({
     "downbeat, half-time bridges, breakdowns without kick, builds with a snare roll that speeds up, an outro ending on",
     "a single hit; most sections end with a fill (tom run, snare roll, hi-hat roll, percussion pickup or a drop-out).",
     "Velocities and timing are humanised and swung where the genre swings.",
-    "Inputs: genre (optional, defaults to the song's genre, else pop); section (intro, verse, pre-chorus, chorus,",
+    "Inputs: genre (optional, defaults to the genre setting, else pop); section (intro, verse, pre-chorus, chorus,",
     "post-chorus, bridge, breakdown, build, drop, outro, other); bars; energy (0–1, how hard the section hits); seed.",
     "Returns { genre, recognised, section, notes, drumMap }: recognised is false when the genre name was not known and",
     "pop was used; notes start at beat 0.",

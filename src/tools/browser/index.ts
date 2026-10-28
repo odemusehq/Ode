@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { defineTool, type AnyTool } from "../define";
-import { TrackRefSchema, trackLabel } from "../live/schemas";
+import { TrackRefSchema } from "../live/schemas";
 
 const CATEGORIES = ["instruments", "audio_effects", "midi_effects", "plugins", "drums", "sounds", "samples", "user_library", "all"] as const;
 
@@ -23,7 +23,7 @@ export const browserTools: AnyTool[] = [
     description:
       "Load an item from Live's browser (a plug-in, a preset, an instrument or effect preset, a drum kit or a sample) onto a track, as if the musician double-clicked it with that track selected.",
     input: { uri: z.string().min(1).describe("uri from browser_search or plugin_list"), track: TrackRefSchema },
-    describe: ({ track }) => `Load the chosen browser item onto ${trackLabel(track)}.`,
+    describe: ({ track }, names) => `${names.track(track)} · load the chosen item from Live's browser`,
     run: (input, ctx) => ctx.live.bridge.call("browser_load", input),
   }),
   defineTool({

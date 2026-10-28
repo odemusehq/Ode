@@ -10,7 +10,7 @@ export const setLyricsToMelodyTool = defineTool({
     "syllables than notes it splits notes; when there are fewer it sings melismas (one syllable over several notes).",
     "Use it to put words under a melody or to prepare a demo vocal; write the returned notes to the clip with the MIDI",
     "note tools if they changed.",
-    "Inputs: line; notes (the melody for that line); timeSignature (optional, defaults to the song's); accent (optional).",
+    "Inputs: line; notes (the melody for that line); timeSignature (optional, defaults to Live's); accent (optional).",
     "Returns { accent, count, syllables, notes, alignment, splitSyllables, melismaSyllables }: notes is the melody",
     "after any splits; alignment pairs each syllable index with the note index it is sung on (a melisma syllable",
     "appears once per note); syllables gives the spelling, word and stress for display under the notes.",

@@ -1,11 +1,11 @@
 import { copyFile, mkdir, readdir, stat, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { z } from "zod";
 import { COVER_CHOICE, COVER_FILE } from "../../shared/api";
 import type { SongInfo } from "../../shared/live-ops";
 import { tempDir, tempFile, userPaths } from "../../mneme/paths";
 import { defineTool, type AnyTool, type ToolContext } from "../define";
-import { NoteSchema, TrackRefSchema, trackLabel } from "../live/schemas";
+import { NoteSchema, TrackRefSchema } from "../live/schemas";
 
 const audioSource = {
   path: z.string().min(1).optional().describe("An audio file; or give track, start and end to render it from the Arrangement"),
@@ -55,21 +55,35 @@ export const mediaTools: AnyTool[] = [
     name: "cover_art_create",
     changes: "memory",
     description:
-      `Create cover art choices for the song from a written brief (subject, mood, colours, style; no text or logos unless asked): several images at 3000 × 3000 pixels, the size release platforms ask for, saved as Ode/release/cover-1.png, cover-2.png and so on, numbered after any earlier choices, which stay. The musician picks one in the Release tab and it becomes Ode/release/${COVER_FILE}. Base the brief on what the song is about; never imitate another artist's artwork.`,
+      `Create cover art choices for the song from a written brief (subject, mood, colours, style; no text or logos unless asked): several images at 3000 × 3000 pixels, the size release platforms ask for, saved in the song's release folder as cover-1.png, cover-2.png and so on, numbered after any earlier choices, which stay. Then let the musician pick one with ask_musician (options "Cover 1", "Cover 2"…, images the files returned, in the same order) and keep their pick with cover_art_choose; in Let me hear it mode pick the one that fits the song best and say so. Base the brief on what the song is about; never imitate another artist's artwork. Returns { choices }: the new files.`,
     input: { brief: z.string().min(10) },
-    describe: () => "Create cover art choices for the song in the release folder.",
+    describe: () => "Release · cover art choices",
     run: async ({ brief }, ctx) => {
       const dir = ctx.song.releaseDir;
       const count = ctx.config.release.coverChoices;
       await mkdir(dir, { recursive: true });
       const earlier = (await readdir(dir)).map((name) => Number(COVER_CHOICE.exec(name)?.[1] ?? 0));
       const first = Math.max(0, ...earlier) + 1;
-      const choices = await Promise.all(
+      const paths = await Promise.all(
         Array.from({ length: count }, (_, index) =>
           ctx.services.generateImage(`${brief}\nVersion ${index + 1} of ${count}: a different composition from the others.`, join(dir, `cover-${first + index}.png`)),
         ),
       );
-      return { choices, note: `The musician picks one in the Release tab; it becomes ${COVER_FILE}.` };
+      const choices = paths.map((path) => basename(path));
+      return { choices, note: "Ask the musician which one with ask_musician (images: these files), then keep it with cover_art_choose." };
+    },
+  }),
+  defineTool({
+    name: "cover_art_choose",
+    changes: "memory",
+    description: `Keep one of the cover art choices made with cover_art_create as the song's cover: the file (such as "cover-2.png") is copied to ${COVER_FILE} in the release folder, replacing the cover there. Returns { cover, from }.`,
+    input: { file: z.string().regex(COVER_CHOICE).describe('One of the choices, such as "cover-2.png"') },
+    describe: ({ file }) => `Release · ${file} as the cover`,
+    run: async ({ file }, ctx) => {
+      const source = join(ctx.song.releaseDir, file);
+      if (!(await exists(source))) throw new Error(`There is no ${file} in the release folder: make choices with cover_art_create first.`);
+      await copyFile(source, join(ctx.song.releaseDir, COVER_FILE));
+      return { cover: COVER_FILE, from: file };
     },
   }),
   defineTool({
@@ -87,7 +101,7 @@ export const mediaTools: AnyTool[] = [
     name: "demo_vocal_render",
     changes: "none",
     description:
-      "Sing lyrics on a melody in the artist's own voice, so they can hear a demo vocal before recording. Give each lyric line with the notes it is sung on (beats from the start of the demo, in order, one or more notes per syllable after set_lyrics_to_melody). Needs a saved recording of the artist's voice (voice_reference_set). Returns a WAV file to import into the project and place on an audio track.",
+      "Sing lyrics on a melody in the artist's own voice, so they can hear a demo vocal before recording. Give each lyric line with the notes it is sung on (beats from the start of the demo, in order, one or more notes per syllable after set_lyrics_to_melody; lyrics_fit_melody gives each line's phrase). Needs a saved recording of the artist's voice (voice_reference_set). Returns a WAV file to import into the project and place on an audio track.",
     input: {
       lines: z.array(z.object({ text: z.string().min(1), notes: z.array(NoteSchema).min(1) })).min(1),
       tempo: z.number().min(20).max(999).optional().describe("Default: the Set's tempo"),
@@ -125,8 +139,8 @@ export const mediaTools: AnyTool[] = [
       end: z.number().positive(),
       consent: z.literal(true).describe("The artist agreed to Ode using this recording of their voice for demo vocals"),
     },
-    describe: ({ track, start, end }) =>
-      `Save your singing on ${trackLabel(track)} (beats ${start}–${end}) as the recording Ode uses to sing demo vocals in your voice.`,
+    describe: ({ track, start, end }, names) =>
+      `Save your singing on ${names.track(track)} (${names.span(start, end)}) as the recording Ode uses to sing demo vocals in your voice`,
     run: async ({ track, start, end }, ctx) => {
       const files = voiceFiles(ctx);
       const { path } = await ctx.live.extension.call<{ path: string }>("render_track_audio", { track, start, end });

@@ -85,7 +85,6 @@ export class SongFormPlanner {
         name: (totals.get(base) ?? 0) > 1 ? `${base} ${number}` : base,
         startBeat,
         lengthBeats,
-        lines: [],
         chords: [],
       };
       startBeat += lengthBeats;

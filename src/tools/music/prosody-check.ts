@@ -11,7 +11,7 @@ export const prosodyCheckTool = defineTool({
     "whether it is a melodic high point. A stressed syllable on a weaker note than an unstressed neighbour is an inversion.",
     "Use it after setting words to a melody, and fix the issues it reports before reporting the result. The line is set to the notes with the same",
     "pronunciation and alignment as set_lyrics_to_melody.",
-    "Inputs: line; notes (the melody for that line); timeSignature (optional, defaults to the song's); accent (optional).",
+    "Inputs: line; notes (the melody for that line); timeSignature (optional, defaults to Live's); accent (optional).",
     "Returns { accent, score (0–1, 1 = no problems), issues, syllables, alignment, notes }: each issue has syllable",
     "(index into syllables), problem and fix in plain words; alignment pairs each syllable with the note it is sung on.",
   ].join(" "),

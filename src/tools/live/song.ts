@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { extensionTool } from "./extension-tool";
-import { LocatorRefSchema, SceneRefSchema, TrackRefSchema, locatorLabel, nameFields, sceneLabel, trackLabel } from "./schemas";
+import { LocatorRefSchema, SceneRefSchema, TrackRefSchema, nameFields } from "./schemas";
 
 export const songTools = [
   extensionTool({
@@ -15,35 +15,35 @@ export const songTools = [
     changes: "set",
     description: "Set the Set's tempo in BPM.",
     input: { tempo: z.number().min(20).max(999).describe("Beats per minute") },
-    describe: ({ tempo }) => `Set the tempo to ${tempo} BPM.`,
+    describe: ({ tempo }) => `Song · tempo to ${tempo} BPM`,
   }),
   extensionTool({
     op: "song_create_midi_track",
     changes: "set",
     description: "Create a MIDI track after the selected track (or at the end). Returns the new track's reference, index and name.",
     input: { ...nameFields },
-    describe: ({ name }) => `Create a MIDI track${name ? ` called "${name}"` : ""}.`,
+    describe: ({ name }) => `Song · new MIDI track${name ? ` ${name}` : ""}`,
   }),
   extensionTool({
     op: "song_create_audio_track",
     changes: "set",
     description: "Create an audio track after the selected track (or at the end). Returns the new track's reference, index and name.",
     input: { ...nameFields },
-    describe: ({ name }) => `Create an audio track${name ? ` called "${name}"` : ""}.`,
+    describe: ({ name }) => `Song · new audio track${name ? ` ${name}` : ""}`,
   }),
   extensionTool({
     op: "song_delete_track",
     changes: "set",
     description: "Delete a track and everything on it.",
     input: { track: TrackRefSchema },
-    describe: ({ track }) => `Delete ${trackLabel(track)}.`,
+    describe: ({ track }, names) => `${names.track(track)} · delete the track`,
   }),
   extensionTool({
     op: "song_duplicate_track",
     changes: "set",
     description: "Duplicate a track with its clips and devices; the copy goes right after the original.",
     input: { track: TrackRefSchema, ...nameFields },
-    describe: ({ track }) => `Duplicate ${trackLabel(track)}.`,
+    describe: ({ track, name }, names) => `${names.track(track)} · duplicate the track${name ? ` as ${name}` : ""}`,
   }),
   extensionTool({
     op: "song_create_scene",
@@ -53,41 +53,41 @@ export const songTools = [
       index: z.number().int().min(-1).optional().describe("0-based position; -1 or empty for the end"),
       name: z.string().min(1).optional(),
     },
-    describe: ({ name }) => `Create a scene${name ? ` called "${name}"` : ""}.`,
+    describe: ({ name }) => `Song · new scene${name ? ` ${name}` : ""}`,
   }),
   extensionTool({
     op: "song_delete_scene",
     changes: "set",
     description: "Delete a scene and the clips in its row.",
     input: { scene: SceneRefSchema },
-    describe: ({ scene }) => `Delete ${sceneLabel(scene)}.`,
+    describe: ({ scene }, names) => `Song · delete ${names.scene(scene)}`,
   }),
   extensionTool({
     op: "song_duplicate_scene",
     changes: "set",
     description: "Duplicate a scene with its clips; the copy goes right after the original.",
     input: { scene: SceneRefSchema },
-    describe: ({ scene }) => `Duplicate ${sceneLabel(scene)}.`,
+    describe: ({ scene }, names) => `Song · duplicate ${names.scene(scene)}`,
   }),
   extensionTool({
     op: "song_create_locator",
     changes: "set",
     description: "Add a locator in the Arrangement at a beat, for example to mark where Verse 1 or the Chorus starts.",
     input: { time: z.number().min(0).describe("Position in beats"), name: z.string().min(1).optional() },
-    describe: ({ time, name }) => `Add a locator${name ? ` "${name}"` : ""} at beat ${time}.`,
+    describe: ({ time, name }, names) => `Song · new locator${name ? ` ${name}` : ""} at ${names.position(time)}`,
   }),
   extensionTool({
     op: "song_delete_locator",
     changes: "set",
     description: "Delete a locator from the Arrangement.",
     input: { locator: LocatorRefSchema },
-    describe: ({ locator }) => `Delete ${locatorLabel(locator)}.`,
+    describe: ({ locator }, names) => `Song · delete ${names.locator(locator)}`,
   }),
   extensionTool({
     op: "locator_rename",
     changes: "set",
     description: "Rename a locator.",
     input: { locator: LocatorRefSchema, name: z.string().min(1) },
-    describe: ({ locator, name }) => `Rename ${locatorLabel(locator)} to "${name}".`,
+    describe: ({ locator, name }, names) => `Song · ${names.locator(locator)} · rename to ${name}`,
   }),
 ];
