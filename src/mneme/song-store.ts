@@ -1,9 +1,10 @@
-import { appendFile, cp, mkdir, readFile, rename, rm, stat } from "node:fs/promises";
+import { cp, mkdir, rename, rm, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { ZodType } from "zod";
-import { HistoryEntrySchema, LeadSheetSchema, emptyLeadSheet, type HistoryEntry, type LeadSheet } from "../shared/song";
+import { LeadSheetSchema, emptyLeadSheet, type LeadSheet } from "../shared/song";
 import { JsonFile } from "./json-file";
 import { projectOdeDir, type UserPaths } from "./paths";
+import { VersionHistory } from "./version-history";
 
 export interface SongLocation {
   /** Stable id of the Set, kept by the Ode device. */
@@ -34,7 +35,8 @@ async function moveFolder(from: string, to: string): Promise<void> {
 
 /**
  * Everything about the open song, stored in the Live project (<project>/Ode/),
- * or in the user folder while the Set is unsaved.
+ * or in the user folder while the Set is unsaved. The version history lives in its versions/ folder,
+ * so the first-save move takes it along.
  */
 export class SongStore {
   private static readonly NO_SET = "no-set";
@@ -69,6 +71,10 @@ export class SongStore {
 
   get releaseDir(): string {
     return join(this.dir, "release");
+  }
+
+  get versionsDir(): string {
+    return join(this.dir, "versions");
   }
 
   /** True when the open Set was unsaved and `location` is the same Set after its first save. */
@@ -106,22 +112,6 @@ export class SongStore {
     return next;
   }
 
-  async appendHistory(entry: Omit<HistoryEntry, "time">): Promise<HistoryEntry> {
-    const full = HistoryEntrySchema.parse({ ...entry, time: new Date().toISOString() });
-    await mkdir(this.dir, { recursive: true });
-    await appendFile(join(this.dir, "history.jsonl"), `${JSON.stringify(full)}\n`, "utf8");
-    return full;
-  }
-
-  async readHistory(limit: number): Promise<HistoryEntry[]> {
-    try {
-      const lines = (await readFile(join(this.dir, "history.jsonl"), "utf8")).split("\n").filter(Boolean);
-      return lines.slice(-limit).map((line) => HistoryEntrySchema.parse(JSON.parse(line)));
-    } catch {
-      return [];
-    }
-  }
-
   async lyrics(): Promise<string[]> {
     const sheet = await this.read();
     return sheet.sections.flatMap((section) => section.lines.map((line) => line.text));
@@ -129,5 +119,25 @@ export class SongStore {
 
   private sheetFile(dir: string): JsonFile<LeadSheet> {
     return new JsonFile(join(dir, "song.json"), LeadSheetSchema as unknown as ZodType<LeadSheet>, emptyLeadSheet);
+  }
+}
+
+/** The open song's version history. It follows the song when another Set opens or an unsaved Set is saved. */
+export class SongVersions {
+  private current: VersionHistory | null = null;
+  private dir = "";
+
+  constructor(
+    private readonly song: SongStore,
+    private readonly snapshotEvery: number,
+  ) {}
+
+  get history(): VersionHistory {
+    const dir = this.song.versionsDir;
+    if (!this.current || dir !== this.dir) {
+      this.current = new VersionHistory(dir, this.snapshotEvery);
+      this.dir = dir;
+    }
+    return this.current;
   }
 }

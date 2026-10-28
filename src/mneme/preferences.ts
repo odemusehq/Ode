@@ -5,6 +5,7 @@ import {
   STREAMING_TARGET,
   type Accent,
   type Detectable,
+  type Mode,
   type Personalisation,
   type PreferencesFile,
   type ResolvedPersonalisation,
@@ -16,7 +17,7 @@ import { SpellingDetector } from "./spelling";
 
 type DetectableValue<K extends keyof Personalisation> = Personalisation[K] extends Detectable<infer T> ? T : never;
 
-/** Artist-level settings: Personalisation and the kinds of change allowed without asking. */
+/** Artist-level settings: Personalisation and the mode Ode works in. */
 export class PreferencesStore {
   private readonly file: JsonFile<PreferencesFile>;
   private readonly spelling = new SpellingDetector();
@@ -32,8 +33,17 @@ export class PreferencesStore {
   update(update: PreferencesUpdate): Promise<PreferencesFile> {
     return this.file.update((current) => ({
       personalisation: { ...current.personalisation, ...update.personalisation },
-      allowedChanges: update.allowedChanges ?? current.allowedChanges,
+      mode: update.mode ?? current.mode,
     }));
+  }
+
+  /** How Ode applies changes: Auto (the default), Manual or Let me hear it. */
+  async mode(): Promise<Mode> {
+    return (await this.file.read()).mode;
+  }
+
+  async setMode(mode: Mode): Promise<Mode> {
+    return (await this.file.update((current) => ({ ...current, mode }))).mode;
   }
 
   /** Stores a detected value; ignored when the musician has set the value themselves. */
@@ -44,16 +54,6 @@ export class PreferencesStore {
       const detected = { mode: "detect", detected: { value, confidence } } as Personalisation[K];
       return { ...current, personalisation: { ...current.personalisation, [key]: detected } };
     });
-  }
-
-  async allow(toolName: string): Promise<void> {
-    await this.file.update((current) =>
-      current.allowedChanges.includes(toolName) ? current : { ...current, allowedChanges: [...current.allowedChanges, toolName] },
-    );
-  }
-
-  async isAllowed(toolName: string): Promise<boolean> {
-    return (await this.file.read()).allowedChanges.includes(toolName);
   }
 
   /** The settings in force for a song: song overrides, then artist settings, then detection. */

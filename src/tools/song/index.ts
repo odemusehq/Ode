@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { z } from "zod";
 import { CreditSchema, LeadSheetSchema, type LeadSheet } from "../../shared/song";
 import { defineTool, type AnyTool } from "../define";
+import { historyTools } from "./history";
 
 const PERSONALISATION_FIELDS = ["genre", "spelling", "pronunciation", "vocalRange", "loudnessTarget"] as const;
 
@@ -31,13 +32,6 @@ export const songTools: AnyTool[] = [
     input: LeadSheetSchema.partial().shape,
     describe: (patch) => `Update the lead sheet: ${Object.keys(patch).join(", ")}.`,
     run: (patch, ctx) => ctx.song.update(patch as Partial<LeadSheet>),
-  }),
-  defineTool({
-    name: "history_read",
-    changes: "none",
-    description: "Read the song's recent history: what Ode suggested and whether the musician kept, changed or rejected it, newest last.",
-    input: { limit: z.number().int().min(1).max(500).optional() },
-    run: ({ limit }, ctx) => ctx.song.readHistory(limit ?? 50),
   }),
   defineTool({
     name: "memory_recall",
@@ -120,4 +114,5 @@ export const songTools: AnyTool[] = [
       return { folder: dir, files: ["lyrics.txt", "credits.json"] };
     },
   }),
+  ...historyTools,
 ];

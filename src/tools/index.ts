@@ -52,14 +52,16 @@ export class ToolRegistry {
     return this.byFullName.get(fullName);
   }
 
-  /** Subagents get every tool except those that change the Set or Mneme. */
+  /** Subagents get every tool except those that change the Set or Mneme and those only the main agent uses. */
   namesFor(agent: "main" | "subagent"): string[] {
-    return [...this.byFullName].filter(([, definition]) => agent === "main" || definition.changes === "none").map(([name]) => name);
+    return [...this.byFullName]
+      .filter(([, definition]) => agent === "main" || (definition.changes === "none" && !definition.mainAgentOnly))
+      .map(([name]) => name);
   }
 
   /** Tools that run without asking: those that change nothing. */
   readOnlyNames(): string[] {
-    return this.namesFor("subagent");
+    return [...this.byFullName].filter(([, definition]) => definition.changes === "none").map(([name]) => name);
   }
 
   private wrap(definition: AnyTool) {

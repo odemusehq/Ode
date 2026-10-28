@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { createConnection, type Socket } from "node:net";
 import type { WSContext } from "hono/ws";
-import type { LiveConnections, LiveLink, LiveRequest, LiveResponse, LiveStatus } from "../shared/live";
-import type { MeterReading, SetInfo } from "../shared/live-ops";
+import type { DeviceCommand, DeviceEventName, LiveConnections, LiveLink, LiveRequest, LiveResponse, LiveStatus } from "../shared/live";
+import type { MeterReading, SelectionInfo, SetInfo } from "../shared/live-ops";
 import type { LiveTimeouts } from "../shared/config";
 
 export class NotConnectedError extends Error {}
@@ -45,12 +45,12 @@ class PendingCalls {
   }
 }
 
-/** Operations that need a long timeout: rendering audio and measuring the Master. */
-const LONG_OPS: ReadonlySet<string> = new Set(["render_track_audio", "master_measure", "apply_as_one_undo_step"]);
+/** Operations that need a long timeout: rendering audio, measuring the Master, big groups and reading the whole Set. */
+const LONG_OPS: ReadonlySet<string> = new Set(["render_track_audio", "master_measure", "apply_as_one_undo_step", "set_snapshot"]);
 
 interface DeviceEvent {
   type: "event";
-  name: "set" | "meters";
+  name: DeviceEventName;
   data: unknown;
 }
 
@@ -60,8 +60,10 @@ export class SocketLink implements LiveLink {
   protected readonly pending = new PendingCalls();
 
   constructor(
-    protected readonly label: string,
-    protected readonly fix: string,
+    /** The part's name, e.g. "Ode extension". */
+    readonly label: string,
+    /** What the musician does to connect it, in plain words. */
+    readonly fix: string,
     protected readonly timeouts: LiveTimeouts,
     private readonly onEvent: (event: DeviceEvent) => void = () => undefined,
   ) {}
@@ -134,12 +136,19 @@ export class ExtensionLink extends SocketLink {
   }
 
   private static isRead(op: string): boolean {
-    return op.endsWith("_get") || op === "midi_clip_get_notes" || op === "render_track_audio" || op === "import_into_project";
+    return (
+      op.endsWith("_get") ||
+      op === "midi_clip_get_notes" ||
+      op === "render_track_audio" ||
+      op === "import_into_project" ||
+      op === "set_snapshot"
+    );
   }
 }
 
 /** The Python bridge inside Live: JSON lines over TCP. */
 export class BridgeLink implements LiveLink {
+  readonly fix = "In Live's settings (Link, Tempo & MIDI), choose Ode as a Control Surface.";
   private socket: Socket | null = null;
   private buffer = "";
   private readonly pending = new PendingCalls();
@@ -160,9 +169,7 @@ export class BridgeLink implements LiveLink {
 
   async call<R = unknown>(op: string, args: unknown, timeoutMs?: number): Promise<R> {
     const socket = await this.ensure().catch(() => {
-      throw new NotConnectedError(
-        "not connected: Ode bridge. In Live's settings (Link, Tempo & MIDI), choose Ode as a Control Surface.",
-      );
+      throw new NotConnectedError(`not connected: Ode bridge. ${this.fix}`);
     });
     const request: LiveRequest = { id: randomUUID(), op, args: args ?? {} };
     socket.write(`${JSON.stringify(request)}\n`);
@@ -205,6 +212,10 @@ export interface LiveHubEvents {
   onSetInfo: (info: SetInfo) => void;
   onMeters: (reading: MeterReading) => void;
   onStatus: (status: LiveStatus) => void;
+  /** The musician selected another track, clip or scene in Live. */
+  onSelection?: (selection: SelectionInfo) => void;
+  /** The device's Again or Undo control was pressed (or the key or pad mapped to it). */
+  onCommand?: (command: DeviceCommand) => void;
 }
 
 /** The server's connections to Live: extension, Ode device and Python bridge. */
@@ -260,6 +271,10 @@ export class LiveHub implements LiveConnections {
       this.publishStatus();
     } else if (event.name === "meters") {
       this.events.onMeters(event.data as MeterReading);
+    } else if (event.name === "selection") {
+      this.events.onSelection?.(event.data as SelectionInfo);
+    } else if (event.name === "command") {
+      this.events.onCommand?.(event.data as DeviceCommand);
     }
   }
 }

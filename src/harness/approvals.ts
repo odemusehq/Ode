@@ -1,7 +1,5 @@
 import { randomUUID } from "node:crypto";
 import type { UiEvent } from "../shared/events";
-import type { PreferencesStore } from "../mneme/preferences";
-import type { SongStore } from "../mneme/song-store";
 
 export enum Decision {
   Allow = "allow",
@@ -22,32 +20,23 @@ export interface ApprovalView {
   input: unknown;
 }
 
-/** Changes waiting for the musician's approval, and the record of what they decided. */
+/** Changes waiting for the musician's Apply or Skip (Manual mode, and consent for the singer's voice in every mode). */
 export class Approvals {
   private readonly waiting = new Map<string, WaitingApproval>();
 
-  constructor(
-    private readonly emit: (event: UiEvent) => void,
-    private readonly prefs: PreferencesStore,
-    private readonly song: SongStore,
-  ) {}
+  constructor(private readonly emit: (event: UiEvent) => void) {}
 
-  async request(tool: string, input: unknown, summary: string, signal: AbortSignal): Promise<Decision> {
-    if (await this.prefs.isAllowed(tool)) return Decision.Allow;
+  request(tool: string, input: unknown, summary: string, signal: AbortSignal): Promise<Decision> {
     const id = randomUUID();
-    const decision = await new Promise<Decision>((resolve) => {
+    return new Promise<Decision>((resolve) => {
       this.waiting.set(id, { tool, summary, input, resolve });
       signal.addEventListener("abort", () => this.settle(id, Decision.Deny), { once: true });
       this.emit({ type: "approval", id, tool, summary, input });
     });
-    await this.song.appendHistory({ kind: decision === Decision.Allow ? "kept" : "rejected", what: summary, detail: { tool, input } });
-    return decision;
   }
 
-  async decide(id: string, decision: Decision, always = false): Promise<boolean> {
-    const approval = this.waiting.get(id);
-    if (!approval) return false;
-    if (always && decision === Decision.Allow) await this.prefs.allow(approval.tool);
+  decide(id: string, decision: Decision): boolean {
+    if (!this.waiting.has(id)) return false;
     this.settle(id, decision);
     return true;
   }

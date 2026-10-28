@@ -1,4 +1,3 @@
-import type { LivePointer, LiveStatus } from "../shared/live";
 import type { LeadSheet } from "../shared/song";
 import type { ResolvedPersonalisation } from "../shared/personalisation";
 import { noteName } from "../shared/notes";
@@ -6,7 +5,7 @@ import type { Mneme } from "./artist";
 import type { PreferencesStore } from "./preferences";
 import type { SongStore } from "./song-store";
 
-/** The short summary of the artist, the song and the settings given to the model before each request. */
+/** The short summary of the artist, the song and the settings that goes with each request. */
 export class ContextSummary {
   constructor(
     private readonly mneme: Mneme,
@@ -15,17 +14,11 @@ export class ContextSummary {
     private readonly maxChars: number,
   ) {}
 
-  async build(live: LiveStatus, pointer: LivePointer | null): Promise<string> {
+  async build(): Promise<string> {
     const sheet = await this.song.read();
     const settings = await this.prefs.effective(sheet);
-    const sections = [
-      await this.artistPart(),
-      this.songPart(sheet),
-      this.settingsPart(settings),
-      this.livePart(live, pointer),
-    ].filter(Boolean);
-    const text = `<ode-context>\n${sections.join("\n\n")}\n</ode-context>`;
-    return text.length <= this.maxChars ? text : `${text.slice(0, this.maxChars - 20)}\n…\n</ode-context>`;
+    const text = [await this.artistPart(), this.songPart(sheet), this.settingsPart(settings)].filter(Boolean).join("\n\n");
+    return text.length <= this.maxChars ? text : `${text.slice(0, this.maxChars - 1)}…`;
   }
 
   private async artistPart(): Promise<string> {
@@ -63,14 +56,5 @@ export class ContextSummary {
       `- vocal range: ${range}`,
       `- loudness target: ${settings.loudnessTarget.lufs} LUFS integrated, ${settings.loudnessTarget.truePeak} dBTP true peak`,
     ].join("\n");
-  }
-
-  private livePart(live: LiveStatus, pointer: LivePointer | null): string {
-    const state = [
-      `extension ${live.extension ? "connected" : "not connected"}`,
-      `Ode device ${live.device ? "connected" : "not connected"}`,
-      `bridge ${live.bridge ? "connected" : "not connected"}`,
-    ].join(", ");
-    return [`Live: ${state}.`, pointer && `The musician pointed at: ${pointer.description}`].filter(Boolean).join("\n");
   }
 }

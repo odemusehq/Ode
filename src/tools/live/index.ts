@@ -21,7 +21,8 @@ const operationTools: AnyTool[] = [
 
 const byName = new Map(operationTools.map((definition) => [definition.name, definition]));
 
-const GROUPABLE_OPS = EXTENSION_OPS.filter((op) => op !== "apply_as_one_undo_step");
+/** Every Live operation except grouping itself and reading the whole Set (project_map_get does that). */
+const GROUPABLE_OPS = EXTENSION_OPS.filter((op) => op !== "apply_as_one_undo_step" && op !== "set_snapshot");
 
 /** Runs several Live changes as one undo step; each step is checked against its own tool's inputs. */
 const applyAsOneUndoStep = defineTool({
