@@ -11,7 +11,7 @@ interface Line {
 export interface DevicePatcherOptions {
   /** JavaScript run by the v8.codebox (Live side). */
   liveCode: string;
-  /** Absolute path of the network side's script for node.script. */
+  /** The network side's script for node.script: its file name beside the device, or its full path. */
   nodeScript: string;
   /** Address of Ode's UI on the local server. */
   uiUrl: string;
@@ -46,6 +46,11 @@ export class DevicePatcher {
 
   constructor(private readonly options: DevicePatcherOptions) {}
 
+  /** The text of the node.script box that runs the network side's script. */
+  static networkLine(script: string): string {
+    return `node.script "${script}" @autostart 1 @watch 0`;
+  }
+
   build(): object {
     this.newObject("plugin", "plugin~", 2, ["signal", "signal"], [40, 30, 60, 22]);
     this.newObject("plugout", "plugout~", 2, ["signal", "signal"], [40, 330, 60, 22]);
@@ -62,7 +67,7 @@ export class DevicePatcher {
       patching_rect: [420, 80, 320, 120],
       saved_object_attributes: { parameter_enable: 0 },
     });
-    this.newObject("network", `node.script "${this.options.nodeScript}" @autostart 1 @watch 0`, 1, ["", ""], [760, 80, 380, 22]);
+    this.newObject("network", DevicePatcher.networkLine(this.options.nodeScript), 1, ["", ""], [760, 80, 380, 22]);
     this.newObject("recorder-route", "route buffer record", 2, ["", "", ""], [420, 230, 130, 22]);
     this.newObject("buffer", "buffer~ ---ode-measure 1000 2", 1, ["float", "bang"], [420, 270, 180, 22]);
     this.newObject("record", "record~ ---ode-measure 2", 4, ["signal"], [40, 200, 160, 22]);

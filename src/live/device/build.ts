@@ -1,33 +1,34 @@
-import { copyFile, mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import * as esbuild from "esbuild";
 import { OdeConfig } from "../../shared/config";
 import { LIVE_SOCKET_PATHS } from "../../shared/live";
+import { AmxdFile } from "./amxd";
+import { DeviceInstaller } from "./install";
 import { DevicePatcher } from "./patcher";
 
-/** Builds the Ode device (Ode.amxd) and installs it in the User Library's Audio Effects presets. */
-class DeviceBuilder {
+/** Builds the Ode device (Ode.amxd) and its network script; run directly, it also installs them in the User Library. */
+export class DeviceBuilder {
   private readonly sourceDir = join(OdeConfig.repoDir, "src", "live", "device");
-  private readonly outDir = join(this.sourceDir, "dist");
+  private readonly outDir = DeviceInstaller.builtDir;
 
   constructor(private readonly config: OdeConfig) {}
 
   async build(): Promise<string> {
     await mkdir(this.outDir, { recursive: true });
-    const nodeScript = await this.buildNetworkSide();
+    await this.buildNetworkSide();
     const liveCode = await this.buildLiveSide();
-    const patcher = new DevicePatcher({ liveCode, nodeScript, uiUrl: this.config.serverUrl }).build();
-    const device = join(this.outDir, "Ode.amxd");
-    await writeFile(device, DeviceBuilder.amxd(JSON.stringify(patcher, null, "\t")));
-    return this.install(device);
+    const patcher = new DevicePatcher({ liveCode, nodeScript: DeviceInstaller.networkScript, uiUrl: this.config.serverUrl }).build();
+    const device = join(this.outDir, DeviceInstaller.deviceFile);
+    await writeFile(device, AmxdFile.pack(JSON.stringify(patcher, null, "\t")));
+    return device;
   }
 
-  private async buildNetworkSide(): Promise<string> {
-    const outfile = join(this.outDir, "ode-device-node.js");
+  private async buildNetworkSide(): Promise<void> {
     const socketUrl = `ws://${this.config.host}:${this.config.port}${LIVE_SOCKET_PATHS.device}`;
     await esbuild.build({
       entryPoints: [join(this.sourceDir, "node", "device-socket.ts")],
-      outfile,
+      outfile: join(this.outDir, DeviceInstaller.networkScript),
       bundle: true,
       format: "cjs",
       platform: "node",
@@ -36,7 +37,6 @@ class DeviceBuilder {
       define: { "process.env.ODE_DEVICE_SOCKET_URL": JSON.stringify(socketUrl) },
       logLevel: "warning",
     });
-    return outfile;
   }
 
   private async buildLiveSide(): Promise<string> {
@@ -62,30 +62,10 @@ class DeviceBuilder {
       "function command(name) { OdeDeviceBundle.device.command(name); }",
     ].join("\n");
   }
-
-  private async install(device: string): Promise<string> {
-    const presets = join(this.config.abletonUserLibrary, "Presets", "Audio Effects", "Max Audio Effect");
-    await mkdir(presets, { recursive: true });
-    const installed = join(presets, "Ode.amxd");
-    await copyFile(device, installed);
-    return installed;
-  }
-
-  /** A Max for Live device file: "ampf" header, device type, meta chunk, then the patch (null-terminated). */
-  private static amxd(patch: string): Buffer {
-    const body = Buffer.from(`${patch}\n\0`, "utf8");
-    const header = Buffer.alloc(32);
-    header.write("ampf", 0, "ascii");
-    header.writeUInt32LE(4, 4);
-    header.write("aaaa", 8, "ascii");
-    header.write("meta", 12, "ascii");
-    header.writeUInt32LE(4, 16);
-    header.writeUInt32LE(0, 20);
-    header.write("ptch", 24, "ascii");
-    header.writeUInt32LE(body.length, 28);
-    return Buffer.concat([header, body]);
-  }
 }
 
-const installed = await new DeviceBuilder(OdeConfig.load()).build();
-console.log(`Ode device installed: ${installed}`);
+if (import.meta.main) {
+  const config = OdeConfig.load();
+  await new DeviceBuilder(config).build();
+  console.log(`Ode device installed: ${await new DeviceInstaller(config).install()}`);
+}
