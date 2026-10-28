@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { createConnection, type Socket } from "node:net";
 import type { WSContext } from "hono/ws";
 import type { DeviceCommand, DeviceEventName, LiveConnections, LiveLink, LiveRequest, LiveResponse, LiveStatus } from "../shared/live";
-import type { MeterReading, SelectionInfo, SetInfo } from "../shared/live-ops";
+import type { SelectionInfo, SetInfo } from "../shared/live-ops";
 import type { LiveTimeouts } from "../shared/config";
 
 export class NotConnectedError extends Error {}
@@ -210,7 +210,6 @@ export class BridgeLink implements LiveLink {
 
 export interface LiveHubEvents {
   onSetInfo: (info: SetInfo) => void;
-  onMeters: (reading: MeterReading) => void;
   onStatus: (status: LiveStatus) => void;
   /** The musician selected another track, clip or scene in Live. */
   onSelection?: (selection: SelectionInfo) => void;
@@ -269,8 +268,6 @@ export class LiveHub implements LiveConnections {
       this.setFilePath = info.filePath;
       this.events.onSetInfo(info);
       this.publishStatus();
-    } else if (event.name === "meters") {
-      this.events.onMeters(event.data as MeterReading);
     } else if (event.name === "selection") {
       this.events.onSelection?.(event.data as SelectionInfo);
     } else if (event.name === "command") {

@@ -20,7 +20,10 @@ export interface ApprovalView {
   input: unknown;
 }
 
-/** Changes waiting for the musician's Apply or Skip (Manual mode, and consent for the singer's voice in every mode). */
+/**
+ * Changes waiting for the musician's Apply or Skip: every change in Manual mode, and in every mode consent for the
+ * singer's voice and deleting what Undo couldn't bring back.
+ */
 export class Approvals {
   private readonly waiting = new Map<string, WaitingApproval>();
 

@@ -1,5 +1,7 @@
 import { EXTENSION_OPS, type LiveConnections } from "../shared/live";
 import type { SetSnapshot } from "../shared/set-snapshot";
+import type { LeadSheet } from "../shared/song";
+import type { LyricsStore } from "../mneme/lyrics-store";
 import { SetDiff } from "../mneme/set-diff";
 import type { SongStore } from "../mneme/song-store";
 import { RestorePlanner, type PlannedCall } from "./restore-planner";
@@ -11,16 +13,20 @@ export interface PutBack {
   skipped: string[];
 }
 
-/** Puts the Set back to a version: plans the Live calls from the Set as it is, runs them step by step, then writes back the lead sheet. */
+/**
+ * Puts the Set back to a version: plans the Live calls from the Set as it is, runs them step by step, then writes back
+ * the lead sheet: its lyrics as a new revision of the shared lyrics, the rest as the lead sheet itself.
+ */
 export class RestoreRunner {
   constructor(
     private readonly live: LiveConnections,
-    private readonly song: Pick<SongStore, "read" | "replace">,
+    private readonly song: Pick<SongStore, "update">,
+    private readonly lyrics: Pick<LyricsStore, "replace">,
   ) {}
 
   /**
-   * Plans the changes from the Set as it is to the target version and applies them step by step, then
-   * writes back the version's lead sheet (lyrics, chords, sections), keeping the musician's song settings.
+   * Plans the changes from the Set as it is to the target version and applies them step by step, then writes back
+   * the version's lead sheet (lyrics, chords, sections), keeping the musician's song settings.
    */
   async putBack(current: SetSnapshot, target: SetSnapshot): Promise<PutBack> {
     const plan = new RestorePlanner(current).plan(SetDiff.between(current, target));
@@ -33,11 +39,18 @@ export class RestoreRunner {
         return { complete: false, skipped: [...skipped, "The rest of the restore was not applied."] };
       }
     }
-    if (target.sheet) {
-      const { settings } = await this.song.read();
-      await this.song.replace({ ...target.sheet, settings });
-    }
+    if (target.sheet) await this.writeSheet(target.sheet);
     return { complete: true, skipped };
+  }
+
+  /**
+   * The version's lead sheet without the musician's song settings (the store keeps the lyrics as they are), then its
+   * lyrics when they differ from the lyrics now, as a new revision, so an open lyrics editor takes or merges them.
+   */
+  private async writeSheet(sheet: LeadSheet): Promise<void> {
+    const { settings: _settings, version: _version, lyrics, lyricsRevision: _revision, ...rest } = sheet;
+    const stored = await this.song.update(rest);
+    if (stored.lyrics !== lyrics) await this.lyrics.replace(lyrics);
   }
 
   /**

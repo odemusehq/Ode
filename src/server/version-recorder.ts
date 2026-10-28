@@ -19,6 +19,8 @@ export interface RecordedVersion {
  * One at a time, so each version is read and compared after the one before it.
  */
 export class VersionRecorder {
+  /** How a version saved after the musician pressed Stop begins: "Stopped: 3 edits on Bass". */
+  static readonly STOPPED = "Stopped";
   private queue: Promise<unknown> = Promise.resolve();
 
   constructor(
@@ -40,6 +42,17 @@ export class VersionRecorder {
     return this.enqueue(async () => {
       const snapshot = await this.reader.read();
       return this.record(snapshot, VersionAuthor.Ode, (changes) => resultLine || SetDiff.summary(changes), request);
+    });
+  }
+
+  /**
+   * Reads the Set and saves what Ode changed before it was cut short, as "<what>: 3 edits on Bass" (for example
+   * "Stopped" or "Restore stopped part-way"), so Undo can go back to before it.
+   */
+  odeCutShort(what: string, request?: string): Promise<RecordedVersion> {
+    return this.enqueue(async () => {
+      const snapshot = await this.reader.read();
+      return this.record(snapshot, VersionAuthor.Ode, (changes) => `${what}: ${SetDiff.summary(changes)}`, request);
     });
   }
 

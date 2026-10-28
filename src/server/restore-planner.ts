@@ -2,10 +2,10 @@ import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { MIXER_INDEX, type ClipRef, type DeviceOp, type DeviceRef, type ExtensionOp, type LoopSettings, type Note, type TrackRef } from "../shared/live";
 import type { AudioClipInfo, ClipInfo, LocatorInfo, MixerInfo, SceneInfo } from "../shared/live-ops";
-import type { DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
+import { isOdeDevice, type DeviceSnapshot, type SetSnapshot, type TrackSnapshot } from "../shared/set-snapshot";
 import { ChangeKind, TrackList, type ClipField, type ClipKey, type SetChange, type TrackField, type TrackKey } from "../shared/versions";
 import type { ClipAudio, ClipLoop } from "../mneme/set-diff";
-import { BEAT_TOLERANCE } from "./set-lookup";
+import { BEAT_TOLERANCE, SetLookup } from "./set-lookup";
 
 /** One Live operation of a restore. */
 export interface PlannedCall {
@@ -143,6 +143,7 @@ interface Removal {
  * Live operations, ordered so each runs after what it needs. Removed and changed objects are addressed
  * by their place in the current Set, added ones by their place in the version restored. What Live
  * can't put back (plug-ins and presets, group tracks, missing audio files) is listed as skipped.
+ * The Ode device is never removed, added or changed, and neither is a track that holds it.
  * Lead sheet changes need no Live calls: the restore writes the sheet back itself.
  */
 export class RestorePlanner {
@@ -151,8 +152,9 @@ export class RestorePlanner {
   private readonly trackFields = new Map<string, MergedFields<TrackRef>>();
   private readonly clipFields = new Map<string, MergedFields<ClipRef>>();
   private readonly removals: Removal[] = [];
+  private readonly lookup: SetLookup;
   private removedTracks: TrackKey[] = [];
-  /** The removed tracks that are deleted (a group track never is), which moves the tracks after them up. */
+  /** The removed tracks that are deleted (never a group track or one holding the Ode device), which moves the tracks after them up. */
   private deletedTracks: TrackKey[] = [];
   private addedTracks: TrackKey[] = [];
   /** Devices removed or added whole: what is inside them goes with them. */
@@ -162,17 +164,37 @@ export class RestorePlanner {
   /** Where each return track the restore adds will be, by its place in the version restored. */
   private newReturnPlaces = new Map<number, number>();
 
-  constructor(private readonly current: SetSnapshot) {}
+  constructor(private readonly current: SetSnapshot) {
+    this.lookup = new SetLookup(current);
+  }
 
   /** True for a call that only sets values, so running it again is harmless. */
   static isEdit(op: string): boolean {
     return EDIT_OPS.has(op);
   }
 
+  /**
+   * True when a restore can add the device back as it is: one of Live's own devices (never a plug-in, a preset or the
+   * Ode device), with its sample file still there, and every device inside its chains the same.
+   */
+  static canAddBack(device: DeviceSnapshot): boolean {
+    if (isOdeDevice(device) || RestorePlanner.insertName(device) === null) return false;
+    if (device.sample && !existsSync(device.sample)) return false;
+    return (device.chains ?? []).every((chain) => chain.devices.every((inner) => RestorePlanner.canAddBack(inner)));
+  }
+
+  /** True when a restore can create the track again with all its devices: a MIDI, audio or return track, never a group track. */
+  static canAddBackTrack(track: TrackSnapshot): boolean {
+    const creatable = track.kind === "midi" || track.kind === "audio" || track.kind === "return";
+    return creatable && track.devices.every((device) => RestorePlanner.canAddBack(device));
+  }
+
   plan(changes: SetChange[]): RestorePlan {
     const removed = RestorePlanner.presence(changes, "track", ChangeKind.Removed);
     this.removedTracks = removed.map((change) => RestorePlanner.trackOf(change));
-    this.deletedTracks = removed.filter((change) => !RestorePlanner.isGroup(change)).map((change) => RestorePlanner.trackOf(change));
+    this.deletedTracks = removed
+      .filter((change) => !RestorePlanner.isGroup(change) && !RestorePlanner.holdsOdeDevice(change.before))
+      .map((change) => RestorePlanner.trackOf(change));
     this.addedTracks = RestorePlanner.presence(changes, "track", ChangeKind.Added).map((change) => RestorePlanner.trackOf(change));
     this.wholeDevices = [
       ...RestorePlanner.presence(changes, "device", ChangeKind.Removed),
@@ -201,6 +223,7 @@ export class RestorePlanner {
         const path = [...target.chain, target.index];
         const inside = (devices: { track: TrackKey; path: number[] }[]) => RestorePlanner.within(devices, target.track, path, false);
         if (this.coveredTrack(target.track) || inside(this.wholeDevices) || inside(this.differentDevices)) continue;
+        if (this.touchesOdeDevice(change)) continue;
         if (target.field === "parameter") this.planParameter(change, target.track, target.chain, target.index, target.parameter);
         else if (change.kind === ChangeKind.Removed) this.planDeviceRemoval(change, target.track, target.chain, target.index);
         else if (change.kind === ChangeKind.Added) additions.push({ change, track: target.track, chain: target.chain, index: target.index });
@@ -301,10 +324,17 @@ export class RestorePlanner {
     this.trackFields.set(id, entry);
   }
 
-  /** Deleting a group track in Live deletes its tracks too, so a group is never removed (its tracks are, one by one). */
+  /**
+   * Deleting a group track in Live deletes its tracks too, so a group is never removed (its tracks are, one by one).
+   * A track holding the Ode device stays, so Ode stays connected.
+   */
   private planTrackRemoval(change: SetChange, key: TrackKey): void {
     if (RestorePlanner.isGroup(change)) {
       this.skipped.push(`${key.name} (a group track can't be removed on its own)`);
+      return;
+    }
+    if (RestorePlanner.holdsOdeDevice(change.before)) {
+      this.skipped.push(`${key.name} (it holds the Ode device)`);
       return;
     }
     if (key.list === TrackList.Returns) {
@@ -322,7 +352,7 @@ export class RestorePlanner {
 
   /** Return tracks the restore adds go after the ones that stay, in the order of the version restored. */
   private returnPlaces(added: SetChange[]): Map<number, number> {
-    const kept = this.current.returnTracks.length - this.removedTracks.filter((key) => key.list === TrackList.Returns).length;
+    const kept = this.current.returnTracks.length - this.deletedTracks.filter((key) => key.list === TrackList.Returns).length;
     const places = added
       .filter((change) => RestorePlanner.trackOf(change).list === TrackList.Returns && RestorePlanner.isTrack(change.after as TrackSnapshot | undefined))
       .map((change) => RestorePlanner.trackOf(change).index)
@@ -549,6 +579,7 @@ export class RestorePlanner {
 
   /** Inserts one of Live's own devices (from the creating step `from` on), then its values, its Simpler sample, and a rack's chains with their devices. */
   private insertDevice(track: TrackRef, chain: number[], index: number, device: DeviceSnapshot, from: number, owner: string): void {
+    if (isOdeDevice(device)) return;
     const name = RestorePlanner.insertName(device);
     const label = `${owner} · ${device.name}`;
     if (!name) {
@@ -624,6 +655,24 @@ export class RestorePlanner {
   /** Changes on a removed or re-created track are covered by removing or creating the whole track. */
   private coveredTrack(key: TrackKey): boolean {
     return [...this.removedTracks, ...this.addedTracks].some((track) => RestorePlanner.sameTrack(track, key));
+  }
+
+  /** True for a change to the Ode device itself: the device on either side, or the device at that place in the Set now. */
+  private touchesOdeDevice(change: SetChange): boolean {
+    const { target } = change;
+    if (target.scope !== "device") return false;
+    const sides = [change.before, change.after] as (DeviceSnapshot | undefined)[];
+    if (sides.some((side) => RestorePlanner.isDevice(side) && isOdeDevice(side))) return true;
+    if (change.kind === ChangeKind.Added) return false;
+    const track = this.lookup.trackAt(target.track);
+    const device = track ? SetLookup.deviceAt(track, target.chain, target.index) : undefined;
+    return device !== undefined && isOdeDevice(device);
+  }
+
+  /** True when a track (as a change holds it) has the Ode device on it or inside one of its racks. */
+  private static holdsOdeDevice(value: unknown): boolean {
+    const track = value as TrackSnapshot | undefined;
+    return RestorePlanner.isTrack(track) && SetLookup.devicesOf(track).some((device) => isOdeDevice(device));
   }
 
   /**

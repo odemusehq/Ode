@@ -2,16 +2,17 @@ import { randomUUID } from "node:crypto";
 import type { UiEvent } from "../shared/events";
 import type { MusicianQuestions } from "../tools/define";
 
-interface WaitingQuestion {
-  text: string;
-  options: string[];
-  resolve: (choice: string | null) => void;
-}
-
 export interface QuestionView {
   id: string;
   text: string;
   options: string[];
+  /** Release files shown as the answers, one per option. */
+  images?: string[];
+}
+
+interface WaitingQuestion {
+  view: QuestionView;
+  resolve: (choice: string | null) => void;
 }
 
 /** One-line questions to the musician, each with two to four buttons; Ode waits for the answer. */
@@ -20,24 +21,26 @@ export class Questions implements MusicianQuestions {
 
   constructor(private readonly emit: (event: UiEvent) => void) {}
 
-  ask(text: string, options: string[]): Promise<string | null> {
+  ask(text: string, options: string[], images?: string[]): Promise<string | null> {
     const id = randomUUID();
+    const view: QuestionView = images && images.length > 0 ? { id, text, options, images } : { id, text, options };
     return new Promise((resolve) => {
-      this.waiting.set(id, { text, options, resolve });
-      this.emit({ type: "question", id, text, options });
+      this.waiting.set(id, { view, resolve });
+      this.emit({ type: "question", ...view });
     });
   }
 
   /** The musician tapped an answer. False when the question is gone or the answer isn't one of its buttons. */
   answer(id: string, choice: string): boolean {
     const question = this.waiting.get(id);
-    if (!question || !question.options.includes(choice)) return false;
+    if (!question || !question.view.options.includes(choice)) return false;
     this.settle(id, choice);
     return true;
   }
 
+  /** The questions still waiting, for a window that just connected. */
   pending(): QuestionView[] {
-    return [...this.waiting].map(([id, { text, options }]) => ({ id, text, options }));
+    return [...this.waiting.values()].map(({ view }) => view);
   }
 
   /** The musician pressed Stop: every open question ends without an answer. */

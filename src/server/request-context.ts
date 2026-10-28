@@ -1,9 +1,9 @@
 import type { OdeConfig } from "../shared/config";
 import type { LiveConnections } from "../shared/live";
-import type { UiEvent } from "../shared/events";
+import { ResultKind, type UiEvent } from "../shared/events";
 import { Mode } from "../shared/personalisation";
 import type { SetSnapshot } from "../shared/set-snapshot";
-import { VersionAuthor, type SetChange, type Version } from "../shared/versions";
+import { VersionAuthor, type Version } from "../shared/versions";
 import { ProjectMap } from "../mneme/project-map";
 import type { PreferencesStore } from "../mneme/preferences";
 import type { SongVersions } from "../mneme/song-store";
@@ -12,7 +12,7 @@ import type { OdeRequest, RequestLifecycle } from "../harness/session";
 import type { Listening } from "./listening";
 import { SelectionState } from "./selection";
 import type { SnapshotReader } from "./snapshot-reader";
-import type { RecordedVersion, VersionRecorder } from "./version-recorder";
+import { VersionRecorder, type RecordedVersion } from "./version-recorder";
 
 export interface PreparedRequest {
   /** What goes with the request for the agent only; it is never shown to the musician. */
@@ -37,14 +37,15 @@ export interface RequestContextDeps {
 const MODE_NOTES: Record<Mode, string> = {
   [Mode.Auto]:
     "Mode: Auto. Change what you are sure of. Ask (ask_musician) only when you can't tell what the musician wants, and before deleting a part or rewriting a whole section.",
-  [Mode.Manual]: "Mode: Manual. Every change to the Set waits for the musician to Apply or Skip it.",
-  [Mode.LetMeHearIt]: "Mode: Let me hear it. Don't ask: apply your best guess straight away and say what you guessed in your result line.",
+  [Mode.Manual]: "Mode: Manual. Every change waits for the musician to Apply or Skip it.",
+  [Mode.LetMeHearIt]: "Mode: Let me hear it. Never ask: apply your best guess straight away and say what you guessed in your result line.",
 };
 
 /**
  * Everything around one request. Before it: read the Set, save the musician's hand edits as a version,
  * and build the hidden context (map, hand edits, mode, selection). After it: save Ode's change as a
- * version, show the result line and play the bars it touched.
+ * version, show the result line and play the bars it touched. Why? is a reply request: it reads nothing
+ * before and saves nothing after; its answer goes under the result line.
  */
 export class RequestContext implements RequestLifecycle {
   /** When the previous request read the Set; hand edits saved after it belong to the next request. */
@@ -54,6 +55,7 @@ export class RequestContext implements RequestLifecycle {
 
   /** Throws "Ode can't read the Set: …" when the Set can't be read; no version is saved then. */
   async prepare(request: OdeRequest): Promise<PreparedRequest> {
+    if (request.reply) return { hiddenContext: await this.replyContext(request.reply.versionId), handEdits: null };
     const recorded: RecordedVersion = request.again
       ? { snapshot: await this.deps.reader.read(), version: null, changes: [] }
       : await this.deps.recorder.handEdits();
@@ -68,25 +70,60 @@ export class RequestContext implements RequestLifecycle {
       `Project map:\n${ProjectMap.encode(recorded.snapshot, this.deps.config.memory.mapMaxChars)}`,
     ].filter(Boolean);
     const handEdits = recorded.version && recorded.changes.length > 0 ? recorded.version : null;
-    return { hiddenContext: `<ode-context>\n${parts.join("\n\n")}\n</ode-context>`, handEdits };
+    return { hiddenContext: RequestContext.wrap(parts), handEdits };
   }
 
-  /** Saves what Ode changed as a version, emits the result line, then plays the bars it touched. */
-  async finish(request: OdeRequest, reply: string): Promise<void> {
-    let text = reply.trim();
-    let versionId: string | null = null;
-    let changes: SetChange[] = [];
+  /**
+   * After the turn. A reply (Why?) emits its answer and nothing else. Otherwise what Ode changed is saved as a
+   * version and the result line says what changed and plays it; after Stop, what it changed so far is saved
+   * too, so Undo works, but the line is "Stopped: …" and nothing plays.
+   */
+  async finish(request: OdeRequest, reply: string, aborted: boolean): Promise<void> {
+    if (request.reply) {
+      const answer = reply.trim();
+      if (!aborted && answer) this.deps.emit({ type: "answer", versionId: request.reply.versionId, text: answer });
+      return;
+    }
+    if (aborted) await this.finishStopped(request);
+    else await this.finishChange(request, reply.trim());
+    await this.deps.selection.refresh().catch(() => undefined);
+  }
+
+  private async finishChange(request: OdeRequest, reply: string): Promise<void> {
+    const recorded = await this.record(() => this.deps.recorder.odeChange(RequestContext.firstLine(reply), request.text));
+    const version = recorded?.version ?? null;
+    const text = reply || version?.summary || "";
+    if (text) this.deps.emit({ type: "result", text, versionId: version?.id ?? null, kind: version ? ResultKind.Change : ResultKind.Reply });
+    if (recorded && version) await this.deps.listening.playChanged(recorded.changes).catch(() => undefined);
+  }
+
+  private async finishStopped(request: OdeRequest): Promise<void> {
+    const { STOPPED } = VersionRecorder;
+    const recorded = await this.record(() => this.deps.recorder.odeCutShort(STOPPED, request.text));
+    const version = recorded?.version ?? null;
+    const text = version ? version.summary : recorded ? `${STOPPED}: nothing changed` : `${STOPPED}.`;
+    this.deps.emit({ type: "result", text, versionId: version?.id ?? null, kind: ResultKind.Stopped });
+  }
+
+  /** Saves a version; when that fails the musician sees why, and the result line goes on without it. */
+  private async record(save: () => Promise<RecordedVersion>): Promise<RecordedVersion | null> {
     try {
-      const recorded = await this.deps.recorder.odeChange(RequestContext.firstLine(text), request.text);
-      versionId = recorded.version?.id ?? null;
-      changes = recorded.changes;
-      if (!text && recorded.version) text = recorded.version.summary;
+      return await save();
     } catch (error) {
       this.deps.emit({ type: "error", message: error instanceof Error ? error.message : String(error) });
+      return null;
     }
-    if (text) this.deps.emit({ type: "result", text, versionId });
-    if (versionId) await this.deps.listening.playChanged(changes).catch(() => undefined);
-    await this.deps.selection.refresh().catch(() => undefined);
+  }
+
+  /** Why?: the change asked about, and how to answer. Nothing is read from Live. */
+  private async replyContext(versionId: string): Promise<string> {
+    const version = await this.deps.versions.history.get(versionId);
+    const asked = version.request ? ` The musician had asked: "${version.request}".` : "";
+    return RequestContext.wrap([
+      `Why?: the musician asks why you made your change "${version.summary}".${asked}`,
+      `What it changed:\n${ProjectMap.describeChanges(version.changes)}`,
+      "Answer in two or three plain sentences: what you did and why it suits the song. Change nothing.",
+    ]);
   }
 
   private selectionPart(snapshot: SetSnapshot): string {
@@ -131,6 +168,10 @@ export class RequestContext implements RequestLifecycle {
   private livePart(): string {
     const { bridge } = this.deps.live;
     return bridge.connected() ? "" : "Live: the Ode bridge isn't connected, so plug-ins, presets and samples can't be loaded from Live's browser.";
+  }
+
+  private static wrap(parts: string[]): string {
+    return `<ode-context>\n${parts.join("\n\n")}\n</ode-context>`;
   }
 
   private static firstLine(text: string): string {

@@ -5,7 +5,7 @@ import type { Suggestion } from "../shared/events";
 import type { LeadSheet } from "../shared/song";
 import { NOTE_NAMES, noteName } from "../shared/notes";
 import { TrackRole, roleFromName } from "../music/audio/track-role";
-import { MusicalKey } from "../music/harmony/musical-key";
+import { LyricsText } from "../mneme/lyrics-text";
 import type { PreferencesStore } from "../mneme/preferences";
 import type { SongStore } from "../mneme/song-store";
 import { BEAT_TOLERANCE, SetLookup, type FoundClip } from "./set-lookup";
@@ -65,7 +65,7 @@ export class SuggestionFinder {
     if (found.clip.kind === "audio") return SuggestionFinder.chips([], SuggestionFinder.forAudioClip(found.track, where));
     const notes = await this.notesOf(ref, found);
     const part = SuggestionFinder.partOf(found.track, notes);
-    const fixes = [...(await this.keyFixes(part, notes, where, lookup.snapshot)), ...(await this.rangeFixes(part, notes, where))];
+    const fixes = [...SuggestionFinder.keyFixes(part, notes, where, lookup.snapshot), ...(await this.rangeFixes(part, notes, where))];
     return SuggestionFinder.chips(fixes, SuggestionFinder.forMidiClip(part, where));
   }
 
@@ -80,9 +80,9 @@ export class SuggestionFinder {
   }
 
   /** Notes outside the song's scale (never on drums, where notes pick sounds rather than pitches). */
-  private async keyFixes(part: Part, notes: Note[], where: string, snapshot: SetSnapshot): Promise<Action[]> {
+  private static keyFixes(part: Part, notes: Note[], where: string, snapshot: SetSnapshot): Action[] {
     if (part === Part.Drums) return [];
-    const scale = await this.scale(snapshot);
+    const scale = SuggestionFinder.scale(snapshot);
     if (!scale) return [];
     const outside = notes.filter((note) => !note.muted && !scale.pitchClasses.has(((note.pitch % PITCH_CLASSES) + PITCH_CLASSES) % PITCH_CLASSES));
     if (outside.length === 0) return [];
@@ -95,7 +95,7 @@ export class SuggestionFinder {
     ];
   }
 
-  /** Melody notes outside the vocal range in Personalisation, when the range is known. */
+  /** Melody notes outside the musician's vocal range, when it is known. */
   private async rangeFixes(part: Part, notes: Note[], where: string): Promise<Action[]> {
     if (part !== Part.Vocal) return [];
     const range = (await this.prefs.effective(await this.song.read())).vocalRange;
@@ -110,13 +110,8 @@ export class SuggestionFinder {
     ];
   }
 
-  /** The key from the lead sheet, or Live's scale when Scale Mode is on; none when neither says. */
-  private async scale(snapshot: SetSnapshot): Promise<Scale | null> {
-    const sheet = await this.song.read();
-    if (sheet.key) {
-      const key = MusicalKey.from(sheet.key);
-      return { pitchClasses: new Set(key.scale), label: key.label };
-    }
+  /** Live's scale when Scale Mode is on, so it follows the key the musician set in Live; none when it is off. */
+  private static scale(snapshot: SetSnapshot): Scale | null {
     const { song } = snapshot;
     if (!song.scaleMode || song.scaleIntervals.length === 0) return null;
     return {
@@ -136,7 +131,7 @@ export class SuggestionFinder {
       actions.push({ label: "Plan the sections", request: "Plan the song form and mark each section with a locator." });
     }
     if (SuggestionFinder.hasChorus(sheet, lookup.snapshot)) actions.push({ label: "Bigger chorus", request: "Make the chorus bigger." });
-    if (sheet.sections.every((section) => section.lines.length === 0)) actions.push({ label: "Write lyrics", request: "Write lyrics for the song." });
+    if (LyricsText.sung(sheet.lyrics).length === 0) actions.push({ label: "Write lyrics", request: "Write lyrics for the song." });
     if (!sheet.title) actions.push({ label: "Find a title", request: "Find a title for the song." });
     actions.push(
       { label: "Arrange the song", request: "Arrange the song from the parts in the Set." },

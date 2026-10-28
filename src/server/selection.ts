@@ -65,22 +65,6 @@ export class SelectionState {
     if (this.selection) await this.show(this.selection);
   }
 
-  /** The suggestions for what the musician is on now. */
-  async suggestions(): Promise<Suggestion[]> {
-    if (this.selection) {
-      await this.show(this.selection);
-      return this.items;
-    }
-    const { device } = this.deps.live;
-    if (!device.connected()) return [];
-    try {
-      await this.show(await device.call<SelectionInfo>("selection_get", {}));
-    } catch {
-      return [];
-    }
-    return this.items;
-  }
-
   /** Sends what the musician is on to a UI that just connected. */
   replay(send: (event: UiEvent) => void): void {
     if (!this.selection) return;

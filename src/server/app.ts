@@ -2,8 +2,9 @@ import { join } from "node:path";
 import type { OdeConfig } from "../shared/config";
 import type { LeadSheet } from "../shared/song";
 import type { LiveStatus } from "../shared/live";
-import type { MeterReading, SetInfo } from "../shared/live-ops";
+import type { SetInfo } from "../shared/live-ops";
 import { Mneme } from "../mneme/artist";
+import { LyricsStore } from "../mneme/lyrics-store";
 import { userPaths, type UserPaths } from "../mneme/paths";
 import { PreferencesStore } from "../mneme/preferences";
 import { SongStore, SongVersions } from "../mneme/song-store";
@@ -15,17 +16,16 @@ import { OdeAgents } from "../agents/agents";
 import { Approvals } from "../harness/approvals";
 import { SessionManager } from "../harness/session-manager";
 import { Workspace } from "../harness/workspace";
-import { analyzeLyrics } from "../music";
+import { DeletionChecker } from "./deletion-checker";
 import { EventBus } from "./event-bus";
 import { OdeServer } from "./http";
 import { Listening } from "./listening";
 import { LiveHub } from "./live-hub";
-import { PointerState } from "./pointer";
 import { Questions } from "./questions";
 import { RequestContext } from "./request-context";
 import { SelectionState } from "./selection";
-import { MelodySettings } from "./melody-settings";
 import { SnapshotReader } from "./snapshot-reader";
+import { SongTitle } from "./song-title";
 import { SuggestionFinder } from "./suggestions";
 import { VersionActions } from "./version-actions";
 import { VersionRecorder } from "./version-recorder";
@@ -33,11 +33,11 @@ import { VersionRecorder } from "./version-recorder";
 /** Builds every part of Ode and connects them. */
 export class OdeApp {
   readonly bus = new EventBus();
-  readonly pointer = new PointerState();
   readonly paths: UserPaths;
   readonly prefs: PreferencesStore;
   readonly mneme: Mneme;
   readonly song: SongStore;
+  readonly lyrics: LyricsStore;
   readonly versions: SongVersions;
   readonly live: LiveHub;
   readonly services: ModelServices;
@@ -49,6 +49,8 @@ export class OdeApp {
   readonly sessions: SessionManager;
   readonly versionActions: VersionActions;
   private readonly server: OdeServer;
+  /** The song title the windows were last sent. */
+  private title = "";
 
   constructor(readonly config: OdeConfig) {
     const emit = this.bus.emit;
@@ -56,10 +58,10 @@ export class OdeApp {
     this.prefs = new PreferencesStore(join(this.paths.preferences, "preferences.json"));
     this.mneme = new Mneme(this.paths, config.memory.halfLifeDays);
     this.song = new SongStore(this.paths, (sheet) => this.onSongChanged(sheet));
+    this.lyrics = new LyricsStore(this.song, this.prefs, (lyrics) => emit({ type: "lyrics", lyrics }));
     this.versions = new SongVersions(this.song, config.versions.snapshotEvery);
     this.live = new LiveHub(config.host, config.bridgePort, config.liveTimeouts, {
-      onSetInfo: (info) => void this.onSetOpened(info),
-      onMeters: (reading) => this.onMeters(reading),
+      onSetInfo: (info) => void this.onSetOpened(info).catch((error: unknown) => this.showError(error)),
       onStatus: (status) => this.onStatus(status),
       onSelection: (selection) => void this.selection.select(selection).catch(() => undefined),
       onCommand: (command) => void this.versionActions.command(command),
@@ -82,6 +84,7 @@ export class OdeApp {
       config,
       live: this.live,
       song: this.song,
+      lyrics: this.lyrics,
       versions: this.versions,
       snapshots: this.reader,
       questions: this.questions,
@@ -113,6 +116,7 @@ export class OdeApp {
         questions: this.questions,
         prefs: this.prefs,
         requests,
+        deletions: new DeletionChecker(this.reader),
         emit,
       },
       join(this.paths.workspace, "sessions.json"),
@@ -120,9 +124,11 @@ export class OdeApp {
     this.versionActions = new VersionActions({
       live: this.live,
       song: this.song,
+      lyrics: this.lyrics,
       versions: this.versions,
       recorder: this.recorder,
       sessions: this.sessions,
+      selection: this.selection,
       emit,
     });
     this.server = new OdeServer({
@@ -130,7 +136,7 @@ export class OdeApp {
       bus: this.bus,
       live: this.live,
       song: this.song,
-      mneme: this.mneme,
+      lyrics: this.lyrics,
       prefs: this.prefs,
       services: this.services,
       approvals: this.approvals,
@@ -138,9 +144,6 @@ export class OdeApp {
       sessions: this.sessions,
       versions: this.versionActions,
       selection: this.selection,
-      melody: new MelodySettings(this.reader, this.prefs),
-      pointer: this.pointer,
-      analyzeLyrics,
     });
   }
 
@@ -149,12 +152,17 @@ export class OdeApp {
     this.server.start();
   }
 
+  /**
+   * The Ode device reported the Set open in Live. The same Set saved for the first time or under a new name carries
+   * on its conversation; another Set gets its own, and the last snapshot is forgotten.
+   */
   private async onSetOpened(info: SetInfo): Promise<void> {
-    const location = { setId: info.setId, filePath: info.filePath };
-    const firstSave = this.song.isFirstSave(location);
-    if (info.setId !== this.song.setId) this.reader.forget();
+    const location = { setId: info.setId, filePath: info.filePath, instance: info.instance };
+    const continues = this.song.continues(location);
+    if (!continues) this.reader.forget();
     await this.song.open(location);
-    await this.sessions.switchTo(info.setId, firstSave);
+    await this.sessions.switchTo(info.setId, continues);
+    this.showTitle((await this.song.read()).title);
     await this.versionActions.restoreOnOpen();
   }
 
@@ -164,19 +172,27 @@ export class OdeApp {
     if (status.extension && status.device) void this.versionActions.restoreOnOpen();
   }
 
+  /** Keeps the windows' song title and Mneme's index of the artist's songs up to date. */
   private onSongChanged(sheet: LeadSheet): void {
-    this.bus.emit({ type: "song", leadSheet: sheet });
+    this.showTitle(sheet.title);
     const setId = this.song.setId;
     if (!setId) return;
-    const lyrics = sheet.sections.flatMap((section) => section.lines.map((line) => line.text));
-    void this.mneme.rememberSong({ setId, title: sheet.title, dataDir: this.song.dataDir, lyrics });
+    const dataDir = this.song.dataDir;
+    void this.song
+      .lyrics()
+      .then((lyrics) => this.mneme.rememberSong({ setId, title: sheet.title, dataDir, lyrics }))
+      .catch(() => undefined);
   }
 
-  private onMeters(reading: MeterReading): void {
-    this.bus.emit({
-      type: "meters",
-      tracks: reading.tracks.map((track) => ({ name: track.name, level: Math.max(track.left, track.right) })),
-      master: { level: Math.max(reading.master.left, reading.master.right) },
-    });
+  /** Sends the song's title to the windows when it is not the one they show. */
+  private showTitle(sheetTitle: string): void {
+    const title = SongTitle.of(sheetTitle, this.song.setFilePath);
+    if (title === this.title) return;
+    this.title = title;
+    this.bus.emit({ type: "title", title });
+  }
+
+  private showError(error: unknown): void {
+    this.bus.emit({ type: "error", message: error instanceof Error ? error.message : String(error) });
   }
 }

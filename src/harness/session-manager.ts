@@ -22,8 +22,8 @@ export class SessionManager {
   }
 
   /**
-   * Switches to the conversation of another Set. With carryOver (an unsaved Set that was just saved)
-   * the current conversation continues under the Set's new key.
+   * Switches to the conversation of another Set. With carryOver (the same Set, saved for the first time or under a
+   * new name) the current conversation continues under the Set's new key.
    */
   async switchTo(setId: string, carryOver = false): Promise<void> {
     if (setId === this.key) return;

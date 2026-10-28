@@ -55,8 +55,6 @@ export class EventTranslator {
 
   translate(message: SDKMessage): UiEvent[] {
     switch (message.type) {
-      case "stream_event":
-        return this.fromStream(message);
       case "assistant":
         return message.parent_tool_use_id ? [] : this.fromAssistant(message.message.content as unknown as ContentBlock[]);
       case "user":
@@ -74,10 +72,10 @@ export class EventTranslator {
     return name.replace(EventTranslator.TOOL_PREFIX, "");
   }
 
-  /** One line about a tool Ode starts: the tool's own description of the change, or a plain label. */
+  /** One line about a tool Ode starts: the tool's own description of the call, or a plain label. */
   progressFor(fullName: string, input: Record<string, unknown>): string {
-    const described = this.registry.find(fullName)?.describe?.(input as never);
-    if (described) return described.trim().replace(/\.$/, "");
+    const described = this.registry.describe(fullName, input);
+    if (described) return described.replace(/\.$/, "");
     if (fullName === "Skill") {
       const skill = [input.skill, input.command, input.name].find((value) => typeof value === "string");
       return skill ? `Reading the ${String(skill)} skill` : "Reading a skill";
@@ -88,7 +86,7 @@ export class EventTranslator {
   }
 
   /** "midi_clip_get_notes" → "Reading MIDI clip notes"; "prosody_check" → "Checking prosody". */
-  private static plainLabel(name: string): string {
+  static plainLabel(name: string): string {
     const words = name.split("_").map((word) => PROGRESS_WORDS.get(word) ?? word);
     const verbAt = words.findIndex((word) => PROGRESS_VERBS.has(word));
     if (verbAt > 0) {
@@ -97,15 +95,6 @@ export class EventTranslator {
     }
     const sentence = words.join(" ");
     return sentence.charAt(0).toUpperCase() + sentence.slice(1);
-  }
-
-  private fromStream(message: Extract<SDKMessage, { type: "stream_event" }>): UiEvent[] {
-    if (message.parent_tool_use_id) return [];
-    const event = message.event as { type: string; delta?: { type: string; text?: string } };
-    if (event.type === "content_block_delta" && event.delta?.type === "text_delta" && event.delta.text) {
-      return [{ type: "text", delta: event.delta.text }];
-    }
-    return [];
   }
 
   private fromAssistant(blocks: ContentBlock[]): UiEvent[] {

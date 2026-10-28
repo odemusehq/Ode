@@ -1,6 +1,6 @@
 import type { ClipRef, TrackRef } from "../shared/live";
 import type { ClipInfo } from "../shared/live-ops";
-import type { SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
+import type { DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
 import { TrackList, type ClipKey, type TrackKey } from "../shared/versions";
 
 /** Live counts beats in quarter notes; a whole note is four of them. */
@@ -75,6 +75,34 @@ export class SetLookup {
     }
     const clip = SetLookup.arrangedClips(track).find((candidate) => Math.abs(candidate.startTime - ref.start) <= BEAT_TOLERANCE);
     return clip ? { track, clip, arranged: true } : undefined;
+  }
+
+  /** A track by its place in this snapshot, as a version's change addresses what was removed or changed. */
+  trackAt(key: TrackKey): TrackSnapshot | undefined {
+    if (key.list === TrackList.Main) return this.snapshot.main;
+    return key.list === TrackList.Returns ? this.snapshot.returnTracks[key.index] : this.snapshot.tracks[key.index];
+  }
+
+  /** A device on a track, or inside racks along `chain` (pairs of rack device index and chain index, from the track inwards). */
+  static deviceAt(track: TrackSnapshot, chain: readonly number[], index: number): DeviceSnapshot | undefined {
+    let devices: DeviceSnapshot[] = track.devices;
+    for (let step = 0; step + 1 < chain.length; step += 2) {
+      const rack = chain[step];
+      const inner = chain[step + 1];
+      const next = rack === undefined || inner === undefined ? undefined : devices[rack]?.chains?.[inner];
+      if (!next) return undefined;
+      devices = next.devices;
+    }
+    return devices[index];
+  }
+
+  /** Every device on a track, with the devices inside its racks. */
+  static devicesOf(track: TrackSnapshot): DeviceSnapshot[] {
+    return SetLookup.withInnerDevices(track.devices);
+  }
+
+  private static withInnerDevices(devices: DeviceSnapshot[]): DeviceSnapshot[] {
+    return devices.flatMap((device) => [device, ...(device.chains ?? []).flatMap((chain) => SetLookup.withInnerDevices(chain.devices))]);
   }
 
   /** The clip a version's change points at on a track. */
