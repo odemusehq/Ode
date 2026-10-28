@@ -19,7 +19,7 @@ import { FakeLive } from "./fake-live";
 import { testEnv } from "./test-env";
 
 const TIMEOUTS = { normal: 200, long: 400 };
-const NO_EVENTS = { onSetInfo: () => undefined, onMeters: () => undefined, onStatus: () => undefined };
+const NO_EVENTS = { onSetInfo: () => undefined, onStatus: () => undefined };
 
 /** A local port with nothing listening on it. */
 async function closedPort(): Promise<number> {
@@ -73,23 +73,23 @@ test("a connected part that never answers times out instead of hanging", async (
 
 // 2. Unsaved or moved Set.
 
-test("an unsaved Set keeps its song in the user folder and moves it into the project on first save", async () => {
+test("an unsaved Set keeps its song in the user folder and moves it into its folder in the project on first save", async () => {
   const root = await tempDir();
   const paths = userPaths(join(root, "Ode"));
   const store = new SongStore(paths, () => undefined);
-  await store.open({ setId: "unsaved-1", filePath: null });
+  await store.open({ setId: "unsaved-1", filePath: null, instance: "first" });
   await store.update({ title: "Night Bus Frequencies" });
   const unsavedDir = join(paths.unsaved, "unsaved-1");
   assert.equal(store.dataDir, unsavedDir);
 
   const setFile = join(root, "Projects", "Night Bus Project", "Night Bus.als");
-  await store.open({ setId: setFile, filePath: setFile });
-  assert.equal(store.dataDir, join(root, "Projects", "Night Bus Project", "Ode"));
+  await store.open({ setId: setFile, filePath: setFile, instance: "first" });
+  assert.equal(store.dataDir, join(root, "Projects", "Night Bus Project", "Ode", "Night Bus"));
   assert.equal((await store.read()).title, "Night Bus Frequencies");
   await assert.rejects(stat(unsavedDir), { code: "ENOENT" });
 
   const reopened = new SongStore(paths, () => undefined);
-  await reopened.open({ setId: setFile, filePath: setFile });
+  await reopened.open({ setId: setFile, filePath: setFile, instance: "later" });
   assert.equal((await reopened.read()).title, "Night Bus Frequencies");
 });
 

@@ -1,6 +1,6 @@
 import type { ArrangementClipRef, ClipRef, ClipSlotRef, DeviceRef, LiveConnections, LiveLink, LiveStatus, LocatorRef, Note, ParameterRef, SceneRef, TrackRef } from "../shared/live";
 import { MIXER_INDEX } from "../shared/live";
-import type { ClipInfo, ExtensionOpArgs, MixerInfo, ParameterInfo, TrackSummary } from "../shared/live-ops";
+import type { ClipInfo, DeviceOpArgs, ExtensionOpArgs, MixerInfo, ParameterInfo, SetInfo, TrackSummary } from "../shared/live-ops";
 import type { ChainSnapshot, DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
 
 type Handler = (args: never) => unknown;
@@ -231,7 +231,7 @@ export class FakeSetLive implements LiveConnections {
 
   private deviceHandlers(): Record<string, Handler> {
     return {
-      set_info: () => ({ filePath: null, setId: "fake-set" }),
+      set_info: (): SetInfo => ({ filePath: null, setId: "unsaved-fake", instance: "fake" }),
       transport_get: () => structuredClone(this.state.transport),
       selection_get: () => structuredClone(this.state.selection),
       loop_set: ({ on, start, length }: { on?: boolean; start?: number; length?: number }) => {
@@ -261,6 +261,10 @@ export class FakeSetLive implements LiveConnections {
       song_set_time_signature: ({ numerator, denominator }: { numerator: number; denominator: number }) => {
         this.state.transport.signature = { numerator, denominator };
         return { numerator, denominator };
+      },
+      clip_slot_fire: ({ track, slot }: DeviceOpArgs["clip_slot_fire"]) => {
+        if (this.slot({ track, slot }).clip) this.state.transport.playing = true;
+        return { fired: true };
       },
     };
   }

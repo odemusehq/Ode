@@ -59,15 +59,18 @@ test("applying a diff gives the later Set", () => {
   assert.deepEqual(contents(SetDiff.apply(before, SetDiff.between(before, after))), contents(after));
 });
 
-test("a lyric rewrite is a change that applies back", () => {
+test("a lyric rewrite is one change, labelled by its lines, that applies back", () => {
   const sheet = TestSets.sheet();
-  const rewritten = structuredClone(sheet);
-  at(at(rewritten.sections, 0).lines, 1).text = "I count the streetlights one by one";
+  const rewritten = { ...sheet, lyrics: sheet.lyrics.replace("I count the windows going by", "I count the streetlights one by one") };
   const before = { ...TestSets.small(), sheet };
   const after = { ...TestSets.small(), sheet: rewritten };
   const changes = SetDiff.between(before, after);
-  assert.deepEqual(changes.map((change) => change.label), ["Lyrics · Verse 1 · line 2"]);
+  assert.deepEqual(changes.map((change) => change.label), ["Lyrics · Verse 1 line 2"]);
+  assert.deepEqual(changes.map((change) => [change.before, change.after]), [[sheet.lyrics, rewritten.lyrics]]);
   assert.deepEqual(SetDiff.apply(before, changes).sheet, rewritten);
+
+  const longer = { ...sheet, lyrics: `${sheet.lyrics}\n\n[Chorus]\nHold on` };
+  assert.deepEqual(SetDiff.between(before, { ...TestSets.small(), sheet: longer }).map((change) => change.label), ["Lyrics · 1 line added"]);
 });
 
 test("the history saves only real changes and rebuilds any version", async () => {
@@ -86,6 +89,7 @@ test("the history saves only real changes and rebuilds any version", async () =>
 
   assert.deepEqual(contents(await history.snapshotAt(first.id)), contents(muted));
   assert.deepEqual(contents(await history.snapshotAt(second.id)), contents(edited()));
+  assert.equal((await history.detail(second.id)).beatsPerBar, 4);
   assert.deepEqual((await history.items()).map((item) => item.id), [second.id, first.id, base.id]);
   assert.equal((await history.name(first.id, "Drums parked")).name, "Drums parked");
 

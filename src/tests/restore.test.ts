@@ -4,13 +4,16 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import type { SessionManager } from "../harness/session-manager";
+import { LyricsStore } from "../mneme/lyrics-store";
 import { userPaths } from "../mneme/paths";
+import { PreferencesStore } from "../mneme/preferences";
 import { SongStore, SongVersions } from "../mneme/song-store";
 import { Listening } from "../server/listening";
 import { RestoreRunner } from "../server/restore-runner";
 import { SetReadError, SnapshotReader } from "../server/snapshot-reader";
 import { RefusedError, VersionActions } from "../server/version-actions";
 import { VersionRecorder } from "../server/version-recorder";
+import type { LeadSheet } from "../shared/song";
 import { VersionAuthor } from "../shared/versions";
 import { FakeSetLive } from "./fake-set-live";
 import { TestSets } from "./sets";
@@ -21,20 +24,29 @@ async function tempDir(): Promise<string> {
   return mkdtemp(join(tmpdir(), "ode-restore-"));
 }
 
-/** The fake Set and an unsaved song with the test lead sheet, wired as the server wires them. */
+/** The fake Set and an unsaved song with the test lead sheet and its lyrics, wired as the server wires them. */
 async function rig() {
   const live = new FakeSetLive(TestSets.small(), TestSets.liveDevices());
-  const song = new SongStore(userPaths(join(await tempDir(), "Ode")), () => undefined);
-  await song.open({ setId: "unsaved-1", filePath: null });
+  const paths = userPaths(join(await tempDir(), "Ode"));
+  const song = new SongStore(paths, () => undefined);
+  const lyrics = new LyricsStore(song, new PreferencesStore(join(paths.preferences, "preferences.json")), () => undefined);
+  await song.open({ setId: "unsaved-1", filePath: null, instance: "test" });
   await song.replace(TestSets.sheet());
+  await lyrics.replace(TestSets.sheet().lyrics);
   const versions = new SongVersions(song, 20);
   const reader = new SnapshotReader(live, song);
   const recorder = new VersionRecorder(reader, versions, () => undefined);
-  return { live, song, versions, reader, recorder };
+  return { live, song, lyrics, versions, reader, recorder };
+}
+
+/** A lead sheet without its lyrics revision, which goes up with every save. */
+function withoutRevision(sheet: LeadSheet): Omit<LeadSheet, "lyricsRevision"> {
+  const { lyricsRevision: _revision, ...rest } = sheet;
+  return rest;
 }
 
 test("restoring brings the Set and the lyrics back to an earlier version, from the Set as it is now", async () => {
-  const { live, song, versions, recorder } = await rig();
+  const { live, song, lyrics, versions, recorder } = await rig();
   const start = await recorder.handEdits();
   assert.ok(start.version);
 
@@ -45,9 +57,8 @@ test("restoring brings the Set and the lyrics back to an earlier version, from t
     set.song.tempo = 124;
     at(set.song.locators, 1).name = "Hook";
   });
-  const sheet = await song.read();
-  at(at(sheet.sections, 0).lines, 1).text = "I count the streetlights one by one";
-  await song.replace(sheet);
+  const { text, revision } = await lyrics.read();
+  await lyrics.write(text.replace("I count the windows going by", "I count the streetlights one by one"), revision, VersionAuthor.Ode);
   const ode = await recorder.odeChange("Lead added, bass lifted in bar 3", "add a lead");
   assert.ok(ode.version);
 
@@ -56,12 +67,12 @@ test("restoring brings the Set and the lyrics back to an earlier version, from t
     at(set.tracks, 0).mute = true;
   });
   const now = await recorder.handEdits();
-  const result = await new RestoreRunner(live, song).putBack(now.snapshot, await versions.history.snapshotAt(start.version.id));
+  const result = await new RestoreRunner(live, song, lyrics).putBack(now.snapshot, await versions.history.snapshotAt(start.version.id));
   await versions.history.truncateAfter(start.version.id);
 
   assert.deepEqual(result, { complete: true, skipped: [] });
   assert.deepEqual(TestSets.contents(live.snapshot()), TestSets.contents(TestSets.small()));
-  assert.deepEqual(await song.read(), TestSets.sheet());
+  assert.deepEqual(withoutRevision(await song.read()), withoutRevision(TestSets.sheet()));
   assert.deepEqual((await versions.history.list()).map((version) => version.id), [start.version.id]);
 });
 
@@ -73,7 +84,9 @@ test("what can't be put back, such as a plug-in removed by hand, is listed inste
   live.edit((current) => {
     at(current.tracks, 2).devices.pop();
   });
-  const result = await new RestoreRunner(live, { read: async () => TestSets.sheet(), replace: async (sheet) => sheet }).putBack(live.snapshot(), before);
+  const unused = { analysis: { lines: [], scheme: [], notes: [] }, revision: 0 };
+  const runner = new RestoreRunner(live, { update: async () => TestSets.sheet() }, { replace: async (text) => ({ ...unused, text }) });
+  const result = await runner.putBack(live.snapshot(), before);
   assert.equal(result.complete, true);
   assert.ok(result.skipped.some((item) => item.includes("Shimmer Verb")), result.skipped.join("\n"));
 });
@@ -98,7 +111,8 @@ test("an unsaved Set keeps its versions in the user folder, they move into the p
   const root = await tempDir();
   const paths = userPaths(join(root, "Ode"));
   const song = new SongStore(paths, () => undefined);
-  await song.open({ setId: "unsaved-2", filePath: null });
+  const lyrics = new LyricsStore(song, new PreferencesStore(join(paths.preferences, "preferences.json")), () => undefined);
+  await song.open({ setId: "unsaved-2", filePath: null, instance: "test" });
   const versions = new SongVersions(song, 20);
   const first = await versions.history.record(TestSets.small(), VersionAuthor.Musician, "Opened");
   assert.ok(first);
@@ -107,12 +121,13 @@ test("an unsaved Set keeps its versions in the user folder, they move into the p
   const live = new FakeSetLive(TestSets.small());
   const recorder = new VersionRecorder(new SnapshotReader(live, song), versions, () => undefined);
   // Copying never runs a request, so it needs no session.
-  const actions = new VersionActions({ live, song, versions, recorder, sessions: {} as SessionManager, emit: () => undefined });
+  const selection = { refresh: async () => undefined };
+  const actions = new VersionActions({ live, song, lyrics, versions, recorder, sessions: {} as SessionManager, selection, emit: () => undefined });
   await assert.rejects(actions.copy(first.id), (error) => error instanceof RefusedError && error.message === "Save the Set first");
 
   const setFile = join(root, "Projects", "Night Bus Project", "Night Bus.als");
-  await song.open({ setId: setFile, filePath: setFile });
-  await stat(join(root, "Projects", "Night Bus Project", "Ode", "versions", "versions.jsonl"));
+  await song.open({ setId: setFile, filePath: setFile, instance: "test" });
+  await stat(join(root, "Projects", "Night Bus Project", "Ode", "Night Bus", "versions", "versions.jsonl"));
   assert.deepEqual((await versions.history.list()).map((version) => version.id), [first.id]);
 });
 

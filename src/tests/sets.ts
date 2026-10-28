@@ -53,24 +53,12 @@ export class TestSets {
     return set;
   }
 
-  /** A lead sheet with one verse of two lines over the first 16 beats. */
+  /** A lead sheet with one verse over the first 16 beats: its label and two sung lines in the lyrics. */
   static sheet(): LeadSheet {
     return LeadSheetSchema.parse({
       title: "Night Bus",
-      sections: [
-        {
-          id: "verse-1",
-          kind: "verse",
-          name: "Verse 1",
-          startBeat: 0,
-          lengthBeats: 16,
-          lines: [
-            { id: "v1-l1", text: "The last bus leaves at midnight" },
-            { id: "v1-l2", text: "I count the windows going by" },
-          ],
-          chords: [{ beat: 0, lengthBeats: 16, symbol: "Am" }],
-        },
-      ],
+      lyrics: "[Verse 1]\nThe last bus leaves at midnight\nI count the windows going by",
+      sections: [{ id: "verse-1", kind: "verse", name: "Verse 1", startBeat: 0, lengthBeats: 16, chords: [{ beat: 0, lengthBeats: 16, symbol: "Am" }] }],
     });
   }
 

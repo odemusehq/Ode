@@ -6,11 +6,13 @@ import { Approvals, Decision } from "../harness/approvals";
 import { OdeSession } from "../harness/session";
 import { Workspace } from "../harness/workspace";
 import { Mneme } from "../mneme/artist";
+import { LyricsStore } from "../mneme/lyrics-store";
 import { userPaths } from "../mneme/paths";
 import { PreferencesStore } from "../mneme/preferences";
 import { SetDiff } from "../mneme/set-diff";
 import { SongStore, SongVersions } from "../mneme/song-store";
 import { ContextSummary } from "../mneme/summary";
+import { DeletionChecker } from "../server/deletion-checker";
 import { Listening } from "../server/listening";
 import { Questions } from "../server/questions";
 import { RequestContext } from "../server/request-context";
@@ -108,14 +110,20 @@ class ScenarioRun {
     const prefs = new PreferencesStore(join(paths.preferences, "preferences.json"));
     const mneme = new Mneme(paths, config.memory.halfLifeDays);
     const song = new SongStore(paths, () => undefined);
-    await song.open({ setId: `scenario-${this.scenario.name}`, filePath: null });
-    if (this.scenario.sheet) await song.replace(this.scenario.sheet);
+    const lyrics = new LyricsStore(song, prefs, (state) => emit({ type: "lyrics", lyrics: state }));
+    const setId = `scenario-${this.scenario.name}`;
+    await song.open({ setId, filePath: null, instance: setId });
+    if (this.scenario.sheet) {
+      await song.replace(this.scenario.sheet);
+      await lyrics.replace(this.scenario.sheet.lyrics);
+    }
     const versions = new SongVersions(song, config.versions.snapshotEvery);
     const live = new FakeSetLive(this.scenario.set, TestSets.liveDevices());
     const reader = new SnapshotReader(live, song);
     const recorder = new VersionRecorder(reader, versions, emit);
     const selection = new SelectionState({ live, reader, versions, finder: new SuggestionFinder(live, song, prefs), busy: () => false, emit });
-    const registry = new ToolRegistry({ config, live, song, versions, snapshots: reader, questions, mneme, prefs, services: new ModelServices(config), emit });
+    const services = new ModelServices(config);
+    const registry = new ToolRegistry({ config, live, song, lyrics, versions, snapshots: reader, questions, mneme, prefs, services, emit });
     const requests = new RequestContext({
       config,
       live,
@@ -128,8 +136,10 @@ class ScenarioRun {
       listening: new Listening(live, reader),
       emit,
     });
+    const workspace = new Workspace(paths.workspace, join(config.repoDir, "skills"));
+    const deletions = new DeletionChecker(reader);
     const session = new OdeSession(
-      { config, workspace: new Workspace(paths.workspace, join(config.repoDir, "skills")), registry, agents: new OdeAgents(config, registry), approvals, questions, prefs, requests, emit },
+      { config, workspace, registry, agents: new OdeAgents(config, registry), approvals, questions, prefs, requests, deletions, emit },
       null,
       () => undefined,
     );
@@ -151,7 +161,9 @@ class ScenarioRun {
     return {
       action,
       reply: results.at(-1) ?? "",
-      questions: events.flatMap((event) => (event.type === "question" ? [`${event.text} [${event.options.join(" / ")}]`] : [])),
+      questions: events.flatMap((event) =>
+        event.type === "question" ? [`${event.text} [${event.options.join(" / ")}]${event.images ? ` images: ${event.images.join(", ")}` : ""}`] : [],
+      ),
       approvals: events.flatMap((event) => (event.type === "approval" ? [`${event.tool}: ${event.summary}`] : [])),
       tools: events.flatMap((event) => (event.type === "tool" && event.status === "started" ? [`${event.name}${event.summary ? `: ${event.summary}` : ""}`] : [])),
       progress: events.flatMap((event) => (event.type === "progress" ? [event.text] : [])),
