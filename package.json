@@ -18,7 +18,8 @@
     "live:extension": "tsx src/live/extension/run.ts",
     "bridge:install": "tsx src/live/bridge/install.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --import tsx \"src/tests/**/*.test.ts\""
+    "test": "node --test --import tsx \"src/tests/**/*.test.ts\"",
+    "test:skills": "tsx src/tests/skill-scenarios.ts"
   },
   "dependencies": {
     "@ableton-extensions/sdk": "file:../extensions-sdk-1.0.0-beta.1/ableton-extensions-sdk-1.0.0-beta.1.tgz",
