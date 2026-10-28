@@ -1,17 +1,13 @@
-import { execFile } from "node:child_process";
 import { constants } from "node:fs";
 import { copyFile } from "node:fs/promises";
 import { join } from "node:path";
-import { promisify } from "node:util";
 import { BridgeInstaller } from "../live/bridge/install";
 import { DeviceInstaller } from "../live/device/install";
 import { OdeConfig } from "../shared/config";
 
-const run = promisify(execFile);
-
 /**
  * Sets up a downloaded release of Ode once npm has installed its packages (`npm run setup`): makes .env, puts the
- * Ode device and the Ode Control Surface in the User Library, and shows the Live extension in Finder.
+ * Ode device and the Ode Control Surface in the User Library, and prints where each file is.
  */
 class ReleaseSetup {
   private readonly settings = join(OdeConfig.repoDir, ".env");
@@ -22,16 +18,15 @@ class ReleaseSetup {
     const config = OdeConfig.load();
     const device = await new DeviceInstaller(config).install();
     const bridge = await new BridgeInstaller(config).install();
-    await run("open", ["-R", this.extension]);
-    if (created) await run("open", ["-t", this.settings]);
     console.log(
       [
         `Ode device: ${device}`,
         `Ode Control Surface: ${bridge}`,
+        `Ode extension: ${this.extension}`,
         `Settings: ${this.settings}${created ? " (add your model keys and save it)" : ""}`,
         "",
         "In Live:",
-        "1. Settings → Extensions: drop Ode.ablx on the page (Finder shows it). Leave Developer Mode off.",
+        "1. Settings → Extensions: drop Ode.ablx on the page. Leave Developer Mode off.",
         "2. Settings → Link, Tempo & MIDI: choose Ode as a Control Surface.",
         "3. Put the Ode device on the Main track: User Library → Presets → Audio Effects → Max Audio Effect.",
         "",
