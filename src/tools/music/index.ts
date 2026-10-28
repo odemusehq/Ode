@@ -6,6 +6,7 @@ import { harmonyVocalsWriteTool } from "./harmony-vocals-write";
 import { lyricsAnalyzeTool } from "./lyrics-analyze";
 import { melodyVaryTool } from "./melody-vary";
 import { melodyWriteTool } from "./melody-write";
+import { notesCheckTool } from "./notes-check";
 import { originalityCheckTool } from "./originality-check";
 import { prosodyCheckTool } from "./prosody-check";
 import { rhymeFindTool } from "./rhyme-find";
@@ -35,5 +36,6 @@ export const musicTools: AnyTool[] = [
   drumGrooveWriteTool,
   songFormPlanTool,
   harmonyVocalsWriteTool,
+  notesCheckTool,
   originalityCheckTool,
 ];

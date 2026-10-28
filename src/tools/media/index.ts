@@ -1,6 +1,7 @@
-import { copyFile, mkdir, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readdir, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
+import { COVER_CHOICE, COVER_FILE } from "../../shared/api";
 import type { SongInfo } from "../../shared/live-ops";
 import { tempDir, tempFile, userPaths } from "../../mneme/paths";
 import { defineTool, type AnyTool, type ToolContext } from "../define";
@@ -54,10 +55,22 @@ export const mediaTools: AnyTool[] = [
     name: "cover_art_create",
     changes: "memory",
     description:
-      "Create the song's cover art from a written brief (subject, mood, colours, style; no text or logos unless asked) and save it as Ode/release/cover.png at 3000 × 3000 pixels, the size release platforms ask for. Base the brief on what the song is about; never imitate another artist's artwork.",
+      `Create cover art choices for the song from a written brief (subject, mood, colours, style; no text or logos unless asked): several images at 3000 × 3000 pixels, the size release platforms ask for, saved as Ode/release/cover-1.png, cover-2.png and so on, numbered after any earlier choices, which stay. The musician picks one in the Release tab and it becomes Ode/release/${COVER_FILE}. Base the brief on what the song is about; never imitate another artist's artwork.`,
     input: { brief: z.string().min(10) },
-    describe: () => "Create cover art for the song and save it in the release folder.",
-    run: async ({ brief }, ctx) => ({ path: await ctx.services.generateImage(brief, join(ctx.song.releaseDir, "cover.png")) }),
+    describe: () => "Create cover art choices for the song in the release folder.",
+    run: async ({ brief }, ctx) => {
+      const dir = ctx.song.releaseDir;
+      const count = ctx.config.release.coverChoices;
+      await mkdir(dir, { recursive: true });
+      const earlier = (await readdir(dir)).map((name) => Number(COVER_CHOICE.exec(name)?.[1] ?? 0));
+      const first = Math.max(0, ...earlier) + 1;
+      const choices = await Promise.all(
+        Array.from({ length: count }, (_, index) =>
+          ctx.services.generateImage(`${brief}\nVersion ${index + 1} of ${count}: a different composition from the others.`, join(dir, `cover-${first + index}.png`)),
+        ),
+      );
+      return { choices, note: `The musician picks one in the Release tab; it becomes ${COVER_FILE}.` };
+    },
   }),
   defineTool({
     name: "sample_from_recording",

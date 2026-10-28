@@ -11,7 +11,7 @@ export const rhymeFindTool = defineTool({
   name: "rhyme_find",
   description: [
     "Finds rhymes for a word from the pronunciation dictionary of the chosen accent (UK and US differ, e.g. bath/path).",
-    "Use it for rhyme suggestions instead of guessing; every result's kind comes from Ode's rhyme code.",
+    "Use it to find rhymes instead of guessing; every result's kind comes from Ode's rhyme code.",
     'Inputs: word; accent (optional, defaults to the Pronunciation setting); kinds (optional filter: "perfect",',
     '"multisyllabic", "near", "assonance", "consonance", "identical"; default all but identical); limit (default 40);',
     "commonOnly (only the most frequent English words).",

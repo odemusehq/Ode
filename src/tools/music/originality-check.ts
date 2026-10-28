@@ -69,7 +69,7 @@ export const originalityCheckTool = defineTool({
     "Checks a lyric for originality: clichéd phrases, over-used rhyme pairs at line ends (such as fire/desire),",
     "phrases repeated from the artist's own earlier songs (from memory), and, through a model, lines that may look like",
     "quotations of existing songs. The result is a warning, not a guarantee; say so when you pass it on.",
-    "Use it on every lyric draft before suggesting it, and when the musician asks whether a line is original.",
+    "Use it on new or changed lyrics before reporting them, and when the musician asks whether a line is original.",
     "Inputs: text (the lyric, one line per line).",
     'Returns { cliches, repeats, overusedRhymes, quoteRisk ("low" or "possible"), quotationCheck { done,',
     "possibleQuotes [{ line, reason }], note }, warning }.",
