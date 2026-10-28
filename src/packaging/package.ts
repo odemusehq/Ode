@@ -88,7 +88,7 @@ class ReleasePackage {
     await copyFile(ExtensionLauncher.packageFile, join(this.folder, basename(ExtensionLauncher.packageFile)));
   }
 
-  /** Fails when the server or the setup imports a file the release doesn't hold. */
+  /** Checks that the release holds every file the server and the setup import. */
   private async checkImports(): Promise<void> {
     const { metafile } = await esbuild.build({
       absWorkingDir: OdeConfig.repoDir,
@@ -103,7 +103,7 @@ class ReleasePackage {
       logLevel: "silent",
     });
     const missing = Object.keys(metafile.inputs).filter((input) => !existsSync(join(this.folder, input)));
-    if (missing.length > 0) throw new Error(`The release lacks files the server or the setup imports: ${missing.join(", ")}`);
+    if (missing.length > 0) throw new Error(`Add these files to the release contents, the server or the setup imports them: ${missing.join(", ")}`);
   }
 
   /** package.json with the release's commands and only the packages Ode runs with, and its lockfile. */
@@ -126,6 +126,6 @@ class ReleasePackage {
 if (import.meta.main) {
   const release = await Release.read();
   const tag = process.argv[2];
-  if (tag !== undefined && tag !== release.tag) throw new Error(`The tag ${tag} doesn't match package.json, which says ${release.version}`);
+  if (tag !== undefined && tag !== release.tag) throw new Error(`The tag ${tag} differs from package.json, which says ${release.version}`);
   console.log(`Release package: ${await new ReleasePackage(release, OdeConfig.defaults()).run()}`);
 }

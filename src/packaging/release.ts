@@ -42,11 +42,11 @@ export class Release {
     return `${this.folder}.zip`;
   }
 
-  /** Fails unless the Live extension's manifest has this version too. */
+  /** Checks that the Live extension's manifest has this version too. */
   async checkManifest(): Promise<void> {
     const { version } = await Release.manifest();
     if (version !== this.version) {
-      throw new Error(`The Live extension's manifest says ${version} but package.json says ${this.version}: change versions with npm version`);
+      throw new Error(`The Live extension's manifest says ${version} and package.json says ${this.version}: change versions with npm version`);
     }
   }
 

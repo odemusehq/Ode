@@ -40,7 +40,7 @@ class ReleaseSetup {
     );
   }
 
-  /** Copies .env.example to .env unless there is one; true when it made one. */
+  /** Copies .env.example to .env when .env is missing; true when it made one. */
   private async createSettings(): Promise<boolean> {
     try {
       await copyFile(join(OdeConfig.repoDir, ".env.example"), this.settings, constants.COPYFILE_EXCL);

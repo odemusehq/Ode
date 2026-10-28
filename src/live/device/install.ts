@@ -23,7 +23,7 @@ export class DeviceInstaller {
     await copyFile(join(DeviceInstaller.builtDir, DeviceInstaller.networkScript), script);
     const patch = AmxdFile.unpack(await readFile(join(DeviceInstaller.builtDir, DeviceInstaller.deviceFile)));
     const built = JSON.stringify(DevicePatcher.networkLine(DeviceInstaller.networkScript));
-    if (!patch.includes(built)) throw new Error("The built Ode device doesn't name its network script: run npm run build:device");
+    if (!patch.includes(built)) throw new Error("The built Ode device is out of date: run npm run build:device");
     const device = join(presets, DeviceInstaller.deviceFile);
     const installed = JSON.stringify(DevicePatcher.networkLine(script));
     await writeFile(device, AmxdFile.pack(patch.replace(built, () => installed)));
