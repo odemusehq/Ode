@@ -3,16 +3,16 @@ import { join } from "node:path";
 import { loadConfig, type OdeConfig } from "../../shared/config";
 import { ExtensionBuild } from "./build";
 
-/** Where the packaged extension goes, inside the extension folder. */
-const PACKAGE_FILE = "dist/Ode.ablx";
-
 /** Builds the extension and hands it to Ableton's extensions CLI: to run it in Live, or with --package to package it. */
-class ExtensionLauncher {
+export class ExtensionLauncher {
+  /** The packaged extension (.ablx), which is installed by dropping it on the Extensions page of Live's settings. */
+  static readonly packageFile = join(ExtensionBuild.directory, "dist", "Ode.ablx");
+
   constructor(private readonly config: OdeConfig) {}
 
   async start(packaging: boolean): Promise<number> {
     await new ExtensionBuild(this.config, packaging).run();
-    return this.cli(packaging ? ["package", "-o", PACKAGE_FILE] : ["run", "--live", this.config.liveApp]);
+    return this.cli(packaging ? ["package", "-o", ExtensionLauncher.packageFile] : ["run", "--live", this.config.liveApp]);
   }
 
   private cli(args: string[]): Promise<number> {
@@ -25,4 +25,6 @@ class ExtensionLauncher {
   }
 }
 
-process.exitCode = await new ExtensionLauncher(loadConfig()).start(process.argv.includes("--package"));
+if (import.meta.main) {
+  process.exitCode = await new ExtensionLauncher(loadConfig()).start(process.argv.includes("--package"));
+}

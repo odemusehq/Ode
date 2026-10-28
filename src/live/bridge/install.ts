@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { OdeConfig } from "../../shared/config";
 
 /** Installs the Python bridge into the User Library's Remote Scripts folder, with its host and port. */
-class BridgeInstaller {
+export class BridgeInstaller {
   constructor(private readonly config: OdeConfig) {}
 
   async install(): Promise<string> {
@@ -17,6 +17,8 @@ class BridgeInstaller {
   }
 }
 
-const target = await new BridgeInstaller(OdeConfig.load()).install();
-console.log(`Ode bridge installed: ${target}`);
-console.log("In Live: Settings → Link, Tempo & MIDI → choose Ode as a Control Surface.");
+if (import.meta.main) {
+  const target = await new BridgeInstaller(OdeConfig.load()).install();
+  console.log(`Ode bridge installed: ${target}`);
+  console.log("In Live: Settings → Link, Tempo & MIDI → choose Ode as a Control Surface.");
+}
