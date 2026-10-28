@@ -4,6 +4,8 @@ declare class LiveAPI {
   constructor(path?: string);
   constructor(callback: (args: unknown[]) => void, path?: string);
   path: string;
+  /** The canonical path without quotes, such as "live_set tracks 2 clip_slots 0 clip". */
+  readonly unquotedpath: string;
   readonly id: number | string;
   property: string;
   get(property: string): unknown[];

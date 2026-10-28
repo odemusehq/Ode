@@ -1,8 +1,13 @@
-import type { LocatorRef, TrackRef } from "../../../shared/live";
-import type { CreatedTrack, DeviceOpArgs, MeterReading, SelectionInfo, SetInfo } from "../../../shared/live-ops";
+import type { ClipRef, LocatorRef, TrackRef } from "../../../shared/live";
+import type { CreatedTrack, DeviceOpArgs, MeterReading, SelectionInfo, SetInfo, TransportState } from "../../../shared/live-ops";
 import { LiveObject } from "./live-object";
 
 type Handler = (args: never) => unknown;
+
+/** Canonical path of anything on a regular track; the first number is the track. */
+const TRACK_PATH = /^live_set tracks (\d+) /;
+/** Canonical path of a Session clip: its track, then its clip slot. */
+const SESSION_CLIP_PATH = /^live_set tracks (\d+) clip_slots (\d+) clip$/;
 
 /** The Max for Live API operations the Extensions SDK lacks, run inside the Ode device. */
 export class DeviceOperations {
@@ -30,6 +35,7 @@ export class DeviceOperations {
       song_redo: () => this.history("can_redo", "redo"),
       selection_get: () => this.selection(),
       track_meters_get: () => this.meters(),
+      transport_get: () => this.transportState(),
     };
   }
 
@@ -62,6 +68,32 @@ export class DeviceOperations {
     return this.song().bool("is_playing");
   }
 
+  /** What the musician has selected in Live, and where the playhead is. */
+  selection(): SelectionInfo {
+    const song = this.song();
+    const view = new LiveObject("live_set view");
+    const track = DeviceOperations.selectedTrack(song, view);
+    const sceneId = view.ids("selected_scene")[0];
+    const scene = sceneId ? song.ids("scenes").indexOf(sceneId) : -1;
+    return {
+      track,
+      clip: track && "index" in track ? DeviceOperations.selectedClip(view, track.index) : null,
+      scene: scene >= 0 ? scene : null,
+      time: song.number("current_song_time"),
+      isPlaying: song.bool("is_playing"),
+    };
+  }
+
+  transportState(): TransportState {
+    const song = this.song();
+    return {
+      playing: song.bool("is_playing"),
+      time: song.number("current_song_time"),
+      loop: DeviceOperations.loopState(song),
+      signature: { numerator: song.number("signature_numerator"), denominator: song.number("signature_denominator") },
+    };
+  }
+
   private song(): LiveObject {
     return new LiveObject("live_set");
   }
@@ -92,7 +124,7 @@ export class DeviceOperations {
     if (start !== undefined) song.set("loop_start", start);
     if (length !== undefined) song.set("loop_length", length);
     if (on !== undefined) song.set("loop", on ? 1 : 0);
-    return { on: song.bool("loop"), start: song.number("loop_start"), length: song.number("loop_length") };
+    return DeviceOperations.loopState(song);
   }
 
   private jump(locator: LocatorRef) {
@@ -151,21 +183,30 @@ export class DeviceOperations {
     return { done: true };
   }
 
-  private selection(): SelectionInfo {
-    const song = this.song();
-    const view = new LiveObject("live_set view");
-    const trackIds = song.ids("tracks");
-    const selectedTrack = view.ids("selected_track")[0];
-    const trackIndex = selectedTrack === undefined ? -1 : trackIds.indexOf(selectedTrack);
-    const sceneIds = song.ids("scenes");
-    const selectedScene = view.ids("selected_scene")[0];
-    const sceneIndex = selectedScene === undefined ? -1 : sceneIds.indexOf(selectedScene);
-    return {
-      track: trackIndex >= 0 ? { index: trackIndex } : null,
-      clip: null,
-      scene: sceneIndex >= 0 ? sceneIndex : null,
-      time: song.number("current_song_time"),
-      isPlaying: song.bool("is_playing"),
-    };
+  private static loopState(song: LiveObject): TransportState["loop"] {
+    return { on: song.bool("loop"), start: song.number("loop_start"), length: song.number("loop_length") };
+  }
+
+  /** The selected track: a regular track, a return track or the main track. */
+  private static selectedTrack(song: LiveObject, view: LiveObject): TrackRef | null {
+    const id = view.ids("selected_track")[0];
+    if (!id) return null;
+    const index = song.ids("tracks").indexOf(id);
+    if (index >= 0) return { index };
+    const returnIndex = song.ids("return_tracks").indexOf(id);
+    if (returnIndex >= 0) return { returnIndex };
+    return song.ids("master_track")[0] === id ? { main: true } : null;
+  }
+
+  /** The clip open in Live's Detail View, when it is on the selected track. */
+  private static selectedClip(view: LiveObject, track: number): ClipRef | null {
+    const id = view.ids("detail_clip")[0];
+    if (!id) return null;
+    const clip = new LiveObject(`id ${id}`);
+    const path = clip.canonicalPath;
+    if (Number(TRACK_PATH.exec(path)?.[1]) !== track) return null;
+    const trackRef: TrackRef = { index: track };
+    const session = SESSION_CLIP_PATH.exec(path);
+    return session ? { track: trackRef, slot: Number(session[2]) } : { track: trackRef, start: clip.number("start_time") };
   }
 }

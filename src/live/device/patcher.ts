@@ -22,9 +22,23 @@ export class DevicePatcher {
   private static readonly DEVICE_HEIGHT = 169;
   private static readonly DEVICE_WIDTH = 480;
   private static readonly BUTTON_WIDTH = 88;
+  private static readonly BUTTON_HEIGHT = 22;
+  /** Space above the first button and between buttons. */
+  private static readonly BUTTON_GAP = 8;
+  /** The compact strip fills the device left of the button column. */
+  private static readonly STRIP_WIDTH = DevicePatcher.DEVICE_WIDTH - DevicePatcher.BUTTON_WIDTH - 8;
   private static readonly WINDOW_SIZE: [number, number] = [420, 860];
   /** Max patcher value for an audio effect device ("aaaa"). */
   private static readonly AUDIO_EFFECT_TYPE = 1633771873;
+  /** live.text mode of a momentary button that sends a bang. */
+  private static readonly LIVE_TEXT_BUTTON_MODE = 0;
+  /**
+   * live.text transition that sends the bang when a press is released (One->Zero), so the control is
+   * back at 0 when Ode reads the Set, which includes this device's own parameters.
+   */
+  private static readonly BANG_ON_RELEASE = 1;
+  /** Max parameter type of a control with named states. */
+  private static readonly ENUM_PARAMETER = 2;
 
   private readonly boxes: Box[] = [];
   private readonly lines: Line[] = [];
@@ -32,7 +46,6 @@ export class DevicePatcher {
   constructor(private readonly options: DevicePatcherOptions) {}
 
   build(): object {
-    const strip = DevicePatcher.DEVICE_WIDTH - DevicePatcher.BUTTON_WIDTH - 8;
     this.newObject("plugin", "plugin~", 2, ["signal", "signal"], [40, 30, 60, 22]);
     this.newObject("plugout", "plugout~", 2, ["signal", "signal"], [40, 330, 60, 22]);
     this.newObject("ready", "live.thisdevice", 1, ["bang", "int", "int"], [420, 30, 90, 22]);
@@ -61,7 +74,7 @@ export class DevicePatcher {
       outlettype: [""],
       patching_rect: [40, 400, 360, DevicePatcher.DEVICE_HEIGHT],
       presentation: 1,
-      presentation_rect: [0, 0, strip, DevicePatcher.DEVICE_HEIGHT],
+      presentation_rect: [0, 0, DevicePatcher.STRIP_WIDTH, DevicePatcher.DEVICE_HEIGHT],
     });
     this.add("open-button", {
       maxclass: "textbutton",
@@ -71,7 +84,7 @@ export class DevicePatcher {
       outlettype: ["", "", "int"],
       patching_rect: [760, 230, 120, 22],
       presentation: 1,
-      presentation_rect: [strip + 4, 8, DevicePatcher.BUTTON_WIDTH, 22],
+      presentation_rect: DevicePatcher.buttonRect(0),
     });
     this.newObject("open-message", "t open", 1, [""], [760, 270, 50, 22]);
     this.newObject("window-control", "pcontrol", 1, [""], [760, 310, 60, 22]);
@@ -83,6 +96,8 @@ export class DevicePatcher {
       patching_rect: [760, 350, 100, 22],
       patcher: this.windowPatcher(),
     });
+    this.commandControl("again", "Again", "Ode tries its last change again: a different take, in place.", 1, [900, 230]);
+    this.commandControl("undo", "Undo", "Goes back to the version before Ode's last change.", 2, [1020, 230]);
 
     this.connect("plugin", 0, "plugout", 0);
     this.connect("plugin", 1, "plugout", 1);
@@ -165,6 +180,58 @@ export class DevicePatcher {
         { patchline: { source: ["w-float", 0], destination: ["w-this", 0] } },
       ],
     };
+  }
+
+  /**
+   * A Live control that sends "command <name>" to the Live side each time a press is released. It is a
+   * Live parameter, so the musician can map it to a key or a MIDI controller.
+   */
+  private commandControl(name: string, label: string, annotation: string, row: number, [x, y]: [number, number]): void {
+    const control = `${name}-control`;
+    const message = `${name}-message`;
+    this.add(control, {
+      maxclass: "live.text",
+      mode: DevicePatcher.LIVE_TEXT_BUTTON_MODE,
+      transition: DevicePatcher.BANG_ON_RELEASE,
+      text: label,
+      texton: label,
+      automation: label,
+      automationon: label,
+      annotation,
+      varname: label,
+      parameter_enable: 1,
+      saved_attribute_attributes: {
+        valueof: {
+          parameter_longname: label,
+          parameter_shortname: label,
+          parameter_type: DevicePatcher.ENUM_PARAMETER,
+          parameter_mmax: 1,
+          parameter_enum: [label, label],
+        },
+      },
+      numinlets: 1,
+      numoutlets: 2,
+      outlettype: ["", ""],
+      patching_rect: [x, y, 60, 20],
+      presentation: 1,
+      presentation_rect: DevicePatcher.buttonRect(row),
+    });
+    this.add(message, {
+      maxclass: "message",
+      text: `command ${name}`,
+      numinlets: 2,
+      numoutlets: 1,
+      outlettype: [""],
+      patching_rect: [x, y + 40, 100, 22],
+    });
+    this.connect(control, 0, message, 0);
+    this.connect(message, 0, "live", 0);
+  }
+
+  /** A row of the button column right of the strip; row 0 is at the top. */
+  private static buttonRect(row: number): number[] {
+    const top = DevicePatcher.BUTTON_GAP + row * (DevicePatcher.BUTTON_HEIGHT + DevicePatcher.BUTTON_GAP);
+    return [DevicePatcher.STRIP_WIDTH + 4, top, DevicePatcher.BUTTON_WIDTH, DevicePatcher.BUTTON_HEIGHT];
   }
 
   private newObject(id: string, text: string, inlets: number, outlets: string[], rect: number[]): void {

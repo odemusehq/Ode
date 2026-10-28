@@ -11,6 +11,7 @@ import { RackOperations } from "./racks";
 import { OperationRegistry } from "./registry";
 import { SceneOperations } from "./scenes";
 import { SimplerOperations } from "./simpler";
+import { SnapshotOperations } from "./snapshot";
 import { SongOperations } from "./song";
 import { TakeLaneOperations } from "./take-lanes";
 import { TrackOperations } from "./tracks";
@@ -31,6 +32,7 @@ export function createOperationRegistry(services: LiveServices): OperationRegist
     ...new SimplerOperations(services).table(),
     ...new SceneOperations(services).table(),
     ...new AudioOperations(services).table(),
+    ...new SnapshotOperations(services).table(),
   };
   const all: OperationTable<ExtensionOp> = { ...regular, ...new UndoOperations(services.live, regular).table() };
   return new OperationRegistry(services.live, all);

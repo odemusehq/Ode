@@ -59,6 +59,7 @@ class DeviceBuilder {
       "function bang() { OdeDeviceBundle.device.start(); }",
       "function request(json) { OdeDeviceBundle.device.request(json); }",
       "function hello() { OdeDeviceBundle.device.hello(); }",
+      "function command(name) { OdeDeviceBundle.device.command(name); }",
     ].join("\n");
   }
 

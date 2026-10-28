@@ -11,6 +11,11 @@ export class LiveObject {
     return Number(this.api.id);
   }
 
+  /** Where the object is in the Set, such as "live_set tracks 2 clip_slots 0 clip", however it was found. */
+  get canonicalPath(): string {
+    return this.api.unquotedpath;
+  }
+
   number(property: string): number {
     return Number(this.api.get(property)[0]);
   }

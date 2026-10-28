@@ -24,6 +24,36 @@ export class LiveError extends Error {
   }
 }
 
+/** Something Live refused to read; the message names it, as in 'couldn't read track 3 "Bass": <reason>'. */
+export class UnreadableError extends Error {
+  constructor(what: string, cause: unknown) {
+    super(`couldn't read ${what}: ${describeError(cause)}`, { cause });
+    this.name = "UnreadableError";
+  }
+
+  /** Runs `read`; a failure names `what`, unless a read inside it already named its own object. */
+  static guard<T>(what: string, read: () => T): T {
+    try {
+      return read();
+    } catch (error) {
+      throw UnreadableError.naming(what, error);
+    }
+  }
+
+  /** Like guard, for a read that finishes later. */
+  static async guardAsync<T>(what: string, read: () => Promise<T>): Promise<T> {
+    try {
+      return await read();
+    } catch (error) {
+      throw UnreadableError.naming(what, error);
+    }
+  }
+
+  private static naming(what: string, error: unknown): UnreadableError {
+    return error instanceof UnreadableError ? error : new UnreadableError(what, error);
+  }
+}
+
 /** A readable message for anything thrown. */
 export function describeError(error: unknown): string {
   return reasonOf(error) || "Live reported an error without details";
