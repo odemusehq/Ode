@@ -11,5 +11,5 @@ test("release notes list each change and say how to install that release's archi
   const notes = ReleaseNotes.format(new Release("1.2.0", "24.16.0"), ["Lyrics side panel", "Safer Undo"]);
   assert.match(notes, /^- Lyrics side panel$/m);
   assert.match(notes, /^- Safer Undo$/m);
-  assert.ok(notes.includes("Unzip Ode-1.2.0-macOS.zip"), notes);
+  assert.ok(notes.includes("Unzip Ode-1.2.0.zip"), notes);
 });

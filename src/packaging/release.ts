@@ -39,7 +39,7 @@ export class Release {
   }
 
   get archive(): string {
-    return `${this.folder}-macOS.zip`;
+    return `${this.folder}.zip`;
   }
 
   /** Fails unless the Live extension's manifest has this version too. */

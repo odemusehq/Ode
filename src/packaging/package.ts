@@ -83,7 +83,7 @@ class ReleasePackage {
 
   private async copyContents(): Promise<void> {
     for (const path of ReleasePackage.contents) {
-      await cp(join(OdeConfig.repoDir, path), join(this.folder, path), { recursive: true, filter: (source) => !ReleasePackage.isJunk(source) });
+      await cp(join(OdeConfig.repoDir, path), join(this.folder, path), { recursive: true, filter: (source) => ReleasePackage.ships(source) });
     }
     await copyFile(ExtensionLauncher.packageFile, join(this.folder, basename(ExtensionLauncher.packageFile)));
   }
@@ -117,8 +117,9 @@ class ReleasePackage {
     await run("npm", ["install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund"], { cwd: this.folder });
   }
 
-  private static isJunk(path: string): boolean {
-    return ["__pycache__", ".DS_Store"].includes(basename(path));
+  /** Whether a file goes in the release: the skills' tests (evals) and caches stay in the repo. */
+  private static ships(path: string): boolean {
+    return !["evals", "__pycache__", ".DS_Store"].includes(basename(path));
   }
 }
 
