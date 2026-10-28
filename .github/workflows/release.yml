@@ -1,8 +1,9 @@
-# Publishes a GitHub release when a version tag is pushed. `npm version patch|minor|major` makes the tag: it runs
-# the typecheck and the tests, bumps the version, commits "Release x.y.z", tags vx.y.z and pushes both.
+# Publishes a GitHub release when a version tag is pushed. `npm version 0.2.0` makes the tag: it runs the typecheck
+# and the tests, writes the version, commits "Release 0.2.0", tags v0.2.0 and pushes both.
 #
-# Releases are built on a self-hosted runner on the Mac that holds the Ableton Extensions SDK: the Live extension
-# is built with it, and the SDK can't be uploaded to GitHub. The runner's .env sets ODE_SDK_DIR to the SDK folder.
+# The job runs on a self-hosted runner, GitHub's runner program on the Mac that holds the Ableton Extensions SDK:
+# the Live extension is built with the SDK, which stays on that Mac. The runner's .env sets ODE_SDK_DIR to the SDK
+# folder.
 name: Release
 
 on:
@@ -26,13 +27,14 @@ jobs:
         with:
           node-version: 24
 
-      - name: Link the Extensions SDK beside the checkout, where package.json expects it
+      - name: Copy the Extensions SDK packages into vendor/, where package.json expects them
         run: |
           if [ ! -d "$ODE_SDK_DIR" ]; then
             echo "::error::Set ODE_SDK_DIR in the runner's .env to the Ableton Extensions SDK folder"
             exit 1
           fi
-          ln -sfn "$ODE_SDK_DIR" "../$(basename "$ODE_SDK_DIR")"
+          mkdir -p vendor
+          cp "$ODE_SDK_DIR"/*.tgz vendor/
 
       - run: npm ci
       - run: npm run typecheck

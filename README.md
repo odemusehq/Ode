@@ -5,7 +5,7 @@ Ode is an AI co-writer and co-producer inside Ableton Live. It helps with every 
 ## Requirements
 - macOS, Node.js 24.16 or later
 - Ableton Live 12 Suite; Live extensions currently need the Live beta with Developer Mode turned on (Settings → Extensions)
-- The Ableton Extensions SDK, unpacked next to this folder as `../extensions-sdk-1.0.0-beta.1` (it is not redistributed here)
+- The Ableton Extensions SDK: copy its `ableton-extensions-sdk` and `ableton-extensions-cli` packages (.tgz) into `vendor/`, a git-ignored folder that keeps the SDK on your machine
 - Model provider keys, described in `.env.example`
 
 ## Setup
