@@ -1,4 +1,5 @@
-import { config as loadDotenv } from "dotenv";
+import { config as loadDotenv, parse } from "dotenv";
+import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -156,6 +157,11 @@ export class OdeConfig {
     );
     reader.assertComplete();
     return config;
+  }
+
+  /** The settings in .env.example, whatever the local .env says: what releases of Ode are built with. */
+  static defaults(): OdeConfig {
+    return OdeConfig.load(parse(readFileSync(join(OdeConfig.repoDir, ".env.example"), "utf8")));
   }
 
   private static readRole(reader: EnvReader, role: Role, metaKey: string): RoleConfig {

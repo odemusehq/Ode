@@ -6,3 +6,4 @@ src/live/device/dist/
 __pycache__/
 *.log
 .DS_Store
+release/
