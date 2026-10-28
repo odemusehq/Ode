@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "title": "Back Into the Jar",
+  "intent": { "theme": "What a family keeps, and who keeps it.", "story": "A grandmother's button jar, followed through the singer's life; each verse is a different time.", "pointOfView": "First person, past tense in verse 1.", "mood": "Warm, plain-spoken.", "hook": "It all goes back into the jar" },
+  "settings": {
+    "spelling": { "mode": "set", "value": "us" },
+    "pronunciation": { "mode": "set", "value": "us" },
+    "genre": { "mode": "set", "value": "folk" }
+  },
+  "tempo": 78,
+  "key": { "root": 2, "scale": "Major" },
+  "timeSignature": { "numerator": 4, "denominator": 4 },
+  "sections": [
+    {
+      "id": "intro",
+      "kind": "intro",
+      "name": "Intro",
+      "startBeat": 0,
+      "lengthBeats": 16,
+      "lines": [],
+      "chords": [
+        { "beat": 0, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 4, "lengthBeats": 4, "symbol": "G" },
+        { "beat": 8, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 12, "lengthBeats": 4, "symbol": "A" }
+      ]
+    },
+    {
+      "id": "verse-1",
+      "kind": "verse",
+      "name": "Verse 1",
+      "startBeat": 16,
+      "lengthBeats": 32,
+      "lines": [
+        { "id": "v1-l1", "text": "On Sundays Grandma tipped them out" },
+        { "id": "v1-l2", "text": "She'd let me pick the silver star" },
+        { "id": "v1-l3", "text": "I'd line them up along the rug" },
+        { "id": "v1-l4", "text": "It all goes back into the jar", "locked": true }
+      ],
+      "chords": [
+        { "beat": 0, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 4, "lengthBeats": 4, "symbol": "G" },
+        { "beat": 8, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 12, "lengthBeats": 4, "symbol": "A" },
+        { "beat": 16, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 20, "lengthBeats": 4, "symbol": "G" },
+        { "beat": 24, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 28, "lengthBeats": 4, "symbol": "A" }
+      ]
+    },
+    {
+      "id": "verse-2",
+      "kind": "verse",
+      "name": "Verse 2",
+      "startBeat": 48,
+      "lengthBeats": 32,
+      "lines": [],
+      "chords": [
+        { "beat": 0, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 4, "lengthBeats": 4, "symbol": "G" },
+        { "beat": 8, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 12, "lengthBeats": 4, "symbol": "A" },
+        { "beat": 16, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 20, "lengthBeats": 4, "symbol": "G" },
+        { "beat": 24, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 28, "lengthBeats": 4, "symbol": "A" }
+      ]
+    },
+    {
+      "id": "verse-3",
+      "kind": "verse",
+      "name": "Verse 3",
+      "startBeat": 80,
+      "lengthBeats": 32,
+      "lines": [],
+      "chords": [
+        { "beat": 0, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 4, "lengthBeats": 4, "symbol": "G" },
+        { "beat": 8, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 12, "lengthBeats": 4, "symbol": "A" },
+        { "beat": 16, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 20, "lengthBeats": 4, "symbol": "G" },
+        { "beat": 24, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 28, "lengthBeats": 4, "symbol": "A" }
+      ]
+    }
+  ],
+  "links": [
+    { "tag": "k4n8", "role": "topline", "description": "Lead vocal melody, one clip per sung section" }
+  ],
+  "locked": [],
+  "credits": [],
+  "notes": ["Form: three verses and no chorus; the hook closes every verse."]
+}

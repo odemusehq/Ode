@@ -1,0 +1,21 @@
+schema_version: "1.1"
+name: stress-fix-moves-notes-under-locked-line
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  Mode: Auto (the default). The musician tapped the fix the prosody check suggested for chorus line 1,
+  "Tonight we drive the coast", which is locked in the lead sheet. In the Chorus melody clip on the
+  Vocal melody track (Arrangement, song beat 48), that line's first syllable "to" starts on beat 1 and
+  lasts a whole beat, while "night" is a short note on beat 2, so the line is heard as "TO-night".
+
+  Because the words are locked, Ode fixes the rhythm, not the words: it edits the notes of that phrase
+  in the existing clip so that "night" sits on a stronger note than "to". The smallest fix is to
+  shorten "to" and start it on the "and" of 1 (clip beat 0.5), which also matches the rhythm of the
+  other three chorus lines; the pitches stay the same and there is still one note per syllable. Ode
+  runs the prosody check on line 1 against the edited notes until it reports no stress problem, and
+  the notes stay in D major.
+
+  The lyric lines, the other chorus phrases, every other clip and all tracks are unchanged, and
+  nothing is copied into a new clip, track or take. Ode asks no question and replies in one line, for
+  example: "Chorus line 1: 'to' now comes in on the 'and' of 1, so 'tonight' is stressed on NIGHT
+  (beat 2) · no stress problems, same pitches, words untouched."

@@ -1,0 +1,21 @@
+schema_version: "1.1"
+name: fit-verse-two-line-to-its-notes
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  Mode: Auto (the default). The musician tapped the red count of verse 2, line 3 in the Lyrics tab.
+  That line, "I'm counting every headlight on the road", counts 10|11 syllables in US English, but it
+  is sung on the 8 notes of the third phrase of the Verse 2 melody clip on the Lead vocal track
+  (clip beats 16 to 24, song beats 96 to 104).
+
+  Ode rewrites that one line in place in the lead sheet (the same line of the Verse 2 section) so that
+  one of its syllable counts is 8, keeping what it says (counting headlights on the drive instead of
+  talking) in the musician's plain, conversational voice, with its stresses on the strong notes. It
+  runs the syllable check and the prosody check on the new line against those 8 notes, fixing and
+  re-checking until both pass.
+
+  Nothing else changes: verse 2 line 4 ("You reach across at every sign", 8|9, which already fits its
+  8 notes when "every" is sung as two syllables), every other lyric line, the melody clip and all
+  tracks stay as they were, and no clip, track, take or section is added. Ode asks no question and
+  replies in one line, for example: "Verse 2, line 3 now 'I watch the headlights cross the road', 8
+  syllables on its 8 notes · stress on the beats, no clichés."

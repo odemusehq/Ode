@@ -1,24 +1,42 @@
 ---
 name: idea
-description: Find and shape a song idea with the musician — title, hook, theme, story, point of view and emotional core — including title-first writing and turning a phrase, feeling, image, situation or piece of music into a clear song concept. Use this whenever a song is starting or has lost its centre — the musician has only a title, a phrase, a mood, a voice memo, a chord loop or a beat and asks what it could be about; wants title, hook or angle ideas; says a draft feels vague, generic or "about nothing"; or wants a fresher take on a familiar subject — even if they never say "idea" or "concept".
+description: Find a song's centre and write it straight into the lead sheet — the title and what the song is about (theme, story, point of view, mood, hook) — built from the musician's own words and material, with the title and hook checked for syllables, stress and clichés. Use this whenever the musician taps "Find a title", asks for a title, hook, angle or concept, starts from a loop, a beat, a hum or an empty Set and needs something to write about, or when lyrics have lost their centre (verses that could swap places, a title sung once, all feeling and no situation), even if they never say "idea" or "concept".
 ---
 
 # Song ideas
 
-A topic is not an idea. "Heartbreak" is a topic. "Learning to cook for one after years of cooking for two" is an idea: a specific situation with a feeling inside it, and a phrase that could be its title. Your job is to help the musician find that kind of centre for their song, in their own words, and then let them choose.
+A topic is not an idea. "Heartbreak" is a topic. "Learning to cook for one after years of cooking for two" is an idea: a situation with a feeling inside it, and a phrase that could be its title. In Ode the idea lives in the lead sheet, as the title and what the song is about, where every later piece of work on the song reads it. Find the centre, write it there, check the title and hook, and say it in one line.
 
-## How to work with the musician
+## The loop
 
-- **Start from what they brought.** A title, a phrase, a story, a feeling, a loop, a hummed melody: build on it instead of starting from a blank page. Repeat it back in one line so they know you understood it.
-- **Propose rather than interview.** Reacting to concrete directions is easier than answering open questions. Ask a question only when the answer would change what you suggest ("Is this happening now, or are you looking back?"), and ask one at a time.
-- **Offer two or three directions, not one finished concept.** When you offer three, label one clearly as outside their usual style (a different point of view, mood, form or angle from what their earlier songs do) and say what makes it different. This keeps them from repeating their past without pushing them anywhere.
-- **Take everything about the musician from their own words and songs.** Never infer subject matter, attitude, relationships or background from their name, gender, age, nationality or genre. If you don't know who "you" is in the song, don't give that person a gender; keep "you" or ask.
-- **Keep their phrasing.** If what they brought has a striking phrase, build around it. Their words beat yours, even when yours are more polished.
-- **Use their English.** Follow the spelling and pronunciation the musician uses (UK or US) in titles, lines and replies.
-- **Be brief.** Explain each direction in a sentence or two; go deeper only when asked.
-- **Write new material every time.** The examples in this skill only illustrate the method; never reuse their titles or lines for the musician.
+1. **Read.**
+   - The lead sheet: the title, what the song is about, every section's lines and which are locked.
+   - The project map: tempo, key, which parts exist (a loop, a beat, a hummed melody), what is selected, and the hand edits since the last request, which show what the musician was just working on.
+   - What Ode remembers about the artist: the themes, points of view and moods they usually write, the images they reach for, what they dislike, and situations from their life they have told you about.
+2. **Decide** with the craft below. Start from what the musician brought: their own phrases first (a striking line in a draft, a word in a hum), then the music, then what they have told you. Choose the one strongest direction; don't line up alternatives. Again gives another take, and the version history keeps this one.
+3. **Change in place.** Write into the lead sheet, replacing what was there:
+   - **title:** one to five words;
+   - **theme:** what the song means, with the feeling and its complication ("relieved it's over, and guilty about the relief");
+   - **story:** the situation (who, where, when, what just happened, what the singer wants) and where it goes: a phrase each for verse 1, verse 2 and the bridge, and how the last chorus reads differently;
+   - **point of view:** the person and tense, and who "you" is, without giving anyone a gender or identity the musician hasn't;
+   - **mood:** in the musician's own terms, never read off the key;
+   - **hook:** the hook line, usually the title line.
+   Idea work changes the title and what the song is about, not the lyric lines or the Set. Use a title the lyric already sings where you can; writing lines around a new title is lyric work, done when the musician asks ("Write the chorus", "Put the title in the chorus").
+4. **Verify.**
+   - **Syllable and stress check** on the title and the hook line: know the count and where the stresses fall. Good: the stresses fall on the important words, and the word most likely to be held has an open vowel ("go", "down", "stay", "far").
+   - **Originality check** on the title and the hook line: no cliché and no over-used pair. A stock phrase, or the title of a very famous song, gets replaced, unless it is the musician's own choice: then keep it and say so in the result line.
+   - **Prosody check**, when the title is already sung on notes: its stressed syllables on strong beats.
+   - A word the check marks as uncertain (a name, slang) is never reported as checked.
+   Fix and check again, up to three rounds; if something still fails, the result line says what.
+5. **Let them hear it.** A title and what the song is about change nothing in the Set, so there is nothing to play; the result line is the whole answer. If you also changed lines because the musician asked, Ode plays the bars where they are sung.
+6. **Report in one line**: the title and the song in a few words · what was checked. For example:
+   - "Title: 'Spare Room': putting a friend up after their break-up, told by the host · 2 syllables, stress on SPARE and ROOM, no clichés."
+   - "Song is now about the late shift at a launderette, told by the attendant · title 'Not in Service', 4 syllables, no clichés · outside your usual style: a character, not you."
+   - "Title kept, 'Paper Crown' is your phrase · what it's about now written: the kid who is king for one birthday, told years later · 3 syllables, stress on PA- and CROWN, no clichés."
 
-If the musician has shared earlier songs, notice the themes, points of view and moods they usually write. That tells you what "outside their usual style" means, and it helps you avoid handing them an idea they have already written.
+## Asking
+
+Idea work almost never needs a question. Don't interview: choose a direction and let the musician react with Undo, Again or a few words. A title the musician already chose is theirs; replace it only when they ask for a new one. In Let me hear it, never ask; in Manual, Ode shows the change for Apply or Skip, and you work the same way.
 
 ## What makes an idea strong
 
@@ -27,13 +45,13 @@ Test every direction against these. They explain why some ideas write themselves
 1. **One emotional core.** Name the feeling precisely, ideally with its complication: not "sad" but "relieved it's over and guilty about the relief". A precise feeling tells you which details to choose and what the chorus has to say.
 2. **A situation, not a subject.** Who, where, when, what just happened. Specific situations make universal feelings believable; general statements make them forgettable.
 3. **Something at stake.** A want, a choice, a conflict or a question the song circles. Without it, the verses turn into a list of moods.
-4. **Somewhere to go.** Verse 2 should be able to add something verse 1 didn't (time passes, stakes rise, a reveal, a wider view), and the bridge should be able to shift the angle. If you can't imagine verse 2, the idea is a moment rather than a song. That can be right for a short, hook-driven track, but know it before writing.
-5. **A title that carries it** (see Title-first writing).
-6. **A fresh angle.** Familiar feelings are fine; familiar telling isn't. Look for the less obvious side: the one who left instead of the one left behind, the morning after instead of the night, gratitude inside a breakup, humour inside grief, an object's point of view. Titles and hook lines that arrive too easily deserve a second look with the originality skill.
+4. **Somewhere to go.** Verse 2 can add something verse 1 didn't (time passes, stakes rise, a reveal, a wider view), and the bridge can shift the angle. If you can't imagine verse 2, the idea is a moment rather than a song; that can be right for a short, hook-driven track, but know it before writing.
+5. **A title that carries it** (see Titles).
+6. **A fresh angle.** Familiar feelings are fine; familiar telling isn't. Look for the less obvious side: the one who left instead of the one left behind, the morning after instead of the night, gratitude inside a break-up, humour inside grief, an object's point of view.
 
 ## Where ideas come from
 
-When the musician has nothing yet, or wants more options, look in these places, starting with their own life and words:
+When the musician brings nothing yet, look here, starting with what they have told you about their life:
 
 - an everyday phrase that can mean two things, given a literal or personal twist;
 - an object that holds a story (a spare key, a borrowed coat, a voicemail nobody deletes);
@@ -42,70 +60,41 @@ When the musician has nothing yet, or wants more options, look in these places, 
 - a contradiction ("I miss the arguments");
 - a list (things left behind in a flat, rules of a friendship);
 - a place at a specific time of day;
-- an instruction or plea to someone ("Don't...", "Tell me...");
+- an instruction or plea to someone ("Don't…", "Tell me…");
 - something said in a real conversation the musician remembers (theirs, never a famous quotation).
 
-## Turning a phrase or feeling into a concept
+## From a phrase or a feeling to the lead sheet
 
-Work through these steps in order; each one narrows the next. Keep it quick: this is a sketch, not an essay.
+Work through these quickly; each step narrows the next, and each fills a field.
 
-1. **Name the feeling and its complication.**
-2. **Find the situation:** who is singing, to whom, where, when, what just happened, what the singer wants.
-3. **Choose the point of view and tense** (see below).
-4. **Find the title:** the phrase that holds the feeling and the situation. It is often already in the musician's words.
+1. **Name the feeling and its complication** → theme.
+2. **Find the situation:** who is singing, to whom, where, when, what just happened, what the singer wants → story.
+3. **Choose the point of view and tense** → point of view.
+4. **Find the title:** the phrase that holds the feeling and the situation, often already in the musician's words → title.
 5. **Say the song in one sentence.** If it needs two sentences, there may be two songs.
-6. **Sketch the journey:** one line each for verse 1, verse 2 and the bridge, plus how the chorus reads differently by the end.
+6. **Sketch the journey:** a phrase each for verse 1, verse 2 and the bridge, and how the chorus reads differently by the end → the rest of the story.
 
-### Worked example
+## Titles
 
-What the musician brought: *"My best friend moved abroad. We only talk in voice notes now, and because of the time difference we're never awake at the same time."*
+A title is a promise: the chorus keeps it and the verses earn it. Starting from a title gives every line a target.
 
-1. Feeling: closeness that survives distance, and the loneliness of always answering someone who's asleep.
-2. Situation: the singer records a voice note late at night, when it's evening where the friend is; they replay old notes to hear the friend laugh.
-3. Point of view: first person, singing to the friend. The song itself works like one long voice note.
-4. Title: *Hold to Record* — the label on the button, and a quiet plea to hold on. Short, concrete, and its last syllable (-CORD) has an open vowel that can be held.
-5. One sentence: two friends in different time zones keep their friendship alive through voice notes, always talking to someone who's asleep.
-6. Journey: verse 1, recording at night and describing what they'd tell the friend in person; verse 2, a reply arrives during the working day and they listen in a stairwell; bridge, they realise they've saved every note and imagine the day the notes stop; final chorus, "hold to record" has come to mean "hold on".
-
-Three directions from the same starting point, presented to the musician:
-
-**1. Hold to Record** — the friendship kept alive one voice note at a time.
-- Core: tenderness, with the ache of never overlapping. First person to the friend, present tense.
-- Hook line: *Hold to record* (4 syllables)
-
-**2. Eight Hours Behind** — the time difference as a picture of feeling left behind: the friend has a new life, the singer hasn't moved.
-- Core: love mixed with the fear of being outgrown. First person to the friend.
-- Hook line: *I'm eight hours behind you* (6|7 syllables; "hours" can be sung as 1 or 2)
-
-**3. Seventeen Minutes** *(outside your usual style: playful and fast, where your songs are usually slow and reflective)* — a list song about the absurdly long voice notes they send each other.
-- Core: joy in a friendship that survives anything, with one serious line saved for the last chorus.
-- Hook line: *Seventeen minutes of you* (7 syllables)
-
-Which feels most like yours, or should two of them combine?
-
-More worked examples, including starting from a loop and rescuing a draft with no centre, are in `references/worked-examples.md`.
-
-## Title-first writing
-
-A title is a promise; the chorus keeps it and the verses earn it. Starting from a title gives every line a target, which is why many professional writers keep lists of titles and start there.
-
-**What makes a good title**
+**What makes a good title:**
 - Short and easy to say: one to five words is typical.
-- Concrete or striking: an image, a twisted everyday phrase, or a direct statement someone would actually say.
-- Carries the idea: it makes sense on its own and means more once the song has been heard.
-- Singable: its stressed syllables fall on its important words, and the word most likely to be held has an open vowel ("go", "down", "stay", "far"). Check this against the melody with the prosody skill once there is one.
-- Still interesting the fourth time it's sung.
-- Not the title of a very famous song. Titles are shared all the time, but a famous namesake invites comparison and makes the song harder to find; flag it and let the musician decide.
+- Concrete or striking: an image, a twisted everyday phrase, or something a person would actually say.
+- It carries the idea: it makes sense on its own and means more once the song has been heard.
+- Singable: its stressed syllables fall on its important words, and the word most likely to be held has an open vowel.
+- Still interesting the fourth time it is sung.
+- Not a stock phrase, and not the title of a very famous song: a famous namesake invites comparison and makes the song harder to find.
 
-**Ask questions of the title.** What does it mean, literally and otherwise? Who says it, and to whom? Why now? What happened before? What happens next? How does the singer feel about it? What could make it mean something different by the last chorus?
+**Ask the title questions, and answer them yourself.** What does it mean, literally and otherwise? Who says it, and to whom? Why now? What happened before, and what happens next? How does the singer feel about it? What could make it mean something different by the last chorus?
 
-**Give each answer a home.** Verse 1 answers one question (usually the situation), verse 2 another (the consequences, or new information), the bridge the deepest one (the realisation or the confession), and the chorus states the title with the core feeling. Now each section has a job before a line is written.
+**Give each answer a home in the story:** verse 1 answers one question (usually the situation), verse 2 another (the consequences, or new information), the bridge the deepest one (the realisation or the confession), and the chorus states the title with the core feeling. Then each section has a job before a line is written.
 
-**Plan where the title sits.** The strongest places are the first line of the chorus, the last line, or both. In verse-refrain songs the title opens or closes each verse. Don't bury it in the middle of a long line, and make the line before it lead into it so it lands as a conclusion or a twist. The lyrics skill covers placement in detail.
+**Where the title sits:** the first line of the chorus, the last line, or both; in verse-refrain songs, the first or last line of each verse. The lyrics skill covers placement.
 
 ## Hooks
 
-A hook is whatever the listener remembers and sings back: usually the title line, sometimes a melodic or rhythmic figure, an instrumental riff, or a short chant after the chorus. At the idea stage, look for a hook line that:
+A hook is whatever the listener remembers and sings back: usually the title line, sometimes a melodic or rhythmic figure, a riff, or a short chant after the chorus. A good hook line:
 
 - is short, with a clear natural rhythm when spoken;
 - sounds like something a person could say;
@@ -113,7 +102,7 @@ A hook is whatever the listener remembers and sings back: usually the title line
 - survives repetition;
 - leaves room for the melody (fewer, longer syllables are easier to make catchy).
 
-Offer a hook line with each direction. The melodic side of the hook belongs to the melody skill.
+The melodic side of the hook belongs to the melody skill.
 
 ## Point of view and tense
 
@@ -126,53 +115,39 @@ Offer a hook line with each direction. The melodic side of the hook belongs to t
 
 Switching point of view works best once and on purpose, for example third-person verses whose bridge reveals that the character is the singer.
 
-Tense sets the distance. Present tense feels like it's happening now; past tense feels like memory or a story being told; future and "would" feel like hope, dread or promises. Keep the tense steady within a section, and mark any shift with a time cue ("back then", "now").
+Tense sets the distance. Present tense feels like it is happening now; past tense feels like memory or a story being told; future and "would" feel like hope, dread or promises. Keep the tense steady within a section, and mark a shift with a time cue ("back then", "now").
 
-## Theme and story
+## Theme and story shapes
 
-The theme is what the song means; the story is what happens. Help the musician choose the shape that suits the idea:
+The theme is what the song means; the story is what happens. Choose the shape that suits the idea:
 
-- **Tell a story:** each verse is a scene, time moves forward, and the chorus comments on it.
+- **Tell a story:** each verse is a scene, time moves forward, the chorus comments.
 - **Stay in one moment:** the same moment, seen more deeply in each verse.
-- **State a feeling and prove it:** the chorus states a belief or feeling, and the verses give the evidence.
-- **Build a list:** the items build to a point, and the last one lands the hardest.
-- **Speak to someone directly:** the song is a letter, a voicemail or a toast to someone; the form sets the tone.
+- **State a feeling and prove it:** the chorus states it, the verses give the evidence.
+- **Build a list:** the items build to a point, and the last one lands hardest.
+- **Speak to someone directly:** the song is a letter, a voicemail or a toast; the form sets the tone.
 
 ## Starting from music
 
 When the starting point is a loop, a beat, a chord progression or a hummed melody:
 
-- **Ask what the music makes the musician feel and picture, and trust their answer.** Don't map key or mode to a mood by rule: minor is not automatically sad and major is not automatically happy. Tempo, groove, sound and the musician's intent matter more.
-- **Offer contrast as a direction.** Bittersweet words over bright music, or calm words over a restless beat, is an established and powerful device.
-- **Listen to placeholder words.** Hummed or mumbled melodies often carry vowel sounds and rhythms that suggest a title. Look for a real phrase with the same vowels and stresses.
+- **Never map key or mode to a mood by rule:** minor isn't automatically sad and major isn't automatically happy. Tempo, groove, sound and what the musician has said about the track matter more.
+- **Contrast is a direction:** bittersweet words over bright music, or calm words over a restless beat, is an established and powerful device.
+- **Listen to placeholder words.** A hummed or mumbled melody often carries vowels and rhythms that suggest a title; look for a real phrase with the same vowels and stresses.
 - **Let tempo and density guide you.** Slow songs carry fewer words and longer vowels; fast songs suit more words and short, punchy phrases.
 
 ## When a draft has lost its centre
 
 Signs: verses that could swap places; a chorus that says something different from the verses; a title that appears once; lines that are all feeling and no situation.
 
-Find the most alive line in the draft, often a specific image buried in verse 2, and test it as the title or the core. Ask what the one thing is that the listener should feel. Then show which existing lines serve that centre and which belong to another song. Keep their lines; move them rather than replacing them.
+Find the most alive line in the draft, often a specific image buried in verse 2, and make it the centre: its phrase becomes the title, its situation the story. Keep the musician's lines; rewriting the sections around the new centre is lyric work, for when they ask. The result line can point to the lines that tell rather than show, so the musician knows where to go next.
 
-## Presenting directions
+## Without bias, without copying
 
-Give each direction the same short shape so the musician can compare at a glance:
+- Take everything about the musician from their own words, their songs and what Ode remembers them saying; never from their name, gender, age, nationality or genre.
+- Write inside their usual themes and points of view by default. When a direction is outside their usual style (a different point of view, mood or form), the result line says so.
+- Write new material every time. The examples here and in the references only illustrate the method; never reuse their titles or lines in a real song.
 
-**Number and working title** — the song in one sentence.
-- Core: the feeling and its complication; point of view and tense.
-- Hook line: a candidate title line, with its syllable count.
-- Optional: where it goes (verse 1, verse 2, bridge) in one line.
-
-Label the direction that is outside their usual style and say what's different about it. End with one short question.
-
-Before showing any line, check its syllable count, stress and rhymes, and run the originality check on titles and hook lines (clichés, phrases that sound like quotations, titles the musician has used before). If a check can't run, say the lines are unchecked instead of guessing.
-
-## Before you present
-
-- Each direction has a precise emotional core and a concrete situation.
-- Each title carries its idea, is short and singable, and is flagged if it is a cliché or a famous song's title.
-- When there are three directions, one is labelled as outside the musician's usual style.
-- Nothing is assumed about the musician from their identity, and "you" has no gender unless they gave it one.
-- Their phrases are kept, and their spelling (UK or US) is followed.
-- Sample lines are checked, or clearly marked unchecked.
+Worked examples in the same shape (starting from a bright loop, rescuing a draft with no centre, building out from a title) are in `references/worked-examples.md`.
 
 Related skills: lyrics (writing the sections), rhymes, prosody, originality.

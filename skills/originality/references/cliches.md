@@ -1,6 +1,8 @@
 # Clichés: what's underneath and where to go instead
 
-Use these lists to recognise stock language quickly and to find the real feeling it is standing in for. None of these phrases is banned: a musician may keep one on purpose, and an everyday phrase given a twist can make a great title. Flag them, explain, and offer fresher options.
+Use these lists to recognise stock language quickly and to find the real feeling it is standing in for. The originality check has its own list of stock phrases and over-used pairs; this one is for your own read too, and covers forms the check can miss (it looks for "broken heart", not "my heart is broken").
+
+None of these phrases is banned: a musician may keep one on purpose, and an everyday phrase given a twist can make a great title. When one turns up in a line you are writing or fixing, replace it in place with a detail from the song's world; when it stays (the musician's title, a locked line, a deliberate choice), the result line names it.
 
 ## Contents
 1. Stock phrases
@@ -59,4 +61,4 @@ The fix is almost always the plainer, more specific word.
 
 ## 5. Over-used rhyme pairs
 
-The list, with ways to find fresher rhymes, is in the rhymes skill. In short: fire / desire, heart / apart, love / above, pain / rain, night / light, eyes / lies, soul / control, cry / goodbye, forever / together, baby / maybe, true / you. Flag them, especially in a chorus, where they are heard again and again.
+The list, with ways to find fresher rhymes, is in the rhymes skill. In short: fire / desire, heart / apart, love / above, pain / rain, night / light, eyes / lies, soul / control, cry / goodbye, forever / together, baby / maybe, true / you. Replace them in the lines you change, above all in a chorus, where they are heard again and again, and change the chorus in every section that sings it.

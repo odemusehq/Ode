@@ -1,6 +1,6 @@
 # Singability: vowels and consonants
 
-Detail behind the singability section of the prosody skill. The check reports singability problems on the actual melody; use this to understand them, explain them plainly and choose better words.
+Detail behind the singability section of the prosody skill. The singability check reports problems on the actual melody (closed vowels on long or high notes, consonant clusters on very short notes, phrases with no rest to breathe); use this to understand them and to choose the word or note that fixes them. When a problem remains, the result line names it in plain words.
 
 ## Contents
 1. Vowels on long and high notes

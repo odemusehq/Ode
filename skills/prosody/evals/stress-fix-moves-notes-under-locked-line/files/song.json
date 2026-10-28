@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "title": "Coastline",
+  "intent": { "theme": "A night drive as a small escape from ordinary life.", "story": "Two friends leave the city after work and drive the coast road with nothing booked.", "pointOfView": "First person plural ('we'), present tense.", "mood": "Restless, then free.", "hook": "Tonight we drive the coast" },
+  "settings": {
+    "spelling": { "mode": "set", "value": "uk" },
+    "pronunciation": { "mode": "set", "value": "uk" },
+    "genre": { "mode": "set", "value": "indie rock" }
+  },
+  "tempo": 104,
+  "key": { "root": 2, "scale": "Major" },
+  "timeSignature": { "numerator": 4, "denominator": 4 },
+  "sections": [
+    {
+      "id": "intro",
+      "kind": "intro",
+      "name": "Intro",
+      "startBeat": 0,
+      "lengthBeats": 16,
+      "lines": [],
+      "chords": [
+        { "beat": 0, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 4, "lengthBeats": 4, "symbol": "A" },
+        { "beat": 8, "lengthBeats": 4, "symbol": "Bm" },
+        { "beat": 12, "lengthBeats": 4, "symbol": "G" }
+      ]
+    },
+    {
+      "id": "verse-1",
+      "kind": "verse",
+      "name": "Verse 1",
+      "startBeat": 16,
+      "lengthBeats": 32,
+      "lines": [
+        { "id": "v1-l1", "text": "You packed the flask, the rug, the coats" },
+        { "id": "v1-l2", "text": "I found the map we never use" },
+        { "id": "v1-l3", "text": "The car still smells of summer sand" },
+        { "id": "v1-l4", "text": "I kicked off both my working shoes" }
+      ],
+      "chords": [
+        { "beat": 0, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 4, "lengthBeats": 4, "symbol": "A" },
+        { "beat": 8, "lengthBeats": 4, "symbol": "Bm" },
+        { "beat": 12, "lengthBeats": 4, "symbol": "G" },
+        { "beat": 16, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 20, "lengthBeats": 4, "symbol": "A" },
+        { "beat": 24, "lengthBeats": 4, "symbol": "Bm" },
+        { "beat": 28, "lengthBeats": 4, "symbol": "G" }
+      ]
+    },
+    {
+      "id": "chorus-1",
+      "kind": "chorus",
+      "name": "Chorus",
+      "startBeat": 48,
+      "lengthBeats": 32,
+      "lines": [
+        { "id": "c1-l1", "text": "Tonight we drive the coast", "locked": true },
+        { "id": "c1-l2", "text": "With both the windows down" },
+        { "id": "c1-l3", "text": "We'll sing whatever plays" },
+        { "id": "c1-l4", "text": "And no one knows the town" }
+      ],
+      "chords": [
+        { "beat": 0, "lengthBeats": 4, "symbol": "G" },
+        { "beat": 4, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 8, "lengthBeats": 4, "symbol": "A" },
+        { "beat": 12, "lengthBeats": 4, "symbol": "Bm" },
+        { "beat": 16, "lengthBeats": 4, "symbol": "G" },
+        { "beat": 20, "lengthBeats": 4, "symbol": "D" },
+        { "beat": 24, "lengthBeats": 4, "symbol": "A" },
+        { "beat": 28, "lengthBeats": 4, "symbol": "Bm" }
+      ]
+    }
+  ],
+  "links": [],
+  "locked": [],
+  "credits": [],
+  "notes": []
+}

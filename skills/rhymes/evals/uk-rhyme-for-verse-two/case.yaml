@@ -1,0 +1,22 @@
+schema_version: "1.1"
+name: uk-rhyme-for-verse-two
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  Mode: Auto (the default). Spelling and pronunciation are set to UK English. The musician selected the
+  Verse 2 melody clip and tapped "Tighten the rhymes". Verse 1 rhymes lines 2 and 4 perfectly
+  ("fall" / "wall"). In verse 2, line 2 ends on "glass" and line 4 on "gas": in UK English these do
+  not rhyme ("glass" has the long "ah" vowel, "gas" the short "a"; the rhyme check calls the pair
+  consonance), so verse 2 does not pair lines 2 and 4 the way verse 1 does.
+
+  Ode re-ends one of the two lines in place, normally line 4, so that the pair is a perfect rhyme in
+  UK English (for example "pass", "grass" or "class" against "glass"), keeping the scene (the first
+  mornings alone in the flat) and natural word order, and keeping a count that equals the line's 8
+  notes with its stresses on the strong notes. It runs the rhyme check in UK English (the pair is
+  perfect and verse 2's scheme matches verse 1's), the syllable and prosody checks on the changed
+  line, and the originality check (no over-used pair).
+
+  Only that line changes: verse 1, the chorus, the other verse 2 lines and the whole Set stay as they
+  were, and nothing is copied into a new clip, track, take or section. Ode asks no question and
+  replies in one line, for example: "Verse 2, line 4 now 'And watch the morning buses pass', perfect
+  rhyme with 'glass' in UK English · 8 syllables on 8 notes, ABCB like verse 1."

@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "title": "Last Bus Back",
+  "intent": { "theme": "Early love that fits into the gaps of a city's timetable.", "story": "Every visit ends with the last bus home across town, still smiling.", "pointOfView": "First person, singing to 'you'.", "mood": "Giddy, tender.", "hook": "I'll take the last bus back" },
+  "settings": {
+    "spelling": { "mode": "set", "value": "uk" },
+    "pronunciation": { "mode": "set", "value": "uk" },
+    "genre": { "mode": "set", "value": "indie pop" }
+  },
+  "tempo": 96,
+  "key": { "root": 10, "scale": "Major" },
+  "timeSignature": { "numerator": 4, "denominator": 4 },
+  "sections": [
+    {
+      "id": "intro",
+      "kind": "intro",
+      "name": "Intro",
+      "startBeat": 0,
+      "lengthBeats": 16,
+      "lines": [],
+      "chords": [
+        { "beat": 0, "lengthBeats": 4, "symbol": "Bb" },
+        { "beat": 4, "lengthBeats": 4, "symbol": "F" },
+        { "beat": 8, "lengthBeats": 4, "symbol": "Gm" },
+        { "beat": 12, "lengthBeats": 4, "symbol": "Eb" }
+      ]
+    },
+    {
+      "id": "verse-1",
+      "kind": "verse",
+      "name": "Verse 1",
+      "startBeat": 16,
+      "lengthBeats": 32,
+      "lines": [
+        { "id": "v1-l1", "text": "Your street is quiet after twelve" },
+        { "id": "v1-l2", "text": "The chippy pulls its shutter down" },
+        { "id": "v1-l3", "text": "You walk me to the stop in socks" },
+        { "id": "v1-l4", "text": "And wave me off to cross the town" }
+      ],
+      "chords": [
+        { "beat": 0, "lengthBeats": 4, "symbol": "Bb" },
+        { "beat": 4, "lengthBeats": 4, "symbol": "F" },
+        { "beat": 8, "lengthBeats": 4, "symbol": "Gm" },
+        { "beat": 12, "lengthBeats": 4, "symbol": "Eb" },
+        { "beat": 16, "lengthBeats": 4, "symbol": "Bb" },
+        { "beat": 20, "lengthBeats": 4, "symbol": "F" },
+        { "beat": 24, "lengthBeats": 4, "symbol": "Gm" },
+        { "beat": 28, "lengthBeats": 4, "symbol": "Eb" }
+      ]
+    },
+    {
+      "id": "chorus-1",
+      "kind": "chorus",
+      "name": "Chorus 1",
+      "startBeat": 48,
+      "lengthBeats": 32,
+      "lines": [
+        { "id": "c1-l1", "text": "I'll take the last bus back" },
+        { "id": "c1-l2", "text": "Upstairs for the whole ride" },
+        { "id": "c1-l3", "text": "Time stood still on your stairs" },
+        { "id": "c1-l4", "text": "And you're right by my side" }
+      ],
+      "chords": [
+        { "beat": 0, "lengthBeats": 4, "symbol": "Eb" },
+        { "beat": 4, "lengthBeats": 4, "symbol": "Bb" },
+        { "beat": 8, "lengthBeats": 4, "symbol": "F" },
+        { "beat": 12, "lengthBeats": 4, "symbol": "Gm" },
+        { "beat": 16, "lengthBeats": 4, "symbol": "Eb" },
+        { "beat": 20, "lengthBeats": 4, "symbol": "Bb" },
+        { "beat": 24, "lengthBeats": 4, "symbol": "F" },
+        { "beat": 28, "lengthBeats": 4, "symbol": "Gm" }
+      ]
+    },
+    {
+      "id": "verse-2",
+      "kind": "verse",
+      "name": "Verse 2",
+      "startBeat": 80,
+      "lengthBeats": 32,
+      "lines": [
+        { "id": "v2-l1", "text": "I sit up top, the front left seat" },
+        { "id": "v2-l2", "text": "And breathe a circle, wipe the glass" },
+        { "id": "v2-l3", "text": "I write your name and rub it out" },
+        { "id": "v2-l4", "text": "And count the takeaways we pass" }
+      ],
+      "chords": [
+        { "beat": 0, "lengthBeats": 4, "symbol": "Bb" },
+        { "beat": 4, "lengthBeats": 4, "symbol": "F" },
+        { "beat": 8, "lengthBeats": 4, "symbol": "Gm" },
+        { "beat": 12, "lengthBeats": 4, "symbol": "Eb" },
+        { "beat": 16, "lengthBeats": 4, "symbol": "Bb" },
+        { "beat": 20, "lengthBeats": 4, "symbol": "F" },
+        { "beat": 24, "lengthBeats": 4, "symbol": "Gm" },
+        { "beat": 28, "lengthBeats": 4, "symbol": "Eb" }
+      ]
+    },
+    {
+      "id": "chorus-2",
+      "kind": "chorus",
+      "name": "Chorus 2",
+      "startBeat": 112,
+      "lengthBeats": 32,
+      "lines": [
+        { "id": "c2-l1", "text": "I'll take the last bus back" },
+        { "id": "c2-l2", "text": "Upstairs for the whole ride" },
+        { "id": "c2-l3", "text": "Time stood still on your stairs" },
+        { "id": "c2-l4", "text": "And you're right by my side" }
+      ],
+      "chords": [
+        { "beat": 0, "lengthBeats": 4, "symbol": "Eb" },
+        { "beat": 4, "lengthBeats": 4, "symbol": "Bb" },
+        { "beat": 8, "lengthBeats": 4, "symbol": "F" },
+        { "beat": 12, "lengthBeats": 4, "symbol": "Gm" },
+        { "beat": 16, "lengthBeats": 4, "symbol": "Eb" },
+        { "beat": 20, "lengthBeats": 4, "symbol": "Bb" },
+        { "beat": 24, "lengthBeats": 4, "symbol": "F" },
+        { "beat": 28, "lengthBeats": 4, "symbol": "Gm" }
+      ]
+    }
+  ],
+  "links": [
+    { "tag": "p2w6", "role": "topline", "description": "Lead vocal melody, one clip per sung section" }
+  ],
+  "locked": [],
+  "credits": [],
+  "notes": []
+}

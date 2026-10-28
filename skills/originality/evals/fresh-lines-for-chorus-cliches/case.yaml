@@ -1,0 +1,23 @@
+schema_version: "1.1"
+name: fresh-lines-for-chorus-cliches
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  Mode: Auto (the default). UK English. The musician selected the Chorus 1 melody clip and tapped the
+  fix the originality check suggested. The check flags two stock phrases in the chorus: "time stood
+  still" (line 3, "Time stood still on your stairs") and "by my side" (line 4, "And you're right by
+  my side"). The chorus is sung twice: the Chorus 1 and Chorus 2 sections hold the same four lines.
+
+  Ode replaces lines 3 and 4 in place with fresh lines from the song's own world (the last bus home,
+  the top deck, the chippy, the socks at the bus stop: evidence instead of the stock phrase) and
+  writes the same new lines into both choruses. Each new line keeps a count equal to its 6 notes with
+  its stresses on the strong notes, and line 4 still rhymes with "ride" (line 2) in UK English, so the
+  chorus keeps rhyming lines 2 and 4. Ode runs the originality check again (no cliché or over-used
+  pair on the new lines) and the syllable, prosody and rhyme checks on the changed lines.
+
+  The title line, line 2, both verses and the whole Set stay as they were, and nothing is copied into
+  a new clip, track, take or section. Ode asks no question and replies in one line that says what
+  changed and what was checked, presenting the originality result as a warning, never as clearance,
+  for example: "Chorus lines 3 and 4, both choruses: 'Your chips still in my coat' / 'My grin is a
+  mile wide' · 6 syllables on 6 notes, 'wide' rhymes with 'ride' (perfect, UK); originality check: no
+  warnings (a warning, not a guarantee)."

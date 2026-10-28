@@ -1,0 +1,22 @@
+schema_version: "1.1"
+name: title-from-the-chorus-draft
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  Mode: Auto (the default). Nothing is selected, so the request is about the whole song. The lead sheet
+  has no title and nothing about what the song is about yet; verse 1 and the chorus are drafted (pop,
+  US English). The chorus opens with the stock phrase "You're the light of my life" (the originality
+  check flags "light of my life") and ends with the musician's own concrete image, "I leave the porch
+  light on a timer".
+
+  Ode reads the lyric and finds its centre: two people on opposite shifts, caring for each other
+  through small things left behind. It writes a title into the lead sheet built on the musician's own
+  words, ideally the phrase the chorus already ends on (for example "Porch Light", "On a Timer" or
+  "Porch Light on a Timer"), never the stock phrase, and fills in what the song is about: the theme
+  with its feeling, the situation as the story, the point of view and tense (with "you" given no
+  gender), the mood and the hook line. It checks the title and hook with the syllable and stress
+  checks and the originality check (no cliché on the title).
+
+  No lyric line changes, nothing in the Set changes and nothing is added. Ode asks no question and
+  replies in one line, for example: "Title: 'On a Timer', from your chorus's last line; love on
+  opposite shifts · 4 syllables, stress on TI-, no clichés."

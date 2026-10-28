@@ -1,49 +1,50 @@
 ---
 name: rhymes-rap
-description: Rhyme craft specific to rap — multisyllabic rhymes (multis) that span words, internal rhymes, holding one rhyme sound across several bars, where rhymes land against the beat, punchline rhymes, bending pronunciation honestly, and rhyme density that suits the tempo and the artist. Read it from the rhymes skill whenever you write or check rap verses or hooks, the musician asks for multis, internal rhymes or "more rhymes per bar", or rhymes have to work at speed against a beat.
+description: Rhyme craft specific to rap, for Ode's in-place edits — multisyllabic rhymes (multis) that span words, internal rhymes, holding one rhyme sound across several bars, where rhymes land against the beat, punchline rhymes, bent pronunciation reported honestly, and rhyme density that suits the tempo and the artist. Read it from the rhymes skill whenever you write or check rap verses or hooks, the request asks for multis, internal rhymes or "more rhymes per bar", or the rhymes have to work at speed against a beat.
 ---
 
 # Rhymes in rap
 
-In rap, rhyme is rhythm: rhymes mark the beat, link bars together and carry the punchlines. Rappers rhyme more densely than writers in any other style, and they rhyme mostly on vowels. The rhymes skill covers rhyme types, schemes and checking; bar structure and flow are in `lyrics/hip-hop/`. This file adds what is specific to rhyming in rap.
+In rap, rhyme is rhythm: rhymes mark the beat, link bars together and carry the punchlines. Rappers rhyme more densely than writers in any other style, and mostly on vowels. The rhymes skill covers the loop, the kinds of rhyme and checking; bar structure and flow are in `lyrics/hip-hop/`. This file adds what is specific to rhyming in rap.
 
 ## Multisyllabic rhymes
 
-- Match the vowel sounds across two or more syllables, often spanning several words: "pocket" with "clock it", "open the door" with "hoping for more".
-- Vowels matter more than consonants. A rap multi can have different consonants throughout and still hit, as long as the vowels and the stress pattern line up.
-- The stress pattern has to match. The stressed syllables of both phrases should fall in the same places, ideally on the same beats.
-- Longer multis impress, but only if the line still makes sense. A three-syllable rhyme that says something beats a five-syllable rhyme that doesn't.
+- Match the vowel sounds across two or more syllables, often spanning several words: "paperwork" with "major work", "overtime" with "over mine".
+- Vowels matter more than consonants. A multi can change consonants throughout and still hit, as long as the vowels and the stress pattern line up.
+- The stress pattern has to match: the stressed syllables of both phrases fall in the same places, ideally on the same beats.
+- Longer multis impress only if the bar still makes sense. A three-syllable rhyme that says something beats a five-syllable rhyme that doesn't.
+- The rhyme check labels multis it can hear as multisyllabic. A rhyme that ends on an unstressed pronoun ("clock it", "drop it") is judged from its last stressed vowel and may come back weaker than it sounds; report what the check says, and add the delivery note.
 
 ## Internal rhymes and holding a rhyme sound
 
-- **Internal rhymes** inside the bar, especially landing on the snare (beats 2 and 4), add punch and density.
+- **Internal rhymes** inside the bar, especially landing on the snare (beats 2 and 4), add punch and density. The rhyme check lists the internal rhymes it finds.
 - **Hold a rhyme sound** for two to four bars, then switch. The switch tells the listener a new thought has started.
 - **Make the sound clear early.** The first bar that uses a rhyme sound should make it obvious, so the following bars land as payoffs rather than accidents.
 - **Echoes:** a rhyme sound from earlier in the verse can come back later to tie the verse together.
 
 ## Where rhymes land
 
-- End rhymes usually fall on or just before beat 4, or across into the next downbeat.
+- End rhymes usually fall on or just before beat 4, or run across into the next downbeat.
 - Rhymes on the beat sound strong and deliberate; rhymes pushed just behind it sound relaxed; rhymes that anticipate it pull the flow forward.
-- Match the musician's habit, from their past verses or from asking.
+- Match the musician's habit, which their own verses show.
 
 ## Punchline rhymes
 
-The payoff word of a punchline should carry both the strongest rhyme in the passage and the biggest surprise in meaning. If the punchline's rhyme is weaker than the rhymes around it, the joke or the turn loses force.
+The payoff word of a punchline carries both the strongest rhyme in the passage and the biggest surprise in meaning. If the punchline's rhyme is weaker than the rhymes around it, the turn loses force.
 
-## Bending pronunciation
+## Bent pronunciation
 
-Rappers often bend vowels or stretch words so that a rhyme lands. That's an accepted part of the style, but report it honestly:
+Rappers often bend vowels or stretch words so that a rhyme lands. That's part of the style; report it honestly:
 
-- The check judges the words as normally pronounced in the musician's accent, so a bent rhyme will usually show as a near rhyme or assonance. Never call it a perfect rhyme.
-- Say how it has to be delivered ("works if 'again' is rapped as 'a-GAIN' to meet 'pain'").
-- Prefer rhymes that work without bending; save bending for when the line is worth it.
+- The rhyme check judges words as normally pronounced in the musician's accent, so a bent rhyme usually shows as a near rhyme or assonance. Never call it perfect.
+- Say how it has to be delivered: "works if 'pen' is rapped like 'pin' to meet 'win'".
+- Prefer rhymes that work without bending; save bending for when the bar is worth it.
 
 ## Density and tempo
 
-- Rhyme density is part of an artist's style. Read their earlier verses for how often they rhyme per bar, and stay close to it unless they ask for more or less.
+- Rhyme density is part of an artist's style. Measure how often they rhyme per bar in their own verses and stay close to it unless the request asks for more or less.
 - At moderate tempos there's room for dense multis and internal rhymes. At very fast tempos or in double-time, simpler rhymes keep the words clear.
-- More rhymes per bar is not always better: a sparse bar after dense ones can make the next rhyme hit harder.
+- More rhymes per bar isn't always better: a sparse bar after dense ones makes the next rhyme hit harder.
 
 ## Accent
 
@@ -52,28 +53,29 @@ Rap rhymes live on vowels, and vowels are where accents differ most. Judge rhyme
 ## Avoid
 
 - Filler words added only to reach a rhyme position.
-- Rhyming the same word with itself, unless the repetition is the point.
+- Rhyming a word with itself, unless the repetition is the point.
 - Borrowing another artist's known rhyme patterns or signature multis.
 
 ## Example (original)
 
-> *Ten-hour shift with the dream in my pocket*
-> *Hum the beat low so the boss can't clock it*
-> *Every break I take, I write a bar and drop it*
-> *Eight bars deep, so go on, tell me how to stop it*
+> *Clocked in at eight, on a break with the paperwork*
+> *Ten-minute wait, but I'm putting in major work*
+> *They pay for the hours, I'm done with the overtime*
+> *Every bar that I write on the bus is over mine*
 
-- **End rhymes:** pocket / clock it / drop it / stop it, one two-syllable rhyme sound held for four bars, with "clock it" spanning two words.
-- **Internal rhymes:** low / so / go (bars 2 and 4) and break / take / eight (bars 3 and 4) tie the bars together.
-- **Wordplay:** "clock it" means both "notice it" and the clock that runs the shift.
-- Everything stays on one subject (writing at work), so the rhymes never pull the verse off topic.
+- **End rhymes:** "paperwork" / "major work", then "overtime" / "over mine": the rhyme check (US) labels both pairs multisyllabic, and the sound switches after two bars, where the thought turns from the job to the writing.
+- **Internal rhyme:** "eight" / "break" in bar 1 (near), with "wait" echoing it in bar 2.
+- **Wordplay:** "over mine" answers "overtime": the hours on the bus belong to the writer, not the boss.
+- **Density:** 12 to 14 syllables a bar, and everything stays on one subject, so the rhymes never pull the verse off topic.
 
-When presenting bars like these, mark each rhyme group as the check reports it, and note any rhyme that depends on delivery or accent.
+## Verify, on top of the rhymes skill's checks
 
-## Rap rhyme checks
-
-On top of the rhymes skill's checks:
-- Multis match in vowels and stress pattern, and still make sense.
+- Multis match in vowels and stress pattern, still make sense, and are labelled as the rhyme check labels them.
 - Rhyme sounds switch where the thought changes, usually every two to four bars.
 - The punchline has the strongest rhyme in its passage.
-- Any rhyme that depends on bent pronunciation is labelled honestly, with a delivery note.
-- Density matches the musician's style and the tempo.
+- Any rhyme that needs bent pronunciation is labelled honestly, with a delivery note.
+- Density per bar matches the musician's verses and suits the tempo.
+
+Example result lines:
+- "Bars 5–8 now 'paperwork' / 'major work' then 'overtime' / 'over mine' · multisyllabic as checked (US), 12–14 syllables a bar like your verse 1."
+- "Bar 4 keeps your bent rhyme: 'pen' / 'win' works if 'pen' is rapped like 'pin' · the check calls it consonance (US), delivery noted."

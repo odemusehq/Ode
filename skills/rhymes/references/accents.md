@@ -1,6 +1,6 @@
 # Rhymes across accents
 
-A rhyme depends on the stressed vowel and everything after it, and accents differ in exactly those sounds. This file explains the main differences between UK and US English that change rhymes, plus regional accents worth knowing about. The check always has the final word for the accent in the musician's settings; use this to anticipate problems and to explain them in plain words.
+A rhyme depends on the stressed vowel and everything after it, and accents differ in exactly those sounds. This file explains the main differences between UK and US English that change rhymes, plus regional accents worth knowing. The rhyme check always has the final word for the accent in the settings; the labels in these tables are the ones it gives. Use this to anticipate problems and to say in a few words why a pair rhymes in one accent and not the other.
 
 ## Contents
 1. The "r" after a vowel
@@ -16,36 +16,38 @@ US English pronounces an "r" after a vowel (car, more, near, farmer); standard S
 
 | Pair | UK | US |
 |---|---|---|
-| law / more, saw / sore | perfect (saw and sore sound the same) | weaker |
-| car / spa | perfect | weaker |
+| law / more | perfect | weaker (assonance) |
+| saw / sore | identical (they sound the same) | weaker (assonance) |
+| car / spa | perfect | weaker (assonance) |
 | idea / near | perfect | weaker |
-| farmer / drama | perfect | weaker |
-| sister / vista | perfect | weaker |
+| farmer / drama | perfect | weaker (near) |
+| sister / vista | perfect | weaker (near) |
+| sure / more | perfect | weaker (consonance) |
 
 The reverse also happens. Before an "r", US English merges vowels that UK English keeps apart, so some pairs rhyme only in US English:
 
 | Pair | UK | US |
 |---|---|---|
-| hurry / furry, worry / furry | weaker | perfect |
-| mirror / nearer | weaker | perfect |
+| hurry / furry, worry / furry | weaker (consonance) | perfect |
+| mirror / nearer | weaker (consonance) | perfect |
 
-**On held notes:** a UK singer sustains a pure vowel in "heart" or "fire"; a US singer usually holds the vowel and closes into the "r" at the end of the note. This matters for singability as well as rhyme (see the prosody skill).
+**On long notes:** a UK singer sustains a pure vowel in "heart" or "fire"; a US singer usually holds the vowel and closes into the "r" at the end of the note. This matters for singability as well as rhyme (the prosody skill covers it).
 
 ## 2. The "a" in bath, dance and glass
 
-Standard Southern British English uses a long "ah" in a set of words with short "a" in US English and in most Northern English accents: bath, path, laugh, after, dance, chance, glass, grass, last, past, can't, aunt, castle, plant, answer.
+Standard Southern British English uses a long "ah" in a set of words that have a short "a" in US English and in most Northern English accents: bath, path, laugh, after, dance, chance, glass, grass, pass, class, last, past, can't, aunt, castle, plant, answer.
 
 So pairs that mix this set with ordinary short-"a" words behave differently:
 
-| Pair | Southern British | Northern English | US |
+| Pair | UK (Southern British) | Northern English | US |
 |---|---|---|---|
 | bath / path | perfect | perfect | perfect |
-| bath / math(s) | weaker | perfect, apart from the final s of "maths" | perfect |
-| dance / romance | weaker | perfect | perfect |
-| glass / gas | weaker | perfect | perfect |
-| castle / hassle | weaker | perfect | perfect |
+| bath / math(s) | weaker (consonance) | perfect, apart from the final s of "maths" | perfect |
+| dance / romance | weaker (consonance) | perfect | perfect |
+| glass / gas | weaker (consonance) | perfect | perfect |
+| castle / hassle | weaker (consonance) | perfect | perfect |
 
-This is one of the most common reasons a UK singer disagrees with a "weaker" label: if they come from the North of England, many of these pairs are perfect in their voice.
+The rhyme check offers only the two standard accents, so the Northern English column is for what the musician tells you. This is one of the most common reasons a UK singer disagrees with a "weaker" label: if they sing with a Northern English accent, many of these pairs are perfect in their voice. Two words from the same set (dance / chance, laugh / half) rhyme in every accent.
 
 ## 3. The "o" in hot, lot and bother
 
@@ -53,20 +55,20 @@ UK English uses a short rounded "o" in hot, lot, bother, comma and bomb. In US E
 
 | Pair | UK | US |
 |---|---|---|
-| father / bother | weaker | perfect |
-| calm / bomb | weaker | perfect |
-| drama / comma | weaker | perfect |
+| father / bother | weaker (consonance) | perfect |
+| calm / bomb | weaker (consonance) | perfect |
+| drama / comma | weaker (consonance) | perfect |
 
-In much of the US, the vowels in "caught" and "cot", or "talk" and "rock", have also merged, so those pairs rhyme for many American singers even where a standard US pronunciation keeps them apart.
+In much of the US the vowels in "caught" and "cot", or "talk" and "rock", have also merged, so those pairs rhyme for many American singers; the rhyme check's US setting already treats "caught" and "cot" as the same sound.
 
 ## 4. Single words that differ
 
 | Word | UK | US | Rhyme effect |
 |---|---|---|---|
-| been | often "bean" | "bin" | rhymes with "seen" in many UK voices, with "win" in US |
-| again | "a-GEN" or "a-GAIN" | mostly "a-GEN" | rhymes with "rain" only for "a-GAIN" speakers |
-| route | "root" | "root" or "rowt" | rhymes with "doubt" only for "rowt" speakers |
-| missile, fragile, hostile | end like "mile" | end like "whistle" | "missile / whistle" rhymes in US only |
+| been | often "bean" | "bin" | "been" / "seen": perfect in UK English, weaker in US English |
+| again | "a-GEN" or "a-GAIN" | mostly "a-GEN" | the check knows both and accepts whichever rhymes; say which one the rhyme needs |
+| route | "root" | "root" or "rowt" | rhymes with "doubt" only for "rowt" speakers (the check: perfect in US, weaker in UK) |
+| missile, whistle | "missile" ends like "mile" | both end like "-ul" | "missile" / "whistle": perfect in US English, near in UK English |
 
 ## 5. Regional accents
 
@@ -77,11 +79,11 @@ The settings offer two standards, but singers bring their own voices:
 - **Southern US:** in some accents "pin" and "pen" sound the same, so they rhyme.
 - **Many US accents:** the "caught" and "cot" vowels are the same (section 3).
 
-These are tendencies, not rules about any individual. Never assume an accent from where someone lives or comes from; go by what the musician tells you and how they sing.
+These are tendencies, not rules about any individual. Never assume an accent from where someone lives or comes from; go by what the musician tells you, what Ode remembers them saying, and how they sing.
 
 ## 6. What to do
 
-1. Judge rhymes in the accent in the musician's settings.
-2. When the musician says a pair rhymes in their voice, believe them. Explain briefly why the setting labelled it differently (for example, "the UK setting uses a long 'ah' in 'dance'"), and treat their accent as the reference for that song.
-3. Flag rhymes that work in only one accent, so the musician can decide whether listeners with other accents matter for this song.
-4. When an accent-dependent rhyme is important (a title line, the last line of a chorus), offer one option that rhymes in every accent, as an alternative rather than a correction.
+1. Judge rhymes in the accent in the settings, and report the label the rhyme check gives, with the accent: "(perfect, UK)".
+2. When the musician says (or Ode remembers them saying) that a pair rhymes in their voice, believe them: keep the pair, and say "rhymes in your accent" in the result line. If they ask "Why?", explain in a sentence why the setting labels it differently (for example, "the UK setting uses a long 'ah' in 'dance'").
+3. When a rhyme works in only one accent, say so in the result line, so the musician knows how it will sound to listeners elsewhere.
+4. When you write a new rhyme for a line that matters most (a title line, the last line of a chorus), prefer a pair that rhymes in both accents, such as two words from the same vowel set.

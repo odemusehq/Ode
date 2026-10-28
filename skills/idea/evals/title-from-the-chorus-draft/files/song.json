@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "title": "",
+  "intent": {},
+  "settings": {
+    "spelling": { "mode": "set", "value": "us" },
+    "pronunciation": { "mode": "set", "value": "us" },
+    "genre": { "mode": "set", "value": "pop" }
+  },
+  "tempo": 100,
+  "key": { "root": 4, "scale": "Major" },
+  "timeSignature": { "numerator": 4, "denominator": 4 },
+  "sections": [
+    {
+      "id": "intro",
+      "kind": "intro",
+      "name": "Intro",
+      "startBeat": 0,
+      "lengthBeats": 16,
+      "lines": [],
+      "chords": [
+        { "beat": 0, "lengthBeats": 4, "symbol": "C#m" },
+        { "beat": 4, "lengthBeats": 4, "symbol": "A" },
+        { "beat": 8, "lengthBeats": 4, "symbol": "E" },
+        { "beat": 12, "lengthBeats": 4, "symbol": "B" }
+      ]
+    },
+    {
+      "id": "verse-1",
+      "kind": "verse",
+      "name": "Verse 1",
+      "startBeat": 16,
+      "lengthBeats": 32,
+      "lines": [
+        { "id": "v1-l1", "text": "You clock out after half past two" },
+        { "id": "v1-l2", "text": "I'm long asleep before you're done" },
+        { "id": "v1-l3", "text": "You leave your boots beside the door" },
+        { "id": "v1-l4", "text": "I find them when the day's begun" }
+      ],
+      "chords": [
+        { "beat": 0, "lengthBeats": 4, "symbol": "C#m" },
+        { "beat": 4, "lengthBeats": 4, "symbol": "A" },
+        { "beat": 8, "lengthBeats": 4, "symbol": "E" },
+        { "beat": 12, "lengthBeats": 4, "symbol": "B" },
+        { "beat": 16, "lengthBeats": 4, "symbol": "C#m" },
+        { "beat": 20, "lengthBeats": 4, "symbol": "A" },
+        { "beat": 24, "lengthBeats": 4, "symbol": "E" },
+        { "beat": 28, "lengthBeats": 4, "symbol": "B" }
+      ]
+    },
+    {
+      "id": "chorus-1",
+      "kind": "chorus",
+      "name": "Chorus",
+      "startBeat": 48,
+      "lengthBeats": 32,
+      "lines": [
+        { "id": "c1-l1", "text": "You're the light of my life" },
+        { "id": "c1-l2", "text": "Even when I'm not awake" },
+        { "id": "c1-l3", "text": "So you don't come home to the dark" },
+        { "id": "c1-l4", "text": "I leave the porch light on a timer" }
+      ],
+      "chords": [
+        { "beat": 0, "lengthBeats": 4, "symbol": "A" },
+        { "beat": 4, "lengthBeats": 4, "symbol": "E" },
+        { "beat": 8, "lengthBeats": 4, "symbol": "B" },
+        { "beat": 12, "lengthBeats": 4, "symbol": "C#m" },
+        { "beat": 16, "lengthBeats": 4, "symbol": "A" },
+        { "beat": 20, "lengthBeats": 4, "symbol": "E" },
+        { "beat": 24, "lengthBeats": 4, "symbol": "B" },
+        { "beat": 28, "lengthBeats": 4, "symbol": "C#m" }
+      ]
+    }
+  ],
+  "links": [],
+  "locked": [],
+  "credits": [],
+  "notes": []
+}
