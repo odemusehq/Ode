@@ -16,13 +16,13 @@ import {
   type VersionListItem,
 } from "../shared/versions";
 import { JsonFile } from "./json-file";
-import { SetDiff, TouchedTracks } from "./set-diff";
+import { SetDiff, SetWording, TouchedTracks } from "./set-diff";
 
 const SONG_FIELDS = ["tempo", "key", "signature", "locators", "scenes"] as const satisfies readonly SongField[];
 const TRACK_FIELDS = ["present", "name", "mute", "solo", "arm", "color"] as const satisfies readonly TrackField[];
 const CLIP_FIELDS = ["present", "notes", "name", "muted", "color", "loop", "audio"] as const satisfies readonly ClipField[];
 const DEVICE_FIELDS = ["present", "parameter"] as const satisfies readonly DeviceField[];
-const SHEET_FIELDS = ["section", "details"] as const satisfies readonly SheetField[];
+const SHEET_FIELDS = ["lyrics", "section", "details"] as const satisfies readonly SheetField[];
 
 const TrackKeySchema = z.object({ list: z.enum(TrackList), index: z.number(), name: z.string(), tag: z.string().optional() });
 const ClipKeySchema = z.union([z.object({ slot: z.number() }), z.object({ start: z.number(), lane: z.number().optional() })]);
@@ -126,12 +126,19 @@ export class VersionHistory {
     return this.enqueue(async () => structuredClone(VersionHistory.locate(await this.entries(), id).entry.version));
   }
 
-  /** A version with its changes by track, and the song's and lead sheet's changes apart. */
+  /**
+   * A version with its changes by track, the song's and lead sheet's changes apart, and the beats in a bar of the Set
+   * as that version left it.
+   */
   detail(id: string): Promise<VersionDetail> {
     return this.enqueue(async () => {
-      const version = structuredClone(VersionHistory.locate(await this.entries(), id).entry.version);
+      const entries = await this.entries();
+      const { entry, index } = VersionHistory.locate(entries, id);
+      const version = structuredClone(entry.version);
       const song = version.changes.filter((change) => change.target.scope === "song" || change.target.scope === "sheet");
-      return { version, tracks: TouchedTracks.groups(version.changes), song };
+      const snapshot = index === entries.length - 1 ? await this.newestSnapshot(entries) : await this.rebuild(entries, index);
+      const beatsPerBar = SetWording.beatsPerBar(snapshot.transport.signature);
+      return { version, tracks: TouchedTracks.groups(version.changes), song, beatsPerBar };
     });
   }
 

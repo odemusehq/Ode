@@ -1,9 +1,10 @@
 import { basename } from "node:path";
+import { diffIndices } from "node-diff3";
 import { MIXER_INDEX, TAG_SEPARATOR, type Note, type TrackRef } from "../shared/live";
 import type { AudioClipInfo, ClipInfo, LocatorInfo, ParameterInfo, SceneInfo, TransportState } from "../shared/live-ops";
 import { NOTE_NAMES, noteName } from "../shared/notes";
 import type { ChainSnapshot, DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
-import type { LeadSheet, LyricLine, Section } from "../shared/song";
+import type { LeadSheet, Section } from "../shared/song";
 import {
   ChangeKind,
   TrackList,
@@ -16,6 +17,7 @@ import {
   type TrackField,
   type TrackKey,
 } from "../shared/versions";
+import { LyricsText } from "./lyrics-text";
 
 /** A whole note is four quarter-note beats, so a bar holds numerator × 4 / denominator beats. */
 const QUARTER_NOTES_PER_WHOLE_NOTE = 4;
@@ -43,9 +45,6 @@ const SUMMARY_TRACK_NAMES = 3;
 /** The lead sheet's details in plain words; the title is named with its old and new words. */
 const SHEET_DETAIL_WORDS: ReadonlyArray<readonly [Exclude<keyof SheetDetails, "title">, string]> = [
   ["intent", "what the song is about"],
-  ["tempo", "tempo"],
-  ["key", "key"],
-  ["timeSignature", "time signature"],
   ["links", "clip links"],
   ["locked", "locked parts"],
   ["credits", "credits"],
@@ -200,6 +199,67 @@ export class SetWording {
   static isOff(device: DeviceSnapshot): boolean {
     return device.parameters.some((parameter) => parameter.name === DEVICE_ON && parameter.value === 0);
   }
+
+  /** "3", "3–4 and 7": numbers counted from 1, consecutive ones as a span. */
+  static spans(numbers: readonly number[]): string {
+    const runs: [number, number][] = [];
+    for (const number of numbers) {
+      const run = runs[runs.length - 1];
+      if (run && run[1] === number - 1) run[1] = number;
+      else runs.push([number, number]);
+    }
+    return SetWording.list(runs.map(([first, last]) => (first === last ? `${first}` : `${first}–${last}`)));
+  }
+}
+
+/** Plain words for a change to the lyrics text, from comparing it line by line. */
+export class LyricsWording {
+  /** "Lyrics · Verse 1 line 2", "Lyrics · Verse 2 lines 1–2 and Chorus line 3", "Lyrics · 2 lines added", "Lyrics · line 5 and 1 line removed". */
+  static label(before: string, after: string): string {
+    return `Lyrics · ${LyricsWording.words(before, after)}`;
+  }
+
+  /**
+   * Sung lines that replace others are named where they are in the new text, by the label they come under and their
+   * number among its sung lines; lines only added or removed are counted; blank lines and labels don't count.
+   */
+  static words(before: string, after: string): string {
+    const oldLines = LyricsWording.lines(before);
+    const newLines = LyricsWording.lines(after);
+    const changed: number[] = [];
+    let added = 0;
+    let removed = 0;
+    for (const hunk of diffIndices(oldLines, newLines)) {
+      const [oldStart, oldLength] = hunk.buffer1;
+      const [newStart, newLength] = hunk.buffer2;
+      const oldSung = oldLines.slice(oldStart, oldStart + oldLength).filter((line) => LyricsText.isSung(line)).length;
+      const newSung = Array.from({ length: newLength }, (_, offset) => newStart + offset).filter((index) => LyricsText.isSung(newLines[index] ?? ""));
+      const replaced = Math.min(oldSung, newSung.length);
+      changed.push(...newSung.slice(0, replaced));
+      added += newSung.length - replaced;
+      removed += oldSung - replaced;
+    }
+    const parts = LyricsWording.places(newLines, changed);
+    if (added > 0) parts.push(`${SetWording.count(added, "line")} added`);
+    if (removed > 0) parts.push(`${SetWording.count(removed, "line")} removed`);
+    return SetWording.list(parts) || "changed";
+  }
+
+  /** "Verse 1 line 2", "Chorus lines 1–2", or "line 5" for lines under no label, one part per label in order. */
+  private static places(lines: readonly string[], indexes: number[]): string[] {
+    const byLabel = new Map<string, number[]>();
+    for (const index of indexes) {
+      const { label, line } = LyricsText.place(lines, index);
+      const key = label ?? "";
+      byLabel.set(key, [...(byLabel.get(key) ?? []), line]);
+    }
+    return [...byLabel].map(([label, numbers]) => `${label ? `${label} ` : ""}${numbers.length === 1 ? "line" : "lines"} ${SetWording.spans(numbers)}`);
+  }
+
+  /** An empty text has no lines. */
+  private static lines(text: string): string[] {
+    return text === "" ? [] : LyricsText.lines(text);
+  }
 }
 
 /**
@@ -213,9 +273,10 @@ export class SetWording {
  * Values: key a SongKey, signature { numerator, denominator }, locators and scenes the whole list; track, clip and
  * device present the TrackSnapshot, the clip with its notes or audio, and the DeviceSnapshot (changed: its name,
  * sample or chains); notes a Note[], loop a ClipLoop, audio a ClipAudio; every other field its value.
- * When both snapshots have a lead sheet, its sections match by id (the Section on each side) and everything else in it
- * is one details change (SheetDetails); applying keeps the sheet's settings and version and orders sections by start
- * beat. No field holds track order, groups, take lane names or the grid, so those aren't recorded.
+ * When both snapshots have a lead sheet, its lyrics are one change (the text on each side), its sections match by id
+ * (the Section on each side: chords, name, kind and place) and everything else in it is one details change
+ * (SheetDetails); applying writes the lyrics text, keeps the sheet's settings, version and lyrics revision, and orders
+ * sections by start beat. No field holds track order, groups, take lane names or the grid, so those aren't recorded.
  */
 export class SetDiff {
   static between(from: SetSnapshot, to: SetSnapshot): SetChange[] {
@@ -231,14 +292,14 @@ export class SetDiff {
   static summary(changes: SetChange[]): string {
     if (changes.length === 0) return "No changes";
     const tracks = TouchedTracks.names(changes);
-    const sections = changes.some((change) => change.target.scope === "sheet" && change.target.field === "section");
-    const details = changes.some((change) => change.target.scope === "sheet" && change.target.field === "details");
-    if (tracks.length === 0 && !sections && !details) return "Song settings";
+    const lyrics = changes.some((change) => change.target.scope === "sheet" && change.target.field === "lyrics");
+    const sheet = changes.some((change) => change.target.scope === "sheet" && change.target.field !== "lyrics");
+    if (tracks.length === 0 && !lyrics && !sheet) return "Song settings";
     const named = tracks.slice(0, SUMMARY_TRACK_NAMES);
     const more = tracks.length - named.length;
     if (more > 0) named.push(`${more} more ${more === 1 ? "track" : "tracks"}`);
-    if (sections) named.push("the lyrics");
-    else if (details) named.push("the lead sheet");
+    if (lyrics) named.push("the lyrics");
+    if (sheet) named.push("the lead sheet");
     if (changes.some((change) => change.target.scope === "song")) named.push("song settings");
     return `${SetWording.count(changes.length, "edit")} on ${SetWording.list(named)}`;
   }
@@ -669,11 +730,15 @@ class DiffBuilder {
     return extra;
   }
 
-  /** The lead sheet's sections by id (in `to`'s order, then the removed ones), then its details as one change. */
+  /** The lead sheet's lyrics as one change, its sections by id (in `to`'s order, then the removed ones), then its details as one change. */
   private sheet(): void {
     const before = this.from.sheet;
     const after = this.to.sheet;
     if (!before || !after) return;
+    if (before.lyrics !== after.lyrics) {
+      const target: ChangeTarget = { scope: "sheet", field: "lyrics" };
+      this.add(ChangeKind.Changed, target, LyricsWording.label(before.lyrics, after.lyrics), before.lyrics, after.lyrics);
+    }
     const earlier = new Map(before.sections.map((section): [string, Section] => [section.id, section]));
     const later = new Set(after.sections.map((section) => section.id));
     for (const section of after.sections) {
@@ -701,36 +766,18 @@ class DiffBuilder {
       a.kind === b.kind &&
       a.startBeat === b.startBeat &&
       a.lengthBeats === b.lengthBeats &&
-      Values.same(a.lines, b.lines) &&
       Values.same(a.chords, b.chords)
     );
   }
 
-  /** "Lyrics · Verse 2 · line 3", "Chords · Chorus", "Song form · Bridge · bars 17–24", or "Verse 2 · lines 3–4 and chords". */
+  /** "Chords · Chorus", "Song form · Bridge · bars 17–24", or "Chorus · chords and renamed Hook". */
   private sectionWords(before: Section, after: Section): string {
     const name = DiffBuilder.sectionName(before);
-    const lines = DiffBuilder.lineWords(before.lines, after.lines);
     const chords = !Values.same(before.chords, after.chords);
     const form = this.formWords(before, after);
-    if (form.length === 0 && !chords) return `Lyrics · ${name} · ${lines}`;
-    if (form.length === 0 && !lines) return `Chords · ${name}`;
-    if (!lines && !chords) return `Song form · ${name} · ${form.join(", ")}`;
-    const parts = [lines, chords ? "chords" : "", ...form].filter((part) => part.length > 0);
-    return `${name} · ${SetWording.list(parts)}`;
-  }
-
-  /** "line 3", "lines 3–4", "lines 1–2 and 5": the lines that differ, counted from 1, or "" when none do. */
-  private static lineWords(before: readonly LyricLine[], after: readonly LyricLine[]): string {
-    const changed = positions(Math.max(before.length, after.length)).filter((index) => !Values.same(before[index], after[index]));
-    if (changed.length === 0) return "";
-    const runs: [number, number][] = [];
-    for (const index of changed) {
-      const run = runs[runs.length - 1];
-      if (run && run[1] === index - 1) run[1] = index;
-      else runs.push([index, index]);
-    }
-    const spans = runs.map(([first, last]) => (first === last ? `${first + 1}` : `${first + 1}–${last + 1}`));
-    return `${changed.length === 1 ? "line" : "lines"} ${SetWording.list(spans)}`;
+    if (form.length === 0) return `Chords · ${name}`;
+    if (!chords) return `Song form · ${name} · ${form.join(", ")}`;
+    return `${name} · ${SetWording.list(["chords", ...form])}`;
   }
 
   /** "renamed Middle 8", "verse → chorus", "bars 17–24": what changed in the section's place in the song form. */
@@ -749,9 +796,9 @@ class DiffBuilder {
     return section.name || `${section.kind.charAt(0).toUpperCase()}${section.kind.slice(1)}`;
   }
 
-  /** Everything in the lead sheet except its sections, the musician's settings and the format version. */
+  /** Everything in the lead sheet except its lyrics, sections, the musician's settings and the format version. */
   private static sheetDetails(sheet: LeadSheet): SheetDetails {
-    const { sections: _sections, version: _version, settings: _settings, ...details } = sheet;
+    const { lyrics: _lyrics, lyricsRevision: _revision, sections: _sections, version: _version, settings: _settings, ...details } = sheet;
     return details;
   }
 
@@ -1306,18 +1353,24 @@ class SnapshotPatcher {
   }
 
   /**
-   * Sections are added, removed or replaced and then ordered by start beat: replaced ones keep their place among equal
-   * start beats and added ones follow in the order they came. The details are replaced; settings and version stay.
+   * The lyrics take the new text. Sections are added, removed or replaced and then ordered by start beat: replaced ones
+   * keep their place among equal start beats and added ones follow in the order they came. The details are replaced;
+   * settings, version and the lyrics revision stay.
    */
   private changeSheet(changes: readonly SetChange[]): void {
     const sheet = this.set.sheet;
     if (!sheet) return;
+    let lyrics: string | null = null;
     let sections: Section[] | null = null;
     let details: SheetDetails | null = null;
     for (const change of changes) {
       const target = change.target;
       const value = change.after;
       if (target.scope !== "sheet") continue;
+      if (target.field === "lyrics") {
+        if (typeof value === "string") lyrics = value;
+        continue;
+      }
       if (target.field === "details") {
         if (isRecord(value)) details = structuredClone(value) as unknown as SheetDetails;
         continue;
@@ -1334,8 +1387,10 @@ class SnapshotPatcher {
         else sections.push(section);
       }
     }
-    if (!sections && !details) return;
-    const next: LeadSheet = details ? { ...details, version: sheet.version, settings: sheet.settings, sections: sheet.sections } : { ...sheet };
+    if (lyrics === null && !sections && !details) return;
+    const kept = { version: sheet.version, settings: sheet.settings, lyrics: sheet.lyrics, lyricsRevision: sheet.lyricsRevision, sections: sheet.sections };
+    const next: LeadSheet = details ? { ...details, ...kept } : { ...sheet };
+    if (lyrics !== null) next.lyrics = lyrics;
     if (sections) next.sections = sections.sort((a, b) => a.startBeat - b.startBeat);
     this.set.sheet = next;
   }

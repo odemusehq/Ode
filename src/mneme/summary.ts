@@ -2,6 +2,7 @@ import type { LeadSheet } from "../shared/song";
 import type { ResolvedPersonalisation } from "../shared/personalisation";
 import { noteName } from "../shared/notes";
 import type { Mneme } from "./artist";
+import { LyricsText } from "./lyrics-text";
 import type { PreferencesStore } from "./preferences";
 import type { SongStore } from "./song-store";
 
@@ -36,11 +37,13 @@ export class ContextSummary {
       .filter(([, value]) => value)
       .map(([key, value]) => `${key}: ${value}`)
       .join("; ");
-    const sections = sheet.sections.map((section) => `${section.name} (${section.lengthBeats} beats, ${section.lines.length} lines)`).join(", ");
+    const sections = sheet.sections.map((section) => `${section.name} (${section.lengthBeats} beats)`).join(", ");
+    const sung = LyricsText.sung(sheet.lyrics).length;
     return [
       header,
       intent && `Intent: ${intent}`,
       sections && `Sections: ${sections}`,
+      `Lyrics: ${sung === 0 ? "none yet" : `${sung} sung ${sung === 1 ? "line" : "lines"} (revision ${sheet.lyricsRevision})`}`,
       sheet.locked.length > 0 && `Locked (never change): ${sheet.locked.join("; ")}`,
     ]
       .filter(Boolean)

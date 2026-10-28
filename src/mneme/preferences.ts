@@ -10,14 +10,14 @@ import {
   type PreferencesFile,
   type ResolvedPersonalisation,
 } from "../shared/personalisation";
-import type { PreferencesUpdate } from "../shared/api";
 import type { LeadSheet } from "../shared/song";
 import { JsonFile } from "./json-file";
+import { LyricsText } from "./lyrics-text";
 import { SpellingDetector } from "./spelling";
 
-type DetectableValue<K extends keyof Personalisation> = Personalisation[K] extends Detectable<infer T> ? T : never;
+export type DetectableValue<K extends keyof Personalisation> = Personalisation[K] extends Detectable<infer T> ? T : never;
 
-/** Artist-level settings: Personalisation and the mode Ode works in. */
+/** Artist-level settings (genre, spelling, pronunciation, vocal range, loudness target) and the mode Ode works in. */
 export class PreferencesStore {
   private readonly file: JsonFile<PreferencesFile>;
   private readonly spelling = new SpellingDetector();
@@ -30,13 +30,6 @@ export class PreferencesStore {
     return this.file.read();
   }
 
-  update(update: PreferencesUpdate): Promise<PreferencesFile> {
-    return this.file.update((current) => ({
-      personalisation: { ...current.personalisation, ...update.personalisation },
-      mode: update.mode ?? current.mode,
-    }));
-  }
-
   /** How Ode applies changes: Auto (the default), Manual or Let me hear it. */
   async mode(): Promise<Mode> {
     return (await this.file.read()).mode;
@@ -44,6 +37,14 @@ export class PreferencesStore {
 
   async setMode(mode: Mode): Promise<Mode> {
     return (await this.file.update((current) => ({ ...current, mode }))).mode;
+  }
+
+  /** Stores what the musician said about themselves as their own setting, for every song; it replaces anything detected. */
+  setByMusician<K extends keyof Personalisation>(key: K, value: DetectableValue<K>): Promise<PreferencesFile> {
+    return this.file.update((current) => {
+      const setting = { mode: "set", value } as Personalisation[K];
+      return { ...current, personalisation: { ...current.personalisation, [key]: setting } };
+    });
   }
 
   /** Stores a detected value; ignored when the musician has set the value themselves. */
@@ -60,8 +61,7 @@ export class PreferencesStore {
   async effective(sheet: LeadSheet): Promise<ResolvedPersonalisation> {
     const artist = (await this.file.read()).personalisation;
     const merged: Personalisation = { ...artist, ...sheet.settings } as Personalisation;
-    const lyrics = sheet.sections.flatMap((section) => section.lines.map((line) => line.text));
-    const spelling = this.resolveAccent(merged.spelling, lyrics);
+    const spelling = this.resolveAccent(merged.spelling, LyricsText.sung(sheet.lyrics));
     return {
       genre: this.resolveOptional(merged.genre),
       spelling,

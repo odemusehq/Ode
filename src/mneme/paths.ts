@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { randomUUID } from "node:crypto";
-import { dirname, join } from "node:path";
+import { dirname, join, parse } from "node:path";
 
 export interface UserPaths {
   root: string;
@@ -26,6 +26,11 @@ export function userPaths(userDir: string): UserPaths {
 /** Ode's folder inside a Live project: <project>/Ode */
 export function projectOdeDir(setFilePath: string): string {
   return join(dirname(setFilePath), "Ode");
+}
+
+/** One Set's data inside its project, so Sets sharing a project keep theirs apart: <project>/Ode/<Set file name without .als> */
+export function projectSetDir(setFilePath: string): string {
+  return join(projectOdeDir(setFilePath), parse(setFilePath).name);
 }
 
 const TEMP_ROOT = join(tmpdir(), "ode");
