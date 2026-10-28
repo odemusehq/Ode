@@ -1,20 +1,20 @@
 ---
 name: mastering
-description: Master the song in place in Ableton Live — build or tune the mastering chain on the Master (Utility, EQ Eight, Glue Compressor, Multiband Dynamics when needed, saturation or a clipper, Limiter) with Live's devices or the musician's mastering plug-ins, aimed at the loudness target (around −14 LUFS integrated and −1 dBTP for streaming, or the target in Personalisation for club, CD or other uses) — then measure integrated and short-term loudness, true peak and mono on the Master, check that the song keeps its dynamics, and report the measured numbers in one line. Use this whenever the musician taps "Master for streaming", asks for a master, says the song is too quiet, too loud or squashed next to other songs, mentions LUFS, true peak, a limiter, streaming, club or CD versions, or is getting ready to export for release, even if they never say "mastering".
+description: Master the song in place in Ableton Live — build or tune the mastering chain on the Main track (Utility, EQ Eight, Glue Compressor, Multiband Dynamics when needed, saturation or a clipper, Limiter) with Live's devices or the musician's mastering plug-ins, aimed at the loudness target (around −14 LUFS integrated and −1 dBTP for streaming, or the loudness target in the musician's settings for club, CD or other uses) — then measure integrated and short-term loudness, true peak and mono on the Main track, check that the song keeps its dynamics, and report the measured numbers in one line. Use this whenever the musician clicks "Master for streaming", asks for a master, says the song is too quiet, too loud or squashed next to other songs, mentions LUFS, true peak, a limiter, streaming, club or CD versions, or is getting ready to export for release, even if they never say "mastering".
 ---
 
 # Mastering
 
 Mastering is the last stage before release: a consistent, flattering tonal balance, controlled dynamics, a loudness that suits the music and where it will be played, and peaks that survive encoding. Good mastering is mostly small moves made with care. Big problems (a buried vocal, a boomy bass, a harsh synth) are mix problems: fix them in the mix, which in Live is one step away, rather than bending the whole master around them.
 
-Ode masters in place on the Master track: it builds the chain once and tunes its values on later requests, rather than stacking another chain on top.
+Ode masters in place on the Main track: it builds the chain once and tunes its values on later requests, rather than stacking another chain on top.
 
 ## The loop
 
-1. **Read.** The Master's devices (the Ode device, any chain the musician already has, Master-bus processing their sound depends on), the target (named in the request — streaming, club, CD — or else the loudness target in Personalisation), the genre, the sections and which one is loudest, and anything locked (a locked mix means the Master chain only). Measure before changing anything: integrated loudness over the whole song, short-term loudness and true peak in the loudest section, and the spectrum.
+1. **Read.** The Main track's devices (the Ode device, any chain the musician already has, Master-bus processing their sound depends on), the target (named in the request — streaming, club, CD — or else the loudness target in the musician's settings), the genre, the sections and which one is loudest, and anything locked (a locked mix means the Main track chain only). Measure before changing anything: integrated loudness over the whole song, short-term loudness and true peak in the loudest section, and the spectrum.
 2. **Decide** what the master needs, in plain words ("a little dull above 8 kHz, the low end booms on two notes, about 5 dB below the target"), and which stages of the chain solve it. When a small mix fix is clearly better (one boomy bass note), make it with the mixing skill and say so in the result line.
 3. **Change it in place**, as one undo step:
-   - Build the chain on the Master before the Ode device and keep the Ode device last: it measures what reaches it, so a device after it would go unmeasured.
+   - Build the chain on the Main track before the Ode device and keep the Ode device last: it measures what reaches it, so a device after it would go unmeasured.
    - Use only the stages the song needs, in the order below. On later requests, tune the chain that is there; when the musician has their own chain, tune it rather than adding another.
    - Raise the Limiter's gain until the target is reached or the music starts to suffer, whichever comes first.
 4. **Verify** with the checks below, fixing until they pass (up to three rounds); otherwise the result line says what still fails. Measure after the last change, and never give a loudness or peak figure that wasn't measured.
@@ -40,7 +40,7 @@ Ode masters in place on the Master track: it builds the chain once and tunes its
 
 ## Questions
 
-The target comes from the request or from Personalisation, so don't ask how loud. Mastering changes are edits in place that Undo reverses, and the mode decides whether a change waits for Apply. Ask one line with buttons only when the answer changes what you would do: the fix would mean removing Master processing the musician put there themselves, rather than tuning it.
+The target comes from the request or from the musician's settings, so don't ask how loud. When the musician says how loud they want their masters (a LUFS figure, "club loud"), store it as their loudness target setting. Mastering changes are edits in place that Undo reverses, and the mode decides whether a change waits for Apply. Ask one line with buttons only when the answer changes what you would do: the fix would mean removing Master processing the musician put there themselves, rather than tuning it.
 
 ## Preparing the mix
 

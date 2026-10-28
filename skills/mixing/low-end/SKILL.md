@@ -43,7 +43,7 @@ The arrangement often settles it for free: short bass notes that leave room for 
 ## Phase and polarity
 
 - Low frequencies from two sources can cancel: kick and bass, layered kicks, a bass recorded through two sources, a sub layer and a mid layer.
-- Flip the polarity of one with Utility and keep the setting where the low end measures stronger on the Master. If neither is clearly better, nudge one by a few milliseconds and measure again.
+- Flip the polarity of one with Utility and keep the setting where the low end measures stronger on the Main track. If neither is clearly better, nudge one by a few milliseconds and measure again.
 - Check after every change of sample or layer; a new kick sample can bring back a cancellation fixed earlier.
 
 ## Mono below about 100–150 Hz
@@ -66,7 +66,7 @@ Phones, laptops and small speakers can't reproduce the sub, so a bass made only 
 ## How much low end
 
 - Too much sub eats headroom, makes the master quieter at the same peak level and sounds woolly on big systems.
-- On the Master's spectrum a healthy sub is steady from note to note rather than jumping on certain notes.
+- On the Main track's spectrum a healthy sub is steady from note to note rather than jumping on certain notes.
 - With a reference track the musician supplied, compare the low end at matched loudness, for tonal balance only: heavier or lighter, steadier or more uneven.
 
 ## Low-end checks
@@ -77,9 +77,9 @@ These add to the parent skill's checks.
 |---|---|
 | One owner | Kick and bass (or 808) aren't both strong below about 100 Hz at the same moment: masking measured where both are audio; for MIDI parts, the bass notes compared against the kick hits |
 | Tuning | The kick's fundamental and the bass notes agree with the key |
-| Polarity | The low end measures stronger on the Master with the polarity setting you kept |
-| Mono | Mono below 100–150 Hz; the low end doesn't drop or change character with the Master summed to mono |
-| Headroom | Low-end peaks don't set the Master's peak level on their own; reverbs and the parts that don't need lows are high-passed |
+| Polarity | The low end measures stronger on the Main track with the polarity setting you kept |
+| Mono | Mono below 100–150 Hz; the low end doesn't drop or change character with the Main track summed to mono |
+| Headroom | Low-end peaks don't set the Main track's peak level on their own; reverbs and the parts that don't need lows are high-passed |
 
 ## Example
 

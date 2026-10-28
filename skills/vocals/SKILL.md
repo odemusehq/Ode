@@ -1,6 +1,6 @@
 ---
 name: vocals
-description: Write backing-vocal parts — harmonies, stacks, answers, echoes, ad-libs, vocal pads — as MIDI guides the singer can follow, directly in the Set, and make a demo vocal in the artist's own voice only after their clear consent. Ode puts each new part where it belongs (the backing-vocal track the musician made, or a new track named for the part) at the bars it is sung, edits existing parts in place, never touches the lead, and checks every part against its singer's range, the chords on strong beats, the lead's words and rhythm and singability, then plays the bars it changed and reports in one line. Use this skill whenever a vocal or backing-vocal track is selected, or the musician taps or types anything about backing vocals, BVs, harmonies, stacks, doubles, answers, ad-libs, a vocal arrangement, which key suits their voice, or hearing the song sung in their own voice — "add a harmony", "bigger chorus vocals", "answer the lead", "demo in my voice" — even if they never say vocals.
+description: Write backing-vocal parts — harmonies, stacks, answers, echoes, ad-libs, vocal pads — as MIDI guides the singer can follow, directly in the Set, and make a demo vocal in the artist's own voice only after their clear consent. Ode puts each new part where it belongs (the backing-vocal track the musician made, or a new track named for the part) at the bars it is sung, edits existing parts in place, never touches the lead, and checks every part against its singer's range, the chords on strong beats, the lead's words and rhythm and singability, then plays the bars it changed and reports in one line. Use this skill whenever a vocal or backing-vocal track is selected, or the musician clicks a suggestion or types anything about backing vocals, BVs, harmonies, stacks, doubles, answers, ad-libs, a vocal arrangement, which key suits their voice, or hearing the song sung in their own voice — "add a harmony", "bigger chorus vocals", "answer the lead", "demo in my voice" — even if they never say vocals.
 ---
 
 # Vocals
@@ -18,8 +18,8 @@ The lead vocal carries the song. Everything else in the vocal arrangement — ha
 ### 1. Read
 
 - From the project map: key, tempo, chords, the sections, the selected clip and its bars, and the vocal tracks — the lead's guide melody, recorded vocals, and any backing-vocal track the musician has set up.
-- The lead's notes and the lyric lines sung on them (the lead sheet).
-- Who sings each part and their comfortable range: the song's settings, then Personalisation, then what memory knows from their own sung parts. Unless the lead sheet names another singer, backing parts are for the artist. Never infer a range, or who sings what, from anything about the person. With nothing known, keep to about A3–D5 and say so in the result line.
+- The lead's notes and the lines sung on them (the lyrics).
+- Who sings each part and their comfortable range: the song's settings, then the musician's settings, then what memory knows from their own sung parts. When the musician tells you their range, store it as their setting. Unless the lead sheet names another singer, backing parts are for the artist. Never infer a range, or who sings what, from anything about the person. With nothing known, keep to about A3–D5 and say so in the result line.
 - The arrangement around the voice: which instruments sit in the vocal's register, and where the gaps in the lead are.
 - What is locked, and what the artist has kept or undone in vocal arrangements before (memory).
 
@@ -31,7 +31,7 @@ Choose the part that answers the request in that section — a harmony on the ho
 
 - **New parts are new material, placed where they belong**: in the backing-vocal track the musician made, or else on a new MIDI track named for the part ("BV Harmony", "BV Answers") with the same instrument as the lead's guide so it can be heard. One clip per part at the bars it is sung, named for the part.
 - **Existing backing parts are edited in place**, in their own clips.
-- **The lead never changes**: its notes, its recorded audio and its lyric lines stay as they are. A harmony is its own line, written from the chords and the lead — not the lead clip copied and moved up a third, which lands on clashes and out of range.
+- **The lead never changes**: its notes, its recorded audio and its words in the lyrics stay as they are. A harmony is its own line, written from the chords and the lead — not the lead clip copied and moved up a third, which lands on clashes and out of range.
 - **Doubles are performances**: write which lines to double into the lead sheet's notes; never copy the lead's MIDI and call it a double.
 - Never put alternatives in new clips, tracks or takes. Again asks for another take with the Set back as it was: make it clearly different (another interval, another part, other words to answer with); the history keeps the old one.
 
@@ -47,7 +47,7 @@ Run every check that applies, fix what fails and check again, up to three rounds
 | Words and rhythm | a harmony starts and ends its notes with the lead's, on the same syllables, or only on the key words chosen; answers and echoes sit in the lead's rests |
 | Singable | each part moves mostly by step or third, with no tritone or major-seventh leaps, and breathes where the lead breathes |
 | Parallels | no long run of parallel fifths or octaves with the lead |
-| Lead | the lead's notes, recorded vocals and lyric lines are exactly as they were |
+| Lead | the lead's notes, recorded vocals and words in the lyrics are exactly as they were |
 
 Locked parts must be exactly as they were.
 

@@ -1,6 +1,6 @@
 ---
 name: mixing
-description: Mix the song in place in Ableton Live with Live's devices or the musician's plug-ins — levels, panning and sends, EQ that carves space, compression, saturation, reverb and delay returns, buses and the low end — by changing the faders, sends and devices already in the Set, then check masking between tracks, clipping and headroom on the Master, and mono, and report in one line. Use this whenever the musician taps a Mix problem's Fix or "Check the mix", says a part is buried, too loud, muddy, harsh, boomy, thin, crowded or flat, asks about EQ, compression, reverb, delay, width, sidechain or pumping, sees meters going red, or wants the mix ready for mastering, even if they never say "mix".
+description: Mix the song in place in Ableton Live with Live's devices or the musician's plug-ins — levels, panning and sends, EQ that carves space, compression, saturation, reverb and delay returns, buses and the low end — by changing the faders, sends and devices already in the Set, then check masking between tracks, clipping and headroom on the Main track, and mono, and report in one line. Use this whenever the musician clicks a mix suggestion's Fix or "Check the mix", says a part is buried, too loud, muddy, harsh, boomy, thin, crowded or flat, asks about EQ, compression, reverb, delay, width, sidechain or pumping, sees Live's meters going red, or wants the mix ready for mastering, even if they never say "mix".
 ---
 
 # Mixing
@@ -11,7 +11,7 @@ Ode mixes in place: it moves the faders, pans and sends and changes the devices 
 
 ## The loop
 
-1. **Read.** From the project map: each track's mixer (volume, pan, sends) and its devices with their values, the return tracks, the Master's devices, the sections, and the hand edits since the last request (a fader the musician just moved is a decision: mix around it). Then measure before changing anything: masking between the parts involved, in the section where the problem is; the Master in the loudest section (peak, true peak, short-term loudness, spectrum); and the meters of the tracks you will touch. Readings back up the decision; never guess them.
+1. **Read.** From the project map: each track's mixer (volume, pan, sends) and its devices with their values, the return tracks, the Main track's devices, the sections, and the hand edits since the last request (a fader the musician just moved is a decision: mix around it). Then measure before changing anything: masking between the parts involved, in the section where the problem is; the Main track in the loudest section (peak, true peak, short-term loudness, spectrum); and the meters of the tracks you will touch. Readings back up the decision; never guess them.
 2. **Decide.** Name the problem in musical words ("the pad covers the vocal at 2–4 kHz in the chorus") and choose the smallest move that fixes it: a fader, a pan or a send before a cut, a cut before dynamics. Cut the competing part rather than boosting the one that should be heard; boosts make a part louder, which fools the ear into hearing it as better.
 3. **Change it in place**, as one undo step:
    - Use what is on the track first: a free band of its EQ Eight, its compressor's threshold, an existing send. Add a device only when nothing there can do it, and never a second copy of a device to compare.
@@ -23,7 +23,7 @@ Ode mixes in place: it moves the faders, pans and sends and changes the devices 
 5. **Let them hear it.** When your turn ends, Ode plays the section you worked on. Don't start playback for that yourself.
 6. **Report in one line:** what changed (device, parameter, from → to), then " · " and what was checked. For example:
    - "Pad cut 3 dB at 3 kHz on its EQ Eight · vocal clear of the pad in the chorus, Master peaks −5.4 dBFS."
-   - "Reverb return high-passed at 300 Hz, pad and guitar −2 dB at 250 Hz · low mids lighter on the Master, mono holds."
+   - "Reverb return high-passed at 300 Hz, pad and guitar −2 dB at 250 Hz · low mids lighter on the Main track, mono holds."
    - "Bass compressed 4 dB, kick up 1 dB · one owner of the sub, Master peaks −4.8 dBFS."
 
 **Again** is another take: the Set is back as it was, so fix it a clearly different way (a dynamic cut instead of a static one, a level move instead of a cut, carving another part).
@@ -34,10 +34,10 @@ Ode mixes in place: it moves the faders, pans and sends and changes the devices 
 
 | Check | When | Correct when |
 |---|---|---|
-| Masking | Parts that collide, and "Check the mix" | The parts no longer compete in the band where they collided. The masking check reads each track's own audio before its devices, so it finds the collision but can't confirm an EQ or dynamics fix: confirm with a measurement taken after the change (the section on the Master, with the part soloed when you need it alone, and the solos put back afterwards) |
-| Clipping | Every change | Nothing clips on any track or on the Master, and the Master's true peak stays below 0 dBTP |
-| Headroom | "Check the mix", and before mastering | The Master peaks around −6 to −3 dBFS in the loudest section, with no limiter doing the work |
-| Mono | Width, pan or polarity changes, and "Check the mix" | With the Master summed to mono, the kick, bass, snare and lead vocal keep their level, and the mix loses no more than about 3 LU (wide but in-phase parts lose up to 3 dB; more means something is cancelling) |
+| Masking | Parts that collide, and "Check the mix" | The parts no longer compete in the band where they collided. The masking check reads each track's own audio before its devices, so it finds the collision but can't confirm an EQ or dynamics fix: confirm with a measurement taken after the change (the section on the Main track, with the part soloed when you need it alone, and the solos put back afterwards) |
+| Clipping | Every change | Nothing clips on any track or on the Main track, and the Main track's true peak stays below 0 dBTP |
+| Headroom | "Check the mix", and before mastering | The Main track peaks around −6 to −3 dBFS in the loudest section, with no limiter doing the work |
+| Mono | Width, pan or polarity changes, and "Check the mix" | With the Main track summed to mono, the kick, bass, snare and lead vocal keep their level, and the mix loses no more than about 3 LU (wide but in-phase parts lose up to 3 dB; more means something is cancelling) |
 | Low end | Changes to kick, bass, 808 or anything below 150 Hz | One part owns the sub at any moment, and the low end is mono below 100–150 Hz (low-end sub-skill) |
 
 ## Questions
@@ -50,13 +50,13 @@ Organise → gain staging → static balance (faders and pan) → corrective EQ 
 
 ## Gain staging and headroom
 
-- Live's internal headroom is huge, so a red track meter doesn't distort by itself; but the Master's output and fixed-point files clip above 0 dBFS, and devices that model analog gear react to how hard they are driven.
+- Live's internal headroom is huge, so a red track meter doesn't distort by itself; but the Main track's output and fixed-point files clip above 0 dBFS, and devices that model analog gear react to how hard they are driven.
 - Aim for track peaks roughly between −12 and −6 dBFS, sustained parts lower; feed analog-modelled plug-ins an average around −18 dBFS if they were designed for it.
 - Set levels with a Utility at the start of the chain, and keep faders near their middle range for balance.
 - Re-check levels after EQ boosts, saturation and resonant filters; they raise the level.
-- Leave the Master peaking around −6 to −3 dBFS while mixing.
-- Measure the mix with any limiter on the Master bypassed, then switch it back as it was: a limiter hides overs, squashes the loud parts being balanced, and makes everything sound better simply because it is louder. Loudness belongs to mastering.
-- The Ode device sits last on the Master and measures what reaches it, so Master devices go before it.
+- Leave the Main track peaking around −6 to −3 dBFS while mixing.
+- Measure the mix with any limiter on the Main track bypassed, then switch it back as it was: a limiter hides overs, squashes the loud parts being balanced, and makes everything sound better simply because it is louder. Loudness belongs to mastering.
+- The Ode device sits last on the Main track and measures what reaches it, so the devices on the Main track go before it.
 
 ## Balance
 
@@ -146,7 +146,7 @@ Masking is one sound making another harder to hear because they share a frequenc
 
 ## Mono compatibility
 
-Phones, many club systems and some speakers play in mono or close to it. Sum the Master to mono for the check (a Utility on the Master set to mono, removed afterwards). Parts that vanish or turn hollow usually come from short left–right delays, heavy chorus, very wide unison, wide stereo samples or polarity problems between layers or microphones: narrow them, flip polarity, or choose another widening method.
+Phones, many club systems and some speakers play in mono or close to it. Sum the Main track to mono for the check (a Utility on the Main track set to mono, removed afterwards). Parts that vanish or turn hollow usually come from short left–right delays, heavy chorus, very wide unison, wide stereo samples or polarity problems between layers or microphones: narrow them, flip polarity, or choose another widening method.
 
 ## Reference tracks
 
@@ -154,7 +154,7 @@ When the musician supplies a reference track, use it for tonal balance only: mea
 
 ## Handing the mix to mastering
 
-The Master peaks around −6 to −3 dBFS, nothing clips, and no limiter or maximiser does the work. Master-bus processing the musician's sound depends on (a clipper, a glue compressor) stays, and the mastering skill works on top of it.
+The Main track peaks around −6 to −3 dBFS, nothing clips, and no limiter or maximiser does the work. Master-bus processing the musician's sound depends on (a clipper, a glue compressor) stays, and the mastering skill works on top of it.
 
 ## Reference files
 

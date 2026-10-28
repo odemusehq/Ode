@@ -1,6 +1,6 @@
 ---
 name: melody
-description: Write, fix and vary toplines, hooks, riffs and countermelodies directly in the Set. Ode edits the notes of the melody clip the musician points at, checks key, the singer's range, chord tones on strong beats, leaps, breaths and, when words are set, syllable fit, prosody and singability, then plays the bars it changed and reports in one line. Use this skill whenever a melody, topline, lead or hook clip is selected, or the musician taps or types anything about a melody — "chorus doesn't lift", "catchier", "simpler", "higher", "fix the out-of-key notes", "set these words", "write something over these chords", a hummed idea to develop — even if they never say the word melody.
+description: Write, fix and vary toplines, hooks, riffs and countermelodies directly in the Set. Ode edits the notes of the melody clip the musician points at, checks key, the singer's range, chord tones on strong beats, leaps, breaths and, when words are set, syllable fit, prosody and singability, then plays the bars it changed and reports in one line. Use this skill whenever a melody, topline, lead or hook clip is selected, or the musician clicks a suggestion or types anything about a melody — "chorus doesn't lift", "catchier", "simpler", "higher", "fix the out-of-key notes", "set these words", "write something over these chords", a hummed idea to develop — even if they never say the word melody.
 ---
 
 # Melody
@@ -20,8 +20,8 @@ A good melody is easy to remember, comfortable to sing, agrees with the harmony,
 - From the project map: key and scale, tempo, meter, the selected clip and its bars, the sections around it, what else plays.
 - The melody's notes, and the chords under them: the chord part's notes or the lead sheet's chord chart, with how long each chord lasts.
 - The neighbouring sections' melodies. "Higher", "busier" and "lift" are relative: a chorus lifts only against its verse.
-- The words sung on these notes (the lead sheet's lyric lines), when there are any.
-- The singer's comfortable range: the song's settings, then Personalisation, then what memory knows from their own sung parts. Never infer it from anything about the person. With nothing known, keep to about A3–D5 and say so in the result line.
+- The words sung on these notes (the section's lines in the lyrics), when there are any.
+- The singer's comfortable range: the song's settings, then the musician's settings, then what memory knows from their own sung parts. When the musician tells you their range, store it as their setting. Never infer it from anything about the person. With nothing known, keep to about A3–D5 and say so in the result line.
 - What is locked, and the groove: where the kick and snare fall.
 
 ### 2. Decide
@@ -48,7 +48,7 @@ Run every check that applies, fix what fails and check again, up to three rounds
 | Leaps | each leap of a fourth or more inside a phrase is followed by a step the other way; no tritone, major-seventh or augmented-second leap unless the style asks for it |
 | Breath | a beat or more of rest between phrases at medium tempos, and no phrase longer than one comfortable breath (about eight beats without a rest) |
 | Lift | when the request is about lift or contrast: the chorus's tessitura (where most notes sit) is a third to a fifth above the verse's, and its peak is the highest so far |
-| Syllables | with words: each changed line has as many notes as one of its syllable counts, or a melisma you chose on a key word |
+| Syllables | with words: the lyrics-to-melody check, which splits the melody into one phrase per line, finds each line's phrase with as many notes as one of its syllable counts, or a melisma you chose on a key word |
 | Prosody | with words: the prosody check finds no stressed syllable on a weaker note than an unstressed neighbour |
 | Singability | with words: the singability check finds no closed vowel ("ee", "oo") on a high held note and no consonant cluster on a very short note |
 | Clashes | no long note a half step from a note the chord part, the bass or a countermelody holds at the same time in the same octave |

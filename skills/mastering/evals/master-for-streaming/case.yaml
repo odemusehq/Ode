@@ -6,7 +6,7 @@ expected_outcome: |
   Mode: Auto (the default). A finished B♭ major pop mix at 104 BPM, 52 bars (beats 0–208, about two
   minutes): Drums, Bass and Keys (MIDI), Lead Vox and BV (audio), a reverb and a delay return, and
   locators from Intro to Outro with three choruses. The Main track holds only the Ode device. The
-  musician selected the Master and tapped "Master for streaming".
+  musician selected the Main track and clicked "Master for streaming".
 
   Ode measures the Master first (integrated loudness over the whole song, and the loudest chorus's
   short-term loudness and true peak), then builds the chain in place on the Main track, as one undo

@@ -16,7 +16,7 @@ Pop listeners decide quickly. The voice usually enters within the first few bars
 - a 2- or 4-bar pre-chorus;
 - opening with the chorus or the post-chorus hook.
 
-For "get to the chorus sooner", shorten what carries no lyric first (the intro, an instrumental gap); shortening a verse that carries lyric lines removes part of the song, which is the song-form skill's one question.
+For "get to the chorus sooner", shorten what carries no lyric first (the intro, an instrumental gap); shortening a verse whose lines are in the lyrics removes part of the song, which is the song-form skill's one question.
 
 ## The usual shapes
 

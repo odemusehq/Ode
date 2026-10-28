@@ -45,7 +45,7 @@ An original example song: "Lantern Season", about leaving a hometown at the end 
 2. **Lanterns close up.** A tight shot of three paper lanterns on a rusted railing, one unlit, warm light against deep blue dusk, shallow focus. Simple, reads clearly as a thumbnail.
 3. **Suitcase collage.** A cut-paper collage of a half-closed suitcase spilling a summer landscape (sea, lanterns, a ferry) in flat, bright colours on an off-white background. Playful rather than wistful.
 
-All three: no text, square, 3000 × 3000. One image per brief goes to the Release tab for the musician to pick. The collage departs from the artist's usual photographic covers, so the result line says so.
+All three: no text, square, 3000 × 3000. One image per brief; the musician picks one from a single question that shows the three images. The collage departs from the artist's usual photographic covers, so the result line says so.
 
 ## Turning references into general qualities
 

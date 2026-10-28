@@ -23,7 +23,7 @@ Pop lyrics aim for instant clarity: a listener understands the chorus on first h
   - three setup lines and the title last, the title line unrhymed so it stands out;
   - the title as a short chant, with one line that changes;
   - lines that start the same way, building to the title.
-- In the last chorus, one changed word or line can deepen the meaning so the final repeat lands harder. Write it into the last chorus section only; the other choruses keep the original.
+- In the last chorus, one changed word or line can deepen the meaning so the final repeat lands harder. Write it into the last copy of the chorus in the lyrics only; the other copies keep the original.
 
 **Example (original), three setup lines and the title last:**
 

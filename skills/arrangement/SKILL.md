@@ -34,7 +34,7 @@ Ode arranges in the Set: it edits the clips already in each section, takes parts
 
 | Check | When | Correct when |
 |---|---|---|
-| Energy | Every change | The changed section sits where the plan puts it against its neighbours. Compare what plays, the drums' note density and the highest register in each section, and measure the sections' short-term loudness on the Master when you can. A section meant to be bigger beats the one it answers on at least two levers besides level, and the biggest moment comes late |
+| Energy | Every change | The changed section sits where the plan puts it against its neighbours. Compare what plays, the drums' note density and the highest register in each section, and measure the sections' short-term loudness on the Main track when you can. A section meant to be bigger beats the one it answers on at least two levers besides level, and the biggest moment comes late |
 | Downbeats | Every change | Section changes, entries and impacts start on beat 1 of the section's first bar; risers and reverse sounds end exactly on it; clip edges sit on the bar grid unless a pickup is meant |
 | Clean edges | Clips cut, shortened or moved | No note left hanging across a cut (shorten it to end there); no audio clip cut mid-word or mid-hit |
 | Key | Notes written or moved | Every new note is in the song's key, or is a chromatic note with a reason (a passing note, a chord the song already borrows) |

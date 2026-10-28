@@ -3,9 +3,7 @@
   "title": "Fold the Map",
   "intent": {"theme": "leaving with no destination", "mood": "restless and warm", "pointOfView": "first person, a couple on a night drive", "hook": "Fold the map and keep on driving"},
   "settings": {"genre": {"mode": "set", "value": "pop"}, "vocalRange": {"mode": "set", "value": {"low": 57, "high": 76}}},
-  "tempo": 92,
-  "key": {"root": 5, "scale": "Major"},
-  "timeSignature": {"numerator": 4, "denominator": 4},
+  "lyrics": "[Verse 1]\nCoffee cold on the dashboard\nradio stuck between two stations\nyou keep reading out the exits\nlike the names of old relations\n\n[Chorus 1]\nFold the map and keep on driving\npast the last lights of the town\nfold the map, we're done arriving\nlet the long road wear us down",
   "sections": [
     {
       "id": "verse-1",
@@ -13,12 +11,6 @@
       "name": "Verse 1",
       "startBeat": 0,
       "lengthBeats": 32,
-      "lines": [
-        {"id": "verse-1-1", "text": "Coffee cold on the dashboard"},
-        {"id": "verse-1-2", "text": "radio stuck between two stations"},
-        {"id": "verse-1-3", "text": "you keep reading out the exits"},
-        {"id": "verse-1-4", "text": "like the names of old relations"}
-      ],
       "chords": [
         {"beat": 0, "lengthBeats": 4, "symbol": "Dm"},
         {"beat": 4, "lengthBeats": 4, "symbol": "Bb"},
@@ -36,12 +28,6 @@
       "name": "Chorus 1",
       "startBeat": 32,
       "lengthBeats": 32,
-      "lines": [
-        {"id": "chorus-1-1", "text": "Fold the map and keep on driving"},
-        {"id": "chorus-1-2", "text": "past the last lights of the town"},
-        {"id": "chorus-1-3", "text": "fold the map, we're done arriving"},
-        {"id": "chorus-1-4", "text": "let the long road wear us down"}
-      ],
       "chords": [
         {"beat": 0, "lengthBeats": 4, "symbol": "Bb"},
         {"beat": 4, "lengthBeats": 4, "symbol": "F"},

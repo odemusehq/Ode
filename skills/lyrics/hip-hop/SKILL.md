@@ -9,7 +9,7 @@ In rap the words are the lead instrument. Rhythm, rhyme and meaning happen at on
 
 ## Bars and sections
 
-- A bar is one measure of the beat (four beats in 4/4). In the lead sheet, a rap section's lines are its bars: one line per bar, unless the musician writes lines that run across bar lines; count bars against the beat, not lines on the page.
+- A bar is one measure of the beat (four beats in 4/4). In the lyrics, a rap section's lines are its bars: one line per bar, unless the musician writes lines that run across bar lines; count bars against the beat, not lines on the page.
 - Verses are commonly 16 bars, with 8, 12, 24 and 32 also common. Hooks are commonly 8 bars, often a 4-bar phrase repeated or varied.
 - Think in 4-bar units. Ideas, rhyme sounds and flow patterns often change at 4- or 8-bar points, and punchlines tend to land at the end of a 4-bar unit.
 - Write exactly the number of bars the section has (its length in the lead sheet) or the request names; never pad or cut a verse to fit an idea.

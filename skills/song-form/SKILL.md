@@ -1,6 +1,6 @@
 ---
 name: song-form
-description: Plan and fix song structure directly in the Set and the lead sheet. Ode marks each section with a locator on its first downbeat, keeps the lead sheet's sections in step with the Arrangement, decides section lengths and order, and checks that sections run back to back in whole phrases, that names follow the usual section names, that the first chorus arrives in time for the genre and that the energy rises to a final peak, then reports in one line. Use this skill whenever the whole song or the Arrangement is selected, or the musician taps or types anything about structure, sections or locators — "mark the sections", "it drags", "get to the chorus sooner", "add a bridge", "what comes next", "too short", "turn this loop into a song" — even if they never say form.
+description: Plan and fix song structure directly in the Set and the lead sheet. Ode marks each section with a locator on its first downbeat, keeps the lead sheet's sections in step with the Arrangement, decides section lengths and order, and checks that sections run back to back in whole phrases, that names follow the usual section names, that the first chorus arrives in time for the genre and that the energy rises to a final peak, then reports in one line. Use this skill whenever the whole song or the Arrangement is selected, or the musician clicks a suggestion or types anything about structure, sections or locators — "mark the sections", "it drags", "get to the chorus sooner", "add a bridge", "what comes next", "too short", "turn this loop into a song" — even if they never say form.
 ---
 
 # Song form
@@ -12,7 +12,7 @@ Song form decides when the listener hears what: when the story starts, when the 
 ### 1. Read
 
 - From the project map: tempo, meter, the locators (names and times), and where each track's clips start and end in the Arrangement. A section usually begins where several parts change at once.
-- Clip names, and the lead sheet's sections (kind, name, start beat, length, lyric lines): what each section is and what it says.
+- Clip names, the lead sheet's sections (kind, name, start beat, length, chords) and the lyrics, whose labels name the sections that have words: what each section is and what it says.
 - Genre and intended use from the song's settings and memory: a streaming single, a DJ track, a live set, a sync brief.
 - What is locked.
 
@@ -27,7 +27,8 @@ Song form decides when the listener hears what: when the story starts, when the 
 
 - **Locators.** One on the first downbeat of every section, named with the established section name and a number where it repeats: "Intro", "Verse 1", "Pre-Chorus 1", "Chorus 1", "Post-Chorus 1", "Bridge", "Breakdown", "Build", "Drop 1", "Outro". A pickup belongs to its section musically, but the locator goes on the downbeat so loops and jumps start cleanly. Add a key or tempo change to the name when it helps: "Chorus 3 (up a step)".
 - **The musician's locators.** They stay where they are. Where one already marks a section start, rename it in place to that section's name instead of adding a second locator; leave the others untouched.
-- **The lead sheet's sections.** Update the existing sections in place to match the Arrangement — kind, name, start beat, length. Each section keeps its lyric lines; sections the Arrangement has and the lead sheet lacks are added without inventing lyrics; nothing is duplicated.
+- **The lead sheet's sections.** Update the existing sections in place to match the Arrangement — kind, name, start beat, length — each keeping its chords. Sections the Arrangement has and the lead sheet lacks are added, with no lyrics written for them; nothing is duplicated.
+- **The lyrics.** Every sung line stays as it is. When a section is renamed, rename its label in the lyrics to match ("[Verse]" → "[Verse 1]"), because Ode plays a lyric change from the locator named like its label.
 - Marking sections changes no clip, note or device. A plan that changes lengths or order is carried out with the arrangement skill, and the locators and lead sheet follow.
 - Never keep a second, alternative plan in the Set or the lead sheet; Again gives another take, and the history keeps the old one.
 
@@ -40,11 +41,11 @@ Run every check that applies to the change.
 | Lengths | sections run back to back from the song's first bar to its last, with no gap or overlap, each a whole number of bars (usually a multiple of 2 or 4) |
 | Downbeats | every locator sits on the first beat of a bar: a whole multiple of the bar length in beats (4 in 4/4, 3 in 3/4) from the song's start |
 | Names | established names, numbered in order where they repeat; one locator per section start and never two at the same time |
-| Agreement | the locators, the lead sheet's sections and the Arrangement's parts agree on where each section starts |
+| Agreement | the locators, the lead sheet's sections and the Arrangement's parts agree on where each section starts, and every label in the lyrics is the name of a section |
 | Timing | start times follow from the tempo (seconds = bars × beats per bar × 60 ÷ BPM), and the first chorus and the total length suit the genre or the musician's target |
 | Contrast | neighbouring sections differ in at least two ways (melody register, rhythm, chords or harmonic rhythm, density, drum pattern, lyric density); repeats stay recognisable |
 | Energy | rises overall, with a dip before the last peak |
-| Kept | the musician's locators are all still there, renamed at most; locked sections are untouched; no lyric line changed |
+| Kept | the musician's locators are all still there, renamed at most; locked sections are untouched; no sung line in the lyrics changed |
 
 Fix and check again until they pass; if something still fails, the result line says what.
 
@@ -66,7 +67,7 @@ When the form is outside the artist's usual shape (a chorus-first song from some
 
 Act without asking. The one question, a single line with buttons, comes only when the answer changes what Ode does:
 
-- removing a section, or shortening one that carries lyric lines, because that deletes part of the song: "Cut verse 2's last four lines to reach the chorus sooner? · Cut them · Keep them";
+- removing a section, or shortening one whose lines are in the lyrics, because that deletes part of the song: "Cut verse 2's last four lines to reach the chorus sooner? · Cut them · Keep them";
 - rewriting the whole form of a song that already has one, or moving or deleting the musician's own locators;
 - a muted track decides where a section starts, and the hand edits and version history don't explain it (muted long ago and untouched means parked).
 
@@ -144,7 +145,7 @@ The result line gives the reason in musical terms: "at 120 BPM, dropping the sec
 
 ## Worked example: "plan the form"
 
-A synth-pop song at 104 BPM in 4/4 (one bar ≈ 2.31 s). The Arrangement holds an 8-bar chorus loop and an 8-bar verse idea; the lead sheet has a verse and a chorus lyric; the artist's songs usually run about three minutes. The musician taps "Plan the form".
+A synth-pop song at 104 BPM in 4/4 (one bar ≈ 2.31 s). The Arrangement holds an 8-bar chorus loop and an 8-bar verse idea; the lyrics have a verse and a chorus; the artist's songs usually run about three minutes. The musician clicks "Plan the form".
 
 Ode writes the plan into the lead sheet's sections and puts a locator on each start:
 

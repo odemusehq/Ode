@@ -5,20 +5,21 @@ context:
 expected_outcome: |
   Mode: Auto (the default). Genre folk, US English. The song is verse-refrain with no chorus: verse 1
   has four lines of 8 syllables, rhymes lines 2 and 4 ("star" / "jar"), and its last line, the hook
-  "It all goes back into the jar" (locked), closes every verse, as the lead sheet's note says. Verse
-  2's section in the lead sheet is empty, but its melody is already in the Verse 2 melody clip on the
-  Lead vocal track (the same four phrases of 8 notes as verse 1). The musician selected that clip and
-  tapped "Write verse 2".
+  "It all goes back into the jar" (on the lead sheet's locked list), closes every verse, as the lead
+  sheet's note says. The lyrics hold only verse 1, under its [Verse 1] label, but verse 2's melody is
+  already in the Verse 2 melody clip on the Lead vocal track (the same four phrases of 8 notes as verse
+  1). The musician selected that clip and clicked "Write verse 2".
 
-  Ode writes verse 2 straight into its section: three new lines and then the refrain as line 4, word
-  for word. Each line has a count equal to the 8 notes of its phrase, with its stresses on the strong
-  notes; line 2 rhymes with "jar" in US English, so the scheme matches verse 1. The verse moves the
-  story on (a later time, for example the singer grown up and clearing the grandmother's house) so
-  the refrain means something new, in verse 1's plain, concrete voice, with no clichés and without
-  spelling out the moral. Ode runs the syllable check on each line against its notes, the prosody
-  check, the rhyme check for the scheme and the originality check on the new lines.
+  Ode writes verse 2 into the lyrics after verse 1, under a [Verse 2] label: three new lines and then
+  the refrain as line 4, word for word. Each line has a count equal to the 8 notes of its phrase, with
+  its stresses on the strong notes; line 2 rhymes with "jar" in US English, so the scheme matches verse
+  1. The verse moves the story on (a later time, for example the singer grown up and clearing the
+  grandmother's house) so the refrain means something new, in verse 1's plain, concrete voice, with no
+  clichés and without spelling out the moral. Ode runs the lyrics-to-melody check on the new lines
+  against the Verse 2 melody (one phrase per line), the prosody check, the rhyme check for the scheme
+  and the originality check on the new lines.
 
-  Verse 1 and the empty verse 3 stay as they are, the melody clips keep their notes, and no section,
-  clip, track or take is added. Ode asks no question and replies in one line, for example: "Verse 2
-  written: years on, clearing her house, you keep the star · 8 syllables a line on its notes, 'car'
-  and 'jar' perfect (US), no clichés."
+  Verse 1 stays word for word, no lines are written for verse 3, the melody clips keep their notes,
+  and no lead-sheet section, clip, track or take is added. Ode asks no question and replies in one
+  line, for example: "Verse 2 written: years on, clearing her house, you keep the star · 8 syllables a
+  line on its notes, 'car' and 'jar' perfect (US), no clichés."

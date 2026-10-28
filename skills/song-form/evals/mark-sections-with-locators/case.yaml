@@ -3,18 +3,20 @@ name: mark-sections-with-locators
 context:
   scaffold_script: place-files.sh
 expected_outcome: |
-  In Auto mode (the default), with nothing selected and "Mark the sections" tapped, Ode reads the
+  In Auto mode (the default), with nothing selected and "Mark the sections" clicked, Ode reads the
   Arrangement (where the drum, bass, keys and vocal clips change), the two locators the musician placed
-  ("verse" at beat 16 and "new bit" at beat 176) and the lead sheet, whose sections are out of date: the
-  musician has since added two pre-choruses, a bridge and a third chorus. Ode puts a locator on the first
-  downbeat of each section: Intro (beat 0), Verse 1 (16), Pre-Chorus 1 (48), Chorus 1 (64), Verse 2 (96),
-  Pre-Chorus 2 (128), Chorus 2 (144), Bridge (176), Chorus 3 (208) and Outro (240). Each chorus locator
-  goes on its downbeat even though the recorded vocal starts two beats earlier with a pickup, and the
-  musician's two locators are renamed in place (to Verse 1 and Bridge) rather than doubled. Ode updates
-  the lead sheet's sections in place to match: corrected start beats, the lyric lines kept with their
-  sections, and the missing sections added without inventing lyrics. No clip, note, track or device
-  changes. Ode checks that the sections run back to back over 64 bars, that every locator is on a
-  downbeat and named in order, that the locators, the lead sheet and the Arrangement agree, and the time
-  of the first chorus (0:40 at 96 BPM), then replies in one line, for example: "Sections marked: Intro,
-  Verse 1, Pre-Chorus 1, Chorus 1 … Outro, 10 locators · lengths add up to 64 bars, first chorus at
-  0:40." No question is asked.
+  ("verse" at beat 16 and "new bit" at beat 176), the lyrics and the lead sheet, whose sections are out
+  of date: the musician has since added two pre-choruses, a bridge and a third chorus. Ode puts a
+  locator on the first downbeat of each section: Intro (beat 0), Verse 1 (16), Pre-Chorus 1 (48),
+  Chorus 1 (64), Verse 2 (96), Pre-Chorus 2 (128), Chorus 2 (144), Bridge (176), Chorus 3 (208) and
+  Outro (240). Each chorus locator goes on its downbeat even though the recorded vocal starts two beats
+  earlier with a pickup, and the musician's two locators are renamed in place (to Verse 1 and Bridge)
+  rather than doubled. Ode updates the lead sheet's sections in place to match: corrected start beats,
+  and the missing sections added. The lyrics keep every sung line word for word (their labels,
+  [Verse 1], [Chorus 1], [Verse 2] and [Chorus 2], already name sections that keep their names), and
+  no lines are written for the added sections. No clip, note, track or device changes. Ode checks that
+  the sections run back to back over 64 bars, that every locator is on a downbeat and named in order,
+  that the locators, the lead sheet and the Arrangement agree, and the time of the first chorus (0:40
+  at 96 BPM), then replies in one line, for example: "Sections marked: Intro, Verse 1, Pre-Chorus 1,
+  Chorus 1 … Outro, 10 locators · lengths add up to 64 bars, first chorus at 0:40." No question is
+  asked.

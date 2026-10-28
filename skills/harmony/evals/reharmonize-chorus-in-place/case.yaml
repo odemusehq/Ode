@@ -4,7 +4,7 @@ context:
   scaffold_script: place-files.sh
 expected_outcome: |
   In Auto mode (the default), with the Keys clip "Chorus keys" selected and "Less predictable chords"
-  tapped, Ode reads the chorus chords (an Eb – Bb – Cm – Ab loop played as root-position block triads
+  clicked, Ode reads the chorus chords (an Eb – Bb – Cm – Ab loop played as root-position block triads
   over a left-hand root), the lead vocal melody, the bassline and the lead sheet. It rewrites the notes
   of "Chorus keys" in place with a fresher progression (for example inversions, sevenths, a secondary
   dominant or a borrowed chord) chosen so every melody note on beats 1 and 3 is a note of its chord (a

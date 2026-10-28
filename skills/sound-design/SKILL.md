@@ -1,6 +1,6 @@
 ---
 name: sound-design
-description: Change how a part sounds, in place, in Ableton Live — reshape the instrument and effects already on the track (oscillators, filter, envelopes, modulation, saturation, width, space), load a better instrument, preset or sample onto that track, layer in a rack, tune and trim samples, isolate a sound from a recording or generate one — then check the part's level, its register against the parts around it and mono, and report in one line. Use this whenever the musician taps or types anything about how a part sounds ("warmer", "darker", "brighter", "punchier", "wider", "softer", "less harsh", "dusty", "glassy", "fatter"), selects an instrument or effect and wants it changed, needs a new sound, patch, preset or sample for a part, or wants a sound pulled from a recording or generated, even if they never say "sound design".
+description: Change how a part sounds, in place, in Ableton Live — reshape the instrument and effects already on the track (oscillators, filter, envelopes, modulation, saturation, width, space), load a better instrument, preset or sample onto that track, layer in a rack, tune and trim samples, isolate a sound from a recording or generate one — then check the part's level, its register against the parts around it and mono, and report in one line. Use this whenever the musician clicks a suggestion or types anything about how a part sounds ("warmer", "darker", "brighter", "punchier", "wider", "softer", "less harsh", "dusty", "glassy", "fatter"), selects an instrument or effect and wants it changed, needs a new sound, patch, preset or sample for a part, or wants a sound pulled from a recording or generated, even if they never say "sound design".
 ---
 
 # Sound design
@@ -36,7 +36,7 @@ Ode changes the sound where it lives — the instrument and effects already on t
 
 | Check | When | Correct when |
 |---|---|---|
-| Level | Every change | The part's level in its section (its track meter, or the Master measured there) is about what it was before, unless louder or quieter was asked, and neither the track nor the Master clips |
+| Level | Every change | The part's level in its section (its track meter, or the Main track measured there) is about what it was before, unless louder or quieter was asked, and neither the track nor the Main track clips |
 | Register | Every change | The part's main energy doesn't sit on the vocal or lead in the same bars: their note ranges barely overlap, or the overlap is thinned by the filter, the voicing or an octave move |
 | Masking | The part and its neighbour are audio tracks | Measured in the section, with no strong band left shared with the vocal or lead. MIDI parts can't be measured this way: compare note ranges and filter settings, and don't call masking measured |
 | Mono | After widening (unison spread, chorus, stereo delay, detuned layers) | Mono below about 100–150 Hz; summed to mono, the part keeps most of its level. Wide but in-phase material loses up to about 3 dB; more, or a hollow tone, means the width is cancelling |

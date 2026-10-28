@@ -7,9 +7,7 @@
     "pronunciation": { "mode": "set", "value": "uk" },
     "genre": { "mode": "set", "value": "indie pop" }
   },
-  "tempo": 96,
-  "key": { "root": 10, "scale": "Major" },
-  "timeSignature": { "numerator": 4, "denominator": 4 },
+  "lyrics": "[Verse 1]\nYour street is quiet after twelve\nThe chippy pulls its shutter down\nYou walk me to the stop in socks\nAnd wave me off to cross the town\n\n[Chorus 1]\nI'll take the last bus back\nUpstairs for the whole ride\nTime stood still on your stairs\nAnd you're right by my side\n\n[Verse 2]\nI sit up top, the front left seat\nAnd breathe a circle, wipe the glass\nI write your name and rub it out\nAnd count the takeaways we pass\n\n[Chorus 2]\nI'll take the last bus back\nUpstairs for the whole ride\nTime stood still on your stairs\nAnd you're right by my side",
   "sections": [
     {
       "id": "intro",
@@ -17,7 +15,6 @@
       "name": "Intro",
       "startBeat": 0,
       "lengthBeats": 16,
-      "lines": [],
       "chords": [
         { "beat": 0, "lengthBeats": 4, "symbol": "Bb" },
         { "beat": 4, "lengthBeats": 4, "symbol": "F" },
@@ -31,12 +28,6 @@
       "name": "Verse 1",
       "startBeat": 16,
       "lengthBeats": 32,
-      "lines": [
-        { "id": "v1-l1", "text": "Your street is quiet after twelve" },
-        { "id": "v1-l2", "text": "The chippy pulls its shutter down" },
-        { "id": "v1-l3", "text": "You walk me to the stop in socks" },
-        { "id": "v1-l4", "text": "And wave me off to cross the town" }
-      ],
       "chords": [
         { "beat": 0, "lengthBeats": 4, "symbol": "Bb" },
         { "beat": 4, "lengthBeats": 4, "symbol": "F" },
@@ -54,12 +45,6 @@
       "name": "Chorus 1",
       "startBeat": 48,
       "lengthBeats": 32,
-      "lines": [
-        { "id": "c1-l1", "text": "I'll take the last bus back" },
-        { "id": "c1-l2", "text": "Upstairs for the whole ride" },
-        { "id": "c1-l3", "text": "Time stood still on your stairs" },
-        { "id": "c1-l4", "text": "And you're right by my side" }
-      ],
       "chords": [
         { "beat": 0, "lengthBeats": 4, "symbol": "Eb" },
         { "beat": 4, "lengthBeats": 4, "symbol": "Bb" },
@@ -77,12 +62,6 @@
       "name": "Verse 2",
       "startBeat": 80,
       "lengthBeats": 32,
-      "lines": [
-        { "id": "v2-l1", "text": "I sit up top, the front left seat" },
-        { "id": "v2-l2", "text": "And breathe a circle, wipe the glass" },
-        { "id": "v2-l3", "text": "I write your name and rub it out" },
-        { "id": "v2-l4", "text": "And count the takeaways we pass" }
-      ],
       "chords": [
         { "beat": 0, "lengthBeats": 4, "symbol": "Bb" },
         { "beat": 4, "lengthBeats": 4, "symbol": "F" },
@@ -100,12 +79,6 @@
       "name": "Chorus 2",
       "startBeat": 112,
       "lengthBeats": 32,
-      "lines": [
-        { "id": "c2-l1", "text": "I'll take the last bus back" },
-        { "id": "c2-l2", "text": "Upstairs for the whole ride" },
-        { "id": "c2-l3", "text": "Time stood still on your stairs" },
-        { "id": "c2-l4", "text": "And you're right by my side" }
-      ],
       "chords": [
         { "beat": 0, "lengthBeats": 4, "symbol": "Eb" },
         { "beat": 4, "lengthBeats": 4, "symbol": "Bb" },

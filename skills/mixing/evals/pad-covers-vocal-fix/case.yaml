@@ -6,8 +6,8 @@ expected_outcome: |
   Mode: Auto (the default). An E minor song at 120 BPM at the mix stage: Drums, Bass, Guitar, Pad and
   Lead Vox are all audio tracks, with Verse (beats 0–32) and Chorus (beats 32–64). The Pad plays only
   in the chorus; its EQ Eight has band 1 on as a low cut at 200 Hz and bands 2–4 off. The Lead Vox has
-  its own EQ Eight and Compressor. The musician selected the Pad's chorus clip and tapped the Mix tab's
-  problem line "Pad covers the vocal at 3 kHz · Fix".
+  its own EQ Eight and Compressor. The musician selected the Pad's chorus clip and clicked the
+  suggestion "Pad covers the vocal at 3 kHz · Fix".
 
   Ode measures masking between the Pad and the Lead Vox over the chorus (beats 32–64) to confirm the
   collision near 3 kHz, then fixes it in place, as one undo step: on the Pad's existing EQ Eight it

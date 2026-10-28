@@ -1,6 +1,6 @@
 ---
 name: drums
-description: Program and fix drum parts directly in the Set. Ode edits the notes of the drum clip the musician points at — grooves, fills, swing, ghost notes, velocity and timing, section energy — writes only to pads the kit actually has, and checks the backbeat, the kick against the bass, the velocity shape, fills that land on the downbeat clear of the vocal, and a loop that ends cleanly, then plays the bars it changed and reports in one line. Use this skill whenever a drum clip or Drum Rack is selected, or the musician taps or types anything about a beat, groove, fill, swing, feel, hats, kick, snare or kit — "fill into the chorus", "more human", "chorus hits harder", "half-time bridge", "give me a beat at 90" — even if they never say drums.
+description: Program and fix drum parts directly in the Set. Ode edits the notes of the drum clip the musician points at — grooves, fills, swing, ghost notes, velocity and timing, section energy — writes only to pads the kit actually has, and checks the backbeat, the kick against the bass, the velocity shape, fills that land on the downbeat clear of the vocal, and a loop that ends cleanly, then plays the bars it changed and reports in one line. Use this skill whenever a drum clip or Drum Rack is selected, or the musician clicks a suggestion or types anything about a beat, groove, fill, swing, feel, hats, kick, snare or kit — "fill into the chorus", "more human", "chorus hits harder", "half-time bridge", "give me a beat at 90" — even if they never say drums.
 ---
 
 # Drums
@@ -170,7 +170,7 @@ Change the pattern between sections, not just the level. The same beat played lo
 
 ## Worked example: "chorus hits harder"
 
-Pop-rock at 118 BPM. The musician selects the chorus drum clip, which plays the verse groove a little louder, and taps "Chorus hits harder". The verse (unchanged) plays cross-stick on 2 and 4, closed eighth hats and a kick on 1 and 3; the bass locks to the kick on 1 and 3.
+Pop-rock at 118 BPM. The musician selects the chorus drum clip, which plays the verse groove a little louder, and clicks "Chorus hits harder". The verse (unchanged) plays cross-stick on 2 and 4, closed eighth hats and a kick on 1 and 3; the bass locks to the kick on 1 and 3.
 
 Ode rewrites the chorus clip's notes: full snare instead of cross-stick, sixteenth hats with accents on the beats, an open hat on the last "and" of each bar, an extra kick on the "a" of 1 and the "and" of 3, a crash with the kick on the chorus downbeat, and a small variation in bar 4 of each phrase.
 

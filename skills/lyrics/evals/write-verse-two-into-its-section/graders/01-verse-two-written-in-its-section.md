@@ -4,4 +4,4 @@ focus: trace
 weight: 1
 ---
 
-Verse 2's section in the lead sheet now holds four lyric lines; verse 1 is word for word unchanged, verse 3 is still empty, and no section, clip, track or take was added.
+The lyrics now hold four sung lines for verse 2, after verse 1 and under a [Verse 2] label; verse 1 is word for word unchanged, no lines were written for verse 3, and no lead-sheet section, clip, track or take was added.

@@ -57,7 +57,7 @@ Typical values as commonly published or reported:
 
 ## Choosing a target
 
-1. Start from the loudness target in the musician's Personalisation settings.
+1. Start from the loudness target in the musician's settings.
 2. Consider where the song will be played most (streaming, club, CD, vinyl).
 3. Measure the musician's own reference tracks for context, as information rather than a rule.
 4. Raise loudness until either the target is reached or the music starts to suffer (punch lost, distortion, the chorus no longer bigger than the verse). Stop at whichever comes first.

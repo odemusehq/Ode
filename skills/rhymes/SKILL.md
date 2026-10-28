@@ -1,6 +1,6 @@
 ---
 name: rhymes
-description: Rhyme craft that acts on the lead sheet. Ode re-ends lines in place so rhymes land where the section needs them, judged by its rhyme check in the musician's accent (UK or US) — perfect, near, assonance, consonance, multisyllabic, internal and identical rhymes, rhyme schemes, settled and unsettled sections, fresh versus over-used pairs, and pairs that rhyme in one accent only. Use this whenever the musician taps "Tighten the rhymes", "Fresher rhymes" or "More internal rhymes", asks whether two words rhyme, says a rhyme feels forced, weak, cheesy or predictable, wants more or fewer rhymes, or whenever you write or change a rhymed line, even if the word "rhyme" never comes up.
+description: Rhyme craft that acts on the song's lyrics. Ode re-ends lines in place so rhymes land where the section needs them, judged by its rhyme check in the musician's accent (UK or US) — perfect, near, assonance, consonance, multisyllabic, internal and identical rhymes, rhyme schemes, settled and unsettled sections, fresh versus over-used pairs, and pairs that rhyme in one accent only. Use this whenever the musician clicks "Tighten the rhymes", "Fresher rhymes" or "More internal rhymes", asks whether two words rhyme, says a rhyme feels forced, weak, cheesy or predictable, wants more or fewer rhymes, or whenever you write or change a rhymed line, even if the word "rhyme" never comes up.
 ---
 
 # Rhymes
@@ -10,20 +10,20 @@ Rhyme serves the song; it is not a rule. It makes lines memorable, gives the ear
 ## The loop
 
 1. **Read.**
-   - The section's lines and its matching section (verse 1 for verse 2) in the lead sheet. Run the rhyme check on both: the scheme letters and the kind of every pair.
+   - The section's lines and its matching section (verse 1 for verse 2) in the lyrics. Run the rhyme check on both: the scheme letters and the kind of every pair.
    - The Pronunciation setting (the song's, else the artist's), and anything the musician has said or Ode remembers about the accent they sing in.
    - The notes the rhyme words are sung on: a rhyme word on a long note needs a vowel that can be held.
-   - Locked lines, and the hand edits since the last request (a pair the musician just typed is their newest intent).
+   - The lines the lead sheet lists as locked, and the hand edits since the last request (a pair the musician just typed is their newest intent).
 2. **Decide** which line to change, what kind of rhyme the moment needs (strong where the section lands, softer where it keeps moving), and which way out of a forced rhyme to take. Meaning comes first: a line that says the right thing with a near rhyme beats a perfect rhyme that says something the song doesn't mean.
-3. **Change in place.** Re-end or rewrite the fewest lines, usually one line of the pair, in the lead sheet: same line, same section. When one line of the pair is locked, re-end the other. Change a chorus line in every chorus section that sings it. Never put alternatives in new sections, clips or takes; Again gives another take and the version history keeps this one.
+3. **Change in place.** Re-end or rewrite the fewest lines, usually one line of the pair, in the lyrics: the same line under the same label, saved against the revision you read. When one line of the pair is locked, re-end the other. Change a chorus line in every copy of the chorus in the text. Never put alternatives in the text, in clips or in takes; Again gives another take and the version history keeps this one.
 4. **Verify** every line you changed:
    - **Rhyme check** in the musician's accent: the pair has the kind you meant (perfect or multisyllabic where the section should land; near rhyme or assonance where it should keep moving), and the scheme letters match the matching section.
    - **Stressed syllables rhyme with stressed syllables.** The check's rhyming part runs from the last stressed vowel to the end; a pair that only matches on an unstressed ending ("city" / "me") isn't a rhyme.
    - **Originality check:** no over-used pair on the changed lines, unless you kept one on purpose (a chant-like chorus) and the result line says so.
-   - **Syllable check and prosody check** on each changed line: one of its counts still equals its notes, with the stresses on the strong notes.
+   - **Lyrics-to-melody check and prosody check** on each changed line: one of its counts still equals the notes of its phrase, with the stresses on the strong notes.
    - **Report the kind exactly as the check labels it**, with the accent: "(perfect, UK)". Never upgrade a near rhyme to perfect. A word with two pronunciations ("again", "either") may rhyme in only one of them; say which one the rhyme needs.
    Fix and check again, up to three rounds; if the rhyme you need still isn't there, the result line says what the check found.
-5. **Let them hear it.** After your turn Ode plays the bars where the changed lines are sung. You don't start playback.
+5. **Let them hear it.** After your turn Ode plays the section of the first changed line, from the locator named like its label to the next locator. You don't start playback.
 6. **Report in one line**: what changed · what was checked. For example:
    - "Verse 2, line 4 now ends on 'stone', perfect rhyme with 'phone' in US English · 8 syllables on its 8 notes, ABCB like verse 1."
    - "Chorus now lands on one sound ('late' / 'wait' / 'gate') with the title left unrhymed · perfect (UK), counts fit the notes, no over-used pairs."
@@ -31,7 +31,7 @@ Rhyme serves the song; it is not a rule. It makes lines memorable, gives the ear
 
 ## Asking
 
-Rhyme fixes don't need a question. When a pair works only in another accent than the setting: if the musician has told you (or Ode remembers) that they sing in that accent, keep it and say "rhymes in your accent"; otherwise follow the setting, fix it, and say which accent you checked in; the history covers the rest. In Let me hear it, never ask; in Manual, Ode shows the change for Apply or Skip, and you work the same way.
+Rhyme fixes don't need a question. When a pair works only in another accent than the setting: if the musician has told you (or Ode remembers) that they sing in that accent, keep it and say "rhymes in your accent"; otherwise follow the setting, fix it, and say which accent you checked in; the history covers the rest. When the musician says they sing in UK or US English, store it as their pronunciation setting; another accent (Northern English, Scottish, Southern US) is remembered about them. In Let me hear it, never ask; in Manual, Ode shows the change for Apply or Skip, and you work the same way.
 
 ## Kinds of rhyme
 
@@ -106,7 +106,7 @@ Ways out, in roughly this order:
 > *I waited at the station in the rain*
 > *And thought about the price of sugar cane*
 
-The second line exists only for the rhyme; sugar cane has nothing to do with the song. The musician taps "Fresher rhymes". Ode keeps line 1, the scene the song is built on, and rewrites line 2 in place with a rhyme word that belongs in the scene: *And counted every late and cancelled train*. The rhyme check (UK) calls "rain" / "train" perfect; the syllable check gives 10|11, which fits the phrase's 10 notes with "every" sung as two syllables. ("Cancelled" is UK spelling; US is "canceled". Follow the setting.) Result line: "Line 2 now 'And counted every late and cancelled train', perfect rhyme with 'rain' (UK) · 10 syllables on its 10 notes with 'every' as 'ev-ry'."
+The second line exists only for the rhyme; sugar cane has nothing to do with the song. The musician clicks "Fresher rhymes". Ode keeps line 1, the scene the song is built on, and rewrites line 2 in place with a rhyme word that belongs in the scene: *And counted every late and cancelled train*. The rhyme check (UK) calls "rain" / "train" perfect; the syllable check gives 10|11, which fits the phrase's 10 notes with "every" sung as two syllables. ("Cancelled" is UK spelling; US is "canceled". Follow the setting.) Result line: "Line 2 now 'And counted every late and cancelled train', perfect rhyme with 'rain' (UK) · 10 syllables on its 10 notes with 'every' as 'ev-ry'."
 
 On Again, a different way out: re-end line 1 instead (*I waited on the platform, soaked right through* / *And every face that passed me wasn't you*), which turns the verse toward the person the song is about. "Through" / "you" is perfect in UK English.
 

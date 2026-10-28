@@ -91,7 +91,7 @@ Shaving the sharpest peaks before the limiter lets the limiter work less, which 
 
 Typical order: Utility (trim) → EQ Eight (corrective) → Glue Compressor → Multiband Dynamics (if needed) → Saturator or Roar (optional) → EQ Eight (tonal) → clipper (optional) → Limiter → the Ode device.
 
-- The Ode device stays last on the Master: it measures what reaches it, so every mastering device goes before it.
+- The Ode device stays last on the Main track: it measures what reaches it, so every mastering device goes before it.
 - Swap the compressor and the corrective EQ if a problem frequency is driving the compressor.
 - After each stage, match its output to its input so bypassing it only changes the tone, not the level.
 

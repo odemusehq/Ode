@@ -5,24 +5,27 @@ context:
 expected_outcome: |
   Mode: Auto (the default). "Tin Roof Weather" is finished and mastered: an A minor song at 84 BPM
   about two people waiting out a storm while one of them is about to leave. The lead sheet holds the
-  intent, every section's lyric lines (both choruses written in full), the credits (Jun Ade, written
-  and produced; Rosa Ilves, mixed) and two notes on sources: the Guitar sample was isolated from Jun's
-  own 2021 phone demo, and the Rain was made with Ode's sound generation. The Set also has drum
-  samples from Live's Core Library and a Chop track whose Simpler plays
+  intent, the credits (Jun Ade, written and produced; Rosa Ilves, mixed) and two notes on sources: the
+  Guitar sample was isolated from Jun's own 2021 phone demo, and the Rain was made with Ode's sound
+  generation. The lyrics hold every stanza under its label, both choruses written out. The Set also
+  has drum samples from Live's Core Library and a Chop track whose Simpler plays
   "Samples/Imported/soul_vox_chop_03.wav", which no note explains. Nothing is selected, and the
-  musician tapped "Prepare the release".
+  musician typed "Prepare the release".
 
   Ode leaves the Set exactly as it was and makes the release files: three or four cover images, each
   from its own brief drawn from this song (rain on a tin roof, a fogged window, a bag waiting by the
   door, the warm and wistful mood), square at 3000 × 3000, with no text and no imitation of another
-  artist's artwork; the lyric sheet from the lead sheet with the exact title, the sections in order and
-  each chorus written out; and the credits from what the lead sheet holds, with the primary artist,
-  legal names, splits, publishers, collecting societies and the master owner marked missing rather
-  than guessed. It checks the clearance of every element in the Set: the drum samples come from Live's
-  library, the guitar from the musician's own recording, the rain from Ode's sound generation, and the
-  vocal chop has no known source, so it is flagged as not cleared. The clearance status goes into the
-  lead sheet's notes, and Ode runs the originality check on the lyrics.
+  artist's artwork; the lyric sheet from the lyrics with the exact title, the stanzas in order with
+  their labels and each chorus written out; and the credits from what the lead sheet holds, with the
+  primary artist, legal names, splits, publishers, collecting societies and the master owner marked
+  missing rather than guessed. It then asks one question, which cover to use, whose answers are the
+  covers ("Cover 1" … "Cover 4") with the cover images attached, and makes the pick (the first answer
+  in this run) the release cover. It checks the clearance of every element in the Set: the drum
+  samples come from Live's library, the guitar from the musician's own recording, the rain from Ode's
+  sound generation, and the vocal chop has no known source, so it is flagged as not cleared. The
+  clearance status goes into the lead sheet's notes, and Ode runs the originality check on the lyrics.
 
-  Ode asks no question and replies in one line, for example: "Release files ready: 4 covers to pick
-  from, lyric sheet, credits with 6 gaps · vocal chop has no known source: clear it or replace it
-  before upload."
+  Beside the cover question, Ode asks at most one question, about a missing credit, and replies in one
+  line, for example: "Release files ready: cover 1 as you picked, lyric sheet, credits missing legal
+  names, splits and publishers · vocal chop has no known source: clear it or replace it before
+  upload."

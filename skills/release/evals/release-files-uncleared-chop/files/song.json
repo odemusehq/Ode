@@ -9,9 +9,7 @@
     "hook": "Drum, drum on the tin roof"
   },
   "settings": {},
-  "tempo": 84,
-  "key": {"root": 9, "scale": "Minor"},
-  "timeSignature": {"numerator": 4, "denominator": 4},
+  "lyrics": "[Verse 1]\nThe kettle clicks, the windows fog\nYou trace a road across the glass\nYour bag has waited by the door\nSince the first warm day of March\n\n[Chorus 1]\nSo drum, drum on the tin roof\nKeep the roads too wet to leave\nEvery cloud that stalls above us\nBuys another night for me\n\n[Verse 2]\nThe radio says the skies will clear\nI turn it down and pour the tea\nYou laugh the way you used to laugh\nBefore the maps got hold of you\n\n[Chorus 2]\nSo drum, drum on the tin roof\nKeep the roads too wet to leave\nEvery cloud that stalls above us\nBuys another night for me\n\n[Outro]\nDrum, drum on the tin roof\nDon't let up till morning",
   "sections": [
     {
       "id": "intro",
@@ -19,7 +17,6 @@
       "name": "Intro",
       "startBeat": 0,
       "lengthBeats": 16,
-      "lines": [],
       "chords": [
         {"beat": 0, "lengthBeats": 4, "symbol": "Am"},
         {"beat": 4, "lengthBeats": 4, "symbol": "F"},
@@ -33,12 +30,6 @@
       "name": "Verse 1",
       "startBeat": 16,
       "lengthBeats": 32,
-      "lines": [
-        {"id": "verse-1-1", "text": "The kettle clicks, the windows fog"},
-        {"id": "verse-1-2", "text": "You trace a road across the glass"},
-        {"id": "verse-1-3", "text": "Your bag has waited by the door"},
-        {"id": "verse-1-4", "text": "Since the first warm day of March"}
-      ],
       "chords": [
         {"beat": 0, "lengthBeats": 4, "symbol": "Am"},
         {"beat": 4, "lengthBeats": 4, "symbol": "F"},
@@ -56,12 +47,6 @@
       "name": "Chorus 1",
       "startBeat": 48,
       "lengthBeats": 32,
-      "lines": [
-        {"id": "chorus-1-1", "text": "So drum, drum on the tin roof"},
-        {"id": "chorus-1-2", "text": "Keep the roads too wet to leave"},
-        {"id": "chorus-1-3", "text": "Every cloud that stalls above us"},
-        {"id": "chorus-1-4", "text": "Buys another night for me"}
-      ],
       "chords": [
         {"beat": 0, "lengthBeats": 4, "symbol": "F"},
         {"beat": 4, "lengthBeats": 4, "symbol": "C"},
@@ -79,12 +64,6 @@
       "name": "Verse 2",
       "startBeat": 80,
       "lengthBeats": 32,
-      "lines": [
-        {"id": "verse-2-1", "text": "The radio says the skies will clear"},
-        {"id": "verse-2-2", "text": "I turn it down and pour the tea"},
-        {"id": "verse-2-3", "text": "You laugh the way you used to laugh"},
-        {"id": "verse-2-4", "text": "Before the maps got hold of you"}
-      ],
       "chords": [
         {"beat": 0, "lengthBeats": 4, "symbol": "Am"},
         {"beat": 4, "lengthBeats": 4, "symbol": "F"},
@@ -102,12 +81,6 @@
       "name": "Chorus 2",
       "startBeat": 112,
       "lengthBeats": 32,
-      "lines": [
-        {"id": "chorus-2-1", "text": "So drum, drum on the tin roof"},
-        {"id": "chorus-2-2", "text": "Keep the roads too wet to leave"},
-        {"id": "chorus-2-3", "text": "Every cloud that stalls above us"},
-        {"id": "chorus-2-4", "text": "Buys another night for me"}
-      ],
       "chords": [
         {"beat": 0, "lengthBeats": 4, "symbol": "F"},
         {"beat": 4, "lengthBeats": 4, "symbol": "C"},
@@ -125,7 +98,6 @@
       "name": "Outro",
       "startBeat": 144,
       "lengthBeats": 16,
-      "lines": [{"id": "outro-1", "text": "Drum, drum on the tin roof"}, {"id": "outro-2", "text": "Don't let up till morning"}],
       "chords": [
         {"beat": 0, "lengthBeats": 4, "symbol": "F"},
         {"beat": 4, "lengthBeats": 4, "symbol": "C"},

@@ -9,7 +9,7 @@ Three examples of the idea loop: what Ode reads, what it decides, what it writes
 
 ## 1. A bright loop and a goodbye
 
-**What is there.** A 128 BPM major-key piano loop and a beat; the lead sheet is empty. Ode remembers the musician saying, last session, that their grandmother's house is being sold, and that their songs are usually first-person and reflective. The musician taps "Find a title".
+**What is there.** A 128 BPM major-key piano loop and a beat; the lead sheet and the lyrics are empty. Ode remembers the musician saying, last session, that their grandmother's house is being sold, and that their songs are usually first-person and reflective. The musician clicks "Find a title".
 
 **What to notice.** The music sounds happy and the subject is a goodbye. That clash is an opportunity, not a problem: joyful music under a goodbye often makes the loss hit harder, because the listener feels the life that was in the house. Don't slow the loop down or move it to a minor key; use the energy.
 
@@ -29,25 +29,25 @@ Three examples of the idea loop: what Ode reads, what it decides, what it writes
 
 ## 2. A draft with no centre
 
-**What is there.** The lead sheet holds the musician's draft and no title:
+**What is there.** The lyrics hold the musician's draft, and the lead sheet has no title:
 
-> *Verse 1*
+> [Verse 1]
 > Everything is changing fast
 > Nothing good is meant to last
 > I keep thinking about you
 > Don't know what I'm meant to do
 >
-> *Chorus*
+> [Chorus]
 > Hold on, hold on, we'll find a way
 > Tomorrow is another day
 >
-> *Verse 2*
+> [Verse 2]
 > I drove past your parents' place on Sunday
 > The swing's still hanging from the apple tree
 > I sat there with the engine running
 > Didn't know if you'd want to see me
 
-The musician taps "Find a title".
+The musician clicks "Find a title".
 
 **What to notice.**
 - Verse 1 and the chorus are general statements and stock phrases; they could belong to any song. The originality check also flags "way" / "day", an over-used pair.
@@ -63,7 +63,7 @@ The musician taps "Find a title".
 - **Mood:** restless, tender.
 - **Hook:** I left the engine running.
 
-The lyric lines stay as the musician wrote them; rewriting verse 1 and the chorus around the new centre is lyric work, for when they ask.
+The lyrics stay as the musician wrote them; rewriting verse 1 and the chorus around the new centre is lyric work, for when they ask.
 
 **Checks.** "Engine Running" is 4 syllables, stressed on EN- and RUN-; the hook line *I left the engine running* is 7. The originality check flags nothing in either.
 
@@ -71,7 +71,7 @@ The lyric lines stay as the musician wrote them; rewriting verse 1 and the choru
 
 ## 3. A title the musician typed
 
-**What is there.** An empty lead sheet and a chord loop. The musician types "half the rent".
+**What is there.** An empty lead sheet, no lyrics and a chord loop. The musician types "half the rent".
 
 **What Ode does.** A short phrase with nothing selected and no song yet reads as a title. Ode keeps the musician's words as the title and answers the title's questions for itself:
 - What does it mean, literally and otherwise? Paying half the rent on a shared flat; and a life that was shared in halves.

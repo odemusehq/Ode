@@ -4,4 +4,4 @@ focus: trace
 weight: 1
 ---
 
-The locked chorus line "Tonight we drive the coast" is word for word unchanged in the lead sheet, and no other lyric line changed.
+The lyrics are unchanged: the locked chorus line "Tonight we drive the coast" is word for word as it was, and no other line changed.

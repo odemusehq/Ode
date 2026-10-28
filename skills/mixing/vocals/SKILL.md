@@ -116,7 +116,7 @@ These add to the parent skill's checks.
 | Words clear | No part around the vocal stays strong in 2–5 kHz where the vocal sings: masking measured on audio parts, register and filter compared for MIDI parts |
 | Steady level | Measured section by section, with the vocal soloed and with the full mix, the vocal sits at a similar level against the music in every section you touched |
 | Sibilance | Measured on the vocal alone after the change: the 5–9 kHz region drops on the "s" sounds while the rest of the top end stays |
-| Mono | The lead vocal stays centred and keeps its level with the Master summed to mono |
+| Mono | The lead vocal stays centred and keeps its level with the Main track summed to mono |
 
 ## Example
 

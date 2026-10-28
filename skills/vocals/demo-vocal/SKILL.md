@@ -35,7 +35,7 @@ The loop is the vocals skill's (read, decide, change in place, verify, let them 
 
 ### 1. Read
 
-- The section to sing (the selected one; the chorus when nothing is selected — short demos are quicker to make and to judge), its lyric lines from the lead sheet, and the melody notes they are sung on.
+- The section to sing (the selected one; the chorus when nothing is selected — short demos are quicker to make and to judge), its lines from the lyrics (the stanza under its label), and the melody notes they are sung on.
 - The singer's range, the accent setting, and whether a consented recording of their voice is already saved.
 
 ### 2. Decide and prepare
@@ -52,7 +52,7 @@ Prepare the setting as if a singer were about to read it: every syllable on its 
 | Check | Correct when |
 |---|---|
 | Consent | a recording of this artist's own voice is saved with their yes |
-| Syllables | each line has as many notes as one of its syllable counts, or melismas chosen on purpose, and the demo uses that same reading |
+| Syllables | the lyrics-to-melody check gives each line a phrase with as many notes as one of its syllable counts, or melismas chosen on purpose, and the demo uses that same reading |
 | Prosody | the prosody check finds no stressed syllable on a weaker note than an unstressed neighbour |
 | Singability | the singability check finds no closed vowel on a high held note and no consonant cluster on a very short note |
 | Range | every note sits inside the singer's range; a demo pushed outside it sounds strained and misleads everyone |

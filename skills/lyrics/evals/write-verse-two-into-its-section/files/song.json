@@ -7,9 +7,7 @@
     "pronunciation": { "mode": "set", "value": "us" },
     "genre": { "mode": "set", "value": "folk" }
   },
-  "tempo": 78,
-  "key": { "root": 2, "scale": "Major" },
-  "timeSignature": { "numerator": 4, "denominator": 4 },
+  "lyrics": "[Verse 1]\nOn Sundays Grandma tipped them out\nShe'd let me pick the silver star\nI'd line them up along the rug\nIt all goes back into the jar",
   "sections": [
     {
       "id": "intro",
@@ -17,7 +15,6 @@
       "name": "Intro",
       "startBeat": 0,
       "lengthBeats": 16,
-      "lines": [],
       "chords": [
         { "beat": 0, "lengthBeats": 4, "symbol": "D" },
         { "beat": 4, "lengthBeats": 4, "symbol": "G" },
@@ -31,12 +28,6 @@
       "name": "Verse 1",
       "startBeat": 16,
       "lengthBeats": 32,
-      "lines": [
-        { "id": "v1-l1", "text": "On Sundays Grandma tipped them out" },
-        { "id": "v1-l2", "text": "She'd let me pick the silver star" },
-        { "id": "v1-l3", "text": "I'd line them up along the rug" },
-        { "id": "v1-l4", "text": "It all goes back into the jar", "locked": true }
-      ],
       "chords": [
         { "beat": 0, "lengthBeats": 4, "symbol": "D" },
         { "beat": 4, "lengthBeats": 4, "symbol": "G" },
@@ -54,7 +45,6 @@
       "name": "Verse 2",
       "startBeat": 48,
       "lengthBeats": 32,
-      "lines": [],
       "chords": [
         { "beat": 0, "lengthBeats": 4, "symbol": "D" },
         { "beat": 4, "lengthBeats": 4, "symbol": "G" },
@@ -72,7 +62,6 @@
       "name": "Verse 3",
       "startBeat": 80,
       "lengthBeats": 32,
-      "lines": [],
       "chords": [
         { "beat": 0, "lengthBeats": 4, "symbol": "D" },
         { "beat": 4, "lengthBeats": 4, "symbol": "G" },
@@ -88,7 +77,7 @@
   "links": [
     { "tag": "k4n8", "role": "topline", "description": "Lead vocal melody, one clip per sung section" }
   ],
-  "locked": [],
+  "locked": ["[Verse 1] line 4: \"It all goes back into the jar\""],
   "credits": [],
   "notes": ["Form: three verses and no chorus; the hook closes every verse."]
 }

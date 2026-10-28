@@ -3,7 +3,7 @@ name: lock-to-kick-in-place
 context:
   scaffold_script: place-files.sh
 expected_outcome: |
-  In Auto mode (the default), with the Bass clip "Bass A" selected and "Lock to the kick" tapped, Ode
+  In Auto mode (the default), with the Bass clip "Bass A" selected and "Lock to the kick" clicked, Ode
   reads the kick notes in the Drums clip "Beat A" (beat 1, the "and" of 2 and the "and" of 3 in every
   bar, plus the "a" of 4 in bar 4), the snare on 2 and 4, and the chords in the Keys clip (Am, F, C, G).
   It rewrites the notes of "Bass A" in place: each bar starts on its chord's root with the kick on beat

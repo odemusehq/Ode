@@ -1,31 +1,31 @@
 ---
 name: release
-description: Prepare a finished song for release as files, without changing the Set — cover art as three or four images to pick from (square, 3000 × 3000, built from this song's own images, no text unless asked, never imitating another artist's artwork), the lyric sheet from the Lyrics tab, credits with what is known and every gap marked, and a clearance check of every sample, isolated sound and generated element in the song — then report in one line what was made and what still stands in the way of release. Use this whenever the musician taps Release or asks for cover art, artwork, a lyric sheet, credits, splits, songwriter or publishing details, ISRC or UPC codes, metadata, or what they need before putting a song out, even if they don't say "release".
+description: Prepare a finished song for release as files, without changing the Set — cover art as three or four images (square, 3000 × 3000, built from this song's own images, no text unless asked, never imitating another artist's artwork) that the musician picks from in one question showing the images, the lyric sheet from the song's lyrics, credits with what is known and every gap asked in one question or named, and a clearance check of every sample, isolated sound and generated element in the song — then report in one line what was made and what still stands in the way of release. Use this whenever the musician asks to prepare the release or asks for cover art, artwork, a lyric sheet, credits, splits, songwriter or publishing details, ISRC or UPC codes, metadata, or what they need before putting a song out, even if they don't say "release".
 ---
 
 # Release
 
-Release preparation turns a finished song into what a distributor and the listening platforms need: artwork, lyrics, credits and metadata, with every element cleared so the musician keeps the right to publish their song. Ode makes these as files in the project's release folder and shows them in the Release tab; it doesn't change the Set, and the musician uploads through their own distributor.
+Release preparation turns a finished song into what a distributor and the listening platforms need: artwork, lyrics, credits and metadata, with every element cleared so the musician keeps the right to publish their song. Ode makes these as files in the project's release folder (Ode/release); it doesn't change the Set, and the musician uploads through their own distributor.
 
 Distributors and platforms each have their own requirements, and they change from time to time; the guidance below covers what is commonly asked.
 
 ## The loop
 
-1. **Read.** The lead sheet: title, what the song is about (theme, story, mood, hook), the lyric lines by section, credits, locked lines, and the notes on where samples and generated sounds came from. The Set, from the project map: every element that wasn't played or programmed from scratch — each audio clip's file, each Simpler and Drum Rack sample, anything isolated or generated. What Ode knows about the artist (artist name, past covers, dislikes) and the spelling set in Personalisation.
+1. **Read.** The lead sheet: title, what the song is about (theme, story, mood, hook), credits, what is locked, and the notes on where samples and generated sounds came from; and the lyrics, stanza by stanza under their labels. The Set, from the project map: every element that wasn't played or programmed from scratch — each audio clip's file, each Simpler and Drum Rack sample, anything isolated or generated. What Ode knows about the artist (artist name, past covers, dislikes) and the spelling setting.
 2. **Decide** three or four cover directions from this song's own images and mood, what the lyric sheet holds, what the credits can say from known facts, and the clearance status of every element.
 3. **Make the files**; the Set stays exactly as it is:
-   - **Cover art:** one image per brief, three or four in all, so the musician picks in the Release tab. Every version stays in the release folder.
-   - **The lyric sheet,** from the lead sheet's lines.
-   - **The credits,** from the lead sheet and what the musician has said, with every unknown fact marked missing; the Release tab's short form asks the musician for those.
+   - **Cover art:** one image per brief, three or four in all. Then ask once which to use: one line whose answers are the covers ("Cover 1" … "Cover 4"), shown as their images; the pick becomes the release cover. Every version stays in the release folder.
+   - **The lyric sheet,** from the lyrics, with their labels as the section labels.
+   - **The credits,** from the lead sheet and what the musician has said. A missing fact that two to four answers cover (who wrote the lyrics, when only the musician and a named collaborator could have) is asked in one question; every other unknown fact is marked missing and named in the result line.
    - **The clearance list,** in the lead sheet's notes: every sampled, isolated or generated element with its source, its rights and its status.
 4. **Verify** with the checks below, fixing what Ode can fix; what only the musician can resolve goes in the result line, worst first.
-5. **Let them see it.** The Release tab shows the covers to pick from and the files; nothing plays.
+5. **Let them see it.** The musician sees the covers in the question that picks one, and the files are in the release folder; nothing plays.
 6. **Report in one line:** what was made, then " · " and what was checked or still blocks release. For example:
-   - "Release files ready: 4 covers to pick from, lyric sheet, credits with 5 gaps · vocal chop has no known source: clear it or replace it before upload."
-   - "3 new covers, warmer, with the title in large type · briefs spell the title as in the metadata; the lettering needs a look."
-   - "Lyric sheet updated to the Lyrics tab: verse 2 rewritten, repeats written out · UK spelling, no explicit lines."
+   - "Release files ready: cover 2 as you picked, lyric sheet, credits missing legal names, splits and publishers · vocal chop has no known source: clear it or replace it before upload."
+   - "Cover 6 is the cover now: warmer, with the title in large type · the brief spells the title as in the metadata; the lettering needs a look."
+   - "Lyric sheet updated from the lyrics: verse 2 rewritten, repeats written out · UK spelling, no explicit lines."
 
-**Again** on cover art makes three or four new images from different briefs; the earlier ones stay in the folder.
+**Again** on cover art makes three or four new images from different briefs and asks again which to use; the earlier ones stay in the folder.
 
 **Outside the usual style.** When a cover departs from the artist's usual artwork (painted where their covers are photographs, bright where they are muted), the result line says so.
 
@@ -34,17 +34,17 @@ Distributors and platforms each have their own requirements, and they change fro
 | Check | Correct when |
 |---|---|
 | Cover briefs | Each brief comes from this song (its title, story, lyric images, mood); asks for a square 3000 × 3000 RGB image; has no text unless the musician asked, and any text spells the title and artist exactly as in the metadata; names nothing stores reject (logos, brands, other artists' names or likeness, URLs, "out now"); describes one clear subject that reads at thumbnail size |
-| Lyric sheet | Matches the lead sheet line for line, with section labels; every repeat written out in full as sung; spelling as set in Personalisation; the title identical to the lead sheet's |
+| Lyric sheet | Matches the lyrics line for line, with their labels as section labels; every repeat written out in full as sung; spelling as the spelling setting says; the title identical to the lead sheet's |
 | Originality | No lyric line flagged as a likely quotation; clichés are a note, not a blocker |
 | Credits | Every name and role comes from the lead sheet or the musician; splits, when given, add up to 100%; nothing invented |
 | Clearance | Every element in the Set is on the clearance list with a known source. Anything taken from someone else's recording that isn't cleared, and anything whose source is unknown, is flagged |
 | Explicit | Any explicit line means the release is flagged explicit, and a clean version needs its own lyric sheet |
 
-When a recording of the final vocal exists, compare a transcription of it with the lead sheet; lines sung differently are named in the result line, because the lyric sheet must match the recording and only the musician knows which version is right.
+When a recording of the final vocal exists, compare a transcription of it with the lyrics; lines sung differently are named in the result line, because the lyric sheet must match the recording and only the musician knows which version is right.
 
 ## Questions
 
-Never ask for facts in prose and never invent them: credits, splits, codes and dates come from the musician or their distributor, and the missing ones are marked in the Release tab's short form. The usual defaults (no text on the cover, the Personalisation spelling) need no question. Ask one line with buttons only when the answer changes what you make.
+Never ask for facts in prose and never invent them: credits, splits, codes and dates come from the musician or their distributor. Ask at most two questions, each one line with buttons: which cover to use, with the covers as the answers shown as images; and one missing credit, when two to four answers cover it. Every other gap is marked missing in the credits and named in the result line. The usual defaults (no text on the cover, the spelling setting) need no question. In Let me hear it, ask nothing: make the cover that fits the song best the release cover, say which in the result line, and name the missing credits.
 
 ## Rights and clearance
 
@@ -76,7 +76,7 @@ The image model creates artwork from a brief, so the brief decides the result. A
 
 - **The words as sung on the final recording,** with section labels (Verse 1, Pre-Chorus, Chorus, Bridge, Outro) on the printable sheet; lyric services often want plain lines without labels, so follow the distributor's guidance.
 - **Repeats written out in full,** line by line as sung, never "Chorus x2".
-- **Consistent spelling** in UK or US English as set in Personalisation, a capital at the start of each line, light and consistent punctuation.
+- **Consistent spelling** in UK or US English as the spelling setting says, a capital at the start of each line, light and consistent punctuation.
 - **Backing lines and ad-libs** in parentheses only when they are clearly part of the song.
 - **The title** matches the metadata exactly.
 

@@ -117,12 +117,12 @@ Controls: Gain, Width, Mono, Bass Mono with an adjustable frequency, Balance, po
 - **Gain** at the start of a chain sets the level into the devices; at the end it matches levels for fair comparisons.
 - **Width** below 100% narrows; 0% is mono.
 - **Bass Mono** makes everything below the set frequency (typically 100–150 Hz) mono.
-- **Mono** on the Master is a quick mono check; take it off afterwards.
+- **Mono** on the Main track is a quick mono check; take it off afterwards.
 - **Polarity invert** fixes cancellation between layers or microphones; keep the setting with more low end and a clearer attack.
 
 ## Limiter (in a mix)
 
-Keep the Limiter off the Master while mixing. On individual tracks it can catch rare peaks (a stray loud hit), set to touch only those peaks. If the musician wants a louder rough mix to play to someone, a limiter goes last on the Master, just before the Ode device, and is switched off again for mixing; the mastering skill covers real limiting.
+Keep the Limiter off the Main track while mixing. On individual tracks it can catch rare peaks (a stray loud hit), set to touch only those peaks. If the musician wants a louder rough mix to play to someone, a limiter goes last on the Main track, just before the Ode device, and is switched off again for mixing; the mastering skill covers real limiting.
 
 ## The mixer itself
 
@@ -130,4 +130,4 @@ Keep the Limiter off the Master while mixing. On individual tracks it can catch 
 - Live's split stereo pan mode pans the left and right channels of a stereo track independently, useful for narrowing a wide recording or placing its sides.
 - Post-fader sends keep the effect level in proportion to the fader; pre-fader sends keep it constant whatever the fader does.
 - Group tracks are buses; return tracks hold shared effects.
-- The Ode device sits last on the Master and measures what reaches it, so every Master device goes before it.
+- The Ode device sits last on the Main track and measures what reaches it, so every other device on the Main track goes before it.

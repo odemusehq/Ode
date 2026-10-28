@@ -7,7 +7,7 @@ expected_outcome: |
   The Pad track plays chords in the chorus on a Drift that sounds thin and buzzy: two saws, Filter
   Freq 18000 Hz, Filter Res 0.45, Env 1 Attack 2 ms, Env 1 Release 300 ms, no effects after it. Its
   chords sit in the same octave as the Lead Vox (audio) in the chorus. The musician selected the Pad's
-  chorus clip and tapped "Warmer".
+  chorus clip and clicked "Warmer".
 
   Ode changes the existing Drift in place, as one undo step: Filter Freq comes down to roughly
   1.5–5 kHz with Filter Res no higher than 0.45, and it may soften the source (oscillator 2 from Saw to

@@ -1,6 +1,6 @@
 ---
 name: prosody
-description: Make words and music agree in the Set — stressed syllables on strong beats, long notes on open vowels, no consonant clusters on fast notes, phrases that can be sung in one breath, and section shapes that feel settled or unsettled as they should. Ode fixes these in place, by moving the melody's notes or changing the words in the lead sheet, and checks the result with its prosody and singability checks. Use this whenever words meet a melody — a "stress off" or "hard to sing" fix, "Set to melody", a topline written or edited under existing words, words written for an existing melody, a line that "sounds wrong", "feels awkward" or "doesn't hit" — and before reporting any lyric that is sung on notes.
+description: Make words and music agree in the Set — stressed syllables on strong beats, long notes on open vowels, no consonant clusters on fast notes, phrases that can be sung in one breath, and section shapes that feel settled or unsettled as they should. Ode fixes these in place, by moving the melody's notes or changing the words in the song's lyrics, and checks the result with its prosody and singability checks. Use this whenever words meet a melody — a "stress off" or "hard to sing" fix, a topline written or edited under existing words, words written for an existing melody, a line that "sounds wrong", "feels awkward" or "doesn't hit" — and before reporting any lyric that is sung on notes.
 ---
 
 # Prosody
@@ -10,9 +10,9 @@ Prosody is the fit between what is said and how it is set. When it works, the wo
 ## The loop
 
 1. **Read.**
-   - The line in the lead sheet and the notes it is sung on: the vocal melody clip in the section's bars, split into phrases at the rests, line 1 on the first phrase (the syllables skill explains how to find them).
-   - What is locked: lyric lines marked locked in the lead sheet, and anything its locked list names (a melody the musician loves, a recorded vocal).
-   - The time signature, the tempo, the song's key, and the vocal range from the Personalisation settings (or a typical range when it isn't set).
+   - The line in the lyrics ("[Chorus] line 1") and the notes it is sung on: the lyrics-to-melody check splits the vocal melody in the section's bars into one phrase per line and reports each line's stress problems against its phrase (the syllables skill explains how to find the melody).
+   - What is locked: everything the lead sheet's locked list names (a lyric line, a melody the musician loves, a recorded vocal).
+   - The time signature, the tempo, the song's key, and the vocal range from the settings (or a typical range when it isn't set).
    - The hand edits since the last request: if the musician just moved notes or retyped the line, start from what they did.
 2. **Decide** the smallest change that puts the stress right, in this order:
    1. **Rhythm only:** shift a note, shorten or lengthen it, add or drop a pickup. Words and pitches stay as they are.
@@ -20,14 +20,14 @@ Prosody is the fit between what is said and how it is set. When it works, the wo
    3. **The whole line**, keeping its meaning and its rhyme.
    4. **Pitch:** make the stressed syllable the higher note, when rhythm can't do it.
    Locked words mean you fix the notes. A locked melody means you fix the words. When both are locked there is nothing to change: say in the result line what still fails.
-3. **Change in place.** Edit the notes of the existing melody clip, or the line's words in the lead sheet. Never put the fix in a new clip, take or track: Again gives another take and the version history keeps the old one. Moved notes stay in the song's key and inside the singer's range.
+3. **Change in place.** Edit the notes of the existing melody clip, or the line's words in the lyrics, saved against the revision you read. Never put the fix in a new clip, take or track: Again gives another take and the version history keeps the old one. Moved notes stay in the song's key and inside the singer's range.
 4. **Verify** every line whose words or notes you changed:
    - **Prosody check** against the new notes: it reports no stress problem. That means no stressed syllable on a weaker note than an unstressed neighbour, no weak syllable on the line's longest note, and no function word on the melodic peak.
    - **Syllable check:** one note per syllable, or a melisma only where you meant one, on an open, stressed vowel.
    - **Singability check:** open vowels on long and high notes, no consonant clusters on very short notes, and a rest to breathe at least every eight beats or so.
    - **Key and range:** every moved note is in the key and inside the singer's range.
    Fix and check again, up to three rounds; if a problem remains, the result line says which.
-5. **Let them hear it.** After your turn Ode plays the bars you changed, from a bar earlier when the change is at the start of a section. You don't start playback.
+5. **Let them hear it.** After your turn Ode plays what changed: moved notes in their bars, from a bar earlier when the change is at the start of a section; changed words from the locator named like the line's label to the next locator. You don't start playback.
 6. **Report in one line**: what moved or changed · what was checked. For example:
    - "Verse 2, line 1: 'for' now comes in on the 'and' of 4, so 'forget' lands on GET (beat 1) · no stress problems, same pitches."
    - "Bridge line 3: the long note moved from 'the' to 'far' · no stress problems, open 'ah' on the held note."

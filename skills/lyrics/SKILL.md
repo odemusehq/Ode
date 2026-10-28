@@ -1,30 +1,38 @@
 ---
 name: lyrics
-description: Write and rewrite song lyrics in place in the lead sheet — verses, pre-choruses, choruses, bridges and single lines — in the musician's own voice, fitted to the notes they are sung on and checked for syllables, stress, rhyme and clichés before the musician hears them. Use this whenever the request is about words — "Write verse 2", "Less telling", "Fresher images", "Make the chorus hit", a weak, flat, cheesy or wordy line, words for an existing melody, a lyric section selected in Live — and whenever you change a lyric line for any other reason, even if the musician only says "help with the second verse".
+description: Write and rewrite song lyrics in place in the song's lyrics, the one text the musician and Ode both edit — verses, pre-choruses, choruses, bridges and single lines, found by their label and number ("[Verse 2] line 3") — in the musician's own voice, fitted to the notes they are sung on and checked for syllables, stress, rhyme and clichés before the musician hears them. Use this whenever the request is about words — "Write verse 2", "Less telling", "Fresher images", "Make the chorus hit", a weak, flat, cheesy or wordy line, words for an existing melody, a lyric section selected in Live — and whenever you change a lyric line for any other reason, even if the musician only says "help with the second verse".
 ---
 
 # Lyrics
 
-A good lyric sounds like a person talking, fits its melody, and makes the listener see and feel something on first hearing. Ode writes and edits the lyric where it lives, in the lead sheet's sections and lines, in the musician's voice; it checks every line it touches and lets them hear it. The musician keeps going, presses Undo, or asks for Again.
+A good lyric sounds like a person talking, fits its melody, and makes the listener see and feel something on first hearing. Ode writes and edits the lyric where it lives, in the song's lyrics, in the musician's voice; it checks every line it touches and lets them hear it. The musician keeps going, presses Undo, or asks for Again.
+
+## The lyrics
+
+- The lyrics are one text that the musician types into while Ode edits it too: one sung line per line, a blank line between stanzas.
+- A line in square brackets is a label: it names the section ("[Chorus 2]") and isn't sung or counted. A line is found by its label and number: "[Verse 2] line 3" is the third sung line under [Verse 2].
+- A chorus written out more than once in the text changes in every copy.
+- Read the text and its revision at the start of the request, and save the whole text against that revision. When the save reports conflicts, the musician changed the same lines while you worked: their lines were kept. Leave them, and say so in the result line.
+- Give a new stanza the label its section's locator has ("[Verse 2]"): Ode plays a lyric change from the locator named like its label.
 
 ## The loop
 
 1. **Read.**
-   - The lead sheet: the title and what the song is about, the sections in order with their lines, which lines are locked, and any notes about the form.
-   - The notes each line is sung on: the vocal melody clip in the section's bars, split into phrases at the rests, line 1 on the first phrase (the syllables skill explains how to find them). A section with no melody yet takes its matching section's lines as the reference (verse 1 for verse 2).
+   - The lyrics, and the lead sheet: the title and what the song is about, the sections in order, what is locked, and any notes about the form.
+   - The notes each line is sung on: the lyrics-to-melody check splits the vocal melody in the section's bars into one phrase per line and counts each line against its phrase (the syllables skill explains how to find the melody). A section with no melody yet takes its matching section's lines as the reference (verse 1 for verse 2).
    - The matching section: run the syllable, stress and rhyme checks on it to learn the counts, stress patterns and scheme the new lines must follow.
    - The musician's voice: their lines in this song and what Ode remembers about their lyric voice (below).
    - The hand edits since the last request: a line they just typed is their newest intent; keep it unless they asked you to change it.
-   - The settings: spelling and pronunciation (UK or US), and the genre, which tells you which sub-skill to read.
+   - The settings: spelling and pronunciation (UK or US), and the genre, which tells you which sub-skill to read. When the musician tells you their genre or the accent they write in, store it as their setting.
 2. **Decide** with the craft below: what the section has to do, what exactly is wrong with the line (meaning, image, sound, fit with the notes, or rhyme), and the smallest change that fixes it. Write inside the musician's habits by default.
 3. **Change in place.**
-   - Edit the existing lines in the lead sheet: same section, same line. New lines go into the section they belong to: an empty verse 2 gets its lines; a new bridge goes where the bridge is sung.
-   - Never put alternative lines in extra sections, clips or takes. Again gives another take, and the version history keeps every earlier one.
-   - Never change a locked line. If it causes a problem (its count, its rhyme), work around it in the lines you may change, and say so in the result line.
-   - A chorus is sung more than once: change a chorus line in every chorus section that sings it, unless the musician varied the last chorus on purpose.
+   - Edit the existing lines in the lyrics: the same line under the same label. New lines go where they are sung: verse 2's lines under a "[Verse 2]" label after verse 1; a new bridge where the bridge is sung.
+   - Never put alternative lines in the text, in clips or in takes. Again gives another take, and the version history keeps every earlier one.
+   - Never change a line the lead sheet lists as locked. If it causes a problem (its count, its rhyme), work around it in the lines you may change, and say so in the result line.
+   - A chorus is sung more than once: change a chorus line in every copy of the chorus in the text, unless the musician varied the last chorus on purpose.
    - Keep the musician's best words, and change only what the request is about.
 4. **Verify** every line you wrote or changed:
-   - **Syllable check:** one of the line's counts equals the number of notes it is sung on (with no melody, the matching line's count).
+   - **Lyrics-to-melody check:** one of the line's counts equals the notes of its phrase (with no melody, the syllable check against the matching line's count).
    - **Prosody check** against its notes: no stressed syllable sits weaker than its unstressed neighbours. With no melody, its stress pattern matches the matching line's.
    - **Rhyme check** in the musician's accent: each pair you meant to rhyme has the kind you meant, and the section's scheme matches its matching section.
    - **Singability check:** open vowels on long and high notes, no consonant clusters on very short notes.
@@ -32,7 +40,7 @@ A good lyric sounds like a person talking, fits its melody, and makes the listen
    - Point of view, tense and who "you" is agree with the lines around it (your own read).
    - A word the checks mark as uncertain is never reported as checked; say "pronunciation not certain" in the result line.
    Fix what fails and check again, up to three rounds; then the result line says what still fails.
-5. **Let them hear it.** After your turn Ode plays the bars where the changed lines are sung, so the musician can sing them over the track. You don't start playback.
+5. **Let them hear it.** After your turn Ode plays the section of the first changed line, from the locator named like its label to the next locator, so the musician can sing it over the track; when no locator has that name, nothing plays. You don't start playback.
 6. **Report in one line**: what changed · what was checked. For example:
    - "Verse 1, line 4 now 'The station clock is running late' · 8 syllables on its 8 notes, no stress problems, no clichés."
    - "Bridge written: the night you finally called, in the past tense · four lines on the bridge melody, every count fits its notes, ABAB, no over-used pairs."
@@ -153,9 +161,9 @@ Decide what is wrong before changing anything: the meaning, the image, the sound
 
 ### Worked example
 
-Verse 1, line 3 (locked): *The kettle clicks, the window shakes*: 8 syllables, stressed on KET-, CLICKS, WIN- and SHAKES, every stress on a beat. Verse 2, line 3 is sung on the same 8 notes: *I'm feeling lonely without you*. Its count fits, but the prosody check finds the unstressed "you" on the line's long final note, and it tells the feeling instead of showing it. The verse is ABCB, so line 3 doesn't need to rhyme.
+Verse 1, line 3 (on the lead sheet's locked list): *The kettle clicks, the window shakes*: 8 syllables, stressed on KET-, CLICKS, WIN- and SHAKES, every stress on a beat. Verse 2, line 3 is sung on the same 8 notes: *I'm feeling lonely without you*. Its count fits, but the prosody check finds the unstressed "you" on the line's long final note, and it tells the feeling instead of showing it. The verse is ABCB, so line 3 doesn't need to rhyme.
 
-The musician taps "Less telling". Ode rewrites verse 2, line 3 in place: *I cook too much and freeze the rest*. The syllable check gives 8 for its 8 notes, the prosody check reports no stress problems, the originality check flags nothing, and it shows the absence through a habit of cooking for two that hasn't stopped. Result line: "Verse 2, line 3 now 'I cook too much and freeze the rest' · 8 syllables on its 8 notes, no stress problems, no clichés."
+The musician clicks "Less telling". Ode rewrites verse 2, line 3 in place: *I cook too much and freeze the rest*. The syllable check gives 8 for its 8 notes, the prosody check reports no stress problems, the originality check flags nothing, and it shows the absence through a habit of cooking for two that hasn't stopped. Result line: "Verse 2, line 3 now 'I cook too much and freeze the rest' · 8 syllables on its 8 notes, no stress problems, no clichés."
 
 On Again, a clearly different take of the same line: *Who gets your Sunday mornings now?* (8 syllables, no stress problems), with "· outside your usual style: a direct question instead of an image" if the musician usually writes in images.
 

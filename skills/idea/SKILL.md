@@ -1,6 +1,6 @@
 ---
 name: idea
-description: Find a song's centre and write it straight into the lead sheet — the title and what the song is about (theme, story, point of view, mood, hook) — built from the musician's own words and material, with the title and hook checked for syllables, stress and clichés. Use this whenever the musician taps "Find a title", asks for a title, hook, angle or concept, starts from a loop, a beat, a hum or an empty Set and needs something to write about, or when lyrics have lost their centre (verses that could swap places, a title sung once, all feeling and no situation), even if they never say "idea" or "concept".
+description: Find a song's centre and write it straight into the lead sheet — the title and what the song is about (theme, story, point of view, mood, hook) — built from the musician's own words and material, with the title and hook checked for syllables, stress and clichés. Use this whenever the musician clicks "Find a title", asks for a title, hook, angle or concept, starts from a loop, a beat, a hum or an empty Set and needs something to write about, or when lyrics have lost their centre (verses that could swap places, a title sung once, all feeling and no situation), even if they never say "idea" or "concept".
 ---
 
 # Song ideas
@@ -10,7 +10,7 @@ A topic is not an idea. "Heartbreak" is a topic. "Learning to cook for one after
 ## The loop
 
 1. **Read.**
-   - The lead sheet: the title, what the song is about, every section's lines and which are locked.
+   - The lead sheet (the title, what the song is about, what is locked) and the lyrics, every section's lines under its label.
    - The project map: tempo, key, which parts exist (a loop, a beat, a hummed melody), what is selected, and the hand edits since the last request, which show what the musician was just working on.
    - What Ode remembers about the artist: the themes, points of view and moods they usually write, the images they reach for, what they dislike, and situations from their life they have told you about.
 2. **Decide** with the craft below. Start from what the musician brought: their own phrases first (a striking line in a draft, a word in a hum), then the music, then what they have told you. Choose the one strongest direction; don't line up alternatives. Again gives another take, and the version history keeps this one.
@@ -21,14 +21,14 @@ A topic is not an idea. "Heartbreak" is a topic. "Learning to cook for one after
    - **point of view:** the person and tense, and who "you" is, without giving anyone a gender or identity the musician hasn't;
    - **mood:** in the musician's own terms, never read off the key;
    - **hook:** the hook line, usually the title line.
-   Idea work changes the title and what the song is about, not the lyric lines or the Set. Use a title the lyric already sings where you can; writing lines around a new title is lyric work, done when the musician asks ("Write the chorus", "Put the title in the chorus").
+   Idea work changes the title and what the song is about, not the lyrics or the Set. Use a title the lyric already sings where you can; writing lines around a new title is lyric work, done when the musician asks ("Write the chorus", "Put the title in the chorus").
 4. **Verify.**
    - **Syllable and stress check** on the title and the hook line: know the count and where the stresses fall. Good: the stresses fall on the important words, and the word most likely to be held has an open vowel ("go", "down", "stay", "far").
    - **Originality check** on the title and the hook line: no cliché and no over-used pair. A stock phrase, or the title of a very famous song, gets replaced, unless it is the musician's own choice: then keep it and say so in the result line.
    - **Prosody check**, when the title is already sung on notes: its stressed syllables on strong beats.
    - A word the check marks as uncertain (a name, slang) is never reported as checked.
    Fix and check again, up to three rounds; if something still fails, the result line says what.
-5. **Let them hear it.** A title and what the song is about change nothing in the Set, so there is nothing to play; the result line is the whole answer. If you also changed lines because the musician asked, Ode plays the bars where they are sung.
+5. **Let them hear it.** A title and what the song is about change nothing in the Set, so there is nothing to play; the result line is the whole answer. If you also changed lines because the musician asked, Ode plays their section, from the locator named like its label.
 6. **Report in one line**: the title and the song in a few words · what was checked. For example:
    - "Title: 'Spare Room': putting a friend up after their break-up, told by the host · 2 syllables, stress on SPARE and ROOM, no clichés."
    - "Song is now about the late shift at a launderette, told by the attendant · title 'Not in Service', 4 syllables, no clichés · outside your usual style: a character, not you."

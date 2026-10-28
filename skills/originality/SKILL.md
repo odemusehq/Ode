@@ -1,6 +1,6 @@
 ---
 name: originality
-description: Keep songs original, in place. Ode replaces clichés and over-used rhyme pairs in the lead sheet with fresh lines from the song's own world, rewrites lines that look like quotations, catches repeats of the artist's earlier songs, turns "like artist X" into general qualities, and reports its originality check honestly, as a warning and never a legal guarantee. Use this whenever a cliché fix is tapped ("2 clichés in the chorus · Fix"), before finishing any new lyric, title or hook, whenever a request names an artist, band or song as a reference ("in the style of", "sounds like", "a nod to"), when a line feels familiar or arrived too easily, when the musician asks whether a song is original or safe to release, and whenever someone asks to quote or borrow from an existing song.
+description: Keep songs original, in place. Ode replaces clichés and over-used rhyme pairs in the song's lyrics with fresh lines from the song's own world, rewrites lines that look like quotations, catches repeats of the artist's earlier songs, turns "like artist X" into general qualities, and reports its originality check honestly, as a warning and never a legal guarantee. Use this whenever a cliché fix is clicked ("2 clichés in the chorus · Fix"), before finishing any new lyric, title or hook, whenever a request names an artist, band or song as a reference ("in the style of", "sounds like", "a nod to"), when a line feels familiar or arrived too easily, when the musician asks whether a song is original or safe to release, and whenever someone asks to quote or borrow from an existing song.
 ---
 
 # Originality
@@ -10,10 +10,10 @@ Ode writes new material with the musician. It never reproduces or imitates exist
 ## The loop
 
 1. **Read.**
-   - The lines in question: the selected section, or the whole lyric when the musician asks about the song or a release. Also the title, the hook line and which lines are locked.
+   - The lines in question in the lyrics: the selected section, or the whole lyric when the musician asks about the song or a release. Also the title, the hook line and the lines the lead sheet lists as locked.
    - The originality check on those lines: clichés, over-used rhyme pairs, phrases repeated from the artist's earlier songs, and lines a model thinks may look quoted.
    - Who wrote each flagged line: the version history shows whether a line came from the musician's hand edits or from Ode.
-   - The notes each flagged line is sung on, so the new line fits them (the syllables skill explains how to find them).
+   - The notes each flagged line is sung on, so the new line fits them: the lyrics-to-melody check gives each line its phrase (the syllables skill explains how to find the melody).
 2. **Decide**, warning by warning:
    - **Cliché:** find the feeling underneath, then write a detail from this song's world that carries it, twist the phrase so it surprises, or cut it.
    - **Over-used rhyme pair:** re-end one line of the pair (the rhymes skill).
@@ -22,12 +22,12 @@ Ode writes new material with the musician. It never reproduces or imitates exist
    - **The title is the stock phrase:** the title is the musician's name for the song; don't rename it on your own. Fix the other lines and say in the result line that the title is a stock phrase.
    - **"Like artist X":** turn it into general qualities (below) and write new material with the lyrics skill.
    - **A request to quote or borrow an existing song:** don't write existing lyrics into the song. Write an original line that does the same job, and say so in the result line.
-3. **Change in place.** Replace the flagged lines in the lead sheet: same section, same line, and in every chorus section that sings them. Leave locked lines as they are and name them in the result line. Never put alternatives in new sections, clips or takes; Again gives another take, and the version history keeps the old one.
+3. **Change in place.** Replace the flagged lines in the lyrics: the same line under the same label, and in every copy of the chorus that sings them, saved against the revision you read. Leave locked lines as they are and name them in the result line. Never put alternatives in the text, in clips or in takes; Again gives another take, and the version history keeps the old one.
 4. **Verify:**
    - **Originality check again** on the changed section: no cliché, over-used pair, repeat or possible quotation left in the lines you changed. A warning you kept on purpose (the title, a callback, a locked line) is named in the result line.
-   - **Lyric checks** on every line you changed: the syllable check (one of its counts equals its notes), the prosody check (stresses on the strong notes) and the rhyme check in the musician's accent (the pair keeps the kind it had and the scheme still matches).
+   - **Lyric checks** on every line you changed: the lyrics-to-melody check (one of its counts equals the notes of its phrase), the prosody check (stresses on the strong notes) and the rhyme check in the musician's accent (the pair keeps the kind it had and the scheme still matches).
    Fix and check again, up to three rounds; if a warning remains, the result line says which.
-5. **Let them hear it.** After your turn Ode plays the bars where the changed lines are sung. You don't start playback.
+5. **Let them hear it.** After your turn Ode plays the section of the first changed line, from the locator named like its label to the next locator. You don't start playback.
 6. **Report in one line**: what changed · what was checked, with the originality result given as a warning, never as clearance. For example:
    - "Verse 1, line 3 now 'I sat in the car with the wipers on' instead of 'tears like rain' · 10 syllables on its 10 notes; originality check: no warnings (a warning, not a legal guarantee)."
    - "Chorus freshened except the title: 'Worlds Apart' is a stock phrase, kept as your title · new lines fit their notes, 'door' / 'floor' perfect (UK)."

@@ -1,6 +1,6 @@
 ---
 name: harmony
-description: Choose, fix, reharmonize and voice chords directly in the Set. Ode rewrites the chord part's notes in place, keeps the bassline and the lead sheet's chord chart in agreement with the new chords, and checks that every strong-beat melody note fits its chord, that voices move smoothly, that nothing turns muddy and that chord symbols are spelled for the key, then plays the bars it changed and reports in one line. Use this skill whenever a chord, keys, pad or guitar part is selected, or the musician taps or types anything about chords — "fresher chords", "less predictable", "darker", "brighter", "jazzier", "smoother voicing", "what goes under this melody", "this chord sounds wrong", a key change or a chord chart — even if they never say harmony.
+description: Choose, fix, reharmonize and voice chords directly in the Set. Ode rewrites the chord part's notes in place, keeps the bassline and the lead sheet's chord chart in agreement with the new chords, and checks that every strong-beat melody note fits its chord, that voices move smoothly, that nothing turns muddy and that chord symbols are spelled for the key, then plays the bars it changed and reports in one line. Use this skill whenever a chord, keys, pad or guitar part is selected, or the musician clicks a suggestion or types anything about chords — "fresher chords", "less predictable", "darker", "brighter", "jazzier", "smoother voicing", "what goes under this melody", "this chord sounds wrong", a key change or a chord chart — even if they never say harmony.
 ---
 
 # Harmony
@@ -222,7 +222,7 @@ Fit the chords to what the lyric does at that moment, not to a mood label. "Sad 
 
 ## Worked example: "fresher chords" under a held melody
 
-The musician selects the chorus keys (C major) and taps "Fresher chords". The melody holds E through bar 1, D through bar 2, C through bar 3 and D through bar 4; the keys and the bass play `| C | G | Am | G |` in root position.
+The musician selects the chorus keys (C major) and clicks "Fresher chords". The melody holds E through bar 1, D through bar 2, C through bar 3 and D through bar 4; the keys and the bass play `| C | G | Am | G |` in root position.
 
 Decision: keep the shape of the phrase and colour it — a secondary ii–V into Am, and a softer approach to the dominant at the end. Ode rewrites the keys' notes to `| Cmaj7 | Bm7♭5 E7 | Am7 | F6 G |`, voiced so common tones hold and the top voice stays under the vocal; moves the bass notes on each chord change to C, B, E, A, F and G in the bass's own rhythm; and updates the chorus chord chart in the lead sheet.
 

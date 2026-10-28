@@ -3,7 +3,7 @@ name: fill-into-chorus-in-place
 context:
   scaffold_script: place-files.sh
 expected_outcome: |
-  In Auto mode (the default), with the Drums clip "Verse" selected and "Fill into the chorus" tapped,
+  In Auto mode (the default), with the Drums clip "Verse" selected and "Fill into the chorus" clicked,
   Ode reads the Drum Rack's pads (kick 36, snare 38, clap 39, closed hat 42, open hat 46, crash 49; no
   toms), the verse and chorus drum clips, and the lead vocal, whose last verse word runs from beat 1 to
   the "and" of 2 in bar 8 (song beats 28 to 29.5). It edits in place: the last bar of the existing

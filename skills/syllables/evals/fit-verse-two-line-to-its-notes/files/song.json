@@ -7,9 +7,7 @@
     "pronunciation": { "mode": "set", "value": "us" },
     "genre": { "mode": "set", "value": "indie pop" }
   },
-  "tempo": 92,
-  "key": { "root": 7, "scale": "Major" },
-  "timeSignature": { "numerator": 4, "denominator": 4 },
+  "lyrics": "[Verse 1]\nThe clock is twenty minutes fast\nI sing the words and get them wrong\nThe heater ticks, the wipers squeak\nYou turn it up and sing along\n\n[Chorus]\nTake the long way home\nMiss the exit on purpose\nTake the long way home\nOne more mile we don't have to fight\n\n[Verse 2]\nWe pass the diner, then the school\nYou say you're fine, I say I'm fine\nI'm counting every headlight on the road\nYou reach across at every sign",
   "sections": [
     {
       "id": "intro",
@@ -17,7 +15,6 @@
       "name": "Intro",
       "startBeat": 0,
       "lengthBeats": 16,
-      "lines": [],
       "chords": [
         { "beat": 0, "lengthBeats": 4, "symbol": "G" },
         { "beat": 4, "lengthBeats": 4, "symbol": "Em" },
@@ -31,12 +28,6 @@
       "name": "Verse 1",
       "startBeat": 16,
       "lengthBeats": 32,
-      "lines": [
-        { "id": "v1-l1", "text": "The clock is twenty minutes fast" },
-        { "id": "v1-l2", "text": "I sing the words and get them wrong" },
-        { "id": "v1-l3", "text": "The heater ticks, the wipers squeak" },
-        { "id": "v1-l4", "text": "You turn it up and sing along" }
-      ],
       "chords": [
         { "beat": 0, "lengthBeats": 4, "symbol": "G" },
         { "beat": 4, "lengthBeats": 4, "symbol": "Em" },
@@ -54,12 +45,6 @@
       "name": "Chorus",
       "startBeat": 48,
       "lengthBeats": 32,
-      "lines": [
-        { "id": "c1-l1", "text": "Take the long way home" },
-        { "id": "c1-l2", "text": "Miss the exit on purpose" },
-        { "id": "c1-l3", "text": "Take the long way home" },
-        { "id": "c1-l4", "text": "One more mile we don't have to fight" }
-      ],
       "chords": [
         { "beat": 0, "lengthBeats": 4, "symbol": "C" },
         { "beat": 4, "lengthBeats": 4, "symbol": "G" },
@@ -77,12 +62,6 @@
       "name": "Verse 2",
       "startBeat": 80,
       "lengthBeats": 32,
-      "lines": [
-        { "id": "v2-l1", "text": "We pass the diner, then the school" },
-        { "id": "v2-l2", "text": "You say you're fine, I say I'm fine" },
-        { "id": "v2-l3", "text": "I'm counting every headlight on the road" },
-        { "id": "v2-l4", "text": "You reach across at every sign" }
-      ],
       "chords": [
         { "beat": 0, "lengthBeats": 4, "symbol": "G" },
         { "beat": 4, "lengthBeats": 4, "symbol": "Em" },

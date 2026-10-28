@@ -1,6 +1,6 @@
 ---
 name: bass
-description: Write and fix basslines directly in the Set. Ode edits the notes of the bass clip the musician points at so the line follows the chords and locks with the kick, checks roots on chord changes, key, starts against the real kick notes, space around the snare, register and clashes with other low parts, then plays the bars it changed and reports in one line. Use this skill whenever a bass, sub or 808 clip is selected, or the musician taps or types anything about the bassline, an 808, sub-bass, walking bass, or low end that sounds muddy, empty or clashing — "lock to the kick", "follow the chords", "more movement", "simpler", "add a bass" — even if they never say bass.
+description: Write and fix basslines directly in the Set. Ode edits the notes of the bass clip the musician points at so the line follows the chords and locks with the kick, checks roots on chord changes, key, starts against the real kick notes, space around the snare, register and clashes with other low parts, then plays the bars it changed and reports in one line. Use this skill whenever a bass, sub or 808 clip is selected, or the musician clicks a suggestion or types anything about the bassline, an 808, sub-bass, walking bass, or low end that sounds muddy, empty or clashing — "lock to the kick", "follow the chords", "more movement", "simpler", "add a bass" — even if they never say bass.
 ---
 
 # Bass
@@ -167,7 +167,7 @@ Chorus in A minor, 100 BPM, chords `| Am7 | Fmaj7 | C | G |`, kick on beat 1, th
 | G     | G1(1) r(½) G1(½) G1(1) r(½) G♯1(½) |
 ```
 
-The musician taps "More movement". Ode keeps the roots on the first two kicks of each bar and rewrites beats 3 and 4 with chord tones and steps into the next chord:
+The musician clicks "More movement". Ode keeps the roots on the first two kicks of each bar and rewrites beats 3 and 4 with chord tones and steps into the next chord:
 
 ```
 | Am7   | A1(1) r(½) A1(½) E1(1) G1(1) |
