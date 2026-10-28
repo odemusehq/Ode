@@ -1,157 +1,126 @@
-import type { UiEvent } from "../../shared/events";
-import { ApprovalStatus } from "../../ui-kit";
-import type { ChatRole } from "../../ui-kit";
-import { UI_CONFIG } from "./config";
-import { ChatEntryKind } from "./model";
-import type { ApprovalEvent, AppState, ChatEntry, MessageEntry, SubagentEvent, ToolEvent } from "./model";
+import type { Suggestion, UiEvent } from "../../shared/events";
+import type { VersionListItem } from "../../shared/versions";
+import { WhyStatus } from "./model";
+import type { AppState, ResultLine, WhyAnswer } from "./model";
 
-/** Applies one server event to the app state. */
+type QuestionEvent = Extract<UiEvent, { type: "question" }>;
+type ApprovalEvent = Extract<UiEvent, { type: "approval" }>;
+
+/**
+ * Applies one server event to the app state. Ode is not a chat: its replies arrive as result lines,
+ * so streamed text, tool calls and subagents are not shown (only "Why?" listens to Ode's words).
+ */
 export function reduceEvent(state: AppState, event: UiEvent): AppState {
   switch (event.type) {
     case "message":
-      return receiveMessage(state, event.role, event.text);
+      return event.role === "assistant" ? hearWhy(state, event.text) : state;
     case "text":
-      return appendText(state, event.delta);
     case "tool":
-      return upsertTool(state, event);
     case "subagent":
-      return upsertSubagent(state, event);
+      return state;
     case "approval":
       return addApproval(state, event);
     case "approval-resolved":
-      return setApprovalStatus(state, event.id, event.decision === "allow" ? ApprovalStatus.Allowed : ApprovalStatus.Denied);
+      return { ...state, approvals: state.approvals.filter((approval) => approval.id !== event.id) };
     case "busy":
-      return { ...state, busy: event.busy };
+      return event.busy ? startRequest(state) : finishRequest(state);
+    case "progress":
+      return { ...state, progress: event.text };
+    case "result":
+      return receiveResult(state, { text: event.text, versionId: event.versionId, undone: false });
+    case "question":
+      return addQuestion(state, event);
+    case "question-resolved":
+      return { ...state, questions: state.questions.filter((question) => question.id !== event.id) };
+    case "selection":
+      return { ...state, focus: event.label.trim() || null };
+    case "pointer":
+      return { ...state, focus: event.pointer.description.trim() || state.focus };
+    case "suggestions":
+      return { ...state, suggestions: fixesFirst(event.items) };
+    case "version":
+      return {
+        ...state,
+        versions: state.versions ? upsertVersion(state.versions, event.version) : null,
+        versionStamp: state.versionStamp + 1,
+      };
+    case "versions-truncated":
+      return state.versions ? { ...state, versions: truncateAfter(state.versions, event.afterId) } : state;
+    case "mode":
+      return { ...state, mode: event.mode };
     case "done":
-      return { ...finishStreaming(state), busy: false, costUsd: event.costUsd ?? state.costUsd };
+      return finishRequest(state);
     case "error":
-      return addError(finishStreaming(state), event.message);
+      return { ...state, error: event.message, progress: null, why: isAsking(state.why) ? null : state.why };
     case "live-status":
       return { ...state, live: event.status };
     case "song":
       return { ...state, song: event.leadSheet };
-    case "pointer":
-      return { ...state, pointer: event.pointer };
     case "meters":
       return { ...state, meters: { tracks: event.tracks, master: event.master } };
   }
 }
 
-export function addUserMessage(state: AppState, text: string): AppState {
-  return append(state, { kind: ChatEntryKind.Message, id: nextId(state), role: "user", text, streaming: false, pending: true });
+/** Suggestions with the fixes for problems first, otherwise in the server's order. */
+export function fixesFirst(items: readonly Suggestion[]): Suggestion[] {
+  return [...items.filter((item) => item.fix), ...items.filter((item) => !item.fix)];
 }
 
-export function addError(state: AppState, message: string): AppState {
-  return append(state, { kind: ChatEntryKind.Error, id: nextId(state), message });
-}
-
-export function setApprovalStatus(state: AppState, id: string, status: ApprovalStatus): AppState {
-  const approvals = state.approvals.map((approval) => {
-    if (approval.id !== id) return approval;
-    const keepsAlways = approval.status === ApprovalStatus.AlwaysAllowed && status === ApprovalStatus.Allowed;
-    return keepsAlways ? approval : { ...approval, status };
-  });
-  return { ...state, approvals };
-}
-
-function nextId(state: AppState): string {
-  return `entry-${state.nextEntry}`;
-}
-
-function append(state: AppState, entry: ChatEntry): AppState {
-  const chat = [...state.chat, entry].slice(-UI_CONFIG.chatEntryLimit);
-  return { ...state, chat, nextEntry: state.nextEntry + 1 };
-}
-
-function replaceAt(state: AppState, index: number, entry: ChatEntry): AppState {
-  const chat = state.chat.slice();
-  chat[index] = entry;
-  return { ...state, chat };
-}
-
-function lastIndexWhere(entries: readonly ChatEntry[], matches: (entry: ChatEntry) => boolean): number {
-  for (let index = entries.length - 1; index >= 0; index -= 1) {
-    const entry = entries[index];
-    if (entry && matches(entry)) return index;
+/** Adds a version, or replaces it if it is already listed; the list stays newest first. */
+export function upsertVersion(versions: readonly VersionListItem[], version: VersionListItem): VersionListItem[] {
+  if (versions.some((item) => item.id === version.id)) {
+    return versions.map((item) => (item.id === version.id ? version : item));
   }
-  return -1;
+  const time = Date.parse(version.time);
+  const index = versions.findIndex((item) => Date.parse(item.time) < time);
+  const position = index < 0 ? versions.length : index;
+  return [...versions.slice(0, position), version, ...versions.slice(position)];
 }
 
-function isMessage(entry: ChatEntry): entry is MessageEntry {
-  return entry.kind === ChatEntryKind.Message;
+/** A restore deleted every version after this one: the list keeps it and everything older. */
+function truncateAfter(versions: readonly VersionListItem[], afterId: string): readonly VersionListItem[] {
+  const index = versions.findIndex((item) => item.id === afterId);
+  return index <= 0 ? versions : versions.slice(index);
 }
 
-function receiveMessage(state: AppState, role: ChatRole, text: string): AppState {
-  const index =
-    role === "user"
-      ? lastIndexWhere(state.chat, (entry) => isMessage(entry) && entry.role === "user" && entry.pending && entry.text === text)
-      : lastIndexWhere(state.chat, (entry) => isMessage(entry) && entry.role === "assistant" && entry.streaming);
-  const existing = state.chat[index];
-  if (existing && isMessage(existing)) {
-    return replaceAt(state, index, { ...existing, text, streaming: false, pending: false });
+function isAsking(why: WhyAnswer | null): boolean {
+  return why?.status === WhyStatus.Asking;
+}
+
+/** A new request: the old progress and error go, and so does an old "Why?" answer. */
+function startRequest(state: AppState): AppState {
+  return { ...state, busy: true, progress: null, error: null, why: isAsking(state.why) ? state.why : null };
+}
+
+/** The request ended: a "Why?" still waiting keeps what Ode said, or goes if it said nothing. */
+function finishRequest(state: AppState): AppState {
+  const { why } = state;
+  const settled = why && isAsking(why) ? (why.text ? { status: WhyStatus.Answered, text: why.text } : null) : why;
+  return { ...state, busy: false, progress: null, why: settled };
+}
+
+/** The answer to "Why?" changes nothing in the Set, so it goes under the result line instead of replacing it. */
+function receiveResult(state: AppState, line: ResultLine): AppState {
+  if (isAsking(state.why) && line.versionId === null) {
+    return { ...state, why: { status: WhyStatus.Answered, text: line.text } };
   }
-  return append(state, { kind: ChatEntryKind.Message, id: nextId(state), role, text, streaming: false, pending: false });
+  return { ...state, result: line, why: null, error: null };
 }
 
-function appendText(state: AppState, delta: string): AppState {
-  const index = state.chat.length - 1;
-  const last = state.chat[index];
-  if (last && isMessage(last) && last.role === "assistant" && last.streaming) {
-    return replaceAt(state, index, { ...last, text: last.text + delta });
-  }
-  const finished = finishStreaming(state);
-  return append(finished, {
-    kind: ChatEntryKind.Message,
-    id: nextId(finished),
-    role: "assistant",
-    text: delta,
-    streaming: true,
-    pending: false,
-  });
+function hearWhy(state: AppState, text: string): AppState {
+  return isAsking(state.why) ? { ...state, why: { status: WhyStatus.Asking, text } } : state;
 }
 
-function finishStreaming(state: AppState): AppState {
-  if (!state.chat.some((entry) => isMessage(entry) && entry.streaming)) return state;
-  const chat = state.chat.map((entry) => (isMessage(entry) && entry.streaming ? { ...entry, streaming: false } : entry));
-  return { ...state, chat };
-}
-
-function upsertTool(state: AppState, event: ToolEvent): AppState {
-  const index = lastIndexWhere(state.chat, (entry) => entry.kind === ChatEntryKind.Tool && entry.toolId === event.id);
-  const existing = state.chat[index];
-  if (existing && existing.kind === ChatEntryKind.Tool) {
-    return replaceAt(state, index, {
-      ...existing,
-      name: event.name || existing.name,
-      status: event.status,
-      summary: event.summary ?? existing.summary,
-    });
-  }
-  return append(state, {
-    kind: ChatEntryKind.Tool,
-    id: nextId(state),
-    toolId: event.id,
-    name: event.name,
-    status: event.status,
-    summary: event.summary,
-  });
-}
-
-function upsertSubagent(state: AppState, event: SubagentEvent): AppState {
-  const index = lastIndexWhere(state.chat, (entry) => entry.kind === ChatEntryKind.Subagent && entry.taskId === event.id);
-  const existing = state.chat[index];
-  if (existing && existing.kind === ChatEntryKind.Subagent) {
-    return replaceAt(state, index, { ...existing, task: event.task || existing.task, status: event.status });
-  }
-  return append(state, { kind: ChatEntryKind.Subagent, id: nextId(state), taskId: event.id, task: event.task, status: event.status });
+function addQuestion(state: AppState, event: QuestionEvent): AppState {
+  const question = { id: event.id, text: event.text, options: event.options, answered: false };
+  const known = state.questions.some((item) => item.id === event.id);
+  const questions = known ? state.questions.map((item) => (item.id === event.id ? question : item)) : [...state.questions, question];
+  return { ...state, questions };
 }
 
 function addApproval(state: AppState, event: ApprovalEvent): AppState {
-  const details = { tool: event.tool, summary: event.summary, input: event.input };
-  if (state.approvals.some((approval) => approval.id === event.id)) {
-    const approvals = state.approvals.map((approval) => (approval.id === event.id ? { ...approval, ...details } : approval));
-    return { ...state, approvals };
-  }
-  const withApproval = { ...state, approvals: [...state.approvals, { id: event.id, ...details, status: ApprovalStatus.Pending }] };
-  return append(withApproval, { kind: ChatEntryKind.Approval, id: nextId(withApproval), approvalId: event.id });
+  const approval = { id: event.id, summary: event.summary, decided: false };
+  const known = state.approvals.some((item) => item.id === event.id);
+  const approvals = known ? state.approvals.map((item) => (item.id === event.id ? approval : item)) : [...state.approvals, approval];
+  return { ...state, approvals };
 }

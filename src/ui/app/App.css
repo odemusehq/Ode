@@ -33,6 +33,13 @@
   color: var(--color-text-muted);
 }
 
+.app-header__connection {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  padding: var(--space-2);
+}
+
 .app-logo {
   flex: none;
   width: var(--logo-size);
@@ -125,9 +132,9 @@
   grid-template-rows: auto minmax(0, 1fr) auto;
   grid-template-areas:
     "logo status"
-    "logo message"
-    "logo hint";
-  gap: var(--space-2) var(--space-5);
+    "logo result"
+    "logo actions";
+  gap: var(--space-3) var(--space-5);
   height: 100vh;
   padding: var(--space-4) var(--space-5);
   overflow: hidden;
@@ -141,22 +148,40 @@
 .strip__status {
   grid-area: status;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2) var(--space-6);
+  gap: var(--space-3);
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
 }
 
-.strip__message {
-  grid-area: message;
+.strip__status--problem {
+  color: var(--color-danger);
+}
+
+.strip__status-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.strip__result {
+  grid-area: result;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: var(--strip-message-lines);
   overflow: hidden;
   font-size: var(--font-size-md);
+  overflow-wrap: anywhere;
 }
 
-.strip__hint {
-  grid-area: hint;
-  font-size: var(--font-size-sm);
+.strip__result--empty {
   color: var(--color-text-muted);
+}
+
+.strip__actions {
+  grid-area: actions;
+  display: flex;
+  gap: var(--space-3);
 }

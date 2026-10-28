@@ -1,0 +1,104 @@
+.ode-menu {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+
+.ode-menu__button {
+  gap: var(--space-2);
+  padding: 0 var(--space-3) 0 var(--space-4);
+}
+
+.ode-menu__button-text {
+  max-width: var(--menu-button-max-width);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ode-menu__button--open {
+  background: var(--color-surface-hover);
+}
+
+.ode-menu__list {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: max-content;
+  min-width: var(--menu-min-width);
+  max-width: var(--menu-max-width);
+  margin: 0;
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-popover);
+  list-style: none;
+}
+
+.ode-menu__list--start {
+  left: 0;
+}
+
+.ode-menu__list--end {
+  right: 0;
+}
+
+.ode-menu__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ode-menu__item:hover:not(:disabled),
+.ode-menu__item:focus-visible {
+  background: var(--color-surface-hover);
+}
+
+.ode-menu__item:focus-visible {
+  outline-offset: calc(var(--focus-ring-width) * -1);
+}
+
+.ode-menu__item:disabled {
+  cursor: default;
+  opacity: var(--opacity-disabled);
+}
+
+.ode-menu__mark {
+  display: flex;
+  flex: none;
+  width: var(--icon-size);
+  height: calc(var(--font-size-md) * var(--line-height-normal));
+  align-items: center;
+  color: var(--color-accent);
+}
+
+.ode-menu__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.ode-menu__label {
+  font-weight: var(--font-weight-medium);
+}
+
+.ode-menu__item--checked .ode-menu__label {
+  color: var(--color-accent);
+}
+
+.ode-menu__description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}

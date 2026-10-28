@@ -1,10 +1,11 @@
 import type { StatusResponse } from "../../shared/api";
-import type { UiEvent } from "../../shared/events";
+import type { Suggestion, UiEvent } from "../../shared/events";
+import type { Mode } from "../../shared/personalisation";
 import type { LeadSheet } from "../../shared/song";
-import type { ApprovalStatus } from "../../ui-kit";
-import { initialState } from "./model";
-import type { AppState, StreamState } from "./model";
-import { addError, addUserMessage, reduceEvent, setApprovalStatus } from "./reducer";
+import type { VersionListItem } from "../../shared/versions";
+import { WhyStatus, initialState } from "./model";
+import type { AppState, ResultLine, StreamState } from "./model";
+import { fixesFirst, reduceEvent, upsertVersion } from "./reducer";
 import type { ViewId } from "./views";
 
 /** Holds the app state and tells subscribers when it changes; read it with useSyncExternalStore. */
@@ -34,23 +35,66 @@ export class Store {
   }
 
   setStatus(status: StatusResponse): void {
-    this.update({ ...this.state, live: status.live, busy: status.busy, projectDir: status.projectDir });
+    this.update({
+      ...this.state,
+      live: status.live,
+      busy: status.busy,
+      projectDir: status.projectDir,
+      mode: status.mode,
+      versionGroupMinutes: status.versionGroupMinutes,
+    });
   }
 
   setSong(song: LeadSheet): void {
     this.update({ ...this.state, song });
   }
 
-  addLocalMessage(text: string): void {
-    this.update(addUserMessage(this.state, text));
+  setMode(mode: Mode | null): void {
+    if (mode !== this.state.mode) this.update({ ...this.state, mode });
   }
 
-  addError(message: string): void {
-    this.update(addError(this.state, message));
+  setSuggestions(items: readonly Suggestion[]): void {
+    this.update({ ...this.state, suggestions: fixesFirst(items) });
   }
 
-  setApprovalStatus(id: string, status: ApprovalStatus): void {
-    this.update(setApprovalStatus(this.state, id, status));
+  setVersions(versions: readonly VersionListItem[]): void {
+    this.update({ ...this.state, versions });
+  }
+
+  putVersion(version: VersionListItem): void {
+    const { versions } = this.state;
+    if (versions) this.update({ ...this.state, versions: upsertVersion(versions, version) });
+  }
+
+  /** A request is on its way: an old error and an old "Why?" answer no longer apply. */
+  startRequest(): void {
+    this.update({ ...this.state, error: null, why: null });
+  }
+
+  askWhy(): void {
+    this.update({ ...this.state, error: null, why: { status: WhyStatus.Asking, text: "" } });
+  }
+
+  cancelWhy(): void {
+    this.update({ ...this.state, why: null });
+  }
+
+  setResult(result: ResultLine): void {
+    this.update({ ...this.state, result, why: null });
+  }
+
+  setError(message: string | null): void {
+    if (message !== this.state.error) this.update({ ...this.state, error: message });
+  }
+
+  setQuestionAnswered(id: string, answered: boolean): void {
+    const questions = this.state.questions.map((question) => (question.id === id ? { ...question, answered } : question));
+    this.update({ ...this.state, questions });
+  }
+
+  setApprovalDecided(id: string, decided: boolean): void {
+    const approvals = this.state.approvals.map((approval) => (approval.id === id ? { ...approval, decided } : approval));
+    this.update({ ...this.state, approvals });
   }
 
   private update(next: AppState): void {

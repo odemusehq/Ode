@@ -1,0 +1,41 @@
+.ode-dot {
+  display: inline-block;
+  flex: none;
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border: var(--border-width) solid var(--ode-dot-color);
+  border-radius: var(--radius-round);
+  background: var(--ode-dot-color);
+}
+
+.ode-dot--neutral {
+  --ode-dot-color: var(--color-text-disabled);
+}
+
+.ode-dot--accent {
+  --ode-dot-color: var(--color-accent);
+}
+
+.ode-dot--info {
+  --ode-dot-color: var(--color-highlight);
+}
+
+.ode-dot--success {
+  --ode-dot-color: var(--color-success);
+}
+
+.ode-dot--warning {
+  --ode-dot-color: var(--color-warning);
+}
+
+.ode-dot--danger {
+  --ode-dot-color: var(--color-danger);
+}
+
+.ode-dot--hollow {
+  background: transparent;
+}
+
+.ode-dot--pulse {
+  animation: var(--motion-pulse);
+}

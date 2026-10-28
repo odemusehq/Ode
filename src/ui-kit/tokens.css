@@ -107,6 +107,8 @@
   --focus-ring-width: 2px;
   --focus-ring-offset: 1px;
   --shadow-raised: 0 1px 3px rgb(0 0 0 / 0.45);
+  --shadow-popover: 0 6px 18px rgb(0 0 0 / 0.5);
+  --z-popover: 10;
 
   /* Control sizes */
   --control-height: 28px;
@@ -137,14 +139,20 @@
   /* Layout */
   --header-height: 40px;
   --content-max-width: 880px;
-  --chat-input-min-height: 36px;
-  --chat-input-max-height: 160px;
-  --chat-user-max-width: 85%;
   --fact-min-width: 120px;
-  --details-max-height: 240px;
   --cover-size: 240px;
+  --cover-choice-size: 96px;
   --mixer-strip-width: 56px;
   --strip-message-lines: 3;
+  /* The Now panel scrolls past this height so the tabs below keep their room. */
+  --now-max-height: 55vh;
+  --history-indent: 22px;
+  --history-summary-lines: 2;
+
+  /* Menus */
+  --menu-min-width: 220px;
+  --menu-max-width: 300px;
+  --menu-button-max-width: 120px;
 
   /* Meter */
   --meter-thickness: 8px;

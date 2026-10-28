@@ -1,0 +1,59 @@
+.ode-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-4) var(--space-5);
+  border: var(--border-width) solid var(--ode-card-color);
+  border-left-width: var(--border-width-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.ode-card--neutral {
+  --ode-card-color: var(--color-border-strong);
+}
+
+.ode-card--accent {
+  --ode-card-color: var(--color-accent);
+}
+
+.ode-card--info {
+  --ode-card-color: var(--color-highlight);
+}
+
+.ode-card--success {
+  --ode-card-color: var(--color-success);
+}
+
+.ode-card--warning {
+  --ode-card-color: var(--color-warning);
+}
+
+.ode-card--danger {
+  --ode-card-color: var(--color-danger);
+}
+
+.ode-card--waiting {
+  opacity: var(--opacity-disabled);
+}
+
+.ode-card__kicker {
+  font-size: var(--font-size-xs);
+  font-family: var(--font-family-heading);
+  font-weight: var(--font-weight-heading);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+  color: var(--ode-card-color);
+}
+
+.ode-card__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ode-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}

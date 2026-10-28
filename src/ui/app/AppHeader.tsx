@@ -1,9 +1,10 @@
-import { BusyIndicator } from "../../ui-kit";
+import { ModePicker } from "../views/ModePicker";
+import { ConnectionDot } from "./ConnectionDot";
 import { useAppState } from "./hooks";
 import { LogoLockup } from "./Logo";
 
+/** The logo, the song title, the mode picker and the connection dot. */
 export function AppHeader() {
-  const busy = useAppState((state) => state.busy);
   const title = useAppState((state) => state.song?.title ?? "");
 
   return (
@@ -14,7 +15,8 @@ export function AppHeader() {
       <p className="app-header__song" title={title}>
         {title}
       </p>
-      <BusyIndicator busy={busy} />
+      <ModePicker />
+      <ConnectionDot />
     </header>
   );
 }

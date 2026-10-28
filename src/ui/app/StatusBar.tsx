@@ -1,14 +1,16 @@
 import { cx } from "../../ui-kit";
-import { CONNECTION_HINTS, CONNECTION_LABELS, LIVE_CONNECTIONS, SERVER_MESSAGES, isConnected, isServerLost } from "./connections";
+import { CONNECTION_HINTS, CONNECTION_LABELS, SERVER_MESSAGES, isServerLost, missingConnections } from "./connections";
 import { ConnectionList } from "./ConnectionList";
 import { useAppState } from "./hooks";
 
-/** Connection status at the bottom of the window, with what to do when a part is missing. */
+/** Shown at the bottom of the window only when something isn't connected, with what to do about it. */
 export function StatusBar() {
   const live = useAppState((state) => state.live);
   const stream = useAppState((state) => state.stream);
   const serverMessage = SERVER_MESSAGES[stream];
-  const missing = live ? LIVE_CONNECTIONS.filter((connection) => !isConnected(live, connection)) : [];
+  const missing = missingConnections(live);
+
+  if (!serverMessage && missing.length === 0) return null;
 
   return (
     <footer className="status-bar">
@@ -17,15 +19,17 @@ export function StatusBar() {
           {serverMessage}
         </p>
       )}
-      <ConnectionList status={live} />
       {missing.length > 0 && (
-        <ul className="status-bar__hints">
-          {missing.map((connection) => (
-            <li key={connection}>
-              <strong>{CONNECTION_LABELS[connection]}:</strong> {CONNECTION_HINTS[connection]}
-            </li>
-          ))}
-        </ul>
+        <>
+          <ConnectionList status={live} />
+          <ul className="status-bar__hints">
+            {missing.map((connection) => (
+              <li key={connection}>
+                <strong>{CONNECTION_LABELS[connection]}:</strong> {CONNECTION_HINTS[connection]}
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </footer>
   );

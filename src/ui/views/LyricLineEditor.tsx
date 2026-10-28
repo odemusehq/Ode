@@ -1,6 +1,7 @@
 import type { KeyboardEvent, Ref } from "react";
 import type { LineAnalysis, LyricsNote } from "../../shared/lyrics";
 import { IconButton, IconName, LyricLine, TextInput } from "../../ui-kit";
+import type { SyllableTarget } from "../../ui-kit";
 import type { LeadSheetLine } from "./useLyricsDrafts";
 
 export interface LyricLineEditorProps {
@@ -10,6 +11,10 @@ export interface LyricLineEditorProps {
   analysis: LineAnalysis | null;
   rhyme?: string;
   notes: readonly LyricsNote[];
+  /** The syllable count the line should have; its count turns red when it doesn't fit. */
+  target?: SyllableTarget;
+  /** Tapping the red count: have Ode rewrite the line to fit. */
+  onFit?: () => void;
   inputRef: Ref<HTMLInputElement>;
   onTextChange: (text: string) => void;
   onLockChange: (locked: boolean) => void;
@@ -26,6 +31,8 @@ export function LyricLineEditor({
   analysis,
   rhyme,
   notes,
+  target,
+  onFit,
   inputRef,
   onTextChange,
   onLockChange,
@@ -58,7 +65,7 @@ export function LyricLineEditor({
   );
 
   return (
-    <LyricLine analysis={analysis} rhyme={rhyme} notes={notes} actions={actions}>
+    <LyricLine analysis={analysis} rhyme={rhyme} notes={notes} target={target} onFit={onFit} actions={actions}>
       <TextInput
         ref={inputRef}
         value={line.text}

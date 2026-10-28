@@ -10,12 +10,10 @@ export const UI_CONFIG = {
   /** First wait before reconnecting to the event stream; doubles up to the maximum. */
   reconnectInitialMs: 1_000,
   reconnectMaxMs: 15_000,
-  /** Chat entries kept in memory. */
-  chatEntryLimit: 500,
-  /** Distance from the bottom within which the chat keeps scrolling with new text. */
-  chatFollowThresholdPx: 48,
-  /** History entries shown on the Changes page. */
-  historyLimit: 50,
+  /** Wait after the selection in Live changes (or Ode changes the Set) before asking for new suggestions. */
+  suggestionsDelayMs: 300,
+  /** Bars Hum records over the song. */
+  humBars: 4,
   /** Length of a section added from the lyric editor. */
   newSectionBars: 8,
 } as const;

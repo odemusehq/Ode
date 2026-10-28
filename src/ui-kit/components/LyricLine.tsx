@@ -24,6 +24,14 @@ const NOTE_TONES: Record<LyricsNoteKind, Tone> = {
 };
 
 const NO_RHYME = "-";
+const UNCERTAIN_NOTE = "Includes a word whose pronunciation is not certain.";
+
+/** The syllable count a line has to match, and why. */
+export interface SyllableTarget {
+  counts: readonly number[];
+  /** Where the target comes from, e.g. "Verse 1, line 3 has 8 syllables". */
+  reason: string;
+}
 
 export interface LyricLineProps {
   /** The line's text, or an editor for it. */
@@ -33,15 +41,18 @@ export interface LyricLineProps {
   /** Rhyme-scheme letter of the line. */
   rhyme?: string;
   notes?: readonly LyricsNote[];
+  /** The count the line should have; the count turns red when no reading of the line matches it. */
+  target?: SyllableTarget;
+  /** Tapping a red count calls this, to have the line rewritten to fit. */
+  onFit?: () => void;
   /** Controls at the end of the line, such as a lock. */
   actions?: ReactNode;
 }
 
 /** A lyric line with its syllables, stress marks, syllable count, rhyme letter and notes. */
-export function LyricLine({ children, analysis, rhyme, notes = [], actions }: LyricLineProps) {
+export function LyricLine({ children, analysis, rhyme, notes = [], target, onFit, actions }: LyricLineProps) {
   const words = analysis?.words ?? [];
   const uncertain = words.some((word) => !word.certain);
-  const countTitle = uncertain ? "Syllables. Includes a word whose pronunciation is not certain." : "Syllables";
 
   return (
     <div className="ode-lyric">
@@ -54,14 +65,11 @@ export function LyricLine({ children, analysis, rhyme, notes = [], actions }: Ly
           )}
         </span>
         <div className="ode-lyric__text">{children}</div>
-        <span className={cx("ode-lyric__count", uncertain && "ode-lyric__count--uncertain")} title={countTitle}>
-          {analysis && words.length > 0 && (
-            <>
-              {formatSyllableCounts(analysis.counts)}
-              <span className="ode-visually-hidden"> syllables</span>
-            </>
-          )}
-        </span>
+        {analysis && words.length > 0 ? (
+          <SyllableCount counts={analysis.counts} uncertain={uncertain} target={target} onFit={onFit} />
+        ) : (
+          <span className="ode-lyric__count" />
+        )}
         {actions && <div className="ode-lyric__actions">{actions}</div>}
       </div>
       {words.length > 0 && (
@@ -82,6 +90,55 @@ export function LyricLine({ children, analysis, rhyme, notes = [], actions }: Ly
         </ul>
       )}
     </div>
+  );
+}
+
+interface SyllableCountProps {
+  counts: readonly number[];
+  uncertain: boolean;
+  target?: SyllableTarget;
+  onFit?: () => void;
+}
+
+/** "7", or "9/8" against a target: red when no reading of the line has the target's count. */
+function SyllableCount({ counts, uncertain, target, onFit }: SyllableCountProps) {
+  const text = formatSyllableCounts(counts);
+  if (!target) {
+    return (
+      <span
+        className={cx("ode-lyric__count", uncertain && "ode-lyric__count--uncertain")}
+        title={uncertain ? `Syllables. ${UNCERTAIN_NOTE}` : "Syllables"}
+      >
+        {text}
+        <span className="ode-visually-hidden"> syllables</span>
+      </span>
+    );
+  }
+
+  const fits = counts.some((count) => target.counts.includes(count));
+  const shown = `${text}/${formatSyllableCounts(target.counts)}`;
+  const spoken = `${text} syllables, ${formatSyllableCounts(target.counts)} wanted`;
+  const title = [`${target.reason}.`, uncertain && UNCERTAIN_NOTE].filter(Boolean).join(" ");
+
+  if (fits || !onFit) {
+    return (
+      <span className={cx("ode-lyric__count", !fits && "ode-lyric__count--off")} title={title}>
+        <span aria-hidden="true">{shown}</span>
+        <span className="ode-visually-hidden">{fits ? spoken : `${spoken}, doesn't fit`}</span>
+      </span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="ode-lyric__count ode-lyric__count--off ode-lyric__fit"
+      title={`${title} Tap to rewrite this line to fit.`}
+      aria-label={`${spoken}. Rewrite this line to fit`}
+      onClick={onFit}
+    >
+      {shown}
+    </button>
   );
 }
 

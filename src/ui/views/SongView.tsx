@@ -1,5 +1,5 @@
 import type { Intent, LeadSheet, Section } from "../../shared/song";
-import { Badge, EmptyState, Panel } from "../../ui-kit";
+import { Badge, ChordChart, EmptyState, Panel } from "../../ui-kit";
 import { barAt, beatsPerBar, formatKey, formatTempo, formatTimeSignature } from "../app/format";
 import { useAppState } from "../app/hooks";
 import { Fact } from "./Fact";
@@ -73,38 +73,43 @@ function IntentPanel({ intent }: IntentPanelProps) {
   );
 }
 
+/** The song's form: each section in order with where it sits and its chord chart. */
 function SectionsPanel({ song }: SongProps) {
   const perBar = beatsPerBar(song);
-  return (
-    <Panel title="Sections">
-      {song.sections.length === 0 ? (
+  if (song.sections.length === 0) {
+    return (
+      <Panel title="Sections">
         <p className="muted">No sections yet. Ask Ode to plan the song form, or add sections in the Lyrics tab.</p>
-      ) : (
-        <ol className="plain-list">
-          {song.sections.map((section) => (
-            <SectionRow key={section.id} section={section} perBar={perBar} />
-          ))}
-        </ol>
-      )}
-    </Panel>
+      </Panel>
+    );
+  }
+  return (
+    <>
+      {song.sections.map((section) => (
+        <SectionPanel key={section.id} section={section} perBar={perBar} />
+      ))}
+    </>
   );
 }
 
-interface SectionRowProps {
+interface SectionPanelProps {
   section: Section;
   perBar: number;
 }
 
-function SectionRow({ section, perBar }: SectionRowProps) {
+function SectionPanel({ section, perBar }: SectionPanelProps) {
   const firstBar = barAt(section.startBeat, perBar);
   const bars = Math.round(section.lengthBeats / perBar);
   return (
-    <li className="list-row">
-      <span className="list-row__main">{section.name}</span>
-      <Badge>{SECTION_KIND_LABELS[section.kind]}</Badge>
-      <span className="muted small">
+    <Panel title={section.name} actions={<Badge>{SECTION_KIND_LABELS[section.kind]}</Badge>}>
+      <p className="muted small">
         Bar {firstBar}, {bars} bars · {section.lines.length} lines · {section.chords.length} chords
-      </span>
-    </li>
+      </p>
+      {section.chords.length === 0 ? (
+        <p className="muted">No chords in this section yet.</p>
+      ) : (
+        <ChordChart label={`Chord chart of ${section.name}`} chords={section.chords} lengthBeats={section.lengthBeats} beatsPerBar={perBar} />
+      )}
+    </Panel>
   );
 }

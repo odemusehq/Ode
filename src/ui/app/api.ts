@@ -3,18 +3,30 @@ import type {
   ApprovalRequest,
   ArtistFact,
   ChatRequest,
-  HistoryEntry,
+  CopyResult,
+  CoverChoice,
   LeadSheet,
   LiveReadRequest,
   LyricsAnalysis,
   LyricsAnalyzeRequest,
+  MelodyRequest,
+  MelodySetting,
   MemoryAdd,
+  ModeRequest,
   PreferencesResponse,
   PreferencesUpdate,
+  QuestionAnswer,
   ReleaseResponse,
+  RestoreRequest,
+  RestoreResult,
   StatusResponse,
+  Suggestion,
+  VersionDetail,
+  VersionListItem,
+  VersionNameRequest,
 } from "../../shared/api";
 import type { DeviceOpArgs, DeviceOpResults, ExtensionOpArgs, ExtensionOpResults } from "../../shared/live-ops";
+import type { Mode } from "../../shared/personalisation";
 
 enum HttpMethod {
   Get = "GET",
@@ -23,8 +35,20 @@ enum HttpMethod {
   Delete = "DELETE",
 }
 
+const JSON_TYPE = "application/json";
+const WAV_TYPE = "audio/wav";
+
 export interface OkResponse {
   ok: boolean;
+}
+
+export interface ModeResponse {
+  mode: Mode;
+}
+
+export interface SpeechResponse {
+  /** What the musician said, in words; the server also sends it to Ode as a request. */
+  text: string;
 }
 
 /** Read-only Live operations the UI may call. */
@@ -62,16 +86,61 @@ export class OdeApi {
     return this.request(HttpMethod.Post, API.approval(id), request);
   }
 
+  answer(id: string, request: QuestionAnswer): Promise<OkResponse> {
+    return this.request(HttpMethod.Post, API.question(id), request);
+  }
+
+  undo(): Promise<RestoreResult> {
+    return this.request(HttpMethod.Post, API.undo);
+  }
+
+  again(): Promise<OkResponse> {
+    return this.request(HttpMethod.Post, API.again);
+  }
+
+  getSuggestions(): Promise<Suggestion[]> {
+    return this.request(HttpMethod.Get, API.suggestions);
+  }
+
+  setMode(request: ModeRequest): Promise<ModeResponse> {
+    return this.request(HttpMethod.Put, API.mode, request);
+  }
+
+  /** Sends a mono WAV of the musician speaking; the server writes it down and sends it to Ode. */
+  async speech(wav: Blob): Promise<SpeechResponse> {
+    const response = await fetch(API.speech, { method: HttpMethod.Post, headers: { "Content-Type": WAV_TYPE }, body: wav });
+    if (!response.ok) throw new ApiError(response.status, await readError(response));
+    return (await response.json()) as SpeechResponse;
+  }
+
+  getVersions(): Promise<VersionListItem[]> {
+    return this.request(HttpMethod.Get, API.versions);
+  }
+
+  getVersion(id: string): Promise<VersionDetail> {
+    return this.request(HttpMethod.Get, API.version(id));
+  }
+
+  /** Restoring deletes the versions after this one; call it only after the musician confirmed. */
+  restoreVersion(id: string): Promise<RestoreResult> {
+    const request: RestoreRequest = { confirmed: true };
+    return this.request(HttpMethod.Post, API.versionRestore(id), request);
+  }
+
+  nameVersion(id: string, request: VersionNameRequest): Promise<VersionListItem> {
+    return this.request(HttpMethod.Post, API.versionName(id), request);
+  }
+
+  copyVersion(id: string): Promise<CopyResult> {
+    return this.request(HttpMethod.Post, API.versionCopy(id));
+  }
+
   getSong(): Promise<LeadSheet> {
     return this.request(HttpMethod.Get, API.song);
   }
 
   saveSong(leadSheet: LeadSheet): Promise<LeadSheet> {
     return this.request(HttpMethod.Put, API.song, leadSheet);
-  }
-
-  getHistory(): Promise<HistoryEntry[]> {
-    return this.request(HttpMethod.Get, API.history);
   }
 
   getPreferences(): Promise<PreferencesResponse> {
@@ -98,6 +167,11 @@ export class OdeApi {
     return this.request(HttpMethod.Post, API.lyricsAnalyze, request);
   }
 
+  /** A section's lines under the notes of the clip selected in Live. */
+  setToMelody(request: MelodyRequest): Promise<MelodySetting> {
+    return this.request(HttpMethod.Post, API.lyricsMelody, request);
+  }
+
   getStatus(): Promise<StatusResponse> {
     return this.request(HttpMethod.Get, API.status);
   }
@@ -108,6 +182,11 @@ export class OdeApi {
 
   releaseFileUrl(name: string): string {
     return API.releaseFile(name);
+  }
+
+  /** One of Ode's cover art images becomes cover.png. */
+  chooseCover(request: CoverChoice): Promise<ReleaseResponse> {
+    return this.request(HttpMethod.Post, API.releaseCover, request);
   }
 
   async getReleaseText(name: string): Promise<string> {
@@ -124,7 +203,7 @@ export class OdeApi {
   private async request<T>(method: HttpMethod, path: string, body?: unknown): Promise<T> {
     const response = await fetch(path, {
       method,
-      headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+      headers: body === undefined ? undefined : { "Content-Type": JSON_TYPE },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     if (!response.ok) throw new ApiError(response.status, await readError(response));

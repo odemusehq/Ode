@@ -1,0 +1,133 @@
+.now {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-height: var(--now-max-height);
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  border-bottom: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.now__focus {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.now__focus-label {
+  flex: none;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.now__focus-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-highlight);
+}
+
+.now__input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.now__input > .ode-input {
+  flex: 1;
+  min-width: var(--fact-min-width);
+}
+
+.now__listening,
+.now__listening:hover:not(:disabled) {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.now__listening > .ode-icon {
+  animation: var(--motion-pulse);
+}
+
+.now__heard {
+  flex-basis: 100%;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.now__status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.now__progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.now__progress > .ode-activity {
+  flex: 1;
+  padding: 0;
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+}
+
+.now__result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.now__result-text {
+  overflow-wrap: anywhere;
+}
+
+.now__result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-left: calc(var(--space-5) * -1);
+}
+
+.now__why {
+  padding-left: var(--space-4);
+  border-left: var(--border-width-strong) solid var(--color-border-strong);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.now__error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+  color: var(--color-danger);
+}
+
+.now__error > .ode-icon {
+  margin-top: var(--space-1);
+}
+
+.now__error-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.now__error > .ode-icon-button {
+  height: var(--control-height-sm);
+  min-height: var(--control-height-sm);
+  color: var(--color-text-muted);
+}

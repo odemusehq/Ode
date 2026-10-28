@@ -125,6 +125,16 @@
 }
 
 .ode-roll__stress {
+  min-height: calc(var(--font-size-xs) * var(--line-height-tight));
   font-size: var(--font-size-xs);
   color: var(--color-accent);
+}
+
+.ode-roll__syllable--held {
+  color: var(--color-text-disabled);
+}
+
+.ode-roll__syllable--problem,
+.ode-roll__syllable--problem .ode-roll__stress {
+  color: var(--color-danger);
 }

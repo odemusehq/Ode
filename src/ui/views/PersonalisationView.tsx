@@ -1,20 +1,26 @@
 import { useCallback, useState } from "react";
-import type { Personalisation } from "../../shared/personalisation";
-import { Notice, Panel, Tone } from "../../ui-kit";
+import type { Mode, Personalisation } from "../../shared/personalisation";
+import { Notice, Panel, Select, Tone } from "../../ui-kit";
+import type { SelectOption } from "../../ui-kit";
 import { errorMessage } from "../app/api";
-import { useClient, useRequest } from "../app/hooks";
+import { useAppState, useClient, useReloadOnChange, useRequest } from "../app/hooks";
+import { MODE_DESCRIPTIONS, MODE_LABELS, MODE_ORDER } from "../app/modes";
 import { AccentSetting } from "./AccentSetting";
 import { GenreSetting } from "./GenreSetting";
 import { LoudnessSetting } from "./LoudnessSetting";
 import { VocalRangeSetting } from "./VocalRangeSetting";
 import "./views.css";
 
+const MODE_OPTIONS: readonly SelectOption<Mode>[] = MODE_ORDER.map((mode) => ({ value: mode, label: MODE_LABELS[mode] }));
+
 export function PersonalisationView() {
   const client = useClient();
+  const currentMode = useAppState((state) => state.mode);
   const loadPreferences = useCallback(() => client.api.getPreferences(), [client]);
   const preferences = useRequest(loadPreferences);
   const [saveError, setSaveError] = useState<string | null>(null);
   const { setData, reload } = preferences;
+  useReloadOnChange(currentMode, reload);
 
   const save = useCallback(
     async (change: Partial<Personalisation>) => {
@@ -30,12 +36,28 @@ export function PersonalisationView() {
     [client, setData, reload],
   );
 
+  /** The mode is remembered in Preferences; the header shows the mode the server is in, so it is read again. */
+  const saveMode = useCallback(
+    async (mode: Mode) => {
+      setData((current) => current && { ...current, mode });
+      try {
+        setData(await client.api.savePreferences({ mode }));
+        setSaveError(null);
+        await client.refreshStatus().catch(() => undefined);
+      } catch (error) {
+        setSaveError(errorMessage(error));
+        reload();
+      }
+    },
+    [client, setData, reload],
+  );
+
   const data = preferences.data;
 
   return (
     <div className="view">
       <p className="muted">
-        Each setting starts on Detect: Ode works it out from your songs and shows what it found. What you choose here always
+        Most settings start on Detect: Ode works them out from your songs and shows what it found. What you choose here always
         wins.
       </p>
       {preferences.error && <Notice tone={Tone.Danger}>Your settings couldn't be read: {preferences.error}</Notice>}
@@ -43,6 +65,15 @@ export function PersonalisationView() {
       {!data && !preferences.error && <p className="muted">Reading your settings…</p>}
       {data && (
         <>
+          <Panel title="Mode">
+            <Select
+              label="Default mode"
+              value={data.mode}
+              options={MODE_OPTIONS}
+              onChange={(mode) => void saveMode(mode)}
+              hint={`${MODE_DESCRIPTIONS[data.mode]}. Picking a mode at the top of the window changes it too.`}
+            />
+          </Panel>
           <Panel title="Style">
             <GenreSetting value={data.personalisation.genre} resolved={data.resolved.genre} onChange={(genre) => void save({ genre })} />
           </Panel>

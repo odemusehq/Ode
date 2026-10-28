@@ -37,6 +37,24 @@
   color: var(--color-warning);
 }
 
+.ode-lyric__count--off {
+  color: var(--color-danger);
+  font-weight: var(--font-weight-bold);
+}
+
+.ode-lyric__fit {
+  min-height: var(--control-height-sm);
+  padding: 0 var(--space-2);
+  border: var(--border-width) solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-tint);
+  cursor: pointer;
+}
+
+.ode-lyric__fit:hover {
+  color: var(--color-danger-hover);
+}
+
 .ode-lyric__actions {
   display: flex;
   flex: none;

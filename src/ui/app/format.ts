@@ -62,8 +62,3 @@ export function beatsPerBar(song: LeadSheet | null): number {
 export function barAt(beat: number, perBar: number): number {
   return Math.floor(beat / perBar) + 1;
 }
-
-/** A tool name in words, e.g. "midi_clip_get_notes" → "midi clip get notes". */
-export function toolWords(name: string): string {
-  return name.replace(/_/g, " ");
-}

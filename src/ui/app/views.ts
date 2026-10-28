@@ -1,45 +1,30 @@
 export enum ViewId {
-  Chat = "chat",
-  Song = "song",
+  History = "history",
   Lyrics = "lyrics",
-  PianoRoll = "piano-roll",
-  Chords = "chords",
-  Sounds = "sounds",
-  Mixer = "mixer",
-  Mastering = "mastering",
+  Song = "song",
+  Mix = "mix",
   Release = "release",
-  Changes = "changes",
   Memory = "memory",
   Personalisation = "personalisation",
 }
 
-/** Tab order follows the work: writing, production, release, then Ode's own settings. */
+/** Tab order: the way back first, then writing, production, release, and Ode's own settings. */
 export const VIEW_ORDER: readonly ViewId[] = [
-  ViewId.Chat,
-  ViewId.Song,
+  ViewId.History,
   ViewId.Lyrics,
-  ViewId.PianoRoll,
-  ViewId.Chords,
-  ViewId.Sounds,
-  ViewId.Mixer,
-  ViewId.Mastering,
+  ViewId.Song,
+  ViewId.Mix,
   ViewId.Release,
-  ViewId.Changes,
   ViewId.Memory,
   ViewId.Personalisation,
 ];
 
 export const VIEW_LABELS: Record<ViewId, string> = {
-  [ViewId.Chat]: "Chat",
-  [ViewId.Song]: "Song",
+  [ViewId.History]: "History",
   [ViewId.Lyrics]: "Lyrics",
-  [ViewId.PianoRoll]: "Piano roll",
-  [ViewId.Chords]: "Chords",
-  [ViewId.Sounds]: "Sounds",
-  [ViewId.Mixer]: "Mixer",
-  [ViewId.Mastering]: "Mastering",
+  [ViewId.Song]: "Song",
+  [ViewId.Mix]: "Mix",
   [ViewId.Release]: "Release",
-  [ViewId.Changes]: "Changes",
   [ViewId.Memory]: "Memory",
   [ViewId.Personalisation]: "Personalisation",
 };

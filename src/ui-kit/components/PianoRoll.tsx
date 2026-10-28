@@ -10,10 +10,16 @@ import type { Stress } from "./stress";
 import type { CSSVariables } from "./types";
 import "./PianoRoll.css";
 
+/** What is sung on a note; HELD_SYLLABLE marks a note that holds the syllable before it. */
 export interface LyricMark {
   text: string;
   stress: Stress;
+  /** A check found a problem on this syllable; it shows in the danger colour. */
+  problem?: boolean;
 }
+
+/** The text of a note that holds the syllable before it (a melisma). */
+export const HELD_SYLLABLE = "_";
 
 export interface PianoRollProps {
   label: string;
@@ -23,9 +29,12 @@ export interface PianoRollProps {
   beatsPerBar?: number;
   /** Clip length in beats; the roll is at least this long. */
   lengthBeats?: number;
+  /** Rows to show; give two rolls the same range to compare them. Fits the notes when left out. */
+  pitchRange?: PitchRange;
 }
 
-interface PitchRange {
+/** Lowest and highest MIDI note shown. */
+export interface PitchRange {
   low: number;
   high: number;
 }
@@ -41,10 +50,10 @@ const DEFAULT_VELOCITY = 100;
 const MAX_VELOCITY = 127;
 
 /** A read-only piano roll with optional lyric syllables under the notes. */
-export function PianoRoll({ label, notes, lyrics, beatsPerBar = 4, lengthBeats = 0 }: PianoRollProps) {
+export function PianoRoll({ label, notes, lyrics, beatsPerBar = 4, lengthBeats = 0, pitchRange }: PianoRollProps) {
   const [zoomStep, setZoomStep] = useState(DEFAULT_ZOOM_STEP);
   const descriptionId = useId();
-  const range = pitchRange(notes);
+  const range = pitchRange ?? pitchRangeOf(notes);
   const rows = range.high - range.low + 1;
   const bars = barCount(notes, beatsPerBar, lengthBeats);
   const beats = bars * beatsPerBar;
@@ -139,13 +148,19 @@ export function PianoRoll({ label, notes, lyrics, beatsPerBar = 4, lengthBeats =
             {notes.map((note, index) => {
               const mark = lyrics?.[index];
               if (!mark) return null;
+              const held = mark.text === HELD_SYLLABLE;
               return (
                 <span
                   key={index}
-                  className={cx("ode-roll__syllable", mark.stress > 0 && "ode-roll__syllable--stressed")}
+                  className={cx(
+                    "ode-roll__syllable",
+                    mark.stress > 0 && !held && "ode-roll__syllable--stressed",
+                    held && "ode-roll__syllable--held",
+                    mark.problem && "ode-roll__syllable--problem",
+                  )}
                   style={{ left: `${(note.start / beats) * 100}%` }}
                 >
-                  <span className="ode-roll__stress">{STRESS_MARKS[mark.stress]}</span>
+                  <span className="ode-roll__stress">{held ? "" : STRESS_MARKS[mark.stress]}</span>
                   {mark.text}
                 </span>
               );
@@ -157,7 +172,8 @@ export function PianoRoll({ label, notes, lyrics, beatsPerBar = 4, lengthBeats =
   );
 }
 
-function pitchRange(notes: readonly Note[]): PitchRange {
+/** The rows a roll needs for these notes, with a little room above and below. */
+export function pitchRangeOf(notes: readonly Note[]): PitchRange {
   if (notes.length === 0) return EMPTY_RANGE;
   const pitches = notes.map((note) => note.pitch);
   let low = Math.min(...pitches) - PADDING_ROWS;

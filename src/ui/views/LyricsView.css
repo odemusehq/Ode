@@ -6,3 +6,68 @@
   padding: 0;
   list-style: none;
 }
+
+.melody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.melody__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.melody__clip {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-highlight);
+  overflow-wrap: anywhere;
+}
+
+.melody__lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.melody__line {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.melody__fit {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.melody__number {
+  color: var(--color-text-muted);
+}
+
+.melody__count {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-bold);
+}
+
+.melody__count--off {
+  color: var(--color-danger);
+}
+
+.melody__problem {
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+}

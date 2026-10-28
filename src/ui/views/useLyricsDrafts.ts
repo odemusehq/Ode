@@ -24,6 +24,8 @@ export interface LyricsDrafts {
   sections: readonly Section[];
   updateLines: (sectionId: string, lines: LeadSheetLine[]) => void;
   addSection: (kind: SectionKind) => void;
+  /** Saves waiting edits now, before Ode is asked to work on the lines. */
+  flush: () => void;
   saveState: SaveState;
   saveError: string | null;
 }
@@ -84,9 +86,11 @@ export function useLyricsDrafts(song: LeadSheet | null): LyricsDrafts {
     [saver, persist],
   );
 
+  const flush = useCallback(() => saver.flush(), [saver]);
+
   const sections = useMemo(() => (song ? applyDrafts(song, drafts).sections : []), [song, drafts]);
 
-  return { sections, updateLines, addSection, saveState, saveError };
+  return { sections, updateLines, addSection, flush, saveState, saveError };
 }
 
 function applyDrafts(song: LeadSheet, drafts: Drafts): LeadSheet {

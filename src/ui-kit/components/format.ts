@@ -13,6 +13,16 @@ export function pitchClassName(pitchClass: number): string {
   return NOTE_NAMES[((pitchClass % 12) + 12) % 12] ?? "";
 }
 
+/** Text written with light Markdown, without its marks, on one line. */
+export function toPlainText(markdown: string): string {
+  return markdown
+    .replace(/```[^\n]*\n?/g, "")
+    .replace(/\*\*|__|`/g, "")
+    .replace(/^\s*(?:[-*•]|\d+[.)]|#{1,6})\s+/gm, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /** Syllable counts of a line: "7", "7–8" for a range, "7, 9" otherwise. */
 export function formatSyllableCounts(counts: readonly number[]): string {
   if (counts.length === 0) return "–";
