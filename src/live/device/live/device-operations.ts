@@ -1,4 +1,4 @@
-import type { ClipRef, LocatorRef, TrackRef } from "../../../shared/live";
+import { TAG_SEPARATOR, type ClipRef, type LocatorRef, type TrackRef } from "../../../shared/live";
 import type { CreatedTrack, DeviceOpArgs, MeterReading, SelectionInfo, SetInfo, TransportState } from "../../../shared/live-ops";
 import { LiveObject } from "./live-object";
 
@@ -11,11 +11,12 @@ const SESSION_CLIP_PATH = /^live_set tracks (\d+) clip_slots (\d+) clip$/;
 
 /** The Max for Live API operations the Extensions SDK lacks, run inside the Ode device. */
 export class DeviceOperations {
-  private readonly setId: string;
+  /** Made when the device loads, so it changes each time a Set is opened; it names an unsaved Set too. */
+  private readonly instance: string;
   private readonly handlers: Record<string, Handler>;
 
   constructor() {
-    this.setId = `unsaved-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e9).toString(36)}`;
+    this.instance = `${Date.now().toString(36)}-${Math.floor(Math.random() * 1e9).toString(36)}`;
     this.handlers = {
       set_info: () => this.setInfo(),
       transport_play: (args: DeviceOpArgs["transport_play"]) => this.play(args),
@@ -36,6 +37,7 @@ export class DeviceOperations {
       selection_get: () => this.selection(),
       track_meters_get: () => this.meters(),
       transport_get: () => this.transportState(),
+      clip_slot_fire: ({ track, slot }: DeviceOpArgs["clip_slot_fire"]) => this.fireClipSlot(track, slot),
     };
   }
 
@@ -51,7 +53,7 @@ export class DeviceOperations {
 
   setInfo(): SetInfo {
     const filePath = this.song().text("file_path");
-    return { filePath: filePath || null, setId: filePath || this.setId };
+    return { filePath: filePath || null, setId: filePath || `unsaved-${this.instance}`, instance: this.instance };
   }
 
   meters(): MeterReading {
@@ -62,10 +64,6 @@ export class DeviceOperations {
     });
     const main = new LiveObject("live_set master_track");
     return { tracks, master: { left: main.number("output_meter_left"), right: main.number("output_meter_right") } };
-  }
-
-  isPlaying(): boolean {
-    return this.song().bool("is_playing");
   }
 
   /** What the musician has selected in Live, and where the playhead is. */
@@ -169,6 +167,13 @@ export class DeviceOperations {
     return { deleted: true as const };
   }
 
+  /** Launches the clip in a Session slot, as clicking its play button does. */
+  private fireClipSlot(track: TrackRef, slot: number) {
+    const index = DeviceOperations.regularTrack(this.song(), track);
+    new LiveObject(`live_set tracks ${index} clip_slots ${slot}`).call("fire");
+    return { fired: true as const };
+  }
+
   private captureMidi() {
     const song = this.song();
     if (!song.bool("can_capture_midi")) return { captured: false };
@@ -185,6 +190,33 @@ export class DeviceOperations {
 
   private static loopState(song: LiveObject): TransportState["loop"] {
     return { on: song.bool("loop"), start: song.number("loop_start"), length: song.number("loop_length") };
+  }
+
+  /** A regular track's index from its index, its name (with or without Ode's tag, then ignoring case) or Ode's tag. */
+  private static regularTrack(song: LiveObject, ref: TrackRef): number {
+    if ("index" in ref) return ref.index;
+    if ("main" in ref || "returnIndex" in ref) throw new Error("only regular tracks have Session clip slots");
+    const names = song.ids("tracks").map((_, index) => song.child("tracks", index).text("name"));
+    let index: number;
+    if ("tag" in ref) {
+      index = names.findIndex((name) => name.endsWith(`${TAG_SEPARATOR}${ref.tag}`));
+    } else {
+      const wanted = ref.name;
+      index = names.findIndex((name) => name === wanted || DeviceOperations.untagged(name) === wanted);
+      if (index < 0) {
+        const lower = wanted.toLowerCase();
+        index = names.findIndex((name) => name.toLowerCase() === lower || DeviceOperations.untagged(name).toLowerCase() === lower);
+      }
+    }
+    if (index < 0) throw new Error(`not found: track ${JSON.stringify(ref)}`);
+    return index;
+  }
+
+  /** A name without the tag Ode puts at its end ("Chorus melody ·o3f2" → "Chorus melody"); a tag is one word. */
+  private static untagged(name: string): string {
+    const at = name.lastIndexOf(TAG_SEPARATOR);
+    const tag = at < 0 ? "" : name.slice(at + TAG_SEPARATOR.length);
+    return tag.length > 0 && !/\s/.test(tag) ? name.slice(0, at) : name;
   }
 
   /** The selected track: a regular track, a return track or the main track. */

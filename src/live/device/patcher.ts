@@ -27,7 +27,8 @@ export class DevicePatcher {
   private static readonly BUTTON_GAP = 8;
   /** The compact strip fills the device left of the button column. */
   private static readonly STRIP_WIDTH = DevicePatcher.DEVICE_WIDTH - DevicePatcher.BUTTON_WIDTH - 8;
-  private static readonly WINDOW_SIZE: [number, number] = [420, 860];
+  /** Wide enough for the lyrics panel beside History. */
+  private static readonly WINDOW_SIZE: [number, number] = [760, 860];
   /** Max patcher value for an audio effect device ("aaaa"). */
   private static readonly AUDIO_EFFECT_TYPE = 1633771873;
   /** live.text mode of a momentary button that sends a bang. */

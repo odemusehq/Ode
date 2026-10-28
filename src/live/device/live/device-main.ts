@@ -7,7 +7,9 @@ const NETWORK_OUTLET = 0;
 
 /** The Live side of the Ode device: answers requests from the network side and sends events. */
 export class OdeDevice {
-  private static readonly METER_INTERVAL_MS = 250;
+  /** How often the device looks at the open Set and the selection. */
+  private static readonly TICK_MS = 250;
+  /** In ticks: the open Set is checked every five seconds. */
   private static readonly SET_CHECK_EVERY = 20;
   /** In ticks: the selection is checked twice a second. */
   private static readonly SELECTION_CHECK_EVERY = 2;
@@ -24,7 +26,7 @@ export class OdeDevice {
   start(): void {
     this.sendSetInfo();
     this.ticker = new Task(() => this.tick(), this);
-    this.ticker.interval = OdeDevice.METER_INTERVAL_MS;
+    this.ticker.interval = OdeDevice.TICK_MS;
     this.ticker.repeat();
   }
 
@@ -60,7 +62,6 @@ export class OdeDevice {
     this.ticks += 1;
     if (this.ticks % OdeDevice.SET_CHECK_EVERY === 0) this.sendSetInfo();
     if (this.ticks % OdeDevice.SELECTION_CHECK_EVERY === 0) this.sendSelection();
-    if (this.operations.isPlaying()) this.event("meters", this.operations.meters());
   }
 
   private sendSetInfo(): void {
