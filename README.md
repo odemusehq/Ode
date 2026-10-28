@@ -1,6 +1,6 @@
 # Ode
 
-Ode is an AI co-writer and co-producer inside Ableton Live. It helps with every part of making a song — idea, lyrics, topline, chords, drums, bass, sounds, arrangement, vocals, mixing, mastering and release — in any order, while the musician stays the author: Ode suggests, checks, asks for approval, and every change lands in Live as editable material.
+Ode is an AI co-writer and co-producer inside Ableton Live. It helps with every part of making a song — idea, lyrics, topline, chords, drums, bass, sounds, arrangement, vocals, mixing, mastering and release — in any order, while the musician stays the author. Select something in Live, tap a suggestion or type a few words: Ode changes the Set in place, checks the craft details with code, plays what it changed, and keeps every version of the Set so you can go back.
 
 ## Requirements
 - macOS, Node.js 24.16 or later
