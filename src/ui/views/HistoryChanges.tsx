@@ -1,23 +1,12 @@
 import { useCallback } from "react";
 import type { Note } from "../../shared/live";
-import { ChangeKind } from "../../shared/versions";
 import type { SetChange } from "../../shared/versions";
-import { Badge, Notice, PianoRoll, Tone, pitchRangeOf } from "../../ui-kit";
-import { beatsPerBar } from "../app/format";
-import { useAppState, useClient, useRequest } from "../app/hooks";
-import { ChangeViewKind, changeView, notesEnd, sectionDifference } from "./change-values";
+import { Notice, PianoRoll, Tone, cx, pitchRangeOf } from "../../ui-kit";
+import { useClient, useRequest } from "../app/hooks";
+import { isLyricsChange, labelUnder, lyricsHunks, notesChange, notesEnd } from "./change-values";
 
-const KIND_LABELS: Record<ChangeKind, string> = {
-  [ChangeKind.Added]: "Added",
-  [ChangeKind.Removed]: "Removed",
-  [ChangeKind.Changed]: "Changed",
-};
-
-const KIND_TONES: Record<ChangeKind, Tone> = {
-  [ChangeKind.Added]: Tone.Success,
-  [ChangeKind.Removed]: Tone.Danger,
-  [ChangeKind.Changed]: Tone.Info,
-};
+const SONG = "Song";
+const LYRICS = "Lyrics";
 
 export interface HistoryChangesProps {
   versionId: string;
@@ -26,15 +15,13 @@ export interface HistoryChangesProps {
 }
 
 /**
- * What a version changed: song-level changes on top, then the lead sheet's (under Lyrics), then each track it touched,
- * highlighted, with how it was before.
+ * What a version changed: the song's changes, the lyrics' lines old above new, then each track it touched,
+ * highlighted, with its notes before and after.
  */
 export function HistoryChanges({ versionId, id }: HistoryChangesProps) {
   const client = useClient();
-  const song = useAppState((state) => state.song);
   const load = useCallback(() => client.api.getVersion(versionId), [client, versionId]);
   const detail = useRequest(load);
-  const perBar = beatsPerBar(song);
 
   if (detail.error) {
     return (
@@ -52,123 +39,90 @@ export function HistoryChanges({ versionId, id }: HistoryChangesProps) {
     );
   }
 
-  const { version, tracks, song: songChanges } = detail.data;
-  const setChanges = songChanges.filter((change) => change.target.scope !== "sheet");
-  const sheetChanges = songChanges.filter((change) => change.target.scope === "sheet");
+  const { version, tracks, song, beatsPerBar } = detail.data;
+  const lyrics = song.filter(isLyricsChange);
+  const songChanges = song.filter((change) => !isLyricsChange(change));
   return (
     <div id={id} className="history-detail">
       {version.request && <p className="muted small">Asked: “{version.request}”</p>}
-      {setChanges.length > 0 && (
-        <section className="history-detail__part" aria-label="Song">
-          <h3 className="history-detail__title">Song</h3>
-          <ChangeList changes={setChanges} perBar={perBar} />
-        </section>
-      )}
-      {sheetChanges.length > 0 && (
-        <section className="history-detail__part" aria-label="Lyrics">
-          <h3 className="history-detail__title">Lyrics</h3>
-          <ul className="history-detail__changes">
-            {sheetChanges.map((change, index) => (
-              <SheetChangeItem key={index} change={change} perBar={perBar} />
-            ))}
-          </ul>
-        </section>
-      )}
-      {tracks.map((track, index) => (
-        <section key={`${index}-${track.track}`} className="history-detail__part history-detail__part--track" aria-label={track.track}>
-          <h3 className="history-detail__title">{track.track}</h3>
-          <ChangeList changes={track.changes} perBar={perBar} />
-        </section>
+      {songChanges.length > 0 && <ChangePart title={SONG} changes={songChanges} beatsPerBar={beatsPerBar} />}
+      {lyrics.map((change, index) => (
+        <LyricsPart key={index} change={change} />
       ))}
-      {songChanges.length === 0 && tracks.length === 0 && <p className="muted small">Nothing changed.</p>}
+      {tracks.map((track, index) => (
+        <ChangePart key={`${index}-${track.track}`} title={track.track} changes={track.changes} beatsPerBar={beatsPerBar} track />
+      ))}
+      {song.length === 0 && tracks.length === 0 && <p className="muted small">Nothing changed.</p>}
     </div>
   );
 }
 
-interface ChangeListProps {
+interface ChangePartProps {
+  title: string;
   changes: readonly SetChange[];
-  perBar: number;
+  beatsPerBar: number;
+  /** A track the version touched: highlighted. */
+  track?: boolean;
 }
 
-function ChangeList({ changes, perBar }: ChangeListProps) {
+function ChangePart({ title, changes, beatsPerBar, track }: ChangePartProps) {
   return (
-    <ul className="history-detail__changes">
-      {changes.map((change, index) => (
-        <ChangeItem key={index} change={change} perBar={perBar} />
-      ))}
-    </ul>
+    <section className={cx("history-detail__part", track && "history-detail__part--track")} aria-label={title}>
+      <h3 className="history-detail__title">{title}</h3>
+      <ul className="history-detail__changes">
+        {changes.map((change, index) => (
+          <ChangeItem key={index} change={change} heading={title} beatsPerBar={beatsPerBar} />
+        ))}
+      </ul>
+    </section>
   );
 }
 
 interface ChangeItemProps {
   change: SetChange;
-  perBar: number;
+  heading: string;
+  beatsPerBar: number;
 }
 
-function ChangeItem({ change, perBar }: ChangeItemProps) {
-  const view = changeView(change);
+function ChangeItem({ change, heading, beatsPerBar }: ChangeItemProps) {
+  const label = labelUnder(change.label, heading);
+  const notes = notesChange(change);
   return (
     <li className="history-change">
-      <div className="history-change__line">
-        <Badge tone={KIND_TONES[change.kind]}>{KIND_LABELS[change.kind]}</Badge>
-        <span className="history-change__label">{change.label}</span>
-      </div>
-      {view.kind === ChangeViewKind.Text && (
-        <p className="history-change__values">
-          <span className="history-change__before">{view.before}</span>
-          <span aria-hidden="true"> → </span>
-          <span className="ode-visually-hidden"> changed to </span>
-          <span>{view.after}</span>
-        </p>
-      )}
-      {view.kind === ChangeViewKind.Notes && <NotesBeforeAfter label={change.label} before={view.before} after={view.after} perBar={perBar} />}
+      <p className="history-change__label">{label}</p>
+      {notes && <NotesBeforeAfter label={label} before={notes.before} after={notes.after} beatsPerBar={beatsPerBar} />}
     </li>
   );
 }
 
-/**
- * A lead-sheet change. A section that changed shows each line that differs, the old words struck through above
- * the new, and its chords before and after; an added or removed section, or the rest of the lead sheet, its label.
- */
-function SheetChangeItem({ change, perBar }: ChangeItemProps) {
-  const difference = sectionDifference(change, perBar);
+interface LyricsPartProps {
+  change: SetChange;
+}
+
+/** The lyrics that changed: each old line struck through above the new one. */
+function LyricsPart({ change }: LyricsPartProps) {
+  const hunks = lyricsHunks(change);
   return (
-    <li className="history-change">
-      <div className="history-change__line">
-        <Badge tone={KIND_TONES[change.kind]}>{KIND_LABELS[change.kind]}</Badge>
-        <span className="history-change__label">{change.label}</span>
-      </div>
-      {difference && difference.lines.length > 0 && (
-        <ul className="history-sheet__lines">
-          {difference.lines.map((line, index) => (
-            <li key={index} className="history-sheet__line">
-              <span className="history-sheet__number">Line {line.number}</span>
-              {line.before !== undefined && (
-                <del className="history-sheet__old">
-                  <span className="ode-visually-hidden">Was: </span>
-                  {line.before}
-                </del>
-              )}
-              {line.after !== undefined && (
-                <ins className="history-sheet__new">
-                  <span className="ode-visually-hidden">Now: </span>
-                  {line.after}
-                </ins>
-              )}
-            </li>
+    <section className="history-detail__part" aria-label={LYRICS}>
+      <h3 className="history-detail__title">{LYRICS}</h3>
+      <p className="history-change__label">{labelUnder(change.label, LYRICS)}</p>
+      {hunks.map((hunk, index) => (
+        <div key={index} className="history-lines">
+          {hunk.removed.map((line, lineIndex) => (
+            <del key={`removed-${lineIndex}`} className="history-lines__old">
+              <span className="ode-visually-hidden">Was: </span>
+              {line}
+            </del>
           ))}
-        </ul>
-      )}
-      {difference?.chords && (
-        <p className="history-change__values">
-          <span className="history-sheet__chords">Chords </span>
-          <span className="history-change__before">{difference.chords.before}</span>
-          <span aria-hidden="true"> → </span>
-          <span className="ode-visually-hidden"> changed to </span>
-          <span>{difference.chords.after}</span>
-        </p>
-      )}
-    </li>
+          {hunk.added.map((line, lineIndex) => (
+            <ins key={`added-${lineIndex}`} className="history-lines__new">
+              <span className="ode-visually-hidden">Now: </span>
+              {line}
+            </ins>
+          ))}
+        </div>
+      ))}
+    </section>
   );
 }
 
@@ -176,11 +130,11 @@ interface NotesBeforeAfterProps {
   label: string;
   before?: Note[];
   after?: Note[];
-  perBar: number;
+  beatsPerBar: number;
 }
 
-/** The notes before and after on two piano rolls with the same rows and length, so they line up. */
-function NotesBeforeAfter({ label, before, after, perBar }: NotesBeforeAfterProps) {
+/** The notes before and after on two rolls with the same rows and length, so they line up. */
+function NotesBeforeAfter({ label, before, after, beatsPerBar }: NotesBeforeAfterProps) {
   const all = [...(before ?? []), ...(after ?? [])];
   const range = pitchRangeOf(all);
   const length = notesEnd(all);
@@ -189,13 +143,13 @@ function NotesBeforeAfter({ label, before, after, perBar }: NotesBeforeAfterProp
       {before && (
         <figure className="history-change__roll">
           <figcaption className="history-change__caption">Before</figcaption>
-          <PianoRoll label={`${label}, before`} notes={before} pitchRange={range} lengthBeats={length} beatsPerBar={perBar} />
+          <PianoRoll label={`${label}, before`} notes={before} pitchRange={range} lengthBeats={length} beatsPerBar={beatsPerBar} />
         </figure>
       )}
       {after && (
         <figure className="history-change__roll">
           <figcaption className="history-change__caption">After</figcaption>
-          <PianoRoll label={`${label}, after`} notes={after} pitchRange={range} lengthBeats={length} beatsPerBar={perBar} />
+          <PianoRoll label={`${label}, after`} notes={after} pitchRange={range} lengthBeats={length} beatsPerBar={beatsPerBar} />
         </figure>
       )}
     </div>

@@ -1,11 +1,11 @@
 .ode-card {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
   min-width: 0;
   padding: var(--space-4) var(--space-5);
-  border: var(--border-width) solid var(--ode-card-color);
-  border-left-width: var(--border-width-strong);
+  border: var(--border-width) solid var(--color-border);
+  border-left: var(--border-width-strong) solid var(--ode-card-color);
   border-radius: var(--radius-md);
   background: var(--color-surface);
 }
@@ -36,15 +36,6 @@
 
 .ode-card--waiting {
   opacity: var(--opacity-disabled);
-}
-
-.ode-card__kicker {
-  font-size: var(--font-size-xs);
-  font-family: var(--font-family-heading);
-  font-weight: var(--font-weight-heading);
-  letter-spacing: var(--letter-spacing-caps);
-  text-transform: uppercase;
-  color: var(--ode-card-color);
 }
 
 .ode-card__text {

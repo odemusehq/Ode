@@ -1,0 +1,162 @@
+import type { LyricsSaved, LyricsState, LyricsWrite } from "../../shared/lyrics";
+import { errorMessage } from "./api";
+import type { OdeApi } from "./api";
+import { UI_CONFIG } from "./config";
+import { Debouncer } from "./debounce";
+
+/** The lyrics as the panel shows them. */
+export interface LyricsSnapshot {
+  /** The text in the editor, with the musician's unsaved edits. */
+  text: string;
+  /** The lyrics as last stored, with their analysis; null until they have been read. */
+  stored: LyricsState | null;
+  /** Goes up each time the stored text replaces the editor's, so the panel can put the caret back. */
+  replaced: number;
+  /** Why the last save failed, until a save works. */
+  saveError: string | null;
+  /** Why the lyrics couldn't be read, until they are. */
+  loadError: string | null;
+}
+
+/**
+ * The lyrics the musician and Ode both edit. The musician's edits are saved after a pause with the revision they
+ * were made from, so the server merges them with anything Ode saved in between; whenever nothing is waiting to be
+ * saved, the editor shows the stored text.
+ */
+export class SharedLyrics {
+  private snapshot: LyricsSnapshot = { text: "", stored: null, replaced: 0, saveError: null, loadError: null };
+  private readonly listeners = new Set<() => void>();
+  private readonly saver = new Debouncer(UI_CONFIG.lyricsSaveDelayMs);
+  /** The revision the editor's text was edited from. */
+  private base = 0;
+  /** The editor has edits that haven't been sent yet. */
+  private changed = false;
+  private saving: Promise<void> | null = null;
+  /** Counts the newer lyrics taken from the event stream, so a read that started earlier doesn't undo them. */
+  private received = 0;
+
+  constructor(private readonly api: OdeApi) {}
+
+  readonly subscribe = (listener: () => void): (() => void) => {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  };
+
+  readonly getSnapshot = (): LyricsSnapshot => this.snapshot;
+
+  /**
+   * Reads the stored lyrics, for what the event stream may have missed. When another Set may have opened, its
+   * lyrics replace the editor's text unless edits are waiting to be saved.
+   */
+  async load(anotherSet = false): Promise<void> {
+    const seen = this.received;
+    let state: LyricsState;
+    try {
+      state = await this.api.getLyrics();
+    } catch (error) {
+      if (!this.snapshot.stored) this.update({ loadError: `The lyrics couldn't be read: ${errorMessage(error)}` });
+      return;
+    }
+    if (this.received !== seen) return;
+    if (anotherSet && !this.changed && !this.saving) this.adopt(state);
+    else this.take(state);
+  }
+
+  /** New lyrics from the event stream: saved from a window, by Ode or by a restore. */
+  receive(state: LyricsState): void {
+    if (this.take(state)) this.received += 1;
+  }
+
+  /** The musician changed the text; it is saved once they pause. */
+  edit(text: string): void {
+    if (text === this.snapshot.text) return;
+    this.changed = true;
+    this.update({ text });
+    this.saver.schedule(() => void this.save());
+  }
+
+  /** Saves what is waiting now, before Ode is asked anything; resolves once it is saved or the save failed. */
+  async flush(): Promise<void> {
+    this.saver.cancel();
+    while (this.saving || this.changed) {
+      await (this.saving ?? this.save());
+      if (this.snapshot.saveError !== null) return;
+    }
+  }
+
+  retrySave(): void {
+    this.saver.cancel();
+    void this.save();
+  }
+
+  /** Stored lyrics newer than the ones known: shown at once unless the musician has edits on the way. False when older. */
+  private take(state: LyricsState): boolean {
+    const { stored } = this.snapshot;
+    if (stored && state.revision <= stored.revision) return false;
+    if (this.saving) {
+      // The save's answer decides what the editor shows.
+      this.update({ stored: state, loadError: null });
+    } else if (this.changed) {
+      // Saved now with the revision the edits were made from: the server merges them with these lyrics.
+      this.update({ stored: state, loadError: null });
+      this.saver.cancel();
+      void this.save();
+    } else {
+      this.adopt(state);
+    }
+    return true;
+  }
+
+  /** The editor shows the stored text; nothing is waiting to be saved. */
+  private adopt(state: LyricsState): void {
+    this.base = state.revision;
+    const { text, replaced } = this.snapshot;
+    this.update({ stored: state, text: state.text, replaced: state.text === text ? replaced : replaced + 1, saveError: null, loadError: null });
+  }
+
+  private save(): Promise<void> {
+    if (!this.saving) {
+      this.saving = this.send().finally(() => {
+        this.saving = null;
+        // Edits made while the text was on its way wait for their own save.
+        if (this.changed && this.snapshot.saveError === null) this.saver.schedule(() => void this.save());
+      });
+    }
+    return this.saving;
+  }
+
+  private async send(): Promise<void> {
+    if (!this.changed) return;
+    const write: LyricsWrite = { text: this.snapshot.text, baseRevision: this.base };
+    this.changed = false;
+    let saved: LyricsSaved;
+    try {
+      saved = await this.api.saveLyrics(write);
+    } catch (error) {
+      this.changed = true;
+      this.update({ saveError: `Your lyrics weren't saved: ${errorMessage(error)}` });
+      return;
+    }
+    this.accept(saved, write.text);
+  }
+
+  private accept(saved: LyricsSaved, sent: string): void {
+    const { stored } = this.snapshot;
+    const newest = stored && stored.revision > saved.revision ? stored : saved;
+    if (!this.changed) {
+      this.adopt(newest);
+      return;
+    }
+    // The musician typed while the text was on its way. Stored as sent, their edits build on that revision; merged
+    // with lines saved in between, the base stays, so the next save is merged again and keeps both.
+    if (saved.text === sent) this.base = saved.revision;
+    this.update({ stored: newest, saveError: null });
+  }
+
+  private update(patch: Partial<LyricsSnapshot>): void {
+    this.snapshot = { ...this.snapshot, ...patch };
+    for (const listener of this.listeners) listener();
+  }
+}

@@ -1,73 +1,87 @@
 import type { Suggestion, UiEvent } from "../../shared/events";
+import { VersionAuthor } from "../../shared/versions";
 import type { VersionListItem } from "../../shared/versions";
-import { WhyStatus } from "./model";
-import type { AppState, ResultLine, WhyAnswer } from "./model";
+import type { AppState } from "./model";
 
 type QuestionEvent = Extract<UiEvent, { type: "question" }>;
 type ApprovalEvent = Extract<UiEvent, { type: "approval" }>;
 
 /**
- * Applies one server event to the app state. Ode is not a chat: its replies arrive as result lines,
- * so streamed text, tool calls and subagents are not shown (only "Why?" listens to Ode's words).
+ * Applies one server event to the app state. Ode is not a chat: its replies arrive as result lines, so messages,
+ * tool calls and subagents are not shown. The lyrics are kept by SharedLyrics.
  */
 export function reduceEvent(state: AppState, event: UiEvent): AppState {
   switch (event.type) {
     case "message":
-      return event.role === "assistant" ? hearWhy(state, event.text) : state;
-    case "text":
     case "tool":
     case "subagent":
+    case "lyrics":
       return state;
     case "approval":
       return addApproval(state, event);
     case "approval-resolved":
       return { ...state, approvals: state.approvals.filter((approval) => approval.id !== event.id) };
     case "busy":
-      return event.busy ? startRequest(state) : finishRequest(state);
+      return event.busy ? startWork(state, event.stoppable) : finishWork(state);
     case "progress":
       return { ...state, progress: event.text };
     case "result":
-      return receiveResult(state, { text: event.text, versionId: event.versionId, undone: false });
+      // An error the same request reported just before stays on screen.
+      return { ...state, result: { text: event.text, versionId: event.versionId, kind: event.kind, overtaken: false } };
+    case "answer":
+      return { ...state, answer: { versionId: event.versionId, text: event.text } };
     case "question":
       return addQuestion(state, event);
     case "question-resolved":
       return { ...state, questions: state.questions.filter((question) => question.id !== event.id) };
     case "selection":
       return { ...state, focus: event.label.trim() || null };
-    case "pointer":
-      return { ...state, focus: event.pointer.description.trim() || state.focus };
     case "suggestions":
       return { ...state, suggestions: fixesFirst(event.items) };
     case "version":
-      return {
-        ...state,
-        versions: state.versions ? upsertVersion(state.versions, event.version) : null,
-        versionStamp: state.versionStamp + 1,
-      };
+      return addVersion(state, event.version);
     case "versions-truncated":
       return state.versions ? { ...state, versions: truncateAfter(state.versions, event.afterId) } : state;
     case "mode":
       return { ...state, mode: event.mode };
     case "done":
-      return finishRequest(state);
+      return finishWork(state);
     case "error":
-      return { ...state, error: event.message, progress: null, why: isAsking(state.why) ? null : state.why };
+      return { ...state, error: event.message, progress: null };
     case "live-status":
       return { ...state, live: event.status };
-    case "song":
-      return { ...state, song: event.leadSheet };
-    case "meters":
-      return { ...state, meters: { tracks: event.tracks, master: event.master } };
+    case "title":
+      return { ...state, title: event.title };
   }
 }
 
 /** Suggestions with the fixes for problems first, otherwise in the server's order. */
-export function fixesFirst(items: readonly Suggestion[]): Suggestion[] {
+function fixesFirst(items: readonly Suggestion[]): Suggestion[] {
   return [...items.filter((item) => item.fix), ...items.filter((item) => !item.fix)];
 }
 
-/** Adds a version, or replaces it if it is already listed; the list stays newest first. */
-export function upsertVersion(versions: readonly VersionListItem[], version: VersionListItem): VersionListItem[] {
+/** A new request: the old progress and error go. */
+function startWork(state: AppState, stoppable: boolean): AppState {
+  return { ...state, busy: true, stoppable, progress: null, error: null };
+}
+
+export function finishWork(state: AppState): AppState {
+  return { ...state, busy: false, stoppable: false, progress: null };
+}
+
+/**
+ * Adds a version, or replaces it if it is already listed; the list stays newest first. A new version by the
+ * musician after a result line means the Set changed since, so the line's actions no longer apply.
+ */
+function addVersion(state: AppState, version: VersionListItem): AppState {
+  const known = state.versions?.some((item) => item.id === version.id) ?? false;
+  const versions = state.versions ? upsertVersion(state.versions, version) : null;
+  const { result } = state;
+  const overtakes = !known && version.author === VersionAuthor.Musician && result !== null && result.versionId !== version.id;
+  return { ...state, versions, result: overtakes && result ? { ...result, overtaken: true } : result };
+}
+
+function upsertVersion(versions: readonly VersionListItem[], version: VersionListItem): VersionListItem[] {
   if (versions.some((item) => item.id === version.id)) {
     return versions.map((item) => (item.id === version.id ? version : item));
   }
@@ -83,36 +97,8 @@ function truncateAfter(versions: readonly VersionListItem[], afterId: string): r
   return index <= 0 ? versions : versions.slice(index);
 }
 
-function isAsking(why: WhyAnswer | null): boolean {
-  return why?.status === WhyStatus.Asking;
-}
-
-/** A new request: the old progress and error go, and so does an old "Why?" answer. */
-function startRequest(state: AppState): AppState {
-  return { ...state, busy: true, progress: null, error: null, why: isAsking(state.why) ? state.why : null };
-}
-
-/** The request ended: a "Why?" still waiting keeps what Ode said, or goes if it said nothing. */
-function finishRequest(state: AppState): AppState {
-  const { why } = state;
-  const settled = why && isAsking(why) ? (why.text ? { status: WhyStatus.Answered, text: why.text } : null) : why;
-  return { ...state, busy: false, progress: null, why: settled };
-}
-
-/** The answer to "Why?" changes nothing in the Set, so it goes under the result line instead of replacing it. */
-function receiveResult(state: AppState, line: ResultLine): AppState {
-  if (isAsking(state.why) && line.versionId === null) {
-    return { ...state, why: { status: WhyStatus.Answered, text: line.text } };
-  }
-  return { ...state, result: line, why: null, error: null };
-}
-
-function hearWhy(state: AppState, text: string): AppState {
-  return isAsking(state.why) ? { ...state, why: { status: WhyStatus.Asking, text } } : state;
-}
-
 function addQuestion(state: AppState, event: QuestionEvent): AppState {
-  const question = { id: event.id, text: event.text, options: event.options, answered: false };
+  const question = { id: event.id, text: event.text, options: event.options, images: event.images ?? [], answered: false };
   const known = state.questions.some((item) => item.id === event.id);
   const questions = known ? state.questions.map((item) => (item.id === event.id ? question : item)) : [...state.questions, question];
   return { ...state, questions };

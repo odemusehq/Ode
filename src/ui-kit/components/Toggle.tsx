@@ -6,11 +6,10 @@ export interface ToggleProps {
   label: ReactNode;
   checked: boolean;
   onChange: (checked: boolean) => void;
-  disabled?: boolean;
 }
 
 /** An on/off switch. */
-export function Toggle({ label, checked, onChange, disabled }: ToggleProps) {
+export function Toggle({ label, checked, onChange }: ToggleProps) {
   const id = useId();
   return (
     <div className="ode-toggle">
@@ -19,7 +18,6 @@ export function Toggle({ label, checked, onChange, disabled }: ToggleProps) {
         type="button"
         role="switch"
         aria-checked={checked}
-        disabled={disabled}
         className="ode-toggle__switch"
         onClick={() => onChange(!checked)}
       >

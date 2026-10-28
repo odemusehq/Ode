@@ -32,7 +32,7 @@ export const CONNECTION_LABELS: Record<LiveConnection, string> = {
 /** What the musician does to connect each part. */
 export const CONNECTION_HINTS: Record<LiveConnection, string> = {
   [LiveConnection.Extension]: "Open the Live beta with Developer Mode on",
-  [LiveConnection.Device]: "Put the Ode device on the Master track",
+  [LiveConnection.Device]: "Put the Ode device on the Main track",
   [LiveConnection.Bridge]: "Select Ode as a Control Surface in Live's settings",
 };
 

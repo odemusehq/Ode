@@ -1,10 +1,8 @@
 import type { ApprovalRequest } from "../../shared/api";
-import type { Suggestion, UiEvent } from "../../shared/events";
+import type { ResultKind, Suggestion } from "../../shared/events";
 import type { LiveStatus } from "../../shared/live";
 import type { Mode } from "../../shared/personalisation";
-import type { LeadSheet } from "../../shared/song";
 import type { VersionListItem } from "../../shared/versions";
-import { ViewId } from "./views";
 
 export enum StreamState {
   /** First connection, not open yet. */
@@ -15,7 +13,6 @@ export enum StreamState {
   Closed = "closed",
 }
 
-export type MeterReadings = Omit<Extract<UiEvent, { type: "meters" }>, "type">;
 export type Decision = ApprovalRequest["decision"];
 
 /** A one-line question from Ode with two to four answers. */
@@ -23,11 +20,13 @@ export interface Question {
   id: string;
   text: string;
   options: string[];
+  /** Release files shown as the answers, one per option; empty for answers in words. */
+  images: string[];
   /** The musician answered and Ode hasn't taken the answer yet. */
   answered: boolean;
 }
 
-/** Manual mode: a change Ode wants to make, waiting for Apply or Skip. */
+/** A change Ode wants to make, waiting for Apply or Skip. */
 export interface Approval {
   id: string;
   summary: string;
@@ -38,34 +37,31 @@ export interface Approval {
 /** What Ode last did, in one line. */
 export interface ResultLine {
   text: string;
-  /** The version Ode's change made; null when the Set didn't change, or after Undo. */
+  /** The version the line is about; null when nothing changed. */
   versionId: string | null;
-  /** The line says how Undo went, not what Ode did. */
-  undone: boolean;
+  kind: ResultKind;
+  /** The musician changed the Set since, so Undo, Again and Why? no longer apply to it. */
+  overtaken: boolean;
 }
 
-export enum WhyStatus {
-  Asking = "asking",
-  Answered = "answered",
-}
-
-/** The short answer to "Why?", shown under the result line. */
+/** Ode's short answer to Why? about one of its changes. */
 export interface WhyAnswer {
-  status: WhyStatus;
+  versionId: string;
   text: string;
 }
 
 export interface AppState {
-  view: ViewId;
   stream: StreamState;
   busy: boolean;
+  /** Stop can interrupt what Ode is doing now. */
+  stoppable: boolean;
   /** Null until the server says which mode Ode is in. */
   mode: Mode | null;
+  /** The song's title, or the Set's file name. */
+  title: string;
   /** History groups consecutive versions by the same author within this many minutes; null until known. */
   versionGroupMinutes: number | null;
   live: LiveStatus | null;
-  projectDir: string | null;
-  song: LeadSheet | null;
   /** What the musician selected or pointed at in Live, in words; null means the whole song. */
   focus: string | null;
   /** One-tap actions for what is selected, fixes first. */
@@ -73,38 +69,37 @@ export interface AppState {
   /** The latest progress line while Ode works. */
   progress: string | null;
   result: ResultLine | null;
-  why: WhyAnswer | null;
+  answer: WhyAnswer | null;
   /** One line saying what went wrong. */
   error: string | null;
   questions: readonly Question[];
   approvals: readonly Approval[];
-  /** The version history, newest first; null until History has read it. */
+  /** The version history, newest first; null until it has been read. */
   versions: readonly VersionListItem[] | null;
-  /** Counts the versions the server announced, so a view can read again what a new version may have changed. */
-  versionStamp: number;
-  meters: MeterReadings | null;
+  /** Why the history couldn't be read. */
+  historyError: string | null;
+  lyricsOpen: boolean;
 }
 
 export function initialState(): AppState {
   return {
-    view: ViewId.History,
     stream: StreamState.Connecting,
     busy: false,
+    stoppable: false,
     mode: null,
+    title: "",
     versionGroupMinutes: null,
     live: null,
-    projectDir: null,
-    song: null,
     focus: null,
     suggestions: [],
     progress: null,
     result: null,
-    why: null,
+    answer: null,
     error: null,
     questions: [],
     approvals: [],
     versions: null,
-    versionStamp: 0,
-    meters: null,
+    historyError: null,
+    lyricsOpen: false,
   };
 }

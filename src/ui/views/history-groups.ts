@@ -48,6 +48,7 @@ export class VersionGrouping {
   private readonly startOfYesterday: number;
   private readonly startOfWeek: number;
 
+  /** `now` is any time today: the groups are worked out from its date. */
   constructor(
     private readonly groupMinutes: number,
     now: Date,

@@ -1,12 +1,10 @@
 import type { StatusResponse } from "../../shared/api";
-import type { Suggestion, UiEvent } from "../../shared/events";
+import type { UiEvent } from "../../shared/events";
 import type { Mode } from "../../shared/personalisation";
-import type { LeadSheet } from "../../shared/song";
 import type { VersionListItem } from "../../shared/versions";
-import { WhyStatus, initialState } from "./model";
-import type { AppState, ResultLine, StreamState } from "./model";
-import { fixesFirst, reduceEvent, upsertVersion } from "./reducer";
-import type { ViewId } from "./views";
+import { StreamState, initialState } from "./model";
+import type { AppState } from "./model";
+import { finishWork, reduceEvent } from "./reducer";
 
 /** Holds the app state and tells subscribers when it changes; read it with useSyncExternalStore. */
 export class Store {
@@ -26,12 +24,16 @@ export class Store {
     this.update(reduceEvent(this.state, event));
   }
 
-  setView(view: ViewId): void {
-    if (view !== this.state.view) this.update({ ...this.state, view });
+  /** While the stream is down nothing says Ode is working; the server says it again when the stream opens. */
+  setStream(stream: StreamState): void {
+    if (stream === this.state.stream) return;
+    const lost = stream === StreamState.Reconnecting || stream === StreamState.Closed;
+    this.update(lost ? { ...finishWork(this.state), stream } : { ...this.state, stream });
   }
 
-  setStream(stream: StreamState): void {
-    if (stream !== this.state.stream) this.update({ ...this.state, stream });
+  /** The stream opened: the server sends the questions and changes still waiting, so the old cards go. */
+  streamOpened(): void {
+    this.update({ ...this.state, questions: [], approvals: [] });
   }
 
   setStatus(status: StatusResponse): void {
@@ -39,48 +41,34 @@ export class Store {
       ...this.state,
       live: status.live,
       busy: status.busy,
-      projectDir: status.projectDir,
+      stoppable: status.busy && status.stoppable,
+      progress: status.busy ? this.state.progress : null,
       mode: status.mode,
+      title: status.title,
       versionGroupMinutes: status.versionGroupMinutes,
     });
-  }
-
-  setSong(song: LeadSheet): void {
-    this.update({ ...this.state, song });
   }
 
   setMode(mode: Mode | null): void {
     if (mode !== this.state.mode) this.update({ ...this.state, mode });
   }
 
-  setSuggestions(items: readonly Suggestion[]): void {
-    this.update({ ...this.state, suggestions: fixesFirst(items) });
-  }
-
   setVersions(versions: readonly VersionListItem[]): void {
-    this.update({ ...this.state, versions });
+    this.update({ ...this.state, versions, historyError: null });
   }
 
+  setHistoryError(message: string): void {
+    this.update({ ...this.state, historyError: message });
+  }
+
+  /** A version the server answered with, as if it had arrived as an event. */
   putVersion(version: VersionListItem): void {
-    const { versions } = this.state;
-    if (versions) this.update({ ...this.state, versions: upsertVersion(versions, version) });
+    this.apply({ type: "version", version });
   }
 
-  /** A request is on its way: an old error and an old "Why?" answer no longer apply. */
+  /** A request is on its way: an old error no longer applies. */
   startRequest(): void {
-    this.update({ ...this.state, error: null, why: null });
-  }
-
-  askWhy(): void {
-    this.update({ ...this.state, error: null, why: { status: WhyStatus.Asking, text: "" } });
-  }
-
-  cancelWhy(): void {
-    this.update({ ...this.state, why: null });
-  }
-
-  setResult(result: ResultLine): void {
-    this.update({ ...this.state, result, why: null });
+    this.setError(null);
   }
 
   setError(message: string | null): void {
@@ -95,6 +83,10 @@ export class Store {
   setApprovalDecided(id: string, decided: boolean): void {
     const approvals = this.state.approvals.map((approval) => (approval.id === id ? { ...approval, decided } : approval));
     this.update({ ...this.state, approvals });
+  }
+
+  toggleLyrics(): void {
+    this.update({ ...this.state, lyricsOpen: !this.state.lyricsOpen });
   }
 
   private update(next: AppState): void {

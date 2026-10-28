@@ -1,22 +1,5 @@
 .ode-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
   padding: var(--space-7) var(--space-5);
   text-align: center;
-}
-
-.ode-empty__title {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-medium);
-}
-
-.ode-empty__body {
-  max-width: var(--content-max-width);
   color: var(--color-text-muted);
-}
-
-.ode-empty__action {
-  margin-top: var(--space-3);
 }

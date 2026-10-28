@@ -12,5 +12,5 @@ export const MODE_LABELS: Record<Mode, string> = {
 export const MODE_DESCRIPTIONS: Record<Mode, string> = {
   [Mode.Auto]: "Changes what it's sure of, asks when it can't tell",
   [Mode.Manual]: "Asks before every change",
-  [Mode.LetMeHearIt]: "Applies everything straight away and plays it",
+  [Mode.LetMeHearIt]: "Never asks: makes its best guess and says what it guessed",
 };

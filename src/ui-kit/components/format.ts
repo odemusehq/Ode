@@ -1,18 +1,3 @@
-import { NOTE_NAMES } from "../../shared/notes";
-
-const MINUS = "−";
-
-/** A number with a real minus sign, and a plus sign above zero. */
-export function formatSigned(value: number, digits = 1): string {
-  const text = Math.abs(value).toFixed(digits);
-  if (Number(text) === 0) return text;
-  return value < 0 ? `${MINUS}${text}` : `+${text}`;
-}
-
-export function pitchClassName(pitchClass: number): string {
-  return NOTE_NAMES[((pitchClass % 12) + 12) % 12] ?? "";
-}
-
 /** Text written with light Markdown, without its marks, on one line. */
 export function toPlainText(markdown: string): string {
   return markdown

@@ -1,8 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import type { Dispatch, SetStateAction } from "react";
+import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
 import { errorMessage } from "./api";
 import type { OdeClient } from "./client";
 import type { AppState } from "./model";
+import type { LyricsSnapshot } from "./shared-lyrics";
 
 export const ClientContext = createContext<OdeClient | null>(null);
 
@@ -18,54 +18,59 @@ export function useAppState<T>(select: (state: AppState) => T): T {
   return useSyncExternalStore(store.subscribe, () => select(store.getSnapshot()));
 }
 
+/** The shared lyrics as the panel shows them. */
+export function useLyrics(): LyricsSnapshot {
+  const { lyrics } = useClient();
+  return useSyncExternalStore(lyrics.subscribe, lyrics.getSnapshot);
+}
+
 export interface RequestState<T> {
   data: T | undefined;
   error: string | null;
-  loading: boolean;
-  reload: () => void;
-  setData: Dispatch<SetStateAction<T | undefined>>;
 }
 
 /** Loads data on mount and whenever `load` changes; memoise `load` with useCallback. */
 export function useRequest<T>(load: () => Promise<T>): RequestState<T> {
-  const [data, setData] = useState<T>();
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [version, setVersion] = useState(0);
+  const [state, setState] = useState<RequestState<T>>({ data: undefined, error: null });
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    load()
-      .then((value) => {
-        if (!active) return;
-        setData(value);
-        setError(null);
-      })
-      .catch((reason: unknown) => {
-        if (active) setError(errorMessage(reason));
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+    load().then(
+      (data) => {
+        if (active) setState({ data, error: null });
+      },
+      (reason: unknown) => {
+        if (active) setState({ data: undefined, error: errorMessage(reason) });
+      },
+    );
     return () => {
       active = false;
     };
-  }, [load, version]);
+  }, [load]);
 
-  const reload = useCallback(() => setVersion((current) => current + 1), []);
-
-  return { data, error, loading, reload, setData };
+  return state;
 }
 
-/** Calls `reload` each time `value` changes after the first render. */
-export function useReloadOnChange(value: unknown, reload: () => void): void {
-  const initial = useRef(value);
-  const changed = useRef(false);
+/** The start of today, as a time; it moves on at midnight, and when the window comes back after a sleep. */
+export function useToday(): number {
+  const [today, setToday] = useState(startOfToday);
 
   useEffect(() => {
-    if (!changed.current && Object.is(value, initial.current)) return;
-    changed.current = true;
-    reload();
-  }, [value, reload]);
+    const check = () => setToday(startOfToday());
+    const midnight = new Date(today);
+    midnight.setDate(midnight.getDate() + 1);
+    const timer = window.setTimeout(check, midnight.getTime() - Date.now());
+    window.addEventListener("focus", check);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("focus", check);
+    };
+  }, [today]);
+
+  return today;
+}
+
+function startOfToday(): number {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 }

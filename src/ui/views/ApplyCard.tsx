@@ -6,22 +6,16 @@ export interface ApplyCardProps {
   approval: Approval;
 }
 
-/** Manual mode: the change Ode wants to make, in one line, with Apply and Skip. */
+/** A change Ode wants to make, in one line, with Apply and Skip. */
 export function ApplyCard({ approval }: ApplyCardProps) {
   const client = useClient();
   return (
     <Card
-      kicker="Change waiting"
       tone={Tone.Accent}
       waiting={approval.decided}
       actions={
         <>
-          <Button
-            variant={ButtonVariant.Primary}
-            icon={IconName.Check}
-            disabled={approval.decided}
-            onClick={() => void client.decide(approval.id, "allow")}
-          >
+          <Button variant={ButtonVariant.Primary} icon={IconName.Check} disabled={approval.decided} onClick={() => void client.decide(approval.id, "allow")}>
             Apply
           </Button>
           <Button disabled={approval.decided} onClick={() => void client.decide(approval.id, "deny")}>

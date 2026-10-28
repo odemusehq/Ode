@@ -1,6 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
-import { ButtonVariant } from "./Button";
 import { Icon, IconName } from "./Icon";
 import { cx } from "./cx";
 import "./Button.css";
@@ -13,7 +12,6 @@ export interface MenuItem<T extends string> {
   description?: string;
   /** For a choice between options: whether this one is chosen. Leave out for plain actions. */
   checked?: boolean;
-  disabled?: boolean;
   icon?: IconName;
 }
 
@@ -33,34 +31,23 @@ export interface MenuProps<T extends string> {
   /** Which edge of the button the menu lines up with. */
   align?: MenuAlign;
   disabled?: boolean;
-  variant?: ButtonVariant;
 }
 
 const NEXT_KEYS: Record<string, number> = { ArrowDown: 1, ArrowUp: -1 };
 
 /** A button that opens a short list of actions, or of options with the chosen one checked. */
-export function Menu<T extends string>({
-  label,
-  buttonText,
-  icon,
-  items,
-  onSelect,
-  align = MenuAlign.Start,
-  disabled,
-  variant = ButtonVariant.Quiet,
-}: MenuProps<T>) {
+export function Menu<T extends string>({ label, buttonText, icon, items, onSelect, align = MenuAlign.Start, disabled }: MenuProps<T>) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const itemButtons = useRef(new Map<T, HTMLButtonElement>());
   const menuId = useId();
   const choice = items.some((item) => item.checked !== undefined);
-  const enabled = items.filter((item) => !item.disabled);
 
   // Runs when the menu opens or closes only: focus goes to the chosen item (or the first) once, on opening.
   useEffect(() => {
     if (!open) return;
-    const start = enabled.find((item) => item.checked) ?? enabled[0];
+    const start = items.find((item) => item.checked) ?? items[0];
     if (start) itemButtons.current.get(start.id)?.focus();
     const handlePointerDown = (event: PointerEvent) => {
       if (event.target instanceof Node && root.current?.contains(event.target)) return;
@@ -81,7 +68,7 @@ export function Menu<T extends string>({
   };
 
   const focusAt = (index: number) => {
-    const item = enabled[(index + enabled.length) % enabled.length];
+    const item = items[(index + items.length) % items.length];
     if (item) itemButtons.current.get(item.id)?.focus();
   };
 
@@ -92,7 +79,7 @@ export function Menu<T extends string>({
   };
 
   const handleListKeyDown = (event: KeyboardEvent<HTMLUListElement>) => {
-    const current = enabled.findIndex((item) => itemButtons.current.get(item.id) === document.activeElement);
+    const current = items.findIndex((item) => itemButtons.current.get(item.id) === document.activeElement);
     const step = NEXT_KEYS[event.key];
     if (event.key === "Tab") {
       close(false);
@@ -100,7 +87,7 @@ export function Menu<T extends string>({
     }
     if (step !== undefined) focusAt(current + step);
     else if (event.key === "Home") focusAt(0);
-    else if (event.key === "End") focusAt(enabled.length - 1);
+    else if (event.key === "End") focusAt(items.length - 1);
     else if (event.key === "Escape") close(true);
     else return;
     event.preventDefault();
@@ -112,7 +99,7 @@ export function Menu<T extends string>({
       <button
         ref={button}
         type="button"
-        className={cx("ode-button", `ode-button--${variant}`, buttonText ? "ode-menu__button" : "ode-icon-button", open && "ode-menu__button--open")}
+        className={cx("ode-button", "ode-button--quiet", buttonText ? "ode-menu__button" : "ode-icon-button", open && "ode-menu__button--open")}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
@@ -139,7 +126,6 @@ export function Menu<T extends string>({
                 role={choice ? "menuitemradio" : "menuitem"}
                 aria-checked={choice ? Boolean(item.checked) : undefined}
                 tabIndex={-1}
-                disabled={item.disabled}
                 className={cx("ode-menu__item", item.checked && "ode-menu__item--checked")}
                 onClick={() => choose(item.id)}
               >

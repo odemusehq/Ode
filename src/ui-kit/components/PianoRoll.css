@@ -1,64 +1,44 @@
 .ode-roll {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.ode-roll__toolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.ode-roll__zoom {
-  min-width: var(--control-height);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  font-variant-numeric: tabular-nums;
-  text-align: center;
-}
-
-.ode-roll__viewport {
-  overflow: auto;
-  max-height: var(--piano-roll-max-height);
+  display: grid;
+  grid-template-columns: var(--piano-roll-keys-width) minmax(0, 1fr);
+  height: calc(var(--roll-rows) * var(--piano-roll-row-height));
+  overflow: hidden;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-surface-sunken);
-}
-
-.ode-roll__canvas {
-  display: grid;
-  grid-template-columns: var(--piano-roll-keys-width) max-content;
-  grid-template-rows: max-content var(--piano-roll-lyric-height);
-  width: max-content;
+  background: var(--color-roll-white-key);
 }
 
 .ode-roll__keys {
-  position: sticky;
-  left: 0;
-  z-index: 1;
-  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
   border-right: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
 }
 
 .ode-roll__key {
+  position: relative;
+  flex: none;
   height: var(--piano-roll-row-height);
-  padding-left: var(--space-2);
-  font-size: var(--font-size-xs);
-  line-height: var(--piano-roll-row-height);
-  color: var(--color-text-muted);
-  white-space: nowrap;
 }
 
 .ode-roll__key--black {
   background: var(--color-roll-black-key);
 }
 
+.ode-roll__key-name {
+  position: absolute;
+  top: 0;
+  left: var(--space-2);
+  font-size: var(--font-size-xs);
+  line-height: 1;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
 .ode-roll__grid {
   display: block;
-  width: calc(var(--roll-beats) * var(--roll-zoom) * var(--piano-roll-beat-width));
-  height: calc(var(--roll-rows) * var(--piano-roll-row-height));
+  width: 100%;
+  height: 100%;
 }
 
 .ode-roll__row {
@@ -88,53 +68,4 @@
 
 .ode-roll__note--muted {
   fill: var(--color-roll-note-muted);
-}
-
-.ode-roll__corner {
-  position: sticky;
-  left: 0;
-  bottom: 0;
-  z-index: 2;
-  background: var(--color-surface);
-  border-top: var(--border-width) solid var(--color-border);
-  border-right: var(--border-width) solid var(--color-border);
-}
-
-.ode-roll__lyrics {
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
-  background: var(--color-surface);
-  border-top: var(--border-width) solid var(--color-border);
-}
-
-.ode-roll__syllable {
-  position: absolute;
-  top: var(--space-2);
-  display: flex;
-  flex-direction: column;
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-tight);
-  color: var(--color-text-muted);
-  white-space: nowrap;
-}
-
-.ode-roll__syllable--stressed {
-  color: var(--color-text);
-  font-weight: var(--font-weight-bold);
-}
-
-.ode-roll__stress {
-  min-height: calc(var(--font-size-xs) * var(--line-height-tight));
-  font-size: var(--font-size-xs);
-  color: var(--color-accent);
-}
-
-.ode-roll__syllable--held {
-  color: var(--color-text-disabled);
-}
-
-.ode-roll__syllable--problem,
-.ode-roll__syllable--problem .ode-roll__stress {
-  color: var(--color-danger);
 }

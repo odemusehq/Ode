@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps } from "react";
 import { Icon } from "./Icon";
 import type { IconName } from "./Icon";
 import { cx } from "./cx";
@@ -16,26 +16,12 @@ export interface ButtonProps extends ComponentProps<"button"> {
   icon?: IconName;
 }
 
+/** A button with text and an optional icon; set aria-pressed for one that turns something on and off. */
 export function Button({ variant = ButtonVariant.Secondary, icon, className, type = "button", children, ...rest }: ButtonProps) {
   return (
     <button type={type} className={cx("ode-button", `ode-button--${variant}`, className)} {...rest}>
       {icon && <Icon name={icon} />}
       {children}
     </button>
-  );
-}
-
-export interface ButtonGroupProps {
-  /** Names the group for assistive technology. */
-  label: string;
-  children: ReactNode;
-}
-
-/** Buttons that belong together; each gets the same width. */
-export function ButtonGroup({ label, children }: ButtonGroupProps) {
-  return (
-    <div className="ode-button-group" role="group" aria-label={label}>
-      {children}
-    </div>
   );
 }

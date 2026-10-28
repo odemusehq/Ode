@@ -65,8 +65,6 @@ export interface HistoryVersionProps {
   onSelect: (id: string | null) => void;
   /** How many versions are newer than this one; restoring it deletes them. */
   newer: number;
-  /** The newest version: "Make a copy first" copies the project as it is now. */
-  newestId: string;
   /** Says how a restore or a copy went. */
   onOutcome: (notes: VersionNote[]) => void;
   fold?: RunFold;
@@ -75,7 +73,7 @@ export interface HistoryVersionProps {
 }
 
 /** A version in the history: when, who, its name and summary; it opens to show its changes and has a menu. */
-export function HistoryVersion({ version, kind, selected, onSelect, newer, newestId, onOutcome, fold, nested }: HistoryVersionProps) {
+export function HistoryVersion({ version, kind, selected, onSelect, newer, onOutcome, fold, nested }: HistoryVersionProps) {
   const client = useClient();
   const [task, setTask] = useState(Task.None);
   const [draft, setDraft] = useState("");
@@ -102,10 +100,11 @@ export function HistoryVersion({ version, kind, selected, onSelect, newer, newes
     const notes: VersionNote[] = [];
     try {
       if (copyFirst) {
-        const result = await client.copyVersion(newestId);
+        const result = await client.copyNow();
         notes.push({ tone: Tone.Success, text: `A copy of the project as it is now is in ${result.path}.` });
       }
-      notes.push(restoreNote(await client.restoreVersion(version.id), moment));
+      const note = restoreNote(await client.restoreVersion(version.id), moment);
+      if (note) notes.push(note);
     } catch (error) {
       const what = copyFirst && notes.length === 0 ? "The copy wasn't made, so nothing was restored" : "The version wasn't restored";
       notes.push({ tone: Tone.Danger, text: `${what}: ${errorMessage(error)}` });
@@ -174,7 +173,6 @@ export function HistoryVersion({ version, kind, selected, onSelect, newer, newes
             icon={fold.open ? IconName.ChevronDown : IconName.ChevronRight}
             className="history-row__fold"
             aria-expanded={fold.open}
-            title={foldTitle(fold)}
             onClick={fold.onToggle}
           >
             {fold.count} more
@@ -210,11 +208,9 @@ export function HistoryVersion({ version, kind, selected, onSelect, newer, newes
           onConfirm={() => void restore(false)}
           onCancel={() => setTask(Task.None)}
           extra={
-            newer > 0 && (
-              <Button icon={IconName.Copy} onClick={() => void restore(true)} disabled={task === Task.Restoring}>
-                Make a copy first
-              </Button>
-            )
+            <Button icon={IconName.Copy} onClick={() => void restore(true)} disabled={task === Task.Restoring}>
+              Make a copy first
+            </Button>
           }
         />
       )}
@@ -224,23 +220,19 @@ export function HistoryVersion({ version, kind, selected, onSelect, newer, newes
   );
 }
 
-function foldTitle(fold: RunFold): string {
-  if (fold.open) return fold.count === 1 ? "Hide the earlier version" : "Hide the earlier versions";
-  return fold.count === 1 ? "Show the earlier version grouped here" : `Show the ${fold.count} earlier versions grouped here`;
-}
-
+/** Restoring deletes the later versions and anything changed by hand since the last one. */
 function confirmMessage(moment: string, newer: number): string {
-  if (newer === 0) return `Go back to ${moment}?`;
-  if (newer === 1) return `Go back to ${moment}? The version after it will be deleted.`;
-  return `Go back to ${moment}? The ${newer} versions after it will be deleted.`;
+  if (newer === 0) return `Go back to ${moment}? Anything changed since then will be deleted.`;
+  return `Go back to ${moment}? Later versions, and anything changed since the last one, will be deleted.`;
 }
 
-function restoreNote(outcome: RestoreResult, moment: string): VersionNote {
+/** Ode's result line says the restore worked; a note only for what couldn't be put back. */
+function restoreNote(outcome: RestoreResult, moment: string): VersionNote | null {
   const skipped = outcome.skipped.join("; ");
   if (!outcome.restored) {
     return { tone: Tone.Danger, text: skipped ? `Couldn't go back to ${moment}: ${skipped}` : `Couldn't go back to ${moment}.` };
   }
-  return skipped ? { tone: Tone.Warning, text: `Back to ${moment}. Not restored: ${skipped}` } : { tone: Tone.Success, text: `Back to ${moment}.` };
+  return skipped ? { tone: Tone.Warning, text: `Back to ${moment}. Not restored: ${skipped}` } : null;
 }
 
 /** "You · 12 edits on Drums and Pad" under "You" reads as "12 edits on Drums and Pad". */

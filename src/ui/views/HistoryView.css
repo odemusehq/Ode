@@ -1,3 +1,21 @@
+.history {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.history__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-5);
+}
+
 .history__outcome {
   display: flex;
   flex-direction: column;
@@ -12,10 +30,7 @@
 
 .history__date {
   font-size: var(--font-size-sm);
-  font-family: var(--font-family-heading);
   font-weight: var(--font-weight-heading);
-  letter-spacing: var(--letter-spacing-caps);
-  text-transform: uppercase;
   color: var(--color-text-muted);
 }
 
@@ -28,11 +43,6 @@
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
-}
-
-.history__small-print {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
 }
 
 .history-row {
@@ -147,7 +157,7 @@
 
 .history-row__name-form > .ode-input {
   flex: 1;
-  min-width: var(--fact-min-width);
+  min-width: var(--input-min-width);
 }
 
 .history-row__name-form > .ode-notice {
@@ -178,8 +188,7 @@
 }
 
 .history-detail__part--track {
-  border-color: var(--color-accent);
-  border-left-width: var(--border-width-strong);
+  border-left: var(--border-width-strong) solid var(--color-accent);
   background: var(--color-accent-tint);
 }
 
@@ -205,26 +214,9 @@
   min-width: 0;
 }
 
-.history-change__line {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
 .history-change__label {
   min-width: 0;
   overflow-wrap: anywhere;
-}
-
-.history-change__values {
-  font-size: var(--font-size-sm);
-  overflow-wrap: anywhere;
-}
-
-.history-change__before {
-  color: var(--color-text-muted);
-  text-decoration: line-through;
 }
 
 .history-change__rolls {
@@ -246,38 +238,22 @@
   color: var(--color-text-muted);
 }
 
-.history-sheet__lines {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.history-sheet__line {
+.history-lines {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
   min-width: 0;
+  padding-left: var(--space-4);
+  border-left: var(--border-width) solid var(--color-border-strong);
 }
 
-.history-sheet__number {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-}
-
-.history-sheet__old {
+.history-lines__old {
   color: var(--color-text-muted);
   text-decoration: line-through;
   overflow-wrap: anywhere;
 }
 
-.history-sheet__new {
+.history-lines__new {
   text-decoration: none;
   overflow-wrap: anywhere;
-}
-
-.history-sheet__chords {
-  color: var(--color-text-muted);
 }

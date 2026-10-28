@@ -66,16 +66,8 @@
   flex: none;
 }
 
-.ode-icon-button--pressed,
-.ode-icon-button--pressed:hover:not(:disabled) {
+.ode-button[aria-pressed="true"],
+.ode-button[aria-pressed="true"]:hover:not(:disabled) {
   background: var(--color-accent-tint);
-  border-color: var(--color-accent);
   color: var(--color-accent);
-}
-
-.ode-button-group {
-  display: inline-grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(var(--control-min-width), 1fr);
-  gap: var(--space-3);
 }

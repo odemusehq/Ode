@@ -2,50 +2,53 @@ import { API } from "../../shared/api";
 import type { CopyResult, RestoreResult } from "../../shared/api";
 import type { Suggestion, UiEvent } from "../../shared/events";
 import type { Mode } from "../../shared/personalisation";
-import type { LeadSheet } from "../../shared/song";
 import { OdeApi, errorMessage } from "./api";
 import { UI_CONFIG } from "./config";
 import { Debouncer } from "./debounce";
 import { EventStream } from "./events";
+import { Layout } from "./layout";
 import type { Decision } from "./model";
 import { REQUESTS } from "./requests";
+import { SharedLyrics } from "./shared-lyrics";
 import { Store } from "./state";
-import { ViewId } from "./views";
 
 /** Ode as the UI sees it: the server's API, its event stream and the state they feed. */
 export class OdeClient {
   readonly store = new Store();
   readonly api = new OdeApi();
+  /** The lyrics the musician and Ode both edit; the Ode window keeps them in step, the strip leaves them. */
+  readonly lyrics = new SharedLyrics(this.api);
   private readonly stream: EventStream;
-  private readonly suggestionsLater = new Debouncer(UI_CONFIG.suggestionsDelayMs);
+  private readonly versionsCheck = new Debouncer(UI_CONFIG.versionsCheckDelayMs);
   /** An Undo is on its way; a second press doesn't go back a second version. */
   private undoing = false;
 
-  constructor() {
+  constructor(readonly layout: Layout) {
     this.stream = new EventStream(API.events, {
       onEvent: (event) => this.receive(event),
       onState: (state) => this.store.setStream(state),
-      onOpen: () => void this.refresh(),
+      onOpen: () => this.opened(),
     });
   }
 
   start(): void {
     this.stream.start();
+    if (this.layout === Layout.Full) window.addEventListener("focus", this.handleFocus);
   }
 
   stop(): void {
-    this.suggestionsLater.cancel();
+    window.removeEventListener("focus", this.handleFocus);
+    this.versionsCheck.cancel();
     this.stream.stop();
   }
 
   /**
-   * Reads again what events may have missed: the status, the lead sheet and the suggestions, and the versions
-   * when History is showing them (History reads them itself when it opens).
+   * Reads again what events may have missed: the status, and in the Ode window the lyrics and the history. The
+   * server sends the selection, its suggestions and anything waiting for the musician when the stream opens.
    */
   async refresh(): Promise<void> {
-    const { view, versions } = this.store.getSnapshot();
-    const reads = [this.refreshStatus(), this.refreshSong(), this.loadSuggestions()];
-    if (view === ViewId.History && versions !== null) reads.push(this.loadVersions());
+    const reads = [this.refreshStatus()];
+    if (this.layout === Layout.Full) reads.push(this.lyrics.load(), this.loadVersions());
     await Promise.allSettled(reads);
   }
 
@@ -53,23 +56,20 @@ export class OdeClient {
     this.store.setStatus(await this.api.getStatus());
   }
 
-  async refreshSong(): Promise<void> {
-    this.store.setSong(await this.api.getSong());
-  }
-
-  async loadSuggestions(): Promise<void> {
-    this.store.setSuggestions(await this.api.getSuggestions());
-  }
-
   async loadVersions(): Promise<void> {
-    this.store.setVersions(await this.api.getVersions());
+    try {
+      this.store.setVersions(await this.api.getVersions());
+    } catch (error) {
+      this.store.setHistoryError(`The history couldn't be read: ${errorMessage(error)}`);
+    }
   }
 
-  /** Sends a typed line or a request from a button; Ode answers with a result line. */
+  /** Sends a typed line or a tapped suggestion; Ode answers with a result line. */
   async send(text: string): Promise<void> {
     const request = text.trim();
     if (!request) return;
     this.store.startRequest();
+    await this.lyrics.flush();
     try {
       await this.api.chat({ text: request });
     } catch (error) {
@@ -88,6 +88,7 @@ export class OdeClient {
   /** Sends what the musician said; the server writes it down and sends it to Ode. Returns the words, or null. */
   async sendSpeech(wav: Blob): Promise<string | null> {
     this.store.startRequest();
+    await this.lyrics.flush();
     try {
       return (await this.api.speech(wav)).text;
     } catch (error) {
@@ -96,14 +97,40 @@ export class OdeClient {
     }
   }
 
-  /** Asks Ode why it made its last change; the short answer goes under the result line. */
-  async askWhy(): Promise<void> {
-    this.store.askWhy();
+  /** Asks why Ode made the change with this version; the short answer goes under its result line. */
+  async askWhy(versionId: string): Promise<void> {
+    this.store.startRequest();
+    await this.lyrics.flush();
     try {
-      await this.api.chat({ text: REQUESTS.why });
+      await this.api.why({ versionId });
     } catch (error) {
-      this.store.cancelWhy();
-      this.store.setError(`Ode didn't get that: ${errorMessage(error)}`);
+      this.store.setError(`Ode couldn't answer: ${errorMessage(error)}`);
+    }
+  }
+
+  /** Another take of the change with this version, in place. */
+  async again(versionId: string): Promise<void> {
+    this.store.startRequest();
+    await this.lyrics.flush();
+    try {
+      await this.api.again({ versionId });
+    } catch (error) {
+      this.store.setError(`Ode couldn't try again: ${errorMessage(error)}`);
+    }
+  }
+
+  /** Back to the version before the change with this version; the server's result line says how it went. */
+  async undo(versionId: string): Promise<void> {
+    if (this.undoing) return;
+    this.undoing = true;
+    this.store.startRequest();
+    try {
+      const outcome = await this.api.undo({ versionId });
+      if (!outcome.restored) this.store.setError(refusal("Couldn't undo", outcome));
+    } catch (error) {
+      this.store.setError(`Couldn't undo: ${errorMessage(error)}`);
+    } finally {
+      this.undoing = false;
     }
   }
 
@@ -112,30 +139,6 @@ export class OdeClient {
       await this.api.stop();
     } catch (error) {
       this.store.setError(`Ode couldn't stop: ${errorMessage(error)}`);
-    }
-  }
-
-  /** Back to the version before Ode's last change, without asking. */
-  async undo(): Promise<void> {
-    if (this.undoing) return;
-    this.undoing = true;
-    try {
-      this.store.setResult({ text: undoLine(await this.api.undo()), versionId: null, undone: true });
-      this.refreshSuggestionsSoon();
-    } catch (error) {
-      this.store.setError(`Undo didn't work: ${errorMessage(error)}`);
-    } finally {
-      this.undoing = false;
-    }
-  }
-
-  /** Another take of Ode's last change, in place. */
-  async again(): Promise<void> {
-    this.store.startRequest();
-    try {
-      await this.api.again();
-    } catch (error) {
-      this.store.setError(`Ode couldn't try again: ${errorMessage(error)}`);
     }
   }
 
@@ -149,7 +152,7 @@ export class OdeClient {
     }
   }
 
-  /** Manual mode: Apply ("allow") or Skip ("deny") a change Ode wants to make. */
+  /** Apply ("allow") or Skip ("deny") a change Ode wants to make. */
   async decide(approvalId: string, decision: Decision): Promise<void> {
     this.store.setApprovalDecided(approvalId, true);
     try {
@@ -174,7 +177,7 @@ export class OdeClient {
   /** Restores a version the musician confirmed; the versions after it are deleted. Throws when it fails. */
   async restoreVersion(id: string): Promise<RestoreResult> {
     const outcome = await this.api.restoreVersion(id);
-    await this.loadVersions().catch(() => undefined);
+    await this.loadVersions();
     return outcome;
   }
 
@@ -188,27 +191,45 @@ export class OdeClient {
     return this.api.copyVersion(id);
   }
 
-  async saveSong(leadSheet: LeadSheet): Promise<LeadSheet> {
-    const saved = await this.api.saveSong(leadSheet);
-    this.store.setSong(saved);
-    return saved;
+  /** Copies the project as it is now, hand edits included. Throws when it fails. */
+  copyNow(): Promise<CopyResult> {
+    return this.api.copyNow();
+  }
+
+  private opened(): void {
+    this.store.streamOpened();
+    void this.refresh();
   }
 
   private receive(event: UiEvent): void {
     this.store.apply(event);
-    const setChanged = event.type === "result" && event.versionId !== null;
-    if (event.type === "selection" || setChanged) this.refreshSuggestionsSoon();
+    if (this.layout !== Layout.Full) return;
+    if (event.type === "lyrics") {
+      this.lyrics.receive(event.lyrics);
+    } else if (event.type === "title") {
+      // Sent when another Set opens, too: its lyrics and history replace these.
+      void this.lyrics.load(true);
+      void this.loadVersions();
+    }
   }
 
-  /** The selection or the Set changed: ask for suggestions once things settle. */
-  private refreshSuggestionsSoon(): void {
-    this.suggestionsLater.schedule(() => void this.loadSuggestions().catch(() => undefined));
+  /** The musician comes back to the window: what they changed in Live meanwhile becomes a version. */
+  private readonly handleFocus = (): void => {
+    this.versionsCheck.schedule(() => void this.checkVersions());
+  };
+
+  private async checkVersions(): Promise<void> {
+    try {
+      const version = await this.api.checkVersions();
+      if (version) this.store.putVersion(version);
+    } catch {
+      // The next request saves the hand edits anyway.
+    }
   }
 }
 
-/** The result line after Undo, with anything that couldn't be put back. */
-function undoLine(outcome: RestoreResult): string {
-  const skipped = outcome.skipped.join("; ");
-  if (outcome.restored) return skipped ? `Undone, except: ${skipped}` : "Undone.";
-  return skipped ? `Couldn't undo: ${skipped}` : "Nothing to undo.";
+/** "Couldn't undo: You have changed the Set since…", from the reasons the server gave. */
+function refusal(what: string, outcome: RestoreResult): string {
+  const reasons = outcome.skipped.join("; ");
+  return reasons ? `${what}: ${reasons}` : `${what}.`;
 }

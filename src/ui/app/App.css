@@ -4,17 +4,13 @@
   height: 100vh;
 }
 
-.app > .ode-tabs {
-  flex: 1;
-}
-
 .app-header {
   display: flex;
   align-items: center;
   gap: var(--space-4);
   flex: none;
   min-height: var(--header-height);
-  padding: 0 var(--space-5);
+  padding: 0 var(--space-4) 0 var(--space-5);
   border-bottom: var(--border-width) solid var(--color-border);
 }
 
@@ -40,6 +36,41 @@
   padding: var(--space-2);
 }
 
+/* The history, with the lyrics panel beside it; on narrow windows the panel goes over it (LyricsPanel.css). */
+.app-body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* The title row of the history and the lyrics. */
+.pane-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex: none;
+  min-height: var(--pane-header-height);
+  padding: 0 var(--space-5);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.pane-header__title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-heading);
+  font-weight: var(--font-weight-heading);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.pane-header .ode-toggle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
 .app-logo {
   flex: none;
   width: var(--logo-size);
@@ -61,79 +92,40 @@
 .status-bar {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
   flex: none;
   padding: var(--space-3) var(--space-5);
   border-top: var(--border-width) solid var(--color-border);
   background: var(--color-surface);
   font-size: var(--font-size-sm);
-}
-
-.status-bar__server {
   color: var(--color-text-muted);
 }
 
-.status-bar__server--lost {
-  color: var(--color-warning);
-}
-
-.status-bar__hints {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: 0;
-  list-style: none;
-  color: var(--color-text-muted);
-}
-
-.status-bar__hints strong {
+.status-bar__line strong {
   color: var(--color-text);
   font-weight: var(--font-weight-medium);
 }
 
-.connections {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-5);
-  padding: 0;
-  list-style: none;
-  font-size: var(--font-size-sm);
+.status-bar__line--lost {
+  color: var(--color-warning);
+}
+
+.muted {
   color: var(--color-text-muted);
 }
 
-.connections__item {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-3);
-  white-space: nowrap;
-}
-
-.connections__dot {
-  flex: none;
-  width: var(--dot-size);
-  height: var(--dot-size);
-  border-radius: var(--radius-round);
-  border: var(--border-width) solid var(--color-border-strong);
-}
-
-.connections__dot--on {
-  border-color: var(--color-success);
-  background: var(--color-success);
-}
-
-.connections__dot--off {
-  border-color: var(--color-danger);
-  background: transparent;
+.small {
+  font-size: var(--font-size-sm);
 }
 
 .strip {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
   grid-template-areas:
     "logo status"
-    "logo result"
-    "logo actions";
+    "logo result";
+  align-content: center;
   gap: var(--space-3) var(--space-5);
   height: 100vh;
   padding: var(--space-4) var(--space-5);
@@ -174,14 +166,4 @@
   overflow: hidden;
   font-size: var(--font-size-md);
   overflow-wrap: anywhere;
-}
-
-.strip__result--empty {
-  color: var(--color-text-muted);
-}
-
-.strip__actions {
-  grid-area: actions;
-  display: flex;
-  gap: var(--space-3);
 }

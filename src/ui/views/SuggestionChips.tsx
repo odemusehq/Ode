@@ -16,7 +16,6 @@ export function SuggestionChips() {
           key={suggestion.id}
           tone={suggestion.fix ? Tone.Warning : Tone.Neutral}
           icon={suggestion.fix ? IconName.Alert : undefined}
-          title={suggestion.request}
           disabled={busy}
           onClick={() => void client.tap(suggestion)}
         >

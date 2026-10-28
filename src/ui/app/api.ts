@@ -1,38 +1,27 @@
 import { API } from "../../shared/api";
 import type {
   ApprovalRequest,
-  ArtistFact,
   ChatRequest,
   CopyResult,
-  CoverChoice,
-  LeadSheet,
-  LiveReadRequest,
-  LyricsAnalysis,
-  LyricsAnalyzeRequest,
-  MelodyRequest,
-  MelodySetting,
-  MemoryAdd,
+  LyricsSaved,
+  LyricsState,
+  LyricsWrite,
   ModeRequest,
-  PreferencesResponse,
-  PreferencesUpdate,
   QuestionAnswer,
-  ReleaseResponse,
   RestoreRequest,
   RestoreResult,
   StatusResponse,
-  Suggestion,
   VersionDetail,
   VersionListItem,
   VersionNameRequest,
+  VersionRequest,
 } from "../../shared/api";
-import type { DeviceOpArgs, DeviceOpResults, ExtensionOpArgs, ExtensionOpResults } from "../../shared/live-ops";
 import type { Mode } from "../../shared/personalisation";
 
 enum HttpMethod {
   Get = "GET",
   Post = "POST",
   Put = "PUT",
-  Delete = "DELETE",
 }
 
 const JSON_TYPE = "application/json";
@@ -51,11 +40,6 @@ export interface SpeechResponse {
   text: string;
 }
 
-/** Read-only Live operations the UI may call. */
-export type UiReadOp = LiveReadRequest["op"];
-export type UiReadArgs = { [Op in UiReadOp]: (ExtensionOpArgs & DeviceOpArgs)[Op] };
-export type UiReadResults = { [Op in UiReadOp]: (ExtensionOpResults & DeviceOpResults)[Op] };
-
 export class ApiError extends Error {
   readonly status: number;
 
@@ -72,7 +56,7 @@ export function errorMessage(error: unknown): string {
   return String(error);
 }
 
-/** Typed access to every route of the local server. */
+/** Typed access to every route of the local server the window uses. */
 export class OdeApi {
   chat(request: ChatRequest): Promise<OkResponse> {
     return this.request(HttpMethod.Post, API.chat, request);
@@ -90,16 +74,17 @@ export class OdeApi {
     return this.request(HttpMethod.Post, API.question(id), request);
   }
 
-  undo(): Promise<RestoreResult> {
-    return this.request(HttpMethod.Post, API.undo);
+  undo(request: VersionRequest): Promise<RestoreResult> {
+    return this.request(HttpMethod.Post, API.undo, request);
   }
 
-  again(): Promise<OkResponse> {
-    return this.request(HttpMethod.Post, API.again);
+  again(request: VersionRequest): Promise<OkResponse> {
+    return this.request(HttpMethod.Post, API.again, request);
   }
 
-  getSuggestions(): Promise<Suggestion[]> {
-    return this.request(HttpMethod.Get, API.suggestions);
+  /** Asks why Ode made that change; the answer arrives as an "answer" event. */
+  why(request: VersionRequest): Promise<OkResponse> {
+    return this.request(HttpMethod.Post, API.why, request);
   }
 
   setMode(request: ModeRequest): Promise<ModeResponse> {
@@ -113,8 +98,22 @@ export class OdeApi {
     return (await response.json()) as SpeechResponse;
   }
 
+  getLyrics(): Promise<LyricsState> {
+    return this.request(HttpMethod.Get, API.lyrics);
+  }
+
+  /** Saves the whole text with the revision it was edited from; the server merges it with what Ode saved since. */
+  saveLyrics(write: LyricsWrite): Promise<LyricsSaved> {
+    return this.request(HttpMethod.Put, API.lyrics, write);
+  }
+
   getVersions(): Promise<VersionListItem[]> {
     return this.request(HttpMethod.Get, API.versions);
+  }
+
+  /** Saves the musician's hand edits as a version now, when Ode is idle; null when there were none. */
+  checkVersions(): Promise<VersionListItem | null> {
+    return this.request(HttpMethod.Post, API.versionsCheck);
   }
 
   getVersion(id: string): Promise<VersionDetail> {
@@ -135,69 +134,17 @@ export class OdeApi {
     return this.request(HttpMethod.Post, API.versionCopy(id));
   }
 
-  getSong(): Promise<LeadSheet> {
-    return this.request(HttpMethod.Get, API.song);
-  }
-
-  saveSong(leadSheet: LeadSheet): Promise<LeadSheet> {
-    return this.request(HttpMethod.Put, API.song, leadSheet);
-  }
-
-  getPreferences(): Promise<PreferencesResponse> {
-    return this.request(HttpMethod.Get, API.preferences);
-  }
-
-  savePreferences(update: PreferencesUpdate): Promise<PreferencesResponse> {
-    return this.request(HttpMethod.Put, API.preferences, update);
-  }
-
-  getMemory(): Promise<ArtistFact[]> {
-    return this.request(HttpMethod.Get, API.memory);
-  }
-
-  addMemory(item: MemoryAdd): Promise<ArtistFact> {
-    return this.request(HttpMethod.Post, API.memory, item);
-  }
-
-  deleteMemory(id: string): Promise<OkResponse> {
-    return this.request(HttpMethod.Delete, API.memoryItem(id));
-  }
-
-  analyzeLyrics(request: LyricsAnalyzeRequest): Promise<LyricsAnalysis> {
-    return this.request(HttpMethod.Post, API.lyricsAnalyze, request);
-  }
-
-  /** A section's lines under the notes of the clip selected in Live. */
-  setToMelody(request: MelodyRequest): Promise<MelodySetting> {
-    return this.request(HttpMethod.Post, API.lyricsMelody, request);
+  /** Saves the hand edits, then copies the project as it is now. */
+  copyNow(): Promise<CopyResult> {
+    return this.request(HttpMethod.Post, API.copyNow);
   }
 
   getStatus(): Promise<StatusResponse> {
     return this.request(HttpMethod.Get, API.status);
   }
 
-  getRelease(): Promise<ReleaseResponse> {
-    return this.request(HttpMethod.Get, API.release);
-  }
-
   releaseFileUrl(name: string): string {
     return API.releaseFile(name);
-  }
-
-  /** One of Ode's cover art images becomes cover.png. */
-  chooseCover(request: CoverChoice): Promise<ReleaseResponse> {
-    return this.request(HttpMethod.Post, API.releaseCover, request);
-  }
-
-  async getReleaseText(name: string): Promise<string> {
-    const response = await fetch(API.releaseFile(name));
-    if (!response.ok) throw new ApiError(response.status, await readError(response));
-    return response.text();
-  }
-
-  liveRead<Op extends UiReadOp>(op: Op, args: UiReadArgs[Op]): Promise<UiReadResults[Op]> {
-    const request: LiveReadRequest = { op, args };
-    return this.request(HttpMethod.Post, API.liveRead, request);
   }
 
   private async request<T>(method: HttpMethod, path: string, body?: unknown): Promise<T> {

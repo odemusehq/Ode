@@ -2,26 +2,21 @@ import { useEffect, useId, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { Button, IconName, TextInput, cx } from "../../ui-kit";
 import { errorMessage } from "../app/api";
-import { UI_CONFIG } from "../app/config";
 import { useAppState, useClient } from "../app/hooks";
 import { SpeechRecorder } from "../app/speech-recorder";
 
 enum ListenState {
   Idle = "idle",
+  Starting = "starting",
   Recording = "recording",
   Sending = "sending",
 }
 
 const LISTEN_LABELS: Record<ListenState, string> = {
   [ListenState.Idle]: "Listen",
+  [ListenState.Starting]: "Starting…",
   [ListenState.Recording]: "Stop",
   [ListenState.Sending]: "Sending…",
-};
-
-const LISTEN_TITLES: Record<ListenState, string> = {
-  [ListenState.Idle]: "Say what you want; press again when you're done",
-  [ListenState.Recording]: "Stop listening and send what you said",
-  [ListenState.Sending]: "Sending what you said",
 };
 
 const PLACEHOLDER = "Tell Ode what you want";
@@ -47,11 +42,13 @@ export function NowInput() {
   };
 
   const startListening = async () => {
+    setListen(ListenState.Starting);
     try {
       await recorder.start();
       setHeard(null);
       setListen(ListenState.Recording);
     } catch (error) {
+      setListen(ListenState.Idle);
       client.store.setError(`Ode can't use the microphone: ${errorMessage(error)}`);
     }
   };
@@ -72,6 +69,8 @@ export function NowInput() {
     else if (listen === ListenState.Recording) void stopListening();
   };
 
+  const recording = listen === ListenState.Recording;
+
   return (
     <form className="now__input" onSubmit={submit}>
       <label htmlFor={inputId} className="ode-visually-hidden">
@@ -86,21 +85,14 @@ export function NowInput() {
         onChange={(event) => setText(event.target.value)}
       />
       <Button
-        icon={listen === ListenState.Recording ? IconName.Stop : IconName.Microphone}
-        className={cx(listen === ListenState.Recording && "now__listening")}
-        aria-pressed={listen === ListenState.Recording}
-        title={LISTEN_TITLES[listen]}
-        disabled={listen === ListenState.Sending}
+        icon={recording ? IconName.Stop : IconName.Microphone}
+        className={cx(recording && "now__listening")}
+        disabled={listen === ListenState.Starting || listen === ListenState.Sending}
         onClick={toggleListening}
       >
         {LISTEN_LABELS[listen]}
       </Button>
-      <Button
-        icon={IconName.Note}
-        title={`Sing over the next ${UI_CONFIG.humBars} bars; Ode turns it into MIDI on the selected track`}
-        disabled={busy}
-        onClick={() => void client.hum()}
-      >
+      <Button icon={IconName.Note} disabled={busy} onClick={() => void client.hum()}>
         Hum
       </Button>
       {heard && <p className="now__heard">Heard: “{heard}”</p>}

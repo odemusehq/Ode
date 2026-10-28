@@ -50,10 +50,6 @@
   --color-danger-tint: #442321;
   --color-neutral-tint: var(--color-surface-raised);
 
-  /* Meters */
-  --color-meter-track: var(--color-surface-sunken);
-  --color-meter-level: var(--color-success);
-
   /* Piano roll */
   --color-roll-white-key: #201e30;
   --color-roll-black-key: #171426;
@@ -113,10 +109,10 @@
   /* Control sizes */
   --control-height: 28px;
   --control-height-sm: 22px;
-  --control-min-width: 64px;
   --icon-size: 16px;
   --icon-stroke: 1.75;
   --dot-size: 8px;
+  --mark-size: 6px;
   --toggle-width: 30px;
   --toggle-height: 16px;
   --toggle-thumb: 12px;
@@ -138,47 +134,41 @@
 
   /* Layout */
   --header-height: 40px;
-  --content-max-width: 880px;
-  --fact-min-width: 120px;
-  --cover-size: 240px;
-  --cover-choice-size: 96px;
-  --mixer-strip-width: 56px;
+  --pane-header-height: 34px;
+  --input-min-width: 120px;
+  /* A cover art answer to a question. */
+  --cover-choice-size: 88px;
   --strip-message-lines: 3;
-  /* The Now panel scrolls past this height so the tabs below keep their room. */
-  --now-max-height: 55vh;
+  /* The Now panel scrolls past this height so the history below keeps its room. */
+  --now-max-height: 50vh;
   --history-indent: 22px;
   --history-summary-lines: 2;
+  --z-panel: 5;
+
+  /* Lyrics panel: beside the history, or over it on windows narrower than LyricsPanel.css's breakpoint */
+  --lyrics-panel-width: 400px;
+  --lyrics-line-height: 22px;
+  --lyrics-count-width: 34px;
+  --lyrics-rhyme-width: 16px;
+  --lyrics-mark-width: 14px;
 
   /* Menus */
   --menu-min-width: 220px;
   --menu-max-width: 300px;
   --menu-button-max-width: 120px;
 
-  /* Meter */
-  --meter-thickness: 8px;
-  --meter-length: 140px;
-
-  /* Piano roll */
-  --piano-roll-beat-width: 20px;
-  --piano-roll-row-height: 9px;
-  --piano-roll-keys-width: 34px;
-  --piano-roll-lyric-height: 34px;
-  --piano-roll-max-height: 360px;
-
-  /* Chord chart */
-  --chord-bars-per-row: 4;
-  --chord-bar-height: 48px;
+  /* Piano roll: rows of a fixed height, as wide as the space it has */
+  --piano-roll-row-height: 7px;
+  --piano-roll-keys-width: 30px;
 
   /* Motion */
   --motion-fast: 120ms;
-  --motion-meter: 60ms;
   --motion-pulse: ode-pulse 1.2s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root {
     --motion-fast: 0ms;
-    --motion-meter: 0ms;
     --motion-pulse: none;
   }
 }

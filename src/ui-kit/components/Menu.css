@@ -60,18 +60,13 @@
   cursor: pointer;
 }
 
-.ode-menu__item:hover:not(:disabled),
+.ode-menu__item:hover,
 .ode-menu__item:focus-visible {
   background: var(--color-surface-hover);
 }
 
 .ode-menu__item:focus-visible {
   outline-offset: calc(var(--focus-ring-width) * -1);
-}
-
-.ode-menu__item:disabled {
-  cursor: default;
-  opacity: var(--opacity-disabled);
 }
 
 .ode-menu__mark {

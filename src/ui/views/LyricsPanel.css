@@ -1,0 +1,162 @@
+.lyrics {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: var(--lyrics-panel-width);
+  min-height: 0;
+  border-left: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.lyrics__reading {
+  padding: var(--space-5);
+  color: var(--color-text-muted);
+}
+
+.lyrics__problem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex: none;
+  padding: var(--space-3) var(--space-5);
+  border-top: var(--border-width) solid var(--color-border);
+  color: var(--color-danger);
+}
+
+.lyrics__problem-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.lyrics-editor {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  background: var(--color-surface-sunken);
+}
+
+.lyrics-editor:focus-within {
+  box-shadow: inset 0 0 0 var(--border-width) var(--color-highlight);
+}
+
+.lyrics-editor__gutter {
+  flex: none;
+  overflow: hidden;
+  padding: var(--space-4) 0 calc(var(--space-4) + var(--scrollbar-size));
+  border-right: var(--border-width) solid var(--color-border);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  user-select: none;
+}
+
+.lyrics-editor__row {
+  display: grid;
+  grid-template-columns: var(--lyrics-count-width) var(--lyrics-rhyme-width) var(--lyrics-mark-width);
+  align-items: center;
+  height: var(--lyrics-line-height);
+  line-height: var(--lyrics-line-height);
+}
+
+.lyrics-editor__row--current {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.lyrics-editor__count {
+  padding-right: var(--space-3);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.lyrics-editor__rhyme {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-highlight);
+}
+
+.lyrics-editor__mark {
+  justify-self: center;
+  width: var(--mark-size);
+  height: var(--mark-size);
+  border-radius: var(--radius-round);
+}
+
+.lyrics-editor__mark--noted {
+  background: var(--color-warning);
+}
+
+.lyrics-editor__text {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-4) var(--space-5);
+  overflow: auto;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  line-height: var(--lyrics-line-height);
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
+.lyrics-editor__text::placeholder {
+  color: var(--color-text-muted);
+}
+
+.lyrics-line {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: calc(var(--lyrics-line-height) + 2 * var(--space-3));
+  padding: var(--space-3) var(--space-5);
+  border-top: var(--border-width) solid var(--color-border);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.lyrics-line__stress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  line-height: var(--lyrics-line-height);
+}
+
+.lyrics-line__word--uncertain .lyrics-line__syllable {
+  text-decoration: underline dashed var(--color-warning);
+  text-underline-offset: var(--space-1);
+}
+
+.lyrics-line__syllable + .lyrics-line__syllable::before {
+  content: "·";
+  color: var(--color-text-disabled);
+}
+
+.lyrics-line__syllable--stressed {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.lyrics-line__syllable--secondary {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.lyrics-line__note {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 719px) {
+  /* Too narrow for both: the lyrics go over the history. Keep in step with --lyrics-panel-width plus room for the history. */
+  .lyrics {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-panel);
+    width: auto;
+    border-left: 0;
+  }
+}

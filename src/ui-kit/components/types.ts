@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-/** Colour role of badges, notices and status marks. */
+/** Colour role of cards, chips, notices and status marks. */
 export enum Tone {
   Neutral = "neutral",
   Accent = "accent",
@@ -10,10 +10,5 @@ export enum Tone {
   Danger = "danger",
 }
 
-export enum Orientation {
-  Horizontal = "horizontal",
-  Vertical = "vertical",
-}
-
-/** Inline style that may also set CSS custom properties, e.g. `{ "--meter-level": "40%" }`. */
+/** Inline style that may also set CSS custom properties, e.g. `{ "--roll-rows": 13 }`. */
 export type CSSVariables = CSSProperties & { [name: `--${string}`]: string | number };
