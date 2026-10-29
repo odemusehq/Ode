@@ -30,6 +30,9 @@ export const API = {
 
 /** The cover art the release uses, in the release folder. */
 export const COVER_FILE = "cover.png";
+/** The lyric sheet and the credits Ode writes into the release folder. */
+export const LYRICS_FILE = "lyrics.txt";
+export const CREDITS_FILE = "credits.json";
 /** The cover art choices Ode makes: cover-1.png, cover-2.png… */
 export const COVER_CHOICE = /^cover-(\d+)\.png$/;
 

@@ -3,8 +3,9 @@ import { join } from "node:path";
 import { z } from "zod";
 import { LyricsText } from "../../mneme/lyrics-text";
 import { SetWording } from "../../mneme/set-diff";
+import { CREDITS_FILE, LYRICS_FILE } from "../../shared/api";
 import { PersonalisationOverridesSchema } from "../../shared/personalisation";
-import { ClipLinkSchema, CreditSchema, IntentSchema, SectionSchema, type LeadSheet } from "../../shared/song";
+import { ClipLinkSchema, CreditSchema, IntentSchema, SectionSchema, type Credit, type LeadSheet } from "../../shared/song";
 import { VersionAuthor } from "../../shared/versions";
 import { defineTool, type AnyTool } from "../define";
 import { historyTools } from "./history";
@@ -41,6 +42,19 @@ const SHEET_FIELD_WORDS: Readonly<Record<keyof LeadSheetPatch, string>> = {
 };
 
 /** The lyric sheet of the release: the title, then the lyrics as they are written, labels included. */
+/** The sheet's credits followed by the new ones it lacks, matched by role and name in any case. */
+function mergedCredits(existing: Credit[], added: Credit[]): Credit[] {
+  const key = (credit: Credit) => `${credit.role.trim().toLowerCase()}\n${credit.name.trim().toLowerCase()}`;
+  const merged = [...existing];
+  const known = new Set(existing.map(key));
+  for (const credit of added) {
+    if (known.has(key(credit))) continue;
+    known.add(key(credit));
+    merged.push(credit);
+  }
+  return merged;
+}
+
 function lyricSheet(sheet: LeadSheet): string {
   return `${sheet.title || "Untitled"}\n\n${sheet.lyrics.trim()}\n`;
 }
@@ -180,15 +194,20 @@ export const songTools: AnyTool[] = [
     changes: "memory",
     description:
       "Write the release files into the song's release folder: the lyric sheet (the title and the lyrics) and the credits. The cover art goes there too: make choices with cover_art_create and keep the musician's pick with cover_art_choose. Returns the files written.",
-    input: { credits: z.array(CreditSchema).optional().describe('Credits to add to the lead sheet, e.g. { role: "Written by", name }') },
+    input: {
+      credits: z
+        .array(CreditSchema)
+        .optional()
+        .describe('Credits to add to the lead sheet, e.g. { role: "Written by", name }; a credit the sheet already holds stays once'),
+    },
     describe: () => "Release · lyric sheet and credits",
     run: async ({ credits }, ctx) => {
-      const sheet = credits ? await ctx.song.update({ credits: [...(await ctx.song.read()).credits, ...credits] }) : await ctx.song.read();
+      const sheet = credits ? await ctx.song.update({ credits: mergedCredits((await ctx.song.read()).credits, credits) }) : await ctx.song.read();
       const dir = ctx.song.releaseDir;
       await mkdir(dir, { recursive: true });
-      await writeFile(join(dir, "lyrics.txt"), lyricSheet(sheet), "utf8");
-      await writeFile(join(dir, "credits.json"), `${JSON.stringify(sheet.credits, null, 2)}\n`, "utf8");
-      return { folder: dir, files: ["lyrics.txt", "credits.json"] };
+      await writeFile(join(dir, LYRICS_FILE), lyricSheet(sheet), "utf8");
+      await writeFile(join(dir, CREDITS_FILE), `${JSON.stringify(sheet.credits, null, 2)}\n`, "utf8");
+      return { files: [LYRICS_FILE, CREDITS_FILE] };
     },
   }),
   ...historyTools,
