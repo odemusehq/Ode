@@ -28,7 +28,6 @@
   --color-text: var(--brand-light);
   --color-text-muted: #b6b4cd;
   --color-text-disabled: #706f85;
-  --color-backdrop: rgb(11 8 25 / 0.6);
 
   /* Accents: violet for primary actions and active states, cyan for focus, selection, links and information */
   --color-accent: var(--brand-violet);
@@ -75,8 +74,6 @@
   --font-size-sm: 11px;
   --font-size-md: 13px;
   --font-size-lg: 15px;
-  --font-size-xl: 18px;
-  --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-bold: 600;
   --line-height-tight: 1.2;
@@ -91,10 +88,8 @@
   --space-5: 12px;
   --space-6: 16px;
   --space-7: 24px;
-  --space-8: 32px;
 
   /* Radii and borders */
-  --radius-sm: 3px;
   --radius-md: 5px;
   --radius-lg: 8px;
   --radius-round: 999px;
@@ -102,7 +97,6 @@
   --border-width-strong: 2px;
   --focus-ring-width: 2px;
   --focus-ring-offset: 1px;
-  --shadow-raised: 0 1px 3px rgb(0 0 0 / 0.45);
   --shadow-popover: 0 6px 18px rgb(0 0 0 / 0.5);
   --z-popover: 10;
 
@@ -116,7 +110,6 @@
   --toggle-width: 30px;
   --toggle-height: 16px;
   --toggle-thumb: 12px;
-  --logo-size: 22px;
 
   /*
    * Logo lockup, by the brand's logo rules: the whole note is as tall as the capitals with its bottom on the

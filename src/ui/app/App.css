@@ -135,12 +135,6 @@
   color: var(--color-text-muted);
 }
 
-.app-logo {
-  flex: none;
-  width: var(--logo-size);
-  height: var(--logo-size);
-}
-
 .logo-lockup {
   white-space: nowrap;
 }

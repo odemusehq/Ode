@@ -1,10 +1,5 @@
 const SYMBOL_URL = "/odemuse-symbol.svg";
 
-/** The OdeMuse symbol in colour, on its own. */
-export function Logo() {
-  return <img className="app-logo" src={SYMBOL_URL} alt="Ode" />;
-}
-
 /** The symbol and the name Ode, set by the brand's logo rules: the note as tall as the capitals, on the baseline. */
 export function LogoLockup() {
   return (

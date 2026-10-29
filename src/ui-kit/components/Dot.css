@@ -32,10 +32,3 @@
   --ode-dot-color: var(--color-danger);
 }
 
-.ode-dot--hollow {
-  background: transparent;
-}
-
-.ode-dot--pulse {
-  animation: var(--motion-pulse);
-}

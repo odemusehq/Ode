@@ -66,8 +66,3 @@
   flex: none;
 }
 
-.ode-button[aria-pressed="true"],
-.ode-button[aria-pressed="true"]:hover:not(:disabled) {
-  background: var(--color-accent-tint);
-  color: var(--color-accent);
-}

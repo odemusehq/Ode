@@ -16,7 +16,7 @@ export interface ButtonProps extends ComponentProps<"button"> {
   icon?: IconName;
 }
 
-/** A button with text and an optional icon; set aria-pressed for one that turns something on and off. */
+/** A button with text and an optional icon. */
 export function Button({ variant = ButtonVariant.Secondary, icon, className, type = "button", children, ...rest }: ButtonProps) {
   return (
     <button type={type} className={cx("ode-button", `ode-button--${variant}`, className)} {...rest}>

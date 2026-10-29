@@ -10,14 +10,12 @@ export interface ConfirmCardProps {
   confirmLabel: string;
   onConfirm: () => void;
   onCancel: () => void;
-  /** Other choices, shown before the confirm button, e.g. "Make a copy first". */
-  extra?: ReactNode;
   /** The action is running; the buttons wait for it. */
   busy?: boolean;
 }
 
 /** Asks before an action that deletes something. Inline, never a dialog; Escape or Cancel leaves it. */
-export function ConfirmCard({ message, confirmLabel, onConfirm, onCancel, extra, busy }: ConfirmCardProps) {
+export function ConfirmCard({ message, confirmLabel, onConfirm, onCancel, busy }: ConfirmCardProps) {
   const messageId = useId();
   const cancel = useRef<HTMLButtonElement>(null);
 
@@ -37,7 +35,6 @@ export function ConfirmCard({ message, confirmLabel, onConfirm, onCancel, extra,
         {message}
       </div>
       <div className="ode-card__actions">
-        {extra}
         <Button variant={ButtonVariant.Danger} onClick={onConfirm} disabled={busy}>
           {confirmLabel}
         </Button>
