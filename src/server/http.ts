@@ -345,6 +345,7 @@ export class OdeServer {
       const response: SettingsResponse = {
         settings: await settings.view(),
         providers: ProviderCatalog.bundled.chatOptions(),
+        lyricsProviders: ProviderCatalog.bundled.lyricsOptions(),
         services: ProviderCatalog.bundled.serviceOptions(),
       };
       return c.json(response);

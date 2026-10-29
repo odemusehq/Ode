@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import type { ProviderCatalog } from "../services/provider-catalog";
+import { Provider } from "../services/providers";
 import {
   ModelSettingsSchema,
   OPTIONAL_ROLES,
@@ -37,6 +38,13 @@ export class SettingsStore {
       model: change.model,
       key: change.key ?? (change.provider === current.provider ? current.key : ""),
       metaKey: change.metaKey ?? current.metaKey,
+      lyrics: change.lyrics
+        ? {
+            provider: change.lyrics.provider,
+            model: change.lyrics.model,
+            key: change.lyrics.key ?? (change.lyrics.provider === current.lyrics.provider ? current.lyrics.key : ""),
+          }
+        : current.lyrics,
       services: Object.fromEntries(
         OPTIONAL_ROLES.flatMap((role) => {
           const service = change.services[role];
@@ -52,16 +60,29 @@ export class SettingsStore {
     return this.toView(next);
   }
 
+  /** The key Lyrics support uses with `provider`: its own, or the key Ode already holds for that provider. */
+  static lyricsKey(settings: ModelSettings, provider: string): string {
+    if (settings.lyrics.key && settings.lyrics.provider === provider) return settings.lyrics.key;
+    if (provider === settings.provider) return settings.key;
+    return provider === Provider.Meta ? settings.metaKey : "";
+  }
+
   private initial(): ModelSettings {
-    return { ...this.catalog.firstChoice(), key: "", metaKey: "", services: {} };
+    return { ...this.catalog.firstChoice(), key: "", metaKey: "", lyrics: { ...this.catalog.lyricsDefault(), key: "" }, services: {} };
   }
 
   private toView(settings: ModelSettings): SettingsView {
+    const lyrics = this.catalog.lyricsChoice(settings.lyrics.provider, settings.lyrics.model);
     return {
       provider: settings.provider,
       model: settings.model,
       keySet: settings.key.length > 0,
       metaKeySet: settings.metaKey.length > 0,
+      lyrics: {
+        provider: lyrics.provider.id,
+        model: lyrics.model.id,
+        keySet: SettingsStore.lyricsKey(settings, lyrics.provider.id).length > 0,
+      },
       services: Object.fromEntries(
         OPTIONAL_ROLES.flatMap((role) => {
           const service = settings.services[role];

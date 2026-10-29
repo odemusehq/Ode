@@ -1,4 +1,4 @@
-import type { SettingsStore } from "../mneme/settings-store";
+import { SettingsStore } from "../mneme/settings-store";
 import type { Role, RoleConfig } from "../shared/config";
 import type { ChatModelOption, ModelListRequest, ModelSettings } from "../shared/settings";
 import { OpenAiCompatibleText } from "./adapters/openai-compatible-text";
@@ -31,12 +31,20 @@ export class ModelRoles implements RoleSource {
     const meta = this.catalog.meta;
     const metaKey = settings.provider === Provider.Meta ? settings.key : settings.metaKey;
     const metaRole = (model: string): RoleConfig => ({ provider: Provider.Meta, baseUrl: meta.baseUrl, apiKey: metaKey, model });
+    const lyrics = this.catalog.lyricsChoice(settings.lyrics.provider, settings.lyrics.model);
     return {
       main,
       subagent: main,
       audio_understanding: metaRole(meta.audioUnderstanding),
       transcription: metaRole(meta.transcription),
       image_generation: metaRole(meta.imageGeneration),
+      lyrics_check: {
+        provider: lyrics.provider.id,
+        baseUrl: lyrics.provider.baseUrl,
+        apiKey: SettingsStore.lyricsKey(settings, lyrics.provider.id),
+        model: lyrics.model.id,
+        effort: lyrics.model.effort,
+      },
       stem_separation: settings.services.stem_separation ?? ModelRoles.UNSET,
       singing_voice: settings.services.singing_voice ?? ModelRoles.UNSET,
       sound_generation: settings.services.sound_generation ?? ModelRoles.UNSET,

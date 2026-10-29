@@ -37,6 +37,7 @@ export const ROLE_CAPABILITY: Record<Role, Capability> = {
   audio_understanding: Capability.AudioUnderstanding,
   transcription: Capability.Transcription,
   image_generation: Capability.ImageGeneration,
+  lyrics_check: Capability.Text,
   stem_separation: Capability.StemSeparation,
   singing_voice: Capability.SingingVoice,
   sound_generation: Capability.SoundGeneration,

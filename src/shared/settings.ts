@@ -12,6 +12,14 @@ export const ServiceSettingsSchema = z.object({
 });
 export type ServiceSettings = z.infer<typeof ServiceSettingsSchema>;
 
+/** Lyrics support: the model that highlights syllables and rhymes in the Lyrics editor, with its provider and key. */
+export const LyricsSupportSchema = z.object({
+  provider: z.string(),
+  model: z.string(),
+  key: z.string(),
+});
+export type LyricsSupport = z.infer<typeof LyricsSupportSchema>;
+
 /** The musician's choice of models and their keys, kept in Ode's storage folder. */
 export const ModelSettingsSchema = z.object({
   provider: z.string(),
@@ -19,6 +27,8 @@ export const ModelSettingsSchema = z.object({
   key: z.string(),
   /** A Meta key for cover art, transcription and listening when the chat provider is Baseten or Modal. */
   metaKey: z.string(),
+  /** Empty provider and model mean the catalog's default; settings saved before Lyrics support start that way. */
+  lyrics: LyricsSupportSchema.default({ provider: "", model: "", key: "" }),
   services: z.partialRecord(z.enum(OPTIONAL_ROLES), ServiceSettingsSchema),
 });
 export type ModelSettings = z.infer<typeof ModelSettingsSchema>;
@@ -37,6 +47,8 @@ export interface SettingsView {
   model: string;
   keySet: boolean;
   metaKeySet: boolean;
+  /** Lyrics support's provider and model, and whether Ode holds a key for that provider. */
+  lyrics: { provider: string; model: string; keySet: boolean };
   services: Partial<Record<OptionalRole, ServiceView>>;
   /** The line the chosen model's licence asks Ode to show. */
   credit: string | null;
@@ -48,6 +60,7 @@ export const SettingsUpdateSchema = z.object({
   model: z.string(),
   key: z.string().optional(),
   metaKey: z.string().optional(),
+  lyrics: z.object({ provider: z.string(), model: z.string(), key: z.string().optional() }).optional(),
   services: z.partialRecord(
     z.enum(OPTIONAL_ROLES),
     z.object({ provider: z.string(), baseUrl: z.string(), model: z.string(), apiKey: z.string().optional() }),
@@ -94,5 +107,7 @@ export interface ServiceProviderOption {
 export interface SettingsResponse {
   settings: SettingsView;
   providers: ChatProviderOption[];
+  /** The providers and models that can run Lyrics support. */
+  lyricsProviders: ChatProviderOption[];
   services: Record<OptionalRole, ServiceProviderOption[]>;
 }

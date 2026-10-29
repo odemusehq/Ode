@@ -16,29 +16,35 @@ export interface ChatProvider extends ChatProviderOption {
   readonly conversationHeader?: string;
 }
 
-/** A Meta model that highlights syllables and rhymes in the Lyrics editor, with the lowest reasoning effort it accepts. */
-export interface LyricsCheckModel extends ChatModelOption {
-  readonly effort: string;
-}
-
-/** The models Settings offers for highlighting syllables and rhymes, and the one Ode uses until the musician picks. */
-export interface LyricsCheckModels {
-  readonly default: string;
-  readonly models: LyricsCheckModel[];
-}
-
-/** Meta's models for listening, transcription, cover art and lyrics checks, used with a Meta key whatever the chat provider. */
+/** Meta's models for listening, transcription and cover art, used with a Meta key whatever the chat provider. */
 export interface MetaModels {
   readonly baseUrl: string;
   readonly audioUnderstanding: string;
   readonly transcription: string;
   readonly imageGeneration: string;
-  readonly lyricsCheck: LyricsCheckModels;
+}
+
+/** A model that can run Lyrics support, with the lowest reasoning effort it accepts. */
+export interface LyricsModel extends ChatModelOption {
+  readonly effort: string;
+}
+
+/** Lyrics support as Ode runs it: the provider to reach, and the model with its effort. */
+export interface LyricsChoice {
+  readonly provider: ChatProvider;
+  readonly model: LyricsModel;
+}
+
+/** The providers and models offered for Lyrics support, and the pair Ode starts with. */
+interface LyricsCatalog {
+  readonly default: { readonly provider: string; readonly model: string };
+  readonly providers: { readonly id: string; readonly models: LyricsModel[] }[];
 }
 
 interface CatalogFile {
   chat: ChatProvider[];
   meta: MetaModels;
+  lyrics: LyricsCatalog;
   services: Record<OptionalRole, ServiceProviderOption[]>;
 }
 
@@ -86,16 +92,27 @@ export class ProviderCatalog {
     return model?.credit ?? (provider?.listsModels ? (provider.credit ?? null) : null);
   }
 
-  /** The models Settings offers for highlighting syllables and rhymes. */
-  lyricsCheckOptions(): ChatModelOption[] {
-    return this.file.meta.lyricsCheck.models.map(({ id, name }) => ({ id, name }));
+  /** The providers Settings offers for Lyrics support, each with the models that can run it. */
+  lyricsOptions(): ChatProviderOption[] {
+    return this.file.lyrics.providers.flatMap(({ id, models }) => {
+      const provider = this.chatProvider(id);
+      if (!provider) return [];
+      return [{ id, name: provider.name, keyHint: provider.keyHint, models: models.map((model) => ({ id: model.id, name: model.name })) }];
+    });
   }
 
-  /** The model that highlights syllables and rhymes: the musician's pick when the catalog offers it, else the default. */
-  lyricsCheckModel(chosen: string): LyricsCheckModel {
-    const { default: fallback, models } = this.file.meta.lyricsCheck;
-    const model = models.find((each) => each.id === chosen) ?? models.find((each) => each.id === fallback);
-    if (!model) throw new Error(`providers.json needs a lyrics check model called ${fallback}.`);
-    return model;
+  /** The provider and model Lyrics support starts with. */
+  lyricsDefault(): { provider: string; model: string } {
+    return { ...this.file.lyrics.default };
+  }
+
+  /** Lyrics support for the musician's choice: their provider and model where the catalog offers them, else the default. */
+  lyricsChoice(providerId: string, modelId: string): LyricsChoice {
+    const { default: fallback, providers } = this.file.lyrics;
+    const entry = providers.find((each) => each.id === providerId) ?? providers.find((each) => each.id === fallback.provider);
+    const model = entry?.models.find((each) => each.id === modelId) ?? entry?.models.find((each) => each.id === fallback.model) ?? entry?.models[0];
+    const provider = entry ? this.chatProvider(entry.id) : undefined;
+    if (!provider || !model) throw new Error("providers.json needs a Lyrics support provider with a model.");
+    return { provider, model };
   }
 }

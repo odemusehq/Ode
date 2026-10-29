@@ -6,6 +6,7 @@ export const ROLES = [
   "audio_understanding",
   "transcription",
   "image_generation",
+  "lyrics_check",
   "stem_separation",
   "singing_voice",
   "sound_generation",
@@ -19,6 +20,8 @@ export interface RoleConfig {
   model: string;
   /** A header that keeps one conversation's requests on the same server, where the provider asks for it. */
   conversationHeader?: string;
+  /** The reasoning effort to ask for, where the role sets one: Lyrics support asks for the model's lowest. */
+  effort?: string;
 }
 
 export interface AgentLimits {
