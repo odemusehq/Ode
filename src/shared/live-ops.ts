@@ -1,5 +1,4 @@
-// Inputs and outputs of every Live operation. The extension, the Max for Live device and the
-// Python bridge implement these; the server's Live tools pass inputs through unchanged.
+// Inputs and outputs of every Live operation. The extension implements them; Ode's Live tools pass inputs through as they are.
 import type {
   ArrangementClipRef,
   ClipRef,

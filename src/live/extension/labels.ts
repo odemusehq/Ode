@@ -51,11 +51,6 @@ export class Labels {
     return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
   }
 
-  /** "1 change", "3 changes". */
-  static count(amount: number, noun: string): string {
-    return `${amount} ${noun}${amount === 1 ? "" : "s"}`;
-  }
-
   /** ' "name"' after a word, or nothing for an empty name. */
   static quoted(name: string): string {
     return name ? ` "${name}"` : "";

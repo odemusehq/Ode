@@ -68,8 +68,9 @@ export class ExtensionBuild {
     const files: Record<string, string> = {};
     for (const folder of TEXT_FOLDERS) {
       for (const path of await ExtensionBuild.files(join(DevConfig.repoDir, folder))) {
-        if (!path.endsWith(TEXT_EXTENSION) || path.includes(SKILL_TESTS)) continue;
-        files[relative(DevConfig.repoDir, path).split(sep).join("/")] = await readFile(path, "utf8");
+        const inRepo = relative(DevConfig.repoDir, path);
+        if (!path.endsWith(TEXT_EXTENSION) || `${sep}${inRepo}`.includes(SKILL_TESTS)) continue;
+        files[inRepo.split(sep).join("/")] = await readFile(path, "utf8");
       }
     }
     return files;

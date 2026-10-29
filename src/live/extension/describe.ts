@@ -61,10 +61,11 @@ export class Describer {
     };
   }
 
-  /** The Set's meter: the first scene with a time signature of its own, or Live's default. */
+  /** The Set's meter: the first scene's own time signature, or Live's default when the first scene leaves it to Live. */
   signature(): TimeSignature {
-    const scene = this.set.song.scenes.find((each) => each.signatureNumerator > 0 && each.signatureDenominator > 0);
-    return scene ? { numerator: scene.signatureNumerator, denominator: scene.signatureDenominator } : { ...LIVE_DEFAULT_SIGNATURE };
+    const scene = this.set.song.scenes[0];
+    const own = scene !== undefined && scene.signatureNumerator > 0 && scene.signatureDenominator > 0;
+    return own ? { numerator: scene.signatureNumerator, denominator: scene.signatureDenominator } : { ...LIVE_DEFAULT_SIGNATURE };
   }
 
   /** Tempo, grid, key and scale, scenes and locators. */
