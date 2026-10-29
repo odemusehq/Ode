@@ -20,6 +20,8 @@ function apiProxy(): ProxyOptions {
     timeout: 0,
     proxyTimeout: 0,
     configure: (proxy) => {
+      // ownPagesOnly lets through the dev server's own pages alone; their origin is the dev server's, so it stays behind.
+      proxy.on("proxyReq", (request) => request.removeHeader("origin"));
       proxy.on("proxyRes", (response) => {
         if (response.headers["content-type"]?.startsWith(EVENT_STREAM)) {
           response.headers["cache-control"] = "no-cache, no-transform";

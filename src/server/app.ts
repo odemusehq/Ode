@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import type { DialogView, OdeConfig } from "../shared/config";
+import { DialogView, type OdeConfig } from "../shared/config";
 import type { LiveConnections } from "../shared/live";
 import type { LeadSheet } from "../shared/song";
 import { OdeAgents } from "../agents/agents";
@@ -175,7 +175,9 @@ export class OdeApp {
   async start(): Promise<void> {
     await this.songs.openLast();
     await this.server.start();
-    console.log(`Ode is ready on port ${this.server.listeningPort}`);
+    // The address carries this session's token for the development tools (ODE_DEV_SERVER); the server's Host and
+    // Origin checks keep every other page out.
+    console.log(`Ode is ready at ${this.server.url(DialogView.Ask)}`);
   }
 
   /** The address a dialog opens: one of Ode's views on the local server, with this session's token. */

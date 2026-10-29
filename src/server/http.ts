@@ -142,11 +142,6 @@ export class OdeServer {
     return `http://localhost:${this.port}/?view=${view}&token=${this.token}`;
   }
 
-  /** The port the server listens on, once it has started. */
-  get listeningPort(): number {
-    return this.port;
-  }
-
   /**
    * Keeps the server to Ode's own pages. The Host names this server, which turns away a page whose own name points at
    * 127.0.0.1. A request that changes something comes from Ode's origin with a JSON body: a page on another port
