@@ -99,7 +99,7 @@ export class OdeApi {
     return this.request(HttpMethod.Get, API.versions);
   }
 
-  /** Saves the musician's hand edits as a version now, when Ode is idle; null when there were none. */
+  /** Saves the musician's hand edits as a version now, when Ode is idle; null when the musician made zero hand edits. */
   checkVersions(): Promise<VersionListItem | null> {
     return this.request(HttpMethod.Post, API.versionsCheck);
   }

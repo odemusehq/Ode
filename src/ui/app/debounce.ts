@@ -1,4 +1,4 @@
-/** Runs the latest scheduled task once nothing new has been scheduled for a while. */
+/** Runs the latest scheduled task once scheduling has been quiet for a while. */
 export class Debouncer {
   private readonly delayMs: number;
   private timer: number | undefined;

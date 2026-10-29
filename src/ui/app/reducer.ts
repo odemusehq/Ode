@@ -7,7 +7,7 @@ type QuestionEvent = Extract<UiEvent, { type: "question" }>;
 type ApprovalEvent = Extract<UiEvent, { type: "approval" }>;
 
 /**
- * Applies one server event to the app state. Ode works in place of a chat: its replies arrive as result lines, and
+ * Applies one server event to the app state. Ode acts directly on the Set: its replies arrive as result lines, and
  * while it works its steps and its short notes show. The lyrics are kept by SharedLyrics.
  */
 export function reduceEvent(state: AppState, event: UiEvent): AppState {
@@ -84,7 +84,7 @@ function setStep(state: AppState, id: string, status: Step["status"]): AppState 
 
 /**
  * Adds a version, or replaces it if it is already listed; the list stays newest first. A new version by the
- * musician after a result line means the Set changed since, so the line's actions no longer apply.
+ * musician after a result line means the Set changed since, so the line's actions are out of date.
  */
 function addVersion(state: AppState, version: VersionListItem): AppState {
   const known = state.versions?.some((item) => item.id === version.id) ?? false;

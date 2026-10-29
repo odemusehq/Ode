@@ -52,7 +52,7 @@ interface LastResultProps {
 
 /**
  * Undo goes back from a change, or from what Ode changed before it was stopped; Again and Why? are for a change.
- * Once the musician has changed the Set since, they no longer apply.
+ * Once the musician has changed the Set since, they are out of date.
  */
 function LastResult({ result, answer }: LastResultProps) {
   const client = useClient();

@@ -14,7 +14,7 @@ export interface CardProps {
   waiting?: boolean;
 }
 
-/** A small card in the flow of the page, never a dialog: one line and the buttons that answer it. */
+/** A small card, always inline in the flow of the page: one line and the buttons that answer it. */
 export function Card({ tone = Tone.Accent, children, actions, waiting }: CardProps) {
   const textId = useId();
   return (

@@ -6,7 +6,7 @@ import "./Button.css";
 
 export interface IconButtonProps extends Omit<ComponentProps<"button">, "children"> {
   icon: IconName;
-  /** Accessible name, also shown as a tooltip since the button has no text. */
+  /** Accessible name, also shown as a tooltip since the button shows only an icon. */
   label: string;
 }
 

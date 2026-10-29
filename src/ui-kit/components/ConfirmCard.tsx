@@ -14,7 +14,7 @@ export interface ConfirmCardProps {
   busy?: boolean;
 }
 
-/** Asks before an action that deletes something. Inline, never a dialog; Escape or Cancel leaves it. */
+/** Asks before an action that deletes something. Always inline, in the flow of the page; Escape or Cancel leaves it. */
 export function ConfirmCard({ message, confirmLabel, onConfirm, onCancel, busy }: ConfirmCardProps) {
   const messageId = useId();
   const cancel = useRef<HTMLButtonElement>(null);

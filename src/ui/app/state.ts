@@ -24,7 +24,7 @@ export class Store {
     this.update(reduceEvent(this.state, event));
   }
 
-  /** While the stream is down nothing says Ode is working; the server says it again when the stream opens. */
+  /** While the stream is down the working state is cleared; the server sends it again when the stream opens. */
   setStream(stream: StreamState): void {
     if (stream === this.state.stream) return;
     const lost = stream === StreamState.Reconnecting || stream === StreamState.Closed;
@@ -66,7 +66,7 @@ export class Store {
     this.apply({ type: "version", version });
   }
 
-  /** A request is on its way: an old error no longer applies. */
+  /** A request is on its way: an old error is out of date. */
   startRequest(): void {
     this.setError(null);
   }

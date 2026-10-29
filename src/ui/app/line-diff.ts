@@ -6,7 +6,7 @@ export interface LineHunk {
   added: string[];
 }
 
-/** For each line of either text, the index of the same line in the other text, or -1 when it isn't there. */
+/** For each line of either text, the index of the same line in the other text, or -1 when it is missing. */
 export interface LineAlignment {
   beforeToAfter: number[];
   afterToBefore: number[];

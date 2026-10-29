@@ -12,7 +12,7 @@ export function useClient(): OdeClient {
   return client;
 }
 
-/** Reads part of the app state. The selector must return a value stored in the state, not a new object. */
+/** Reads part of the app state. The selector must return a value stored in the state, so the same object comes back each time. */
 export function useAppState<T>(select: (state: AppState) => T): T {
   const { store } = useClient();
   return useSyncExternalStore(store.subscribe, () => select(store.getSnapshot()));

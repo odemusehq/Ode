@@ -17,7 +17,7 @@ export class OdeClient {
   /** The lyrics the musician and Ode both edit; the Lyrics dialog keeps them in step. */
   readonly lyrics = new SharedLyrics(this.api);
   private readonly stream: EventStream;
-  /** An Undo is on its way; a second press doesn't go back a second version. */
+  /** An Undo is on its way; a second press meanwhile is ignored, so each Undo goes back one version. */
   private undoing = false;
 
   constructor(readonly layout: Layout) {

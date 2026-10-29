@@ -14,13 +14,13 @@ export interface LyricsSnapshot {
   replaced: number;
   /** Why the last save failed, until a save works. */
   saveError: string | null;
-  /** Why the lyrics couldn't be read, until they are. */
+  /** Why reading the lyrics stopped, until a read succeeds. */
   loadError: string | null;
 }
 
 /**
  * The lyrics the musician and Ode both edit. The musician's edits are saved after a pause with the revision they
- * were made from, so the server merges them with anything Ode saved in between; whenever nothing is waiting to be
+ * were made from, so the server merges them with anything Ode saved in between; whenever every edit is
  * saved, the editor shows the stored text.
  */
 export class SharedLyrics {
@@ -29,10 +29,10 @@ export class SharedLyrics {
   private readonly saver = new Debouncer(UI_CONFIG.lyricsSaveDelayMs);
   /** The revision the editor's text was edited from. */
   private base = 0;
-  /** The editor has edits that haven't been sent yet. */
+  /** The editor has edits still waiting to be sent. */
   private changed = false;
   private saving: Promise<void> | null = null;
-  /** Counts the newer lyrics taken from the event stream, so a read that started earlier doesn't undo them. */
+  /** Counts the newer lyrics taken from the event stream, so a read that started earlier leaves them in place. */
   private received = 0;
 
   constructor(private readonly api: OdeApi) {}
@@ -118,7 +118,7 @@ export class SharedLyrics {
     return true;
   }
 
-  /** The editor shows the stored text; nothing is waiting to be saved. */
+  /** The editor shows the stored text; every edit is saved. */
   private adopt(state: LyricsState): void {
     this.base = state.revision;
     const { text, replaced } = this.snapshot;

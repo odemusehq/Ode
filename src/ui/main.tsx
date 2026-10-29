@@ -6,7 +6,7 @@ import { ClientContext } from "./app/hooks";
 import { layoutFromUrl } from "./app/layout";
 
 const container = document.getElementById("root");
-if (!container) throw new Error("The page has no #root element");
+if (!container) throw new Error("The page needs a #root element");
 
 const client = new OdeClient(layoutFromUrl());
 client.start();

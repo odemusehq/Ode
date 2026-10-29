@@ -4,21 +4,21 @@ import { LineDiff } from "../app/line-diff";
 
 /** What the gutter and the caret line show for one line of the editor. */
 export interface CheckedLine {
-  /** Syllable count, e.g. "8" or "7–8"; empty for a blank or label line, or one not checked yet. */
+  /** Syllable count, e.g. "8" or "7–8"; empty for a blank or label line, or one still waiting for its check. */
   count: string;
-  /** Rhyme-scheme letter; empty when the line rhymes with none. */
+  /** Rhyme-scheme letter; empty for an unrhymed line. */
   rhyme: string;
   notes: readonly LyricsNote[];
-  /** Words, syllables and stress; null when there is nothing to show. */
+  /** Words, syllables and stress; null when the analysis is missing. */
   analysis: LineAnalysis | null;
 }
 
 const NOT_CHECKED: CheckedLine = { count: "", rhyme: "", notes: [], analysis: null };
 const NO_RHYME = "-";
-/** A line in square brackets, such as "[Chorus]", is a label and isn't sung. */
+/** A line in square brackets, such as "[Chorus]", is an unsung label. */
 const LABEL_LINE = /^\[[^\]]*\]$/;
 
-/** A line that is sung: not blank and not a label. */
+/** A line that is sung: it holds text and sits outside square brackets. */
 export function isSungLine(line: string): boolean {
   const text = line.trim();
   return text !== "" && !LABEL_LINE.test(text);
@@ -26,7 +26,7 @@ export function isSungLine(line: string): boolean {
 
 /**
  * The stored analysis laid over the lines in the editor, matched line by line, so the checks stay on their lines
- * while the musician types; a line edited since the last save shows nothing until the save comes back checked.
+ * while the musician types; a line edited since the last save stays blank until the save comes back checked.
  */
 export function checkedLines(lines: readonly string[], stored: LyricsState): CheckedLine[] {
   const { afterToBefore } = new LineDiff(LineDiff.lines(stored.text), lines).alignment();

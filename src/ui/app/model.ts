@@ -4,7 +4,7 @@ import type { Mode } from "../../shared/personalisation";
 import type { VersionListItem } from "../../shared/versions";
 
 export enum StreamState {
-  /** First connection, not open yet. */
+  /** First connection, still opening. */
   Connecting = "connecting",
   Open = "open",
   /** The connection was lost; trying again. */
@@ -21,7 +21,7 @@ export interface Question {
   options: string[];
   /** Release files shown as the answers, one per option; empty for answers in words. */
   images: string[];
-  /** The musician answered and Ode hasn't taken the answer yet. */
+  /** The musician answered and the answer is still on its way to Ode. */
   answered: boolean;
 }
 
@@ -29,17 +29,17 @@ export interface Question {
 export interface Approval {
   id: string;
   summary: string;
-  /** The musician decided and Ode hasn't taken the decision yet. */
+  /** The musician decided and the decision is still on its way to Ode. */
   decided: boolean;
 }
 
 /** What Ode last did, in one line. */
 export interface ResultLine {
   text: string;
-  /** The version the line is about; null when nothing changed. */
+  /** The version the line is about; null when the Set stayed the same. */
   versionId: string | null;
   kind: ResultKind;
-  /** The musician changed the Set since, so Undo, Again and Why? no longer apply to it. */
+  /** The musician changed the Set since, so Undo, Again and Why? are out of date for it. */
   overtaken: boolean;
 }
 
@@ -88,7 +88,7 @@ export interface AppState {
   approvals: readonly Approval[];
   /** The version history, newest first; null until it has been read. */
   versions: readonly VersionListItem[] | null;
-  /** Why the history couldn't be read. */
+  /** Why reading the history stopped. */
   historyError: string | null;
 }
 
