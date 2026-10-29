@@ -3,7 +3,7 @@ import type { ChordEvent } from "../../shared/song";
 import { ChordTimeline } from "../harmony/chord-timeline";
 import { KeyFinder } from "../harmony/key-finder";
 import type { MusicalKey } from "../harmony/musical-key";
-import { inRange, type PitchRange } from "../harmony/pitch-range";
+import { inRange, requirePitchRange, type PitchRange } from "../harmony/pitch-range";
 import { melodyLine } from "../prosody/melody-line";
 import { Meter, METRICAL_WEIGHT } from "../prosody/meter";
 
@@ -62,7 +62,7 @@ export class HarmonyVoiceWriter {
   write(melody: Note[], parts: number, range?: PitchRange): Note[][] {
     const lead = melodyLine(melody);
     if (lead.length === 0) return [];
-    const limits = range ?? this.leadRange(lead);
+    const limits = requirePitchRange(range ?? this.leadRange(lead));
     const written: Note[][] = [];
     for (const shape of PART_SHAPES.slice(0, Math.min(MAX_PARTS, Math.max(1, Math.round(parts))))) {
       const pitches = this.part(lead, shape, limits, written);
@@ -136,8 +136,7 @@ export class HarmonyVoiceWriter {
       candidates.push({ pitch, cost: preference + (fits ? 0 : strong ? STRONG_NON_CHORD_COST : WEAK_NON_CHORD_COST) });
     }
     if (candidates.length > 0) return candidates;
-    const fallback = this.key.step(note.pitch, shape.above ? 2 : -2);
-    return [{ pitch: fallback + (inRange(fallback, range) ? 0 : shape.above ? -OCTAVE : OCTAVE), cost: OTHER_CHORD_TONE_COST }];
+    throw new RangeError(`No ${shape.above ? "upper" : "lower"} harmony fits range ${range.low}–${range.high} beside lead pitch ${note.pitch} at beat ${note.start}.`);
   }
 
   private motionCost(previous: number, current: number, previousLead: number | undefined, currentLead: number | undefined): number {

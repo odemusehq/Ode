@@ -4,7 +4,7 @@ import type { ChordEvent } from "../../shared/song";
 import { ChordTimeline } from "../harmony/chord-timeline";
 import { KeyFinder } from "../harmony/key-finder";
 import { MusicalKey } from "../harmony/musical-key";
-import type { PitchRange } from "../harmony/pitch-range";
+import { requirePitchRange, type PitchRange } from "../harmony/pitch-range";
 import { clamp } from "../prosody/melody-line";
 import { Meter } from "../prosody/meter";
 import { OptionChooser } from "../prosody/option-chooser";
@@ -23,8 +23,6 @@ const REGISTER_POSITION: Readonly<Record<Register, number>> = {
 const CONTOUR_SPAN_SHARE = 0.35;
 const DEFAULT_MOTIF_BARS = 2;
 /** Plans count beats in quarter notes. */
-/** A range narrower than a perfect fourth is widened around its middle. */
-const NARROWEST_RANGE = 5;
 const BASE_VELOCITY = 80;
 const ACCENT_VELOCITY = 20;
 const MAX_VELOCITY = 127;
@@ -50,7 +48,7 @@ export class MelodyWriter {
     this.key = plan.key ? MusicalKey.from(plan.key) : new KeyFinder().find(chords);
     this.chords = new ChordTimeline(chords);
     this.random = new SeededRandom(plan.seed ?? DEFAULT_SEED);
-    this.range = this.usableRange(range);
+    this.range = requirePitchRange(range);
   }
 
   write(lyric?: LineAnalysis): Note[] {
@@ -98,13 +96,6 @@ export class MelodyWriter {
     return first.length > 1 ? { steps: planner.stepsOf(first) } : null;
   }
 
-  private usableRange(range: PitchRange): PitchRange {
-    const low = Math.min(range.low, range.high);
-    const high = Math.max(range.low, range.high);
-    if (high - low >= NARROWEST_RANGE) return { low, high };
-    const middle = (low + high) / 2;
-    return { low: Math.floor(middle - NARROWEST_RANGE / 2), high: Math.ceil(middle + NARROWEST_RANGE / 2) };
-  }
 }
 
 /** Writes melody notes for a plan over chords, inside a pitch range, optionally setting a lyric line. */

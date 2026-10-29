@@ -9,7 +9,7 @@ const MAX_VOICES = 4;
 export const voiceChordsTool = defineTool({
   name: "voice_chords",
   description: [
-    "Voices a chord progression as MIDI notes for keys, pads or guitar-like parts: 3–4 upper voices inside a register",
+    "Drafts sustained simultaneous chord voicings as MIDI notes for keys or pads: 3–4 upper voices inside a register",
     "with smooth voice leading (least movement between chords, wide spacing low down, few parallel fifths and octaves),",
     "plus a bass note that uses roots and inversions for a smooth bass line.",
     "Use it to turn a chord chart into a playable part; write the notes into a clip with the MIDI tools.",

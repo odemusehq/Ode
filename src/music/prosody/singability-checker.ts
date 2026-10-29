@@ -55,7 +55,7 @@ interface SungSyllable {
 export class SingabilityChecker {
   private readonly setter: LyricSetter;
 
-  constructor(meter: Meter) {
+  constructor(meter: Meter, private readonly tempo: number | null = null) {
     this.setter = new LyricSetter(meter);
   }
 
@@ -65,8 +65,10 @@ export class SingabilityChecker {
     const issues = new IssueList();
     if (setting.alignment.length > 0) {
       this.checkVowels(issues, sung, setting.notes);
-      this.checkClusters(issues, sung);
-      this.checkBreath(issues, setting);
+      if (this.tempo !== null) {
+        this.checkClusters(issues, sung);
+        this.checkBreath(issues, setting);
+      }
     }
     return { ...issues.result(setting.syllables.length), syllables: setting.syllables, notes: setting.notes, alignment: setting.alignment };
   }
@@ -121,7 +123,7 @@ export class SingabilityChecker {
     for (const item of sung) {
       const first = item.notes[0];
       const consonants = item.syllable.onsetLength + item.syllable.codaLength;
-      if (!first || first.duration > VERY_SHORT_BEATS || consonants < CLUSTER_CONSONANTS) continue;
+      if (!first || first.duration * 60 / this.tempo! > 0.125 || consonants < CLUSTER_CONSONANTS) continue;
       issues.add(
         item.index,
         `"${item.syllable.text}" (in "${item.syllable.wordText}") packs ${consonants} consonants onto a very short note.`,
@@ -138,14 +140,14 @@ export class SingabilityChecker {
       const note = notes[index];
       const previous = notes[index - 1];
       if (!note) continue;
-      if (previous && note.start - (previous.start + previous.duration) >= BREATH_REST_BEATS) phraseStart = note.start;
-      if (note.start + note.duration - phraseStart <= PHRASE_WITHOUT_BREATH_BEATS) continue;
+      if (previous && (note.start - (previous.start + previous.duration)) * 60 / this.tempo! >= 0.25) phraseStart = note.start;
+      if ((note.start + note.duration - phraseStart) * 60 / this.tempo! <= 4) continue;
       const syllable = alignment.find((entry) => entry.note === index)?.syllable ?? 0;
       const text = setting.syllables[syllable]?.text ?? "";
       issues.add(
         syllable,
-        `The line runs more than ${PHRASE_WITHOUT_BREATH_BEATS} beats without a place to breathe.`,
-        `Leave a short rest (about half a beat) around "${text}", for example between two phrases of the line.`,
+        "The line runs more than four seconds without a rest of at least 0.25 seconds; check the singer's breath and intended delivery.",
+        `Consider a breath around "${text}" if the singer needs one; this is an advisory timing heuristic.`,
         BREATH_PENALTY,
       );
       return;
@@ -159,6 +161,7 @@ export function singabilityCheck(
   notes: Note[],
   beatsPerBar: number = COMMON_TIME.numerator,
   beatUnit: number = COMMON_TIME.denominator,
+  tempo: number | null = null,
 ): CheckReport {
-  return new SingabilityChecker(new Meter(beatsPerBar, beatUnit)).check(line, notes);
+  return new SingabilityChecker(new Meter(beatsPerBar, beatUnit), tempo).check(line, notes);
 }

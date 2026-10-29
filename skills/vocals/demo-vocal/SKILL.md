@@ -47,7 +47,7 @@ Prepare the setting as if a singer were about to read it: every syllable on its 
 - After consent, render the demo and place it on an audio track called "Demo vocal", lined up with the section it sings. If that track already holds a demo at those bars, the new one takes its place there; the history keeps the old one.
 - Leave the artist's recorded vocals and every other clip exactly as they are.
 
-### 4. Verify, before singing
+### 4. Check the score, then the actual rendered vocal
 
 | Check | Correct when |
 |---|---|
@@ -59,7 +59,9 @@ Prepare the setting as if a singer were about to read it: every syllable on its 
 | Pronunciation | words whose pronunciation the checks left unconfirmed are named in the result line and always reported as uncertain |
 | Rights | the singing model allows commercial use and leaves the artist the rights |
 
-Fix the setting until the checks pass (the melody and prosody skills cover how), then sing.
+Treat prosody/singability findings as advisory and keep deliberate melismas and delivery. The current self-hosted singing contract forwards note velocities but cannot preserve chosen pronunciation, syllable-to-note alignment or delivery instructions; requesting those fields raises an explicit error rather than silently asking the provider to infer them again. Do not promise the selected lyric setting was honoured by an unsupported service.
+
+After synthesis, `demo_vocal_render` attempts audio listening and transcription when configured, returning their results or errors alongside the exact file evidence. Inspect the actual words, entrances, endings, breaths and pronunciation. A missing final word or incomplete listening answer leaves verification incomplete even when the score passed. ASR alone is not a performance verdict; the musician auditions the generated file in Live, and full accompaniment checks still require processed context.
 
 ### 5. Let them hear it
 
@@ -68,7 +70,7 @@ When your turn ends, the musician presses play in Live: name the section in the 
 ### 6. Report in one line
 
 - "Demo vocal of the chorus on 'Demo vocal' · syllables fit every note, stresses on strong beats, inside your range."
-- "Demo of verse 1 in your voice · 'Lisbon' pronunciation uncertain, everything else checked."
+- "Demo of verse 1 in your voice · 'Lisbon' pronunciation uncertain, score checked; rendered pronunciation still needs audition."
 - "Demo skipped: your voice is used only with your yes · it stays unrecorded and unsaved."
 
 ## Be honest about its limits

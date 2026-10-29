@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { bassline, BassStyle } from "../../music/rhythm/bassline-writer";
 import { defineTool } from "../define";
-import { ChordsInput, NotesInput, SeedInput } from "./schemas";
+import { ChordsInput, NotesInput, SeedInput, TimeSignatureInput } from "./schemas";
 import { quarterBeatsPerBar, songDefaults } from "./song-defaults";
 
 export const basslineWriteTool = defineTool({
@@ -22,10 +22,11 @@ export const basslineWriteTool = defineTool({
     kick: NotesInput.optional().describe("Kick drum notes, or the whole drum clip (kick = MIDI note 36)."),
     style: z.enum(BassStyle).describe("Bass style."),
     seed: SeedInput,
+    timeSignature: TimeSignatureInput.optional(),
   },
   changes: "none",
-  async run({ chords, kick, style, seed }, ctx) {
-    const barBeats = quarterBeatsPerBar((await songDefaults(ctx)).timeSignature);
+  async run({ chords, kick, style, seed, timeSignature }, ctx) {
+    const barBeats = quarterBeatsPerBar(timeSignature ?? (await songDefaults(ctx)).timeSignature);
     return { style, notes: bassline(chords, kick ?? [], style, seed, barBeats) };
   },
 });

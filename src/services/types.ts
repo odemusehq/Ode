@@ -5,10 +5,12 @@ import type { TextGenerator } from "./capabilities";
 export interface Transcript {
   text: string;
   turns: { start: number; end: number; text: string }[];
+  timing?: "speech-detection-approximate";
+  providerMetadata?: Record<string, unknown>;
 }
 
 export interface DemoVocalInput {
-  lines: { text: string; notes: Note[] }[];
+  lines: { text: string; notes: Note[]; pronunciation?: string; alignment?: { syllable: number; note: number }[]; delivery?: string }[];
   tempo: number;
   voiceModel?: string;
 }
@@ -21,21 +23,22 @@ export interface RoleSource {
 /** Model-backed services, one role per component, each set up in Settings. */
 export interface Services {
   /** One-off text answer from the main agent's model or the subagent model (text only, without tools). */
-  text(role: "main" | "subagent", prompt: string, options?: { system?: string; maxTokens?: number }): Promise<string>;
+  text(role: "main" | "subagent", prompt: string, options?: { system?: string; maxTokens?: number; signal?: AbortSignal }): Promise<string>;
   /** The chat model of the main agent or of subagents, for the agent loop. */
   chat(role: "main" | "subagent"): Promise<TextGenerator>;
   /** Audio understanding: describe a recording or answer a question about it. */
-  describeAudio(audioPath: string, question: string): Promise<string>;
+  describeAudio(audioPath: string, question: string, signal?: AbortSignal): Promise<string>;
+  compareAudio?(a: string, b: string, question: string, levelMatch: boolean, signal?: AbortSignal): Promise<{ answer: string; comparison: unknown }>;
   /** Transcription: words from a vocal or spoken recording. */
-  transcribe(audioPath: string): Promise<Transcript>;
+  transcribe(audioPath: string, signal?: AbortSignal): Promise<Transcript>;
   /** Image generation: writes a PNG to outPath and returns it. */
-  generateImage(prompt: string, outPath: string, size?: number): Promise<string>;
+  generateImage(prompt: string, outPath: string, size?: number, signal?: AbortSignal): Promise<string>;
   /** Stem separation: isolates the described sound; writes target and rest as WAV files in outDir. */
-  separateStem(audioPath: string, describe: string, outDir: string): Promise<{ target: string; rest: string }>;
+  separateStem(audioPath: string, describe: string, outDir: string, signal?: AbortSignal): Promise<{ target: string; rest: string }>;
   /** Singing voice: writes a WAV of a demo vocal in the artist's voice to outPath. */
-  singDemoVocal(input: DemoVocalInput, outPath: string): Promise<string>;
+  singDemoVocal(input: DemoVocalInput, outPath: string, signal?: AbortSignal): Promise<string>;
   /** Sound generation: writes the generated sound next to outPath and returns its path. */
-  generateSound(prompt: string, seconds: number, outPath: string, loop?: boolean): Promise<string>;
+  generateSound(prompt: string, seconds: number, outPath: string, loop?: boolean, signal?: AbortSignal): Promise<string>;
   /** Which roles are set up in Settings. */
   available(): Promise<Record<Role, boolean>>;
 }

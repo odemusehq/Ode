@@ -12,7 +12,7 @@ export class OpenAiCompatibleText implements TextGenerator {
   private readonly client: OpenAI;
 
   constructor(private readonly role: RoleConfig) {
-    this.client = new OpenAI({ baseURL: role.baseUrl, apiKey: role.apiKey });
+    this.client = new OpenAI({ baseURL: role.baseUrl, apiKey: role.apiKey, timeout: 120_000, maxRetries: 0 });
   }
 
   async ask(prompt: string, options: TextOptions): Promise<string> {
@@ -22,8 +22,11 @@ export class OpenAiCompatibleText implements TextGenerator {
       tools: [],
       maxTokens: options.maxTokens,
       conversation: randomUUID(),
+      signal: options.signal,
     });
-    return reply.message.content ?? "";
+    if (reply.message.refusal) throw new Error(`${this.role.model} refused the request: ${reply.message.refusal}`);
+    if (reply.finishReason !== "stop" || !reply.message.content?.trim()) throw new Error(`${this.role.model} returned an incomplete or empty answer (${reply.finishReason}).`);
+    return reply.message.content;
   }
 
   async complete(turn: ChatTurn): Promise<ChatReply> {
@@ -58,6 +61,8 @@ export class OpenAiCompatibleText implements TextGenerator {
       { signal: request.signal },
     );
     const content = response.choices[0]?.message?.content;
+    const choice = response.choices[0];
+    if (choice?.finish_reason !== "stop" || choice.message.refusal) throw new Error(`${this.role.model} returned an incomplete or refused structured answer.`);
     if (!content) throw new Error(`${this.role.model} sent an empty answer.`);
     return request.parse(JSON.parse(content));
   }

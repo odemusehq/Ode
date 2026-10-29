@@ -1,44 +1,34 @@
 ---
 name: mixing
-description: Mix the song in place in Ableton Live with Live's devices or the musician's plug-ins — levels, panning and sends, EQ that carves space, compression, saturation, reverb and delay returns, buses and the low end — by changing the faders, sends and devices already in the Set, then check masking and levels on the tracks' own audio, and mono, and report in one line. Use this whenever the musician clicks a mix suggestion's Fix or "Check the mix", says a part is buried, too loud, muddy, harsh, boomy, thin, crowded or flat, asks about EQ, compression, reverb, delay, width, sidechain or pumping, sees Live's meters going red, or wants the mix ready for mastering, even when the request leaves out the word "mix".
+description: Work on mix balance, EQ, dynamics, width and existing sends/devices for the musician's stated problem. Inspect source metrics as bounded observations, compare actual processed files when supplied, and state missing capture or routing. Use for buried, muddy, harsh, boomy, crowded or unbalanced parts and mix checks. Average spectra do not diagnose masking and independent LUFS do not establish Main headroom.
 ---
 
 # Mixing
 
 A mix makes the song's important parts clear and the whole song feel the way the musician intends. Most of a mix is balance: the right level for each part, in its own space in frequency, stereo and depth. Processing serves that balance, which always comes first.
 
-Ode mixes in place: it moves the faders, pans and sends and changes the devices already on the tracks, and adds a device only where the track's own devices fall short of the job. The musician plays the section in Live straight away, and the version history keeps every earlier mix.
+Ode mixes in place: it moves the faders, pans and sends and changes the devices already on the tracks, and adds a device only where the track's own devices fall short of the job. The musician plays the section in Live straight away, and the available version history records supported state. It is not a complete Live project backup.
 
 ## The loop
 
-1. **Read.** From the project map: each track's mixer (volume, pan, sends) and its devices with their values, the return tracks, the Main track's devices, the sections, and the hand edits since the last request (a fader the musician just moved is a decision: mix around it). Then measure before changing anything: masking between the parts involved, in the section where the problem is, and the levels of the tracks you will touch. The mix check renders each audio track's own sound, before its devices and fader; a device or fader change is heard in Live. Readings back up the decision; take them only from the checks.
-2. **Decide.** Name the problem in musical words ("the pad covers the vocal at 2–4 kHz in the chorus") and choose the smallest move that fixes it: a fader, a pan or a send before a cut, a cut before dynamics. Make room by cutting the competing part; boosting the one that should be heard makes it louder, which fools the ear into hearing it as better.
-3. **Change it in place**, as one undo step:
-   - Use what is on the track first: a free band of its EQ Eight, its compressor's threshold, an existing send. Add a device only when the ones there fall short, and add it once, without a second copy to compare.
-   - Try every mix move on the original tracks and clips, without duplicates. Parallel processing goes only through a return track or a device's Dry/Wet.
-   - Keep the musician's notes and parts. When the cleanest fix is an arrangement or sound change (drop a part in a section, move it an octave), make it with that skill and say so in the result line.
-   - When a move changes level (an EQ boost, saturation, compression), match the output to the input, so the change is heard for its tone alone.
-   - Leave locked parts alone; if one causes the problem, fix around it and say so.
-4. **Verify** with the checks below, fixing until they pass (up to three rounds); otherwise the result line says what still fails. Report settings as settings and readings as readings: give readings only from checks that ran after the change.
-5. **Let them hear it.** When your turn ends, the musician presses play in Live: name the section you worked on in the result line, so they know where to listen.
-6. **Report in one line:** what changed (device, parameter, from → to), then " · " and what was checked. For example:
-   - "Pad cut 3 dB at 3 kHz on its EQ Eight · on the clash with the vocal that the masking check found in the chorus."
-   - "Reverb return high-passed at 300 Hz, pad and guitar −2 dB at 250 Hz · on the 250 Hz build-up the masking check found, bass still mono below 120 Hz."
-   - "Bass compressed 4 dB, kick up 1 dB · one owner of the sub, track levels clear of clipping."
-
-**Again** is another take: the Set is back as it was, so fix it a clearly different way (a dynamic cut where the last take used a static one, a level move where it used a cut, carving another part).
-
-**Outside the usual style.** Taste calls (how wet, how wide, how forward the vocal) are made by acting, without asking. When a take goes beyond the artist's usual mixes — judged only from their own songs and what they have said — the result line says so.
+1. Read the actual tracks, routing assumptions, existing processing, hand edits, locks and the artist's problem. Determine which signal the available audio contains before diagnosing it.
+2. Use `mix_check` for bounded source observations. Its average spectra suggest candidate spectral overlap only; they do not establish simultaneous masking, processed balance or Main headroom. Independent track LUFS are not a measured sum.
+3. Hear the relevant processed passage when available, including the lead-in, competing parts and effect returns. Retain supplied bounces and compare the actual files with `audio_compare`; match loudness for tone decisions, and preserve levels when balance is the question. The installed SDK cannot capture a new processed mix, so a missing bounce leaves audible verification incomplete.
+4. Make the smallest supported change that addresses the observed problem. Preserve intentional colour, groove, roughness and artist choices. Existing sends and static parameters can be changed; missing routing, automation and recording operations remain explicitly incomplete.
+5. Read back the changed settings. Verify audible improvement only against comparable subsequent audio and the artist's criterion. Re-running a pre-effects render after EQ or a fader change cannot verify that change.
+6. Give a concise chat reply with actual changes and the remaining audition/capture step. A valid outcome can be no change, a reverted experiment or a request for the missing processed passage.
 
 ## Checks
 
-| Check | When | Correct when |
-|---|---|---|
-| Masking | Parts that collide, and "Check the mix" | The move sits on the band and in the section where the masking check found the collision, at the size the plan called for. The check reads each track's own audio before its devices, so it finds the collision, and the musician hears the fix in Live |
-| Clipping | Every change | The mix check shows every audio track's own audio below clipping, and every gain a change adds (an EQ boost, saturation, compression makeup) is taken back at the device's output |
-| Headroom | "Check the mix", and before mastering | The mix check over the loudest section finds every audio track within its gain-staging window and the summed level clear of a hot mix, and any limiter on the Main track stays switched off while mixing |
-| Mono | Width, pan or polarity changes, and "Check the mix" | The kick, bass, snare and lead vocal stay centred, everything below 100–150 Hz is mono (Bass Mono on wide parts), and the width comes from panning, doubles and stereo effects; very short left–right delays cancel when summed to mono |
-| Low end | Changes to kick, bass, 808 or anything below 150 Hz | One part owns the sub at any moment, and the low end is mono below 100–150 Hz (low-end sub-skill) |
+| Property | Evidence required |
+|---|---|
+| Masking | Simultaneous audible competition in context; average source bands alone never prescribe a cut, pan or sidechain |
+| Output clipping and headroom | Peaks of the actual relevant bus/Main output or final file. Source true peak is labelled dBTP and cannot establish downstream clipping |
+| Balance | Processed parts in their musical context, including actual faders, pan, routing and effects |
+| Mono | Original stereo/mono-power diagnostics and audition of the output. Centre or width settings are intentions, not proof |
+| Dynamics and low end | The actual attack/recovery and musical interaction. Nominal threshold/ratio settings do not establish gain reduction or artistic benefit |
+
+The recipes below are conditional starting points. Do not change an intentional signal or force a heuristic score merely to satisfy them.
 
 ## Questions
 
@@ -139,9 +129,9 @@ Static mixes rarely hold a song's interest: drier verses and wider, brighter cho
 
 Masking is one sound making another harder to hear because they share a frequency range at the same time.
 
-- **Find it:** measure masking between the tracks involved in the section where it happens, and compare their spectra.
+- **Investigate:** compare source spectra as candidates, then hear aligned processed overlap in the problem section. Alternating phrases cannot mask one another merely because their average spectra match.
 - **Common pairs:** kick and bass (low-end sub-skill); the vocal against guitars, keys, pads and leads around 1–5 kHz; pads and everything else around 200–500 Hz.
-- **Fix in this order:** arrangement (drop a part in that section, change its octave or rhythm), sound choice, panning, EQ carving, dynamic fixes (sidechain or multiband ducking when the overlap comes and goes), level. Check again after each fix.
+- Choose an arrangement, sound, balance or processing move only after identifying the audible problem, then compare the outcome. Preserve intentional overlap.
 
 ## Mono compatibility
 

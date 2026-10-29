@@ -29,7 +29,6 @@ const GHOST_VELOCITY = 60;
 /** Overlap that makes an 808 glide to the next note (legato glide). */
 const SLIDE_OVERLAP_BEATS = 0.125;
 const OCTAVE = 12;
-const PERFECT_FIFTH = 7;
 const EIGHTH = 0.5;
 const SIXTEENTH = 0.25;
 const QUARTER = 1;
@@ -123,7 +122,8 @@ export class BasslineWriter {
 
   private rootFifth(event: BassEvent): Note[] {
     const root = this.rootPitch(event.chord);
-    const fifth = root + PERFECT_FIFTH <= this.range.high ? root + PERFECT_FIFTH : root - (OCTAVE - PERFECT_FIFTH);
+    const fifthClass = event.chord.tones.find((tone) => tone.role === ChordTone.Fifth)?.pitchClass ?? event.chord.root;
+    const fifth = this.nearest(fifthClass, root + 7);
     const notes: Note[] = [];
     let index = 0;
     const halfBar = this.barBeats / 2;
@@ -142,7 +142,7 @@ export class BasslineWriter {
     const notes: Note[] = [];
     let index = 0;
     for (let start = event.start; start < event.end - EPSILON; start += EIGHTH) {
-      notes.push({ pitch: index % 2 === 0 ? low : high, start, duration: EIGHTH * STACCATO, velocity: index % 2 === 0 ? ON_KICK_VELOCITY : OFF_KICK_VELOCITY });
+      notes.push({ pitch: index % 2 === 0 ? low : high, start, duration: Math.min(EIGHTH, event.end - start) * STACCATO, velocity: index % 2 === 0 ? ON_KICK_VELOCITY : OFF_KICK_VELOCITY });
       index += 1;
     }
     return notes;
@@ -154,7 +154,7 @@ export class BasslineWriter {
     const tones = [ChordTone.Third, ChordTone.Fifth, ChordTone.Seventh, ChordTone.Root]
       .map((role) => event.chord.tones.find((tone) => tone.role === role)?.pitchClass)
       .filter((pitchClass): pitchClass is number => pitchClass !== undefined);
-    const beats = Math.max(1, Math.round((event.end - event.start) / QUARTER));
+    const beats = Math.max(1, Math.ceil((event.end - event.start) / QUARTER));
     const notes: Note[] = [];
     let previous = root;
     for (let beat = 0; beat < beats; beat++) {
@@ -163,7 +163,7 @@ export class BasslineWriter {
       if (beat === 0) pitch = root;
       else if (beat === beats - 1 && next) pitch = this.approach(this.nearest(next.chord.bass, previous), previous);
       else pitch = this.nearest(tones[(beat - 1) % Math.max(1, tones.length)] ?? event.chord.root, previous + 1);
-      notes.push({ pitch, start, duration: QUARTER * LEGATO, velocity: beat === 0 ? ON_KICK_VELOCITY : OFF_KICK_VELOCITY });
+      notes.push({ pitch, start, duration: Math.min(QUARTER, event.end - start) * LEGATO, velocity: beat === 0 ? ON_KICK_VELOCITY : OFF_KICK_VELOCITY });
       previous = pitch;
     }
     this.previousPitch = previous;
@@ -204,7 +204,7 @@ export class BasslineWriter {
       let pitch = this.nearest(pitchClass, root + (octaveUp ? OCTAVE : 0));
       if (pitch < root && role !== ChordTone.Root) pitch += OCTAVE;
       if (pitch > this.range.high) pitch -= OCTAVE;
-      notes.push({ pitch, start, duration: EIGHTH * LEGATO, velocity: index === 0 ? ON_KICK_VELOCITY : OFF_KICK_VELOCITY });
+      notes.push({ pitch, start, duration: Math.min(EIGHTH, event.end - start) * LEGATO, velocity: index === 0 ? ON_KICK_VELOCITY : OFF_KICK_VELOCITY });
       index += 1;
     }
     return notes;

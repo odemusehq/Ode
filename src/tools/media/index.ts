@@ -8,6 +8,7 @@ import { userPaths } from "../../mneme/paths";
 import { VoiceReference } from "../../mneme/voice-reference";
 import { defineTool, type AnyTool, type ToolContext } from "../define";
 import { NoteSchema, TrackRefSchema } from "../live/schemas";
+import { audioFileEvidence } from "../audio/file-evidence";
 
 const audioSource = {
   path: z.string().min(1).optional().describe("An audio file Ode made in its temp folder; or give track, start and end to render it from the Arrangement"),
@@ -60,7 +61,23 @@ export const mediaTools: AnyTool[] = [
     description:
       "Listen to a recording and answer a question about it: what instruments and sounds are in it, the mood, what the musician says or asks in it. For exact pitch or loudness use hum_to_midi or audio_analyze.",
     input: { ...audioSource, question: z.string().min(1) },
-    run: (input, ctx) => withAudio(input, ctx, async (path) => ({ answer: await ctx.services.describeAudio(path, input.question) })),
+    run: (input, ctx) => withAudio(input, ctx, async (path) => ({
+      answer: await ctx.services.describeAudio(path, input.question, ctx.signal),
+      source: await audioFileEvidence(path),
+      signalStage: input.path ? "supplied file; stage depends on declared provenance" : "pre-effects, pre-fader Arrangement audio",
+      representation: "Source channels and sample rate in PCM24 WAV; over-full-scale input uniformly attenuated for listening. Model musical/stereo judgement is unvalidated; numerical measurements use the original samples.",
+    })),
+  }),
+  defineTool({
+    name: "audio_compare",
+    changes: "none",
+    description: "Compare two retained managed WAV/AIFF files for a stated musical criterion. Both recordings are sent as A then B in one WAV with a 0.5 second gap and labelled time ranges, preserving channels/rate. levelMatch defaults to true and attenuates the louder integrated-loudness file; set false when balance is the question. Requires matching channel layouts/sample rates. This does not capture the current processed Set or prove common musical alignment/currentness.",
+    input: { a: z.string().min(1), b: z.string().min(1), question: z.string().min(1), levelMatch: z.boolean().optional() },
+    run: async ({ a, b, question, levelMatch }, ctx) => {
+      if (!ctx.services.compareAudio) throw new Error("The configured service has no paired-audio comparison path.");
+      const [first, second] = await Promise.all([ctx.temp.inside(a), ctx.temp.inside(b)]);
+      return { ...(await ctx.services.compareAudio(first, second, question, levelMatch ?? true, ctx.signal)), a: await audioFileEvidence(first), b: await audioFileEvidence(second), note: "The listener heard both files sequentially. Artistic preference and model fidelity remain unvalidated; assess the stated criterion in Live." };
+    },
   }),
   defineTool({
     name: "vocal_transcribe",
@@ -70,12 +87,12 @@ export const mediaTools: AnyTool[] = [
     input: { ...audioSource },
     run: (input, ctx) =>
       withAudio(input, ctx, async (path) => {
-        const transcript = await ctx.services.transcribe(path);
+        const transcript = await ctx.services.transcribe(path, ctx.signal);
         const { start } = input;
         if (input.path || start === undefined) return transcript;
         const beatsPerSecond = (await tempoOf(ctx)) / 60;
         const turns = transcript.turns.map((turn) => ({ ...turn, startBeat: start + turn.start * beatsPerSecond, endBeat: start + turn.end * beatsPerSecond }));
-        return { ...transcript, turns };
+        return { ...transcript, turns, alignment: "Approximate speech-detection times mapped using one constant tempo; these are not verified phrase or note boundaries." };
       }),
   }),
   defineTool({
@@ -93,7 +110,7 @@ export const mediaTools: AnyTool[] = [
       const first = Math.max(0, ...earlier) + 1;
       const paths = await Promise.all(
         Array.from({ length: count }, (_, index) =>
-          ctx.services.generateImage(`${brief}\nVersion ${index + 1} of ${count}: a different composition from the others.`, join(dir, `cover-${first + index}.png`)),
+          ctx.services.generateImage(`${brief}\nVersion ${index + 1} of ${count}: a different composition from the others.`, join(dir, `cover-${first + index}.png`), undefined, ctx.signal),
         ),
       );
       const choices = paths.map((path) => basename(path));
@@ -119,7 +136,7 @@ export const mediaTools: AnyTool[] = [
     description:
       'Isolate one sound from a recording by describing it (e.g. "the acoustic guitar", "the snare", "the voice") with stem separation. Returns two files: the isolated sound and the rest. Bring a file into Live with import_into_project, then load it into a Simpler or a Drum Rack pad, or place it as a clip.',
     input: { ...audioSource, describe: z.string().min(2) },
-    run: (input, ctx) => withAudio(input, ctx, async (source) => ctx.services.separateStem(source, input.describe, await ctx.temp.folder())),
+    run: (input, ctx) => withAudio(input, ctx, async (source) => ctx.services.separateStem(source, input.describe, await ctx.temp.folder(), ctx.signal)),
   }),
   defineTool({
     name: "demo_vocal_render",
@@ -127,7 +144,7 @@ export const mediaTools: AnyTool[] = [
     description:
       "Sing lyrics on a melody in the artist's own voice, so they can hear a demo vocal before recording. Give each lyric line with the notes it is sung on (beats from the start of the demo, in order, one or more notes per syllable after set_lyrics_to_melody; lyrics_fit_melody gives each line's phrase). Needs a saved recording of the artist's voice (voice_reference_set). Returns a WAV file to import into the project and place on an audio track.",
     input: {
-      lines: z.array(z.object({ text: z.string().min(1), notes: z.array(NoteSchema).min(1) })).min(1),
+      lines: z.array(z.object({ text: z.string().min(1), notes: z.array(NoteSchema).min(1), pronunciation: z.string().optional(), alignment: z.array(z.object({ syllable: z.number().int().min(0), note: z.number().int().min(0) })).optional(), delivery: z.string().optional() })).min(1),
       tempo: z.number().min(LIVE_TEMPO.min).max(LIVE_TEMPO.max).optional().describe("Default: the Set's tempo"),
     },
     run: async ({ lines, tempo }, ctx) => {
@@ -136,8 +153,18 @@ export const mediaTools: AnyTool[] = [
         throw new Error("Demo vocals wait for a recording of the artist's voice with their consent. Ask them, then use voice_reference_set.");
       }
       const bpm = tempo ?? (await tempoOf(ctx));
-      const path = await ctx.services.singDemoVocal({ lines, tempo: bpm, voiceModel: voice.recording }, await ctx.temp.file("wav"));
-      return { path, tempo: bpm };
+      const path = await ctx.services.singDemoVocal({ lines, tempo: bpm, voiceModel: voice.recording }, await ctx.temp.file("wav"), ctx.signal);
+      const available = await ctx.services.available();
+      const verification: Record<string, unknown> = { status: "not auditioned", note: "A generated file is not a verified vocal performance." };
+      if (available.audio_understanding) {
+        try { verification.listening = await ctx.services.describeAudio(path, "Check this demo against the requested words, entrances, endings, breath and pronunciation. Report missing words or synthesis artefacts and uncertainty; do not certify artistic quality. Requested lyrics: " + lines.map((line) => line.text).join(" / "), ctx.signal); }
+        catch (error) { ctx.signal?.throwIfAborted(); verification.listeningError = error instanceof Error ? error.message : String(error); }
+      }
+      if (available.transcription) {
+        try { verification.transcript = await ctx.services.transcribe(path, ctx.signal); }
+        catch (error) { ctx.signal?.throwIfAborted(); verification.transcriptionError = error instanceof Error ? error.message : String(error); }
+      }
+      return { path, tempo: bpm, source: await audioFileEvidence(path), verification };
     },
   }),
   defineTool({
@@ -150,7 +177,7 @@ export const mediaTools: AnyTool[] = [
       seconds: z.number().min(0.5).max(30),
       loop: z.boolean().optional(),
     },
-    run: async ({ prompt, seconds, loop }, ctx) => ({ path: await ctx.services.generateSound(prompt, seconds, await ctx.temp.file("mp3"), loop) }),
+    run: async ({ prompt, seconds, loop }, ctx) => ({ path: await ctx.services.generateSound(prompt, seconds, await ctx.temp.file("mp3"), loop, ctx.signal) }),
   }),
   defineTool({
     name: "voice_reference_set",

@@ -4,19 +4,18 @@ import { Meter } from "../../music/prosody/meter";
 import { MIDI_MAX } from "../../shared/notes";
 import { defineTool } from "../define";
 import { ChordsInput, KeyInput, NotesInput, RangeInput, TimeSignatureInput } from "./schemas";
-import { songDefaults } from "./song-defaults";
+import { requireTimeSignature, songDefaults } from "./song-defaults";
 
 const MAX_LEAP = 48;
 
 export const notesCheckTool = defineTool({
   name: "notes_check",
   description: [
-    "Checks the notes of a part (melody, bassline, chords, drums) and lists exactly what is wrong: notes outside the key;",
-    "notes outside a range; notes on strong beats (beats 1 and 3 in 4/4, beat 1 in 3/4 and 6/8) outside the chord",
+    "Checks requested note properties and lists findings: notes outside the key;",
+    "notes outside a range; notes on strong beats or held across a chord change outside the chord",
     "sounding there; onsets apart from another part's onsets, such as the kick's; notes without a Drum Rack pad; and leaps",
     "wider than a limit. It also gives the lowest, highest and average pitch, to compare how high two sections sit.",
-    "Use it after changing notes, on the clip's notes as they are now (midi_clip_get_notes), and fix what it lists before",
-    "reporting; only the checks whose inputs you give run (the key check uses Live's key when key is left out and Scale Mode is on).",
+    "Use it after changing notes, on the actual clip notes (midi_clip_get_notes). Range/pad bounds are hard constraints; chromatic notes, suspensions, groove and leaps require musical interpretation and can be intentional. Only supplied checks run; passed is a summary of those checks, not musical approval or a listening verdict.",
     "Inputs: notes; key (optional); range or vocal (true checks the singer's vocal range setting); chords (events in",
     "the same beats as the notes); lockTo with lockPitch (the other part's notes, and the one pitch of them to use, such as",
     "36 for a Drum Rack kick); pads (the Drum Rack's pad notes, from device_get); maxLeap (semitones); timeSignature.",
@@ -39,7 +38,7 @@ export const notesCheckTool = defineTool({
   changes: "none",
   async run(input, ctx) {
     const defaults = await songDefaults(ctx);
-    const signature = input.timeSignature ?? defaults.timeSignature;
+    const signature = requireTimeSignature(input.timeSignature ?? defaults.timeSignature);
     const key = input.key ?? defaults.key;
     const lockTo = input.lockTo?.filter((note) => input.lockPitch === undefined || note.pitch === input.lockPitch);
     const check = new PartChecker(new Meter(signature.numerator, signature.denominator)).check(input.notes, {
@@ -50,6 +49,6 @@ export const notesCheckTool = defineTool({
       pads: input.pads,
       maxLeap: input.maxLeap,
     });
-    return key ? check : { ...check, keyNote: "The key is missing and Scale Mode is off in Live: pass the key from the project map." };
+    return { ...check, coverage: "Requested note properties only; ensemble clashes, resolution, expressive intent, singer comfort and audible quality are not verified.", ...(key ? {} : { keyNote: "The key is missing and Scale Mode is off in Live: pass the key from the project map." }) };
   },
 });

@@ -13,10 +13,11 @@ export class ModelServices implements Services {
 
   constructor(private readonly source: RoleSource) {}
 
-  async text(role: "main" | "subagent", prompt: string, options: { system?: string; maxTokens?: number } = {}): Promise<string> {
+  async text(role: "main" | "subagent", prompt: string, options: { system?: string; maxTokens?: number; signal?: AbortSignal } = {}): Promise<string> {
     return (await this.chat(role)).ask(prompt, {
       system: options.system,
       maxTokens: options.maxTokens ?? OdeConfig.services.textMaxTokens,
+      signal: options.signal,
     });
   }
 
@@ -24,28 +25,34 @@ export class ModelServices implements Services {
     return this.adapter(role, Capability.Text);
   }
 
-  async describeAudio(audioPath: string, question: string): Promise<string> {
-    return (await this.adapter("audio_understanding", Capability.AudioUnderstanding)).describe(audioPath, question);
+  async describeAudio(audioPath: string, question: string, signal?: AbortSignal): Promise<string> {
+    return (await this.adapter("audio_understanding", Capability.AudioUnderstanding)).describe(audioPath, question, signal);
   }
 
-  async transcribe(audioPath: string): Promise<Transcript> {
-    return (await this.adapter("transcription", Capability.Transcription)).transcribe(audioPath);
+  async compareAudio(a: string, b: string, question: string, levelMatch: boolean, signal?: AbortSignal) {
+    const adapter = await this.adapter("audio_understanding", Capability.AudioUnderstanding);
+    if (!adapter.compare) throw new Error("The configured audio service does not support paired comparison.");
+    return adapter.compare(a, b, question, levelMatch, signal);
   }
 
-  async generateImage(prompt: string, outPath: string, size = OdeConfig.services.coverSize): Promise<string> {
-    return (await this.adapter("image_generation", Capability.ImageGeneration)).square(prompt, outPath, size);
+  async transcribe(audioPath: string, signal?: AbortSignal): Promise<Transcript> {
+    return (await this.adapter("transcription", Capability.Transcription)).transcribe(audioPath, signal);
   }
 
-  async separateStem(audioPath: string, describe: string, outDir: string): Promise<SeparatedStems> {
-    return (await this.adapter("stem_separation", Capability.StemSeparation)).separate(audioPath, describe, outDir);
+  async generateImage(prompt: string, outPath: string, size = OdeConfig.services.coverSize, signal?: AbortSignal): Promise<string> {
+    return (await this.adapter("image_generation", Capability.ImageGeneration)).square(prompt, outPath, size, signal);
   }
 
-  async singDemoVocal(input: DemoVocalInput, outPath: string): Promise<string> {
-    return (await this.adapter("singing_voice", Capability.SingingVoice)).sing(input, outPath);
+  async separateStem(audioPath: string, describe: string, outDir: string, signal?: AbortSignal): Promise<SeparatedStems> {
+    return (await this.adapter("stem_separation", Capability.StemSeparation)).separate(audioPath, describe, outDir, signal);
   }
 
-  async generateSound(prompt: string, seconds: number, outPath: string, loop = false): Promise<string> {
-    return (await this.adapter("sound_generation", Capability.SoundGeneration)).generate(prompt, seconds, outPath, loop);
+  async singDemoVocal(input: DemoVocalInput, outPath: string, signal?: AbortSignal): Promise<string> {
+    return (await this.adapter("singing_voice", Capability.SingingVoice)).sing(input, outPath, signal);
+  }
+
+  async generateSound(prompt: string, seconds: number, outPath: string, loop = false, signal?: AbortSignal): Promise<string> {
+    return (await this.adapter("sound_generation", Capability.SoundGeneration)).generate(prompt, seconds, outPath, loop, signal);
   }
 
   async available(): Promise<Record<Role, boolean>> {

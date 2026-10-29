@@ -15,7 +15,7 @@ export class MetaTranscriber implements Transcriber {
     private readonly audio: SpeechAudio,
   ) {}
 
-  async transcribe(audioPath: string): Promise<Transcript> {
+  async transcribe(audioPath: string, signal?: AbortSignal): Promise<Transcript> {
     const form = new FormData();
     const settings = { mode: "ENDPOINTING", model: this.role.model, audioEncoding: "WAV" };
     form.append("request", new Blob([JSON.stringify(settings)], { type: "application/json" }));
@@ -24,12 +24,16 @@ export class MetaTranscriber implements Transcriber {
       method: "POST",
       headers: { Authorization: `Bearer ${this.role.apiKey}`, Accept: "application/json" },
       body: form,
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(120_000)]) : AbortSignal.timeout(120_000),
     });
     if (!response.ok) throw new Error(`Transcription failed (${response.status}): ${await response.text()}`);
     const result = (await response.json()) as MetaTranscriptResponse;
+    if (typeof result.transcript !== "string" || !Array.isArray(result.turns) || result.turns.some((turn) => !Number.isFinite(turn.startMs) || !Number.isFinite(turn.endMs) || turn.endMs < turn.startMs || typeof turn.transcript !== "string")) throw new Error("Transcription returned an unreadable transcript or detection times.");
     return {
       text: result.transcript,
       turns: result.turns.map((turn) => ({ start: turn.startMs / 1000, end: turn.endMs / 1000, text: turn.transcript })),
+      timing: "speech-detection-approximate",
+      providerMetadata: { ...result },
     };
   }
 }

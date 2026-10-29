@@ -17,12 +17,11 @@ export interface SongDefaults {
   tempo: number | null;
   /** Live's key and scale when Scale Mode is on (with Scale Mode off, the Set's key is unknown). */
   key: KeySpec | null;
-  /** Live's time signature; 4/4, Live's default, before the Set has been read. */
-  timeSignature: TimeSignature;
+  /** Null when the installed host cannot report the current meter. */
+  timeSignature: TimeSignature | null;
 }
 
-/** Live's default time signature and tempo, used before the Set has been read. */
-export const DEFAULT_TIME_SIGNATURE: TimeSignature = { numerator: 4, denominator: 4 };
+/** A suggested draft tempo only, not a reading from Live. */
 export const DEFAULT_TEMPO = 120;
 /** Live counts positions in quarter-note beats. */
 const QUARTER_NOTES_PER_WHOLE = 4;
@@ -39,7 +38,7 @@ export async function songDefaults(ctx: ToolContext): Promise<SongDefaults> {
     key: snapshot?.song.scaleMode
       ? { root: snapshot.song.rootNote, scale: snapshot.song.scaleName, intervals: [...snapshot.song.scaleIntervals] }
       : null,
-    timeSignature: snapshot ? { ...snapshot.signature } : DEFAULT_TIME_SIGNATURE,
+    timeSignature: snapshot?.signature ? { ...snapshot.signature } : null,
   };
 }
 
@@ -49,6 +48,12 @@ export async function resolveAccent(ctx: ToolContext, accent: Accent | undefined
 }
 
 /** Quarter-note beats in one bar of a time signature (4 in 4/4, 3 in 6/8). */
-export function quarterBeatsPerBar(signature: TimeSignature): number {
-  return (signature.numerator * QUARTER_NOTES_PER_WHOLE) / signature.denominator;
+export function requireTimeSignature(signature: TimeSignature | null | undefined): TimeSignature {
+  if (!signature) throw new Error("The installed Live SDK cannot report the current time signature. Give timeSignature explicitly, using the musician's stated meter.");
+  return signature;
+}
+
+export function quarterBeatsPerBar(signature: TimeSignature | null): number {
+  const meter = requireTimeSignature(signature);
+  return (meter.numerator * QUARTER_NOTES_PER_WHOLE) / meter.denominator;
 }

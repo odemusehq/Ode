@@ -13,6 +13,10 @@ A good melody is easy to remember, comfortable to sing, agrees with the harmony,
 - Lengths are beats of 4/4: 1 = quarter, ½ = eighth, ¼ = sixteenth, 1½ = dotted quarter, 2 = half, 4 = whole. `r` is a rest and `|` a barline: `r(½) G4(½) A4(1)` is an eighth rest, an eighth-note G4, a quarter-note A4.
 - Scale degrees are numbers (1 = tonic, 5 = dominant, ♭3 = lowered third). Chords are symbols (Am7, F/A, G7sus4).
 
+A hummed idea keeps estimated timing and chromatic pitches by default. `hum_to_midi` exposes its observed pitches and transformations; enable tuning correction, key snapping, fragment cleanup or quantization only when the musician requests that change. Preserve source audio for vibrato and expression that MIDI note numbers cannot represent. ASR speech-detection times are approximate and must not drive note edits or lyric replacement.
+
+`melody_write` is a drafting helper. Lyric lines get independent equal whole-bar shares; `motifBars` is refused in lyric mode. For uneven phrases, pickups and a retained hook, plan spans and write/vary the actual notes. An infeasible register must remain an error unless the musician changes the bounds.
+
 ## How Ode works on a melody
 
 ### 1. Read
@@ -38,7 +42,7 @@ Plan in words before placing notes: the motif, the contour, the range, the rhyth
 
 ### 4. Verify
 
-Run every check that applies, fix what fails and check again, up to three rounds. If something still fails, the result line says what. Call a melody checked only when the check ran.
+Run the checks that apply and report their coverage. Explicit range and preservation constraints are hard requirements. Chromatic notes, suspensions, syncopation, melismas and deliberate stress departures are musical choices: inspect their intention/resolution before changing them. A passed note check is not a listening or artistic-quality verdict. English pronunciation tools are heuristic and do not establish multilingual lyric expertise.
 
 | Check | Correct when |
 |---|---|

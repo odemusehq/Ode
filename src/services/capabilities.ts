@@ -46,6 +46,7 @@ export const ROLE_CAPABILITY: Record<Role, Capability> = {
 export interface TextOptions {
   system?: string;
   maxTokens: number;
+  signal?: AbortSignal;
 }
 
 /** A request for an answer in a fixed JSON shape: the strict schema the provider enforces, and a parser that checks it. */
@@ -71,16 +72,17 @@ export interface TextGenerator {
 }
 
 export interface AudioUnderstander {
-  describe(audioPath: string, question: string): Promise<string>;
+  describe(audioPath: string, question: string, signal?: AbortSignal): Promise<string>;
+  compare?(a: string, b: string, question: string, levelMatch: boolean, signal?: AbortSignal): Promise<{ answer: string; comparison: unknown }>;
 }
 
 export interface Transcriber {
-  transcribe(audioPath: string): Promise<Transcript>;
+  transcribe(audioPath: string, signal?: AbortSignal): Promise<Transcript>;
 }
 
 export interface ImageGenerator {
   /** Writes a square PNG of size × size pixels to outPath. */
-  square(prompt: string, outPath: string, size: number): Promise<string>;
+  square(prompt: string, outPath: string, size: number, signal?: AbortSignal): Promise<string>;
 }
 
 export interface SeparatedStems {
@@ -90,17 +92,17 @@ export interface SeparatedStems {
 
 export interface StemSeparator {
   /** Writes the described sound and everything else as audio files in outDir. */
-  separate(audioPath: string, describe: string, outDir: string): Promise<SeparatedStems>;
+  separate(audioPath: string, describe: string, outDir: string, signal?: AbortSignal): Promise<SeparatedStems>;
 }
 
 export interface SingingVoiceSynthesizer {
   /** Writes a WAV of the lyrics sung on the notes, in the voice of the reference recording. */
-  sing(input: DemoVocalInput, outPath: string): Promise<string>;
+  sing(input: DemoVocalInput, outPath: string, signal?: AbortSignal): Promise<string>;
 }
 
 export interface SoundGenerator {
   /** Writes the generated sound next to outPath and returns its path. */
-  generate(prompt: string, seconds: number, outPath: string, loop: boolean): Promise<string>;
+  generate(prompt: string, seconds: number, outPath: string, loop: boolean, signal?: AbortSignal): Promise<string>;
 }
 
 export interface CapabilityAdapters {

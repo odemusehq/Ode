@@ -66,10 +66,10 @@ export class DrumGrooveWriter {
 
   constructor(private readonly random: SeededRandom) {}
 
-  write(genre: Genre, section: SectionKind, bars: number, energy: number): Note[] {
+  write(genre: Genre, section: SectionKind, bars: number, energy: number, feelOverride?: SectionFeel): Note[] {
     const groove = GROOVES[genre];
     const level = Math.min(1, Math.max(0, energy));
-    const feel = this.feel(section, level);
+    const feel = feelOverride ?? this.feel(section, level);
     const barCount = Math.max(1, Math.round(bars));
     let hits: TimedHit[] = [];
     for (let bar = 0; bar < barCount; bar++) hits.push(...this.bar(groove, feel, bar, barCount, level));
@@ -193,6 +193,6 @@ export class DrumGrooveWriter {
 }
 
 /** Drum Rack notes for a genre and section (36 kick, 38 snare, 39 clap, 42/46 hats, 49 crash, 51 ride, 45/47/48 toms). */
-export function drumGroove(genre: string, section: SectionKind, bars: number, energy: number, seed: number = DEFAULT_SEED): Note[] {
-  return new DrumGrooveWriter(new SeededRandom(seed)).write(parseGenre(genre), section, bars, energy);
+export function drumGroove(genre: string, section: SectionKind, bars: number, energy: number, seed: number = DEFAULT_SEED, feel?: SectionFeel): Note[] {
+  return new DrumGrooveWriter(new SeededRandom(seed)).write(parseGenre(genre), section, bars, energy, feel);
 }

@@ -7,8 +7,8 @@ export const singabilityCheckTool = defineTool({
   description: [
     "Checks how easy a lyric line is to sing on its melody: open vowels (as in \"ah\", \"oh\", \"eye\") suit long or",
     "high notes; closed vowels (\"ee\", \"oo\") and \"er\" on high sustained notes are flagged; clusters of consonants",
-    "on very short notes are flagged; phrases longer than eight beats without a rest are flagged.",
-    "Use it with prosody_check after writing or changing a topline, or new words for an existing melody, and fix what it flags before reporting.",
+    "on very short physical durations are flagged; phrases longer than four seconds without a rest are flagged when tempo is known.",
+    "Use these English-language heuristics with prosody_check as advisory evidence. Preserve intentional phrasing and the singer's judgement; a score does not establish comfort or performance quality.",
     "Inputs: line; notes (the melody for that line); timeSignature (optional, defaults to Live's); accent (optional).",
     "Returns { accent, score (0–1, 1 = zero issues), issues, syllables, alignment, notes }: each issue has syllable",
     "(index into syllables), problem and fix in plain words.",
@@ -16,8 +16,8 @@ export const singabilityCheckTool = defineTool({
   input: LINE_ON_NOTES_INPUT,
   changes: "none",
   async run(input, ctx) {
-    const { accent, line, notes, signature } = await prepareLineOnNotes(ctx, input);
-    const report = singabilityCheck(line, notes, signature.numerator, signature.denominator);
+    const { accent, line, notes, signature, tempo } = await prepareLineOnNotes(ctx, input);
+    const report = singabilityCheck(line, notes, signature.numerator, signature.denominator, tempo);
     return {
       accent,
       score: report.score,
@@ -25,6 +25,8 @@ export const singabilityCheckTool = defineTool({
       syllables: describeSyllables(report.syllables),
       alignment: report.alignment,
       notes: report.notes,
+      tempo,
+      limitations: `English pronunciation and physical-duration heuristics, not a singer-comfort or performance verdict. ${tempo === null ? "Tempo unavailable: consonant-duration and breath checks did not run." : "Duration checks use this constant tempo; actual breath and expression require the singer's judgement."}`,
     };
   },
 });

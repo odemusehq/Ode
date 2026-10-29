@@ -98,7 +98,7 @@ export class LoudnessMeter {
     const shortTerm = this.windowMeanSquares(SHORT_TERM_STEPS);
     const completeShortTerm = Array.from(shortTerm.subarray(SHORT_TERM_STEPS - 1), toLufs);
     return {
-      integrated: this.integrated(momentary.subarray(MOMENTARY_STEPS - 1)),
+      integrated: this.stepEnergies.length >= MOMENTARY_STEPS ? this.integrated(momentary.subarray(MOMENTARY_STEPS - 1)) : -Infinity,
       momentaryMax: toLufs(maximum(momentary)),
       shortTermMax: toLufs(maximum(shortTerm)),
       range: loudnessRange(completeShortTerm),
@@ -111,7 +111,9 @@ export class LoudnessMeter {
    * steps − 1 on are complete windows.
    */
   private windowMeanSquares(steps: number): Float64Array {
-    const energies = this.stepEnergies;
+    // Finite-file reading zero-pads the final 100 ms step; pending audio must not disappear.
+    // Keep this local so reading during streaming does not alter subsequent pushes.
+    const energies = this.pendingLength > 0 ? [...this.stepEnergies, this.pendingEnergy] : this.stepEnergies;
     const result = new Float64Array(energies.length);
     const windowLength = steps * this.stepLength;
     for (let k = 0; k < energies.length; k++) {

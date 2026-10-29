@@ -4,6 +4,7 @@ import { defineTool } from "../define";
 import { TrackRefSchema } from "../live/schemas";
 import { ArrangementAudio, requireRange } from "./arrangement-audio";
 import { measurementReport } from "./report";
+import { audioFileEvidence } from "./file-evidence";
 
 export const audioAnalyze = defineTool({
   name: "audio_analyze",
@@ -24,8 +25,9 @@ export const audioAnalyze = defineTool({
   changes: "none",
   async run(input, ctx) {
     if (input.path) {
-      const measurement = new AudioMeasurement(await decode(await ctx.temp.inside(input.path)));
-      return { source: input.path, ...measurementReport(measurement) };
+      const path = await ctx.temp.inside(input.path);
+      const measurement = new AudioMeasurement(await decode(path));
+      return { source: await audioFileEvidence(path), ...measurementReport(measurement) };
     }
     if (!input.track || input.start === undefined || input.end === undefined) {
       throw new Error("give either path, or track with start and end (beats)");
@@ -35,6 +37,6 @@ export const audioAnalyze = defineTool({
     const lookup = await arrangement.resolve(input.track);
     if ("skipped" in lookup) throw new Error(`${lookup.skipped.track} stays unrendered: ${lookup.skipped.reason}`);
     const measurement = new AudioMeasurement(await arrangement.withRender(lookup.track.ref, input.start, input.end, decode));
-    return { source: `${lookup.track.name}, beats ${input.start}–${input.end}`, ...measurementReport(measurement) };
+    return { source: `${lookup.track.name}, beats ${input.start}–${input.end}`, signalStage: "pre-effects, pre-fader Arrangement source audio", currentness: "measured during this call only", ...measurementReport(measurement) };
   },
 });

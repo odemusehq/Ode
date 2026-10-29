@@ -47,8 +47,9 @@ function readAnswer(answer: string): z.infer<typeof QuoteAnswer> | null {
 async function checkQuotes(ctx: ToolContext, text: string): Promise<QuoteCheck> {
   let answer: string;
   try {
-    answer = await ctx.services.text("subagent", quotePrompt(text), { system: QUOTE_SYSTEM });
+    answer = await ctx.services.text("subagent", quotePrompt(text), { system: QUOTE_SYSTEM, signal: ctx.signal });
   } catch (error) {
+    ctx.signal?.throwIfAborted();
     const reason = error instanceof Error ? error.message : String(error);
     return { done: false, possibleQuotes: [], note: `The quotation check failed to run: ${reason}` };
   }
@@ -71,7 +72,7 @@ export const originalityCheckTool = defineTool({
     "quotations of existing songs. The result is only a warning; say so when you pass it on.",
     "Use it on new or changed lyrics before reporting them, and when the musician asks whether a line is original.",
     "Inputs: text (the lyric, one line per line).",
-    'Returns { cliches, repeats, overusedRhymes, quoteRisk ("low" or "possible"), quotationCheck { done,',
+    'Returns { cliches, repeats, overusedRhymes, quoteRisk ("unknown", "low" or "possible"), quotationCheck { done,',
     "possibleQuotes [{ line, reason }], note }, warning }.",
   ].join(" "),
   input: {
@@ -81,7 +82,7 @@ export const originalityCheckTool = defineTool({
   async run({ text }, ctx) {
     const report = originalityCheck(text, await ctx.mneme.pastLyrics(ctx.song.songId));
     const quotationCheck = await checkQuotes(ctx, text);
-    const quoteRisk = quotationCheck.possibleQuotes.length > 0 ? QuoteRisk.Possible : report.quoteRisk;
+    const quoteRisk = !quotationCheck.done ? QuoteRisk.Unknown : quotationCheck.possibleQuotes.length > 0 ? QuoteRisk.Possible : QuoteRisk.Low;
     return { ...report, quoteRisk, quotationCheck, warning: WARNING };
   },
 });

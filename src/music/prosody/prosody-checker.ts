@@ -71,15 +71,6 @@ export class ProsodyChecker {
         `Add ${plural(difference, "note")} to the melody, or cut ${plural(difference, "syllable")} with a shorter word or a contraction.`,
         penalty,
       );
-    } else if (difference < 0) {
-      const first = setting.melismaSyllables[0] ?? 0;
-      const text = setting.syllables[first]?.text ?? "";
-      issues.add(
-        first,
-        `The line has ${plural(syllableCount, "syllable")} for ${plural(noteCount, "note")}, so some syllables are sung over several notes (melismas), starting on "${text}".`,
-        "That works on an open, stressed vowel; otherwise add a word or merge notes.",
-        penalty,
-      );
     }
   }
 

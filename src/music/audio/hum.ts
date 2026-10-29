@@ -12,6 +12,10 @@ import type { NoteSegment, PitchedFrame } from "./segmentation";
 import type { AudioData, MusicalKey } from "./types";
 
 export interface HumTranscriberOptions {
+  quantize: boolean;
+  snapToKey: boolean;
+  correctTuning: boolean;
+  cleanFragments: boolean;
   /** Same-pitch fragments separated by less than this, without a new attack, are joined, seconds. */
   mergeGapSeconds: number;
   /**
@@ -28,6 +32,10 @@ export interface HumTranscriberOptions {
 }
 
 export const DEFAULT_HUM_OPTIONS: Readonly<HumTranscriberOptions> = {
+  quantize: false,
+  snapToKey: false,
+  correctTuning: false,
+  cleanFragments: false,
   mergeGapSeconds: 0.06,
   shortestNoteFraction: 0.6,
   referenceVelocity: 96,
@@ -46,9 +54,11 @@ export interface HumTranscription {
   /** Notes in beats from the start of the audio. */
   notes: Note[];
   /** Grid the timing was fitted to. */
-  grid: GridDivision;
+  grid: GridDivision | null;
   /** How far the singer's tuning sat from equal temperament at A4 = 440 Hz, cents. */
   tuningOffsetCents: number;
+  originalNotes: { startSeconds: number; endSeconds: number; midi: number; levelDbfs: number }[];
+  transformations: string[];
 }
 
 interface PitchedNote {
@@ -60,9 +70,8 @@ interface PitchedNote {
 }
 
 /**
- * Turns a hummed or sung line into MIDI notes: pitch tracking, global tuning correction, note cuts
- * where the pitch settles or the level jumps, same-pitch fragments joined, pitches snapped to the key
- * (when given), timing fitted to an eighth or sixteenth grid, velocity from each note's level.
+ * Estimates notes from a monophonic recording. Timing and chromatic notes are kept by default;
+ * tuning/key/grid correction and fragment cleanup require explicit options.
  */
 export class HumTranscriber {
   private readonly options: HumTranscriberOptions;
@@ -70,7 +79,7 @@ export class HumTranscriber {
 
   /**
    * @param tempo song tempo, BPM
-   * @param key when given, pitches snap to this key
+   * @param key used only when snapToKey is explicitly enabled
    */
   constructor(
     private readonly tempo: number,
@@ -79,7 +88,7 @@ export class HumTranscriber {
   ) {
     if (!(tempo > 0)) throw new RangeError(`tempo must be above 0 BPM, got ${tempo}`);
     this.options = { ...DEFAULT_HUM_OPTIONS, ...options };
-    this.keySnapper = key ? new KeySnapper(key) : null;
+    this.keySnapper = key && this.options.snapToKey ? new KeySnapper(key) : null;
   }
 
   /** Notes in beats from the start of the audio. */
@@ -100,17 +109,24 @@ export class HumTranscriber {
     );
     const pitched: PitchedFrame[] = frames.map((frame, k) => ({
       time: frame.time,
-      midi: frame.freq === null ? null : frequencyToMidi(frame.freq) - offsetCents / CENTS_PER_SEMITONE,
+      midi: frame.freq === null ? null : frequencyToMidi(frame.freq) - (this.options.correctTuning ? offsetCents / CENTS_PER_SEMITONE : 0),
       level: levels[k] ?? -Infinity,
       onset: onsets[k] ?? false,
     }));
 
     const segments = new NoteSegmenter(tracker.hop / audio.sampleRate).segment(pitched);
-    const notes = this.withoutFragments(this.joinFragments(segments.map((segment) => this.toPitchedNote(segment))));
+    const observed = segments.map((segment) => this.toPitchedNote(segment));
+    const notes = this.options.cleanFragments ? this.withoutFragments(this.joinFragments(observed)) : observed;
     const timed = this.toBeats(notes);
     const quantizer = new GridQuantizer();
-    const grid = quantizer.choose(timed);
-    return { notes: quantizer.quantize(timed, grid), grid, tuningOffsetCents: offsetCents };
+    const grid = this.options.quantize ? quantizer.choose(timed) : null;
+    return {
+      notes: grid === null ? timed.map(({ end, ...note }) => ({ ...note, duration: end - note.start })) : quantizer.quantize(timed, grid),
+      grid,
+      tuningOffsetCents: offsetCents,
+      originalNotes: segments.map((segment) => ({ startSeconds: segment.start, endSeconds: segment.end, midi: segment.midi + (this.options.correctTuning ? offsetCents / CENTS_PER_SEMITONE : 0), levelDbfs: segment.level })),
+      transformations: ["MIDI pitches rounded to semitones; pitch tracking and segmentation are estimates", ...(this.options.correctTuning ? ["global tuning corrected"] : []), ...(this.keySnapper ? ["pitches snapped to supplied key"] : []), ...(this.options.cleanFragments ? ["short fragments removed and nearby same-pitch fragments joined"] : []), ...(grid !== null ? ["timing quantized"] : [])],
+    };
   }
 
   private toPitchedNote(segment: NoteSegment): PitchedNote {

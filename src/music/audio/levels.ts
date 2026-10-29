@@ -1,11 +1,11 @@
 import { signed } from "./format";
 import { median } from "./signal";
-import { sumDb } from "./units";
 
 export interface TrackLevel {
   name: string;
   /** Peak level, dBFS (true peak when available). */
   peak: number;
+  peakUnit?: "dBTP" | "dBFS";
   /** Integrated loudness, LUFS. */
   loudness: number;
 }
@@ -80,38 +80,37 @@ export class LevelChecker {
         findings.push({
           track: track.name,
           issue: LevelIssue.Unmeasured,
-          advice: `${track.name} peaks at ${signed(track.peak)} dBFS here; its loudness needs a longer or louder stretch to read, so check a longer stretch to compare it with the other tracks.`,
+          advice: `${track.name} peaks at ${signed(track.peak)} ${track.peakUnit ?? "dBFS"} here; integrated loudness is below the gates or the passage is too short. This is not silence.`,
         });
       }
     }
     findings.push(...this.balanceFindings(measured));
-    const hot = this.hotMixFinding(measured);
-    if (hot) findings.push(hot);
     return findings;
   }
 
   private peakFinding(track: TrackLevel): LevelFinding | null {
-    const { clipDbfs, headroomDbfs, quietDbfs, targetPeak } = this.options;
+    const { clipDbfs, headroomDbfs, quietDbfs } = this.options;
     const peak = signed(track.peak);
+    const unit = track.peakUnit ?? "dBFS";
     if (track.peak >= clipDbfs) {
       return {
         track: track.name,
         issue: LevelIssue.Clipping,
-        advice: `${track.name} peaks at ${peak} dBFS, so it clips or is about to: turn its clip gain down by about ${(track.peak - targetPeak.high).toFixed(0)} dB so it peaks near ${targetPeak.high} dBFS.`,
+        advice: `${track.name} has a source peak of ${peak} ${unit}, near or above full scale. Inspect the exact signal and output format; this alone does not prove clipping in Live or at Main.`,
       };
     }
     if (track.peak > headroomDbfs) {
       return {
         track: track.name,
         issue: LevelIssue.LittleHeadroom,
-        advice: `${track.name} peaks at ${peak} dBFS, leaving little headroom for plug-ins and the Master: lower its clip gain by about ${(track.peak - targetPeak.high).toFixed(0)} dB.`,
+        advice: `${track.name} has a source peak of ${peak} ${unit}. Check the actual processed output before deciding whether gain needs reducing; Main headroom is unmeasured.`,
       };
     }
     if (track.peak < quietDbfs) {
       return {
         track: track.name,
         issue: LevelIssue.TooQuiet,
-        advice: `${track.name} peaks at only ${peak} dBFS: raise its clip gain by about ${(targetPeak.low - track.peak).toFixed(0)} dB so compressors and saturators see a healthy level (peaks between ${targetPeak.low} and ${targetPeak.high} dBFS).`,
+        advice: `${track.name} has a low source peak of ${peak} ${unit}; that may be intentional. Judge its level in the processed mix before changing gain.`,
       };
     }
     return null;
@@ -127,29 +126,19 @@ export class LevelChecker {
         findings.push({
           track: track.name,
           issue: LevelIssue.MuchLouder,
-          advice: `${track.name} is ${difference.toFixed(0)} LU louder than the middle of the other tracks before its fader: check that it leaves room for the rest of the mix, and trim its gain while every other fader stays where it is.`,
+          advice: `${track.name} is ${difference.toFixed(0)} LU above the median independently measured source loudness. This does not establish mix balance: activity, faders, pan and processing differ.`,
         });
       } else if (-difference > this.options.quieterLu) {
         findings.push({
           track: track.name,
           issue: LevelIssue.MuchQuieter,
-          advice: `${track.name} is ${(-difference).toFixed(0)} LU quieter than the middle of the other tracks before its fader: it may get lost unless it is meant to sit far back; raise its clip gain if you find the fader pushed high.`,
+          advice: `${track.name} is ${(-difference).toFixed(0)} LU below the median independently measured source loudness. Audition its intended role before deciding whether anything is too quiet.`,
         });
       }
     }
     return findings;
   }
 
-  private hotMixFinding(tracks: readonly TrackLevel[]): LevelFinding | null {
-    if (tracks.length < 2) return null;
-    const sum = sumDb(tracks.map((track) => track.loudness));
-    if (sum <= this.options.hotMixLufs) return null;
-    return {
-      track: null,
-      issue: LevelIssue.HotMix,
-      advice: `Together these tracks add up to roughly ${sum.toFixed(0)} LUFS before faders, which leaves the Master little headroom: bring clip gains or faders down so the mix peaks around ${this.options.targetPeak.high} dBFS before mastering.`,
-    };
-  }
 }
 
 /** Gain-staging advice for a set of tracks (headroom, clipping risk, very low levels, balance). */

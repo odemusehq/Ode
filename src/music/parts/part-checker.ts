@@ -39,7 +39,7 @@ export interface PartCheck {
   averagePitch: number | null;
   key?: { key: string; outOfKey: PlacedNote[] };
   range?: { low: string; high: string; outside: PlacedNote[] };
-  chordTones?: { strongBeatNotes: number; offChord: (PlacedNote & { chord: string })[] };
+  chordTones?: { strongBeatNotes: number; heldAtChanges: number; offChord: (PlacedNote & { chord: string; checkedAt: number })[]; note: string };
   lock?: { onsets: number; together: number; apart: number[]; targetsWithoutNote: number[] };
   pads?: { missing: { pitch: string; midi: number; notes: number }[] };
   leaps?: { largest: number; over: { from: PlacedNote; to: PlacedNote; semitones: number }[] };
@@ -99,9 +99,17 @@ export class PartChecker {
     const strong = notes.filter((note) => this.meter.weightAt(note.start) >= METRICAL_WEIGHT.middleBeat);
     const offChord = strong.flatMap((note) => {
       const chord = chords.at(note.start);
-      return chord && !chord.contains(note.pitch) ? [{ ...PartChecker.placed(note), chord: chord.symbol }] : [];
+      return chord && !chord.contains(note.pitch) ? [{ ...PartChecker.placed(note), chord: chord.symbol, checkedAt: note.start }] : [];
     });
-    return { strongBeatNotes: strong.length, offChord };
+    let heldAtChanges = 0;
+    for (const event of chords.entries()) {
+      for (const note of notes) {
+        if (note.start >= event.start || note.start + note.duration <= event.start) continue;
+        heldAtChanges++;
+        if (event.chord && !event.chord.contains(note.pitch)) offChord.push({ ...PartChecker.placed(note), chord: event.symbol, checkedAt: event.start });
+      }
+    }
+    return { strongBeatNotes: strong.length, heldAtChanges, offChord, note: "Strong onsets and notes held across chord changes only. Non-chord tones can be intentional; this does not judge resolution, ensemble clashes or musical quality." };
   }
 
   private static lock(notes: Note[], targets: Note[]): NonNullable<PartCheck["lock"]> {

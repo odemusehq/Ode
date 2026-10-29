@@ -70,6 +70,7 @@ export class PitchPlanner {
 
   constructor(private readonly context: PitchContext) {
     this.pitches = context.key.pitchesBetween(context.range.low, context.range.high);
+    if (this.pitches.length === 0) throw new RangeError("The requested range contains no pitch in the chosen scale; change the range or key explicitly.");
   }
 
   plan(onsets: MelodyOnset[], motif: MotifShape | null): number[] {

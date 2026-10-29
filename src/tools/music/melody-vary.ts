@@ -4,8 +4,8 @@ import { MusicalKey } from "../../music/harmony/musical-key";
 import { varyMelody } from "../../music/melody/melody-varier";
 import { Meter } from "../../music/prosody/meter";
 import { defineTool } from "../define";
-import { NotesInput, SeedInput } from "./schemas";
-import { songDefaults } from "./song-defaults";
+import { NotesInput, SeedInput, TimeSignatureInput } from "./schemas";
+import { requireTimeSignature, songDefaults } from "./song-defaults";
 
 export const melodyVaryTool = defineTool({
   name: "melody_vary",
@@ -22,11 +22,12 @@ export const melodyVaryTool = defineTool({
     notes: NotesInput.min(1).describe("The melody to vary."),
     how: z.enum(MelodyVariation).describe("What to vary."),
     seed: SeedInput,
+    timeSignature: TimeSignatureInput.optional(),
   },
   changes: "none",
-  async run({ notes, how, seed }, ctx) {
+  async run({ notes, how, seed, timeSignature }, ctx) {
     const defaults = await songDefaults(ctx);
-    const { numerator, denominator } = defaults.timeSignature;
+    const { numerator, denominator } = requireTimeSignature(timeSignature ?? defaults.timeSignature);
     const key = defaults.key ? MusicalKey.from(defaults.key) : undefined;
     return { notes: varyMelody(notes, how, seed, new Meter(numerator, denominator), key) };
   },

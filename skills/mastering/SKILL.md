@@ -1,6 +1,6 @@
 ---
 name: mastering
-description: Master the song in place in Ableton Live — build or tune the mastering chain on the Main track (Utility, EQ Eight, Glue Compressor, Multiband Dynamics when needed, saturation or a clipper, Limiter) with Live's devices or the mastering plug-ins the musician already added, aimed at the loudness target (around −14 LUFS integrated and −1 dBTP for streaming, or the loudness target in the musician's settings for club, CD or other uses) — then check the chain's order and settings against the target, measure a bounce of the master when the musician drops one onto an audio track, check that the song keeps its dynamics, and report in one line. Use this whenever the musician clicks "Master for streaming", asks for a master, says the song is too quiet, too loud or squashed next to other songs, mentions LUFS, true peak, a limiter, streaming, club or CD versions, or is getting ready to export for release, even when the request leaves out the word "mastering".
+description: Configure or tune the existing Main mastering chain for the artist's stated target, measure exact supplied processed bounces, compare retained audio and disclose missing audition/export. Use for mastering, LUFS, true peak, loudness, limiting or delivery requests. The installed SDK cannot capture Main output, export audio or save the project; limiter settings alone never establish a verified or delivered master.
 ---
 
 # Mastering
@@ -11,32 +11,24 @@ Ode masters in place on the Main track: it builds the chain once and tunes its v
 
 ## The loop
 
-1. **Read.** The Main track's devices (any chain the musician already has, Master-bus processing their sound depends on), the target (named in the request — streaming, club, CD — or else the loudness target in the musician's settings), the genre, the sections and which one is loudest, and anything locked (a locked mix means the Main track chain only). When the musician drops a bounce of the mix onto an audio track, render that track and measure it with the audio analysis before changing anything: integrated loudness over the whole song, short-term loudness and true peak in the loudest section, and the spectrum.
-2. **Decide** what the master needs, in plain words ("a little dull above 8 kHz, the low end booms on two notes, about 5 dB below the target"), and which stages of the chain solve it. When a small mix fix is clearly better (one boomy bass note), make it with the mixing skill and say so in the result line.
-3. **Change it in place**, as one undo step:
-   - Build the chain on the Main track with the Limiter last, so its ceiling holds for everything before it.
-   - Use only the stages the song needs, in the order below. On later requests, tune the chain that is there; when the musician has their own chain, tune that one.
-   - Raise the Limiter's gain toward the target, as far as the music allows; a bounce of the master on an audio track, when the musician adds one, shows how close it came.
-4. **Verify** with the checks below, fixing until they pass (up to three rounds); otherwise the result line says what still fails. Ode's measurements hear the tracks before their devices, so loudness and peak figures for the master come only from a bounce the musician drops onto an audio track, rendered and measured there; give only figures that were measured.
-5. **Let them hear it.** When your turn ends, the musician presses play in Live: name the loudest section in the result line, so they hear the master where it works hardest.
-6. **Report in one line** with the settings, the target and any measured numbers. For example:
-   - "Mastered for streaming: EQ Eight low cut at 25 Hz, Glue at ratio 2, Limiter ceiling −1 dB with true peak on · aimed at −14 LUFS, one limiter, last; play chorus 3 to hear it."
-   - "Limiter eased 2 dB after your bounce measured −0.4 dBTP, Saturator clipping shaves the kick peaks · ceiling −1 dB, aimed at −9 LUFS for club."
-   - "Low end steadier: Multiband low band at 1.5:1 on the booming notes · low end mono below 120 Hz, ceiling −1 dB."
-
-**Again** is another take: the Set is back as it was, so make a clearly different master on the same target, with a new approach to the chain (more glue and less limiting, a darker or brighter balance).
-
-**Outside the usual style.** When a master goes beyond the artist's usual releases (much denser, much brighter), the result line says so.
+1. Read the request, reference, artist's target and existing Main chain. Preserve the approved mix and intentional processing. A default platform figure is a starting point, not a universal artistic target.
+2. Identify the actual audio available. The installed SDK renders only Arrangement audio before devices and fader. It cannot hear a MIDI instrument, group, return or Main output, save the Set or export a master. Ask for a processed bounce through the chat's file intake when that evidence is required; never substitute a source render.
+3. Measure the exact supplied file with `audio_analyze`, retaining its hash, format, frame count and declared signal stage. A supplied bounce's relationship to the current Set is unknown, even when exposed settings look unchanged.
+4. Make a justified, limited chain change through supported controls. Recipes below are optional starting points. Parameter values establish configuration only; they do not reveal actual gain reduction, pumping, tone or translation.
+5. Compare retained before/after or reference files with `audio_compare` for the artist's stated criterion. Match loudness for tone comparisons; retain levels when balance is the question. Both files must cover comparable musical material. Listening-model judgement is unvalidated and complements the artist's audition in Live.
+6. Report briefly what was configured, what exact file was measured, and what still needs a new bounce, audition or export. Use “chain configured” when that is the completed action. Use “delivered” only for an actual retained output file; the SDK cannot create the native export or save/collect the Live project.
 
 ## Checks
 
-| Check | When | Correct when |
-|---|---|---|
-| Loudness | Every change | The Limiter's gain is raised toward the target as far as the music allows. When the musician adds a bounce on an audio track, its integrated loudness over the whole song is within ±1 LU of the target: a short stretch gives the wrong integrated number |
-| True peak | Every change | The Limiter's ceiling sits at the target's: −1 dB for streaming, −2 dB for masters louder than about −14 LUFS, below 0 dB with a margin for club and CD, with true-peak limiting on where the Limiter offers it; a bounce, when there is one, measures at or below it |
-| Dynamics | Limiter and compression changes | Compression stays gentle (1–2 dB on the loud parts) and the limiting moderate (about 3–4 dB at most), so the chorus or drop keeps its lift over the verse; on a bounce, the chorus still measures louder than the verse |
-| Tonal balance | EQ changes | Each EQ move is the band and size the plan named (air up, low end steadier), 0.5–2 dB; against a reference the musician supplied, compared at matched loudness |
-| Mono | Width or mid/side changes, and the final check | The low end stays mono below about 100–150 Hz, and width moves on the sides stay small (around 90–110%) |
+| Property | Evidence required |
+|---|---|
+| Loudness and peak | Measurements of the exact proposed final file. Limiter gain and ceiling are settings, not measured outcomes |
+| Dynamics and tone | Comparable audio and task-specific listening. A higher chorus LUFS or gentle ratio does not prove retained impact or a better master |
+| Mono | Original stereo correlation and mono-power diagnostics, plus audition of the actual output. Bass Mono or Width settings alone do not verify translation |
+| Completeness | Correct file, sample rate, channels, bit depth and exact frames, with the agreed start and complete tail checked. Equal frame counts alone do not establish common stem origin |
+| Delivery | The requested playable files actually exist. Packaging a supplied bounce is not native Live export; saving and reopening the editable project remains a host/manual requirement |
+
+Do not repeatedly change a chain to make a source-only heuristic pass. Intentional distortion, a quiet master or no change can be the right result.
 
 ## Questions
 
@@ -65,8 +57,8 @@ Third-party mastering plug-ins the musician already added are welcome; the same 
 
 **Loudness normalisation changes the question.** Most streaming services turn loud tracks down to a reference level for playback, and some raise quiet ones only as far as their peak headroom allows. A master much louder than the platform's reference gets turned down, keeping its squashed dynamics without being any louder for the listener.
 
-**Typical values** (platforms publish and occasionally change them):
-- Streaming in general: around **−14 LUFS integrated** with a **−1 dBTP** true-peak ceiling is a common, safe target.
+**Illustrative starting values** (verify current platform requirements when relevant; the artist and delivery brief decide):
+- Streaming in general: around **−14 LUFS integrated** with a **−1 dBTP** true-peak ceiling is one possible target, not a professional-quality requirement.
 - Apple Music normalises to around −16 LUFS; a −14 LUFS master is simply turned down a little.
 - Masters louder than about −14 LUFS are safer with a −2 dBTP ceiling, because lossy encoding adds peaks.
 - Club play, DJ use, CD and downloads play each file at its own level: loudness is an artistic choice, and true peaks still need a margin below 0 dBTP.
@@ -87,14 +79,14 @@ Third-party mastering plug-ins the musician already added are welcome; the same 
 
 ## Exporting
 
-Settings for the final files, which the release skill checks:
+The following are delivery requirements for a native export performed in Live. Ode can inspect supplied files and package existing audio; it cannot execute this export through the installed SDK:
 - **Main master:** WAV or AIFF, 24-bit at the project's sample rate (44.1 or 48 kHz) unless the distributor asks otherwise; the full song including tails; normalisation off.
 - **Dither** only when reducing bit depth, once, as the very last step (16-bit for CD); 32-bit float files stay undithered.
 - **Only lossless files go to distributors;** they encode from the WAV.
 - **Alternate versions** (instrumental, clean or radio edit, a cappella) go through the same chain with the same settings so they match; a club master gets its own limiter settings.
 - **File names** carry the title, version and format, for example "Title - Main Master - 24bit 44k1.wav".
 
-When a master is done, the result line can end with these settings in a few words ("export 24-bit WAV, normalisation off").
+State export settings as instructions until an actual file has been supplied and checked. Do not call the task mastered or delivered from these settings alone.
 
 ## Albums and EPs
 

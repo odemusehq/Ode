@@ -2,6 +2,7 @@ import { CLICHES } from "./cliches";
 import { isOverusedPair } from "./overused-rhymes";
 
 export enum QuoteRisk {
+  Unknown = "unknown",
   Low = "low",
   Possible = "possible",
 }
@@ -13,7 +14,7 @@ export interface OriginalityReport {
   repeats: string[];
   /** Over-used rhyme pairs at line endings, as "fire / desire". */
   overusedRhymes: string[];
-  /** Quotations are detected by a model alone: the tool raises this to "possible" from a model check. */
+  /** Unknown until a separate quotation check runs; model recollection is not corpus-backed clearance. */
   quoteRisk: QuoteRisk;
 }
 
@@ -53,7 +54,7 @@ export class OriginalityChecker {
       cliches: this.findCliches(lines),
       repeats: this.findRepeats(lines, pastLyrics),
       overusedRhymes: this.findOverusedRhymes(lines),
-      quoteRisk: QuoteRisk.Low,
+      quoteRisk: QuoteRisk.Unknown,
     };
   }
 
@@ -125,7 +126,7 @@ export class OriginalityChecker {
 
 const checker = new OriginalityChecker();
 
-/** Clichés, repeats of the artist's earlier lyrics and over-used rhyme pairs in a lyric; quote risk "low" from code. */
+/** Local cliché/repetition checks; quotation risk remains unknown here. */
 export function originalityCheck(text: string, pastLyrics: string[]): OriginalityReport {
   return checker.check(text, pastLyrics);
 }

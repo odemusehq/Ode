@@ -10,17 +10,17 @@ export class OpenAiCompatibleImageGenerator implements ImageGenerator {
   private readonly client: OpenAI;
 
   constructor(private readonly role: RoleConfig) {
-    this.client = new OpenAI({ baseURL: role.baseUrl, apiKey: role.apiKey });
+    this.client = new OpenAI({ baseURL: role.baseUrl, apiKey: role.apiKey, timeout: 120_000, maxRetries: 0 });
   }
 
-  async square(prompt: string, outPath: string, size: number): Promise<string> {
+  async square(prompt: string, outPath: string, size: number, signal?: AbortSignal): Promise<string> {
     const response = await this.client.images.generate({
       model: this.role.model,
       prompt,
       n: 1,
       size: OdeConfig.services.imageRequestSize as OpenAI.ImageGenerateParams["size"],
       response_format: "b64_json",
-    });
+    }, { signal });
     const encoded = response.data?.[0]?.b64_json;
     if (!encoded) throw new Error("The image model's answer was missing the image.");
     const image = await Jimp.read(Buffer.from(encoded, "base64"));

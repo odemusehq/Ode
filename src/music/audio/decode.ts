@@ -38,15 +38,26 @@ const FLOAT_BITS: readonly number[] = [32, 64];
  */
 export class AudioFileDecoder {
   decode(bytes: Uint8Array, name: string): AudioData {
+    const { view, block } = this.block(bytes, name);
+    return { sampleRate: block.sampleRate, channels: AudioFileDecoder.samples(view, block) };
+  }
+
+  inspect(bytes: Uint8Array, name: string) {
+    const { view, block } = this.block(bytes, name);
+    return { format: AudioFileDecoder.fourCC(view, 0) === "RIFF" ? "WAV" : "AIFF", sampleRate: block.sampleRate, channels: block.channels, channelLayout: block.channels === 1 ? "mono" : block.channels === 2 ? "stereo" : "unknown", frames: block.frames, bitDepth: block.encoding.bits, encoding: block.encoding.kind };
+  }
+
+  private block(bytes: Uint8Array, name: string): { view: DataView; block: PcmBlock } {
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    if (bytes.byteLength < 12) throw new Error(`${name}: the audio header is incomplete`);
     const form = AudioFileDecoder.fourCC(view, 0);
     const kind = AudioFileDecoder.fourCC(view, 8);
     let block: PcmBlock;
     if (form === "RIFF" && kind === "WAVE") block = this.wav(view, name);
     else if (form === "FORM" && (kind === "AIFF" || kind === "AIFC")) block = this.aiff(view, kind === "AIFC", name);
     else throw new Error(`${name}: Ode reads WAV and AIFF files; export the audio as WAV`);
-    const readable = AudioFileDecoder.readable(view, block, name);
-    return { sampleRate: readable.sampleRate, channels: AudioFileDecoder.samples(view, readable) };
+    if (view.getUint32(4, form === "RIFF") + 8 > view.byteLength) throw new Error(`${name}: the audio file is truncated`);
+    return { view, block: AudioFileDecoder.readable(view, block, name) };
   }
 
   /**
@@ -61,6 +72,7 @@ export class AudioFileDecoder {
     if (!Number.isFinite(block.sampleRate) || block.sampleRate <= 0) throw new Error(`${name}: the header names a sample rate of ${block.sampleRate}; export the audio as WAV again`);
     const held = Math.floor(Math.max(0, view.byteLength - block.start) / (block.channels * (bits / 8)));
     const frames = Number.isFinite(block.frames) ? Math.max(0, Math.min(block.frames, held)) : held;
+    if (block.frames > held) throw new Error(`${name}: the audio data is truncated`);
     return { ...block, frames };
   }
 
@@ -71,6 +83,7 @@ export class AudioFileDecoder {
       const id = AudioFileDecoder.fourCC(view, offset);
       const size = view.getUint32(offset + 4, true);
       const body = offset + 8;
+      if (body + size > view.byteLength) throw new Error(`${name}: the WAV chunk is truncated`);
       if (id === "fmt ") {
         let code = view.getUint16(body, true);
         if (code === WAV_EXTENSIBLE && size >= 26) code = view.getUint16(body + 24, true);
@@ -102,6 +115,7 @@ export class AudioFileDecoder {
       const id = AudioFileDecoder.fourCC(view, offset);
       const size = view.getUint32(offset + 4, false);
       const body = offset + 8;
+      if (body + size > view.byteLength) throw new Error(`${name}: the AIFF chunk is truncated`);
       if (id === "COMM") {
         common = {
           channels: view.getInt16(body, false),

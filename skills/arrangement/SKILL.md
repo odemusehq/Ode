@@ -9,9 +9,13 @@ Arrangement decides what plays when. The same eight bars can be a forgettable lo
 
 Ode arranges in the Set: it edits the clips already in each section, takes parts out, brings them in, and adds what a section needs where it belongs. The musician plays the result in Live straight away, and the version history keeps the arrangement as it was.
 
+Before generating a whole song, retain the agreed phrase spans, hook identity, chord/cadence plan, instrument readiness, kit mapping, parts by section and transitions in the existing lead sheet's `intent`, `sections`, `links`, `locked` and `notes`, using `lead_sheet_read` and `lead_sheet_update`. Keep those notes concise and update them after a deliberate revision. Read the retained decisions before later generation; do not infer a new chorus identity from a fresh template.
+
+A stock-device insertion or MIDI note list is not proof of an audible instrument. Inspect the actual Drum Rack map, use `padMap` for non-GM drums, and check readiness. The groove helper is a 4/4 template; its `feel` can preserve a bridge's pulse, and other meters need an intentional MIDI pattern. Chord voicing is a sustained harmonic skeleton, not guitar articulation or piano comping.
+
 ## The loop
 
-1. **Read.** From the project map: the locators (the sections and their bars), tempo and time signature (a scene's own, or 4/4 unless the musician says otherwise), every track and the clips it plays in each section, which clips and tracks are muted, the hand edits since the last request, and the lead sheet's sections and locked parts. Read the notes of the clips you may change. Work out what plays where (parts down the side, sections across) and rate each section's energy from 1 to 10: flat neighbours, an early peak and crowded spots show at a glance.
+1. **Read.** From the project map: the locators (the sections and their bars), tempo and time signature (unknown in this SDK unless established by the musician; a scene's launch meter is not the current arrangement meter), every track and the clips it plays in each section, which clips and tracks are muted, the hand edits since the last request, and the lead sheet's sections and locked parts. Read the notes of the clips you may change. Work out what plays where (parts down the side, sections across) and rate each section's energy from 1 to 10: flat neighbours, an early peak and crowded spots show at a glance.
 2. **Decide** the cause of what the musician describes ("the drop feels weak": the build before it is as full as the drop) and the smallest set of moves that fixes it, using the levers and rules below. Contrast does most of the work, so before adding to a section, look at what can come out of the one before it. Move several levers together so the change is obvious.
 3. **Change it in place**, as one undo step:
    - Edit the clips already in the section: their notes (a fill in the last bar, hats from eighths to sixteenths, a part doubled an octave up), their mute and their length.
@@ -19,7 +23,7 @@ Ode arranges in the Set: it edits the clips already in each section, takes parts
    - New material (a counter-melody, a fill, a riser, a new section) goes where it belongs: a new clip on the right track in the right bars, and a new track only for a genuinely new part. Write melodic and rhythmic material with the melody, harmony, bass or drums skills and their checks.
    - Copy sections, clips or tracks only to build the song: Again gives another take, and the history keeps the old one.
    - Leave locked parts alone: arrange around them (bring other parts in or out against them, put a transition before them) without touching their notes, clips or devices.
-4. **Verify** with the checks below, fixing until they pass (up to three rounds); otherwise the result line says what still fails.
+4. **Review** the requested properties below. Hard range, timing and kit constraints must hold; musical tension, density and contrast are advisory and can be intentional. State which checks ran and which need listening.
 5. **Let them hear it.** When your turn ends, the musician presses play in Live: name the bars you changed in the result line, from a bar or two earlier for a transition, so they know where to listen.
 6. **Report in one line:** what changed, then " · " and what was checked. For example:
    - "Last chorus bigger: hats in sixteenths, crash on the downbeat, pad held back in verse 2 · above chorus 1 on three levers, all in key, lands on bar 29."
@@ -34,7 +38,7 @@ Ode arranges in the Set: it edits the clips already in each section, takes parts
 
 | Check | When | Correct when |
 |---|---|---|
-| Energy | Every change | The changed section sits where the plan puts it against its neighbours. Compare what plays, the drums' note density and the highest register in each section. A section meant to be bigger beats the one it answers on at least two levers beyond level, and the biggest moment comes late |
+| Energy | Every change | The changed section sits where the plan puts it against its neighbours. Compare what plays, the drums' note density and the highest register in each section. Judge the intended contrast in the actual song; note density/register are clues, not proof. A stripped chorus or an early peak can be intentional |
 | Downbeats | Every change | Section changes, entries and impacts start on beat 1 of the section's first bar; risers and reverse sounds end exactly on it; clip edges sit on the bar grid unless a pickup is meant |
 | Clean edges | Clips cut, shortened or moved | Every note ends at or before a cut (shorten it to end there); audio clips are cut between words and hits |
 | Key | Notes written or moved | Every new note is in the song's key, or is a chromatic note with a reason (a passing note, a chord the song already borrows) |

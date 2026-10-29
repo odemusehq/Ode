@@ -4,7 +4,7 @@ import { KeyFinder } from "../../music/harmony/key-finder";
 import { MusicalKey } from "../../music/harmony/musical-key";
 import { defineTool } from "../define";
 import { KeyInput, NotesInput, TimeSignatureInput } from "./schemas";
-import { quarterBeatsPerBar, songDefaults } from "./song-defaults";
+import { requireTimeSignature, songDefaults } from "./song-defaults";
 
 const MAX_PROGRESSIONS = 8;
 const MAX_HARMONIC_RHYTHM_BEATS = 16;
@@ -42,7 +42,7 @@ export const harmonizeTool = defineTool({
       k: input.k,
       style: input.style ?? defaults.genre ?? undefined,
       harmonicRhythmBeats: input.harmonicRhythmBeats,
-      signature: input.timeSignature ?? defaults.timeSignature,
+      signature: requireTimeSignature(input.timeSignature ?? defaults.timeSignature),
       favour: input.favour,
     }).progressions(input.melody);
     return { key: { ...key.spec, name: key.label }, progressions };

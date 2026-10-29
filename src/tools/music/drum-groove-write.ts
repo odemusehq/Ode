@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { drumMap } from "../../music/rhythm/drum-kit";
-import { drumGroove } from "../../music/rhythm/drum-groove-writer";
+import { drumGroove, SectionFeel } from "../../music/rhythm/drum-groove-writer";
 import { ALL_GENRES, isKnownGenre, parseGenre } from "../../music/rhythm/genre";
 import { SECTION_KINDS } from "../../shared/song";
 import { defineTool } from "../define";
-import { MAX_BARS, SeedInput } from "./schemas";
-import { songDefaults } from "./song-defaults";
+import { MAX_BARS, SeedInput, TimeSignatureInput } from "./schemas";
+import { requireTimeSignature, songDefaults } from "./song-defaults";
 
 
 export const drumGrooveWriteTool = defineTool({
@@ -29,16 +29,26 @@ export const drumGrooveWriteTool = defineTool({
     bars: z.number().int().min(1).max(MAX_BARS).describe("Length in bars."),
     energy: z.number().min(0).max(1).describe("Intensity from 0 (gentle) to 1 (full)."),
     seed: SeedInput,
+    timeSignature: TimeSignatureInput.optional(),
+    feel: z.enum(SectionFeel).optional().describe("Override the template feel, e.g. main to retain a bridge's pulse instead of half time."),
+    padMap: z.array(z.object({ from: z.number().int().min(0).max(127), to: z.number().int().min(0).max(127) })).optional().describe("Explicit GM-note to inspected Drum Rack pad mapping; must cover each generated drum."),
   },
   changes: "none",
-  async run({ genre, section, bars, energy, seed }, ctx) {
-    const name = genre ?? (await songDefaults(ctx)).genre;
+  async run({ genre, section, bars, energy, seed, timeSignature, feel, padMap }, ctx) {
+    const defaults = await songDefaults(ctx);
+    const signature = requireTimeSignature(timeSignature ?? defaults.timeSignature);
+    if (signature.numerator !== 4 || signature.denominator !== 4) throw new Error("This drum helper supports 4/4 only; write an intentional pattern with the MIDI tools for this meter.");
+    const name = genre ?? defaults.genre;
+    const notes = drumGroove(name ?? "", section, bars, energy, seed, feel);
+    const mapping = new Map(padMap?.map(({ from, to }) => [from, to]));
+    if (padMap && notes.some((note) => !mapping.has(note.pitch))) throw new Error("The supplied padMap is missing a generated drum; inspect the actual kit and map every used drum note.");
     return {
       genre: parseGenre(name),
       recognised: isKnownGenre(name),
       section,
-      notes: drumGroove(name ?? "", section, bars, energy, seed),
+      notes: notes.map((note) => ({ ...note, pitch: mapping.get(note.pitch) ?? note.pitch })),
       drumMap: drumMap(),
+      note: "A 4/4 template draft with humanized timing/velocity, not a new groove concept per seed. GM pads are assumptions unless mapped; check the actual kit and vocal gaps before placement.",
     };
   },
 });

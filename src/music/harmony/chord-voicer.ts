@@ -1,7 +1,7 @@
 import type { Note } from "../../shared/live";
 import type { ChordEvent } from "../../shared/song";
 import { ChordSymbol, ChordTone } from "./chord-symbol";
-import { fitByOctaves, pitchesOfClass, rangeCentre, type PitchRange } from "./pitch-range";
+import { fitByOctaves, pitchesOfClass, rangeCentre, requirePitchRange, type PitchRange } from "./pitch-range";
 
 /** Keyboard comping range for the upper voices (E3 to G5), used when the register is left out. */
 export const DEFAULT_VOICING_REGISTER: PitchRange = { low: 52, high: 79 };
@@ -73,7 +73,7 @@ export class ChordVoicer {
   constructor(
     private readonly register: PitchRange = DEFAULT_VOICING_REGISTER,
     private readonly options: VoicingOptions = {},
-  ) {}
+  ) { requirePitchRange(register); }
 
   voice(chords: ChordEvent[]): { notes: Note[]; voicings: Voicing[] } {
     const events = [...chords]
@@ -144,7 +144,8 @@ export class ChordVoicer {
     }
     const valid = voicings.map((voicing) => [...voicing].sort((a, b) => a - b)).filter((voicing) => this.wellSpaced(voicing));
     const unique = [...new Map(valid.map((voicing): [string, number[]] => [voicing.join(","), voicing])).values()];
-    return unique.length > 0 ? unique : [this.closePosition(tones)];
+    if (unique.length === 0) throw new RangeError(`Cannot voice ${chord.symbol} with the requested voices inside register ${this.register.low}–${this.register.high}; widen it explicitly or request fewer tones through MIDI editing.`);
+    return unique;
   }
 
   private chooseTones(chord: ChordSymbol): number[] {
@@ -165,16 +166,6 @@ export class ChordVoicer {
     const highest = voicing.at(-1);
     if (lowest === undefined || highest === undefined || highest - lowest > MAX_SPREAD) return false;
     return voicing.every((pitch, index) => index === 0 || pitch - (voicing[index - 1] ?? pitch) <= MAX_ADJACENT_GAP);
-  }
-
-  /** Tones stacked upwards from the bottom of the register, one after another. */
-  private closePosition(tones: number[]): number[] {
-    let pitch = this.register.low - 1;
-    return tones.map((pitchClass) => {
-      pitch += 1;
-      while (pitch % OCTAVE !== pitchClass) pitch += 1;
-      return pitch;
-    });
   }
 
   private shapeCost(voicing: number[]): number {

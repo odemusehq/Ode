@@ -9,7 +9,7 @@ import { TYPICAL_VOCAL_RANGE } from "../../shared/personalisation";
 import type { ChordEvent } from "../../shared/song";
 import { defineTool } from "../define";
 import { ChordsInput, KeyInput, MAX_BARS, RangeInput, SeedInput, TimeSignatureInput } from "./schemas";
-import { quarterBeatsPerBar, songDefaults } from "./song-defaults";
+import { quarterBeatsPerBar, requireTimeSignature, songDefaults } from "./song-defaults";
 
 const MAX_MOTIF_BARS = 8;
 
@@ -34,12 +34,12 @@ export const melodyWriteTool = defineTool({
     "Use it to draft toplines or instrumental hooks; check sung lines with prosody_check and singability_check, then write",
     "the notes into a clip with the MIDI tools.",
     "Inputs: bars; contour (rising, falling, arch, valley, wave, static); register (low, mid, high within the range);",
-    "density (notes per beat, 0.5–4); motifBars (optional length of the repeated motif); chords (optional chord events",
+    "density (notes per beat, 0.5–4); motifBars (optional length of the repeated motif, unsupported with lyrics); chords (optional chord events",
     "to fit, from beat 0); lyrics (optional lines to set, at most one per bar: each line gets an equal share of the bars,",
     "as equal as whole bars allow, and its syllables decide the note count); range (optional MIDI low/high, defaults to the artist's vocal range); key (optional, defaults",
     "to Live's key when Scale Mode is on, else the chords' key); timeSignature (optional, defaults to Live's); seed (same seed,",
     "same melody).",
-    "Returns { notes, key, range, beatsPerBar }: notes start at beat 0 of the clip.",
+    "Lyric mode is an independent per-line draft with equal whole-bar allocation; it does not retain a shared hook or infer phrase structure. For pickups, unequal spans or recurring hooks plan the phrases and write/vary the chosen MIDI notes explicitly. Infeasible pitch constraints raise an error rather than silently widening the range. Returns { notes, key, range, beatsPerBar }: notes start at beat 0 of the clip.",
   ].join(" "),
   input: {
     bars: z.number().int().min(1).max(MAX_BARS).describe("Length in bars."),
@@ -57,7 +57,7 @@ export const melodyWriteTool = defineTool({
   changes: "none",
   async run(input, ctx) {
     const defaults = await songDefaults(ctx);
-    const signature = input.timeSignature ?? defaults.timeSignature;
+    const signature = requireTimeSignature(input.timeSignature ?? defaults.timeSignature);
     const beatsPerBar = quarterBeatsPerBar(signature);
     const range = input.range ?? defaults.vocalRange ?? TYPICAL_VOCAL_RANGE;
     const chords = input.chords ?? [];
@@ -73,6 +73,9 @@ export const melodyWriteTool = defineTool({
       key,
     };
     const lines = (input.lyrics ?? []).map((line) => line.trim()).filter((line) => line.length > 0);
+    if (lines.length > 0 && input.motifBars !== undefined) {
+      throw new Error("motifBars is unsupported with lyrics: this helper drafts each line independently. Plan the shared hook and phrase spans, then write or vary the retained notes explicitly.");
+    }
     const notes: Note[] = [];
     if (lines.length === 0) {
       notes.push(...writeMelody(plan, chords, range));

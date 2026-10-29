@@ -5,7 +5,7 @@ import { MelodyFitter } from "../../music/prosody/melody-fitter";
 import { Meter } from "../../music/prosody/meter";
 import { defineTool } from "../define";
 import { AccentInput, NotesInput, TimeSignatureInput } from "./schemas";
-import { songDefaults } from "./song-defaults";
+import { requireTimeSignature, songDefaults } from "./song-defaults";
 
 export const lyricsFitMelodyTool = defineTool({
   name: "lyrics_fit_melody",
@@ -34,7 +34,7 @@ export const lyricsFitMelodyTool = defineTool({
   async run(input, ctx) {
     const defaults = await songDefaults(ctx);
     const accent = input.accent ?? defaults.accent;
-    const signature = input.timeSignature ?? defaults.timeSignature;
+    const signature = requireTimeSignature(input.timeSignature ?? defaults.timeSignature);
     const analyzer = LineAnalyzer.for(accent);
     // A label or a blank line is analysed as empty text, so only sung lines get a phrase.
     const lines = input.lines.map((text) => ({ text, analysis: analyzer.analyze(LyricsText.isSung(text) ? text : "") }));

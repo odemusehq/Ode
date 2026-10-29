@@ -25,7 +25,7 @@ export function tuningOffset(pitches: readonly WeightedPitch[]): number {
   const smoothed = new Float64Array(CENTS_PER_SEMITONE);
   for (let bin = 0; bin < CENTS_PER_SEMITONE; bin++) {
     let sum = 0;
-    for (let offset = -SMOOTHING_CENTS; offset <= SMOOTHING_CENTS; offset++) sum += histogram[wrap(bin + offset)]!;
+    for (let offset = -SMOOTHING_CENTS; offset <= SMOOTHING_CENTS; offset++) sum += histogram[wrap(bin + offset)]! * (SMOOTHING_CENTS + 1 - Math.abs(offset));
     smoothed[bin] = sum;
   }
 

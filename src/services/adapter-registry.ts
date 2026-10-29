@@ -22,7 +22,7 @@ export class AdapterRegistry {
       [Provider.Modal]: (role) => new OpenAiCompatibleText(role),
     },
     [Capability.AudioUnderstanding]: {
-      [Provider.Meta]: (role, speech) => new OpenAiCompatibleAudioUnderstander(role, speech),
+      [Provider.Meta]: (role) => new OpenAiCompatibleAudioUnderstander(role),
     },
     [Capability.Transcription]: {
       [Provider.Meta]: (role, speech) => new MetaTranscriber(role, speech),
