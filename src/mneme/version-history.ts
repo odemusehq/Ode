@@ -56,7 +56,7 @@ const VersionSchema = z.object({
   request: z.string().optional(),
   changes: z.array(SetChangeSchema),
 });
-const SNAPSHOT_PARTS = ["takenAt", "song", "tracks", "returnTracks", "main", "transport", "selection"];
+const SNAPSHOT_PARTS = ["takenAt", "song", "signature", "tracks", "returnTracks", "main"];
 const SnapshotSchema = z.custom<SetSnapshot>((value) => looksLikeSnapshot(value), "not a snapshot of the Set") as z.ZodType<SetSnapshot>;
 
 /** A version as stored: the parsed version and its line in versions.jsonl. */
