@@ -176,7 +176,9 @@ export class DrumGrooveWriter {
     const start = bars * BEATS_PER_BAR - length;
     const fill = this.fills.write(groove.fill, start, length, energy);
     const replaced = new Set(fill.replaces);
-    return [...hits.filter((hit) => hit.start < start - EPSILON || !replaced.has(hit.drum)), ...fill.hits];
+    // A groove hit on the same drum and beat as a fill hit gives way to it, so each drum sounds once there.
+    const doubled = (hit: TimedHit) => fill.hits.some((added) => added.drum === hit.drum && Math.abs(added.start - hit.start) < EPSILON);
+    return [...hits.filter((hit) => (hit.start < start - EPSILON || !replaced.has(hit.drum)) && !doubled(hit)), ...fill.hits];
   }
 
   /** The last bar of an outro is a single kick and crash on its downbeat. */
