@@ -1,0 +1,13 @@
+{
+  "scope": "MidiClip",
+  "description": "Lead Vocal \u00b7 clip \"Chorus vox\"",
+  "target": {
+    "clip": {
+      "track": {
+        "index": 3
+      },
+      "start": 32
+    }
+  },
+  "time": "2026-10-29T00:00:00.000Z"
+}

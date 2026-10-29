@@ -1,0 +1,13 @@
+{
+  "scope": "MidiClip",
+  "description": "Drums \u00b7 clip \"Verse\"",
+  "target": {
+    "clip": {
+      "track": {
+        "index": 0
+      },
+      "start": 0
+    }
+  },
+  "time": "2026-10-29T00:00:00.000Z"
+}

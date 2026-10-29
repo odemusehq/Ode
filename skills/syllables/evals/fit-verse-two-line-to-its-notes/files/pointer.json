@@ -1,0 +1,13 @@
+{
+  "scope": "MidiClip",
+  "description": "Lead vocal \u00b7 clip \"Verse 2 melody\"",
+  "target": {
+    "clip": {
+      "track": {
+        "index": 3
+      },
+      "start": 80
+    }
+  },
+  "time": "2026-10-29T00:00:00.000Z"
+}

@@ -56,7 +56,7 @@ export class SuggestionFinder {
     if (selection.clip && found) return this.forClip(selection.clip, found, lookup);
     const track = selection.track ? lookup.track(selection.track) : undefined;
     if (track && track !== snapshot.main) return this.chips([], SuggestionFinder.forTrack(track));
-    return this.chips([], await this.forSong(lookup, track === snapshot.main));
+    return this.chips([], await this.forSong(lookup));
   }
 
   private async forClip(ref: ClipRef, found: FoundClip, lookup: SetLookup): Promise<Suggestion[]> {
@@ -118,13 +118,12 @@ export class SuggestionFinder {
     };
   }
 
-  private async forSong(lookup: SetLookup, onMain: boolean): Promise<Action[]> {
+  private async forSong(lookup: SetLookup): Promise<Action[]> {
     const sheet = await this.song.read();
     const actions: Action[] = [
       { label: "Check the mix", request: "Check the mix and fix the biggest problems." },
       { label: "Master for streaming", request: "Master the song for streaming." },
     ];
-    if (onMain) actions.push({ label: "Measure loudness", request: "Measure the loudness and true peak of the Main output." });
     if (sheet.sections.length === 0 && lookup.snapshot.song.locators.length === 0) {
       actions.push({ label: "Plan the sections", request: "Plan the song form and mark each section with a locator." });
     }

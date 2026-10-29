@@ -1,0 +1,13 @@
+{
+  "scope": "AudioClip",
+  "description": "Pad \u00b7 clip \"Pad\"",
+  "target": {
+    "clip": {
+      "track": {
+        "index": 3
+      },
+      "start": 32
+    }
+  },
+  "time": "2026-10-29T00:00:00.000Z"
+}

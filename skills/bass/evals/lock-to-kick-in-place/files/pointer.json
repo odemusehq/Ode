@@ -1,0 +1,13 @@
+{
+  "scope": "MidiClip",
+  "description": "Bass \u00b7 clip \"Bass A\"",
+  "target": {
+    "clip": {
+      "track": {
+        "index": 1
+      },
+      "start": 0
+    }
+  },
+  "time": "2026-10-29T00:00:00.000Z"
+}

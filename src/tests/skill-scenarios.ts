@@ -20,6 +20,7 @@ import { ContextSummary } from "../mneme/summary";
 import { DeletionChecker } from "../server/deletion-checker";
 import { Questions } from "../server/questions";
 import { RequestContext } from "../server/request-context";
+import type { LivePointer } from "../shared/live";
 import { SelectionState } from "../server/selection";
 import { SnapshotReader } from "../server/snapshot-reader";
 import { SuggestionFinder } from "../server/suggestions";
@@ -56,6 +57,8 @@ class ScenarioCase {
     readonly set: SetSnapshot,
     readonly sheet: LeadSheet | null,
     readonly graders: string[],
+    /** What the musician right-clicked with "Ask Ode" (files/pointer.json); the whole song when the case has none. */
+    readonly pointer: LivePointer | null,
   ) {}
 
   /** Every case folder under skills/<skill>/evals/, for the skills named (all when none are). */
@@ -83,9 +86,18 @@ class ScenarioCase {
     const prompt = (await readFile(join(dir, "prompt.md"), "utf8")).replace(FRONT_MATTER, "").replace(INPUT_FILES_LINE, "").trim();
     const set = JSON.parse(await readFile(join(dir, "files", "set.json"), "utf8")) as SetSnapshot;
     const song = await readFile(join(dir, "files", "song.json"), "utf8").catch(() => null);
+    const pointer = await readFile(join(dir, "files", "pointer.json"), "utf8").catch(() => null);
     const graderFiles = (await readdir(join(dir, "graders"))).filter((file) => file.endsWith(".md")).sort();
     const graders = await Promise.all(graderFiles.map(async (file) => (await readFile(join(dir, "graders", file), "utf8")).replace(FRONT_MATTER, "").trim()));
-    return new ScenarioCase(skill, name, prompt, set, song ? LeadSheetSchema.parse(JSON.parse(song)) : null, graders);
+    return new ScenarioCase(
+      skill,
+      name,
+      prompt,
+      set,
+      song ? LeadSheetSchema.parse(JSON.parse(song)) : null,
+      graders,
+      pointer ? (JSON.parse(pointer) as LivePointer) : null,
+    );
   }
 }
 
@@ -99,7 +111,6 @@ interface Trace {
   progress: string[];
   liveCalls: string[];
   changes: { label: string; before?: string; after?: string }[];
-  played: boolean;
 }
 
 /** Runs one case with the real agent and tools against the fake Set, wired as the server wires them. */
@@ -158,6 +169,7 @@ class ScenarioRun {
       conversations.log(this.scenario.name),
     );
     const before = await reader.read();
+    selection.point(this.scenario.pointer);
     await session.send({ text: this.scenario.action });
     const after = await reader.read();
     return ScenarioRun.describe(this.scenario.action, events, live, SetDiff.between(before, after).map((change) => ({ label: change.label, before: ScenarioRun.cut(change.before), after: ScenarioRun.cut(change.after) })));
@@ -183,7 +195,6 @@ class ScenarioRun {
       progress: events.flatMap((event) => (event.type === "progress" ? [event.text] : [])),
       liveCalls: live.calls.map(({ op, args }) => `${op} ${ScenarioRun.cut(args) ?? ""}`),
       changes,
-      played: live.calls.some(({ op }) => op === "transport_play"),
     };
   }
 
