@@ -263,12 +263,13 @@ class ScenarioSuite {
     const file = join(await mkdtemp(join(tmpdir(), "ode-skill-scenarios-")), "report.json");
     await writeFile(file, `${JSON.stringify(report, null, 2)}\n`, "utf8");
     console.log(`\n${cases.length} scenarios, ${failed} statements not met. Full report: ${file}`);
-    return failed === 0 ? 0 : 1;
+    console.log("These scenarios use a scaffolded Set. They do not validate rendered audio or professional listening quality.");
+    return cases.length === 0 ? 2 : failed === 0 ? 0 : 1;
   }
 
   private static skip(reason: string): number {
-    console.log(`Skill scenarios skipped: ${reason.replace(/\.?$/, ".")} They run the real agent, so they need the model settings in .env.`);
-    return 0;
+    console.log(`Skill scenarios skipped: ${reason.replace(/\.?$/, ".")} They need saved model settings; no scenarios were evaluated.`);
+    return 2;
   }
 }
 

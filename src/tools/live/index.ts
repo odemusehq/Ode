@@ -7,6 +7,7 @@ import { audioFileTools, sceneTools } from "./scenes-audio";
 import { songTools } from "./song";
 import { trackTools } from "./tracks";
 import { localAudioTools } from "./local-audio";
+import { setDependencies } from "./set-dependencies";
 
 const operationTools: AnyTool[] = [
   ...songTools,
@@ -56,4 +57,4 @@ const applyAsOneUndoStep = defineTool({
   },
 });
 
-export const liveTools: AnyTool[] = [...operationTools, applyAsOneUndoStep, ...localAudioTools];
+export const liveTools: AnyTool[] = [...operationTools, applyAsOneUndoStep, ...localAudioTools, setDependencies];

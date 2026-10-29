@@ -21,6 +21,7 @@ import type { ChainSnapshot, DeviceSnapshot } from "../shared/set-snapshot";
 import { FakeLive } from "./fake-live";
 import { FakeSetLive } from "./fake-set-live";
 import { TestSets } from "./sets";
+import { observedSetDependencies } from "../tools/live/set-dependencies";
 
 test("audio uploads preserve exact bytes and declared source without claiming current Live audio", async () => {
   const root = await mkdtemp(join(tmpdir(), "ode-audio-"));
@@ -173,4 +174,22 @@ test("unknown meter survives history patches and uses beat labels", () => {
   assert.match(map, /meter unknown/);
   assert.match(map, /Chorus at beat 24/);
   assert.match(map, /launch meter 4\/4/);
+});
+
+test("observed dependencies preserve containment without inventing send destinations", () => {
+  const snapshot = TestSets.small();
+  snapshot.tracks[1]!.groupTrack = 0;
+  snapshot.tracks[0]!.devices[0]!.chains![0]!.devices.push(TestSets.device(0, "Utility", "StereoGain", []));
+  const graph = observedSetDependencies(snapshot);
+  assert.deepEqual({
+    complete: graph.complete,
+    group: graph.tracks[1]!.group,
+    nestedDevice: graph.tracks[0]!.devices[1]!.device,
+    sendDestination: graph.tracks[1]!.sendControls[0]!.destination,
+  }, {
+    complete: false,
+    group: { index: 0 },
+    nestedDevice: { track: { index: 0 }, chain: [0, 0], index: 0 },
+    sendDestination: null,
+  });
 });
