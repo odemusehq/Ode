@@ -84,8 +84,7 @@ export function HistoryVersion({ version, kind, selected, onSelect, newer, onOut
     setTask(Task.Restoring);
     const notes: VersionNote[] = [];
     try {
-      const note = restoreNote(await client.restoreVersion(version.id), moment);
-      if (note) notes.push(note);
+      notes.push(restoreNote(await client.restoreVersion(version.id), moment));
     } catch (error) {
       notes.push({ tone: Tone.Danger, text: `The version stayed as it was: ${errorMessage(error)}` });
     }
@@ -174,7 +173,7 @@ export function HistoryVersion({ version, kind, selected, onSelect, newer, onOut
           <Button onClick={() => setTask(Task.None)} disabled={task === Task.SavingName}>
             Cancel
           </Button>
-          {nameError && <Notice tone={Tone.Danger}>The name wasn't saved: {nameError}</Notice>}
+          {nameError && <Notice tone={Tone.Danger}>The name is waiting to be saved: {nameError}</Notice>}
         </form>
       )}
       {(task === Task.Confirming || task === Task.Restoring) && (
@@ -197,13 +196,13 @@ function confirmMessage(moment: string, newer: number): string {
   return `Go back to ${moment}? Later versions, and anything changed since the last one, will be deleted.`;
 }
 
-/** Ode's result line says the restore worked; a note only for what couldn't be put back. */
-function restoreNote(outcome: RestoreResult, moment: string): VersionNote | null {
+/** How the restore went, under the version: back, back with what stayed as it is, or stopped and why. */
+function restoreNote(outcome: RestoreResult, moment: string): VersionNote {
   const skipped = outcome.skipped.join("; ");
   if (!outcome.restored) {
-    return { tone: Tone.Danger, text: skipped ? `Couldn't go back to ${moment}: ${skipped}` : `Couldn't go back to ${moment}.` };
+    return { tone: Tone.Danger, text: skipped ? `Going back to ${moment} stopped: ${skipped}` : `Going back to ${moment} stopped.` };
   }
-  return skipped ? { tone: Tone.Warning, text: `Back to ${moment}. Not restored: ${skipped}` } : null;
+  return skipped ? { tone: Tone.Warning, text: `Back to ${moment}. Left as it is: ${skipped}` } : { tone: Tone.Success, text: `Back to ${moment}.` };
 }
 
 /** "You · 12 edits on Drums and Pad" under "You" reads as "12 edits on Drums and Pad". */

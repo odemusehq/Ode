@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { SettingsView } from "../views/SettingsView";
 import { AskDialog, HistoryDialog, LyricsDialog } from "./Dialogs";
-import { useClient } from "./hooks";
+import { LiveDialog } from "./dialog";
+import { useAppState, useClient } from "./hooks";
 import { Layout } from "./layout";
 import "./App.css";
 
@@ -14,10 +15,21 @@ const TITLES: Record<Layout, string> = {
 };
 
 export function App() {
-  const { layout } = useClient();
+  const client = useClient();
+  const { layout } = client;
+  const busy = useAppState((state) => state.busy);
   useEffect(() => {
     document.title = TITLES[layout];
   }, [layout]);
+  // Escape closes the dialog like its Close or Cancel button, once a menu, a confirmation or a name field has had its turn.
+  useEffect(() => {
+    if (!LiveDialog.hosted) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented && !busy) void client.close();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [client, busy]);
   switch (layout) {
     case Layout.Lyrics:
       return <LyricsDialog />;

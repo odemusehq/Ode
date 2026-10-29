@@ -35,10 +35,6 @@ export class OdeClient {
     if (this.layout === Layout.History) void this.checkVersions();
   }
 
-  stop(): void {
-    this.stream.stop();
-  }
-
   /**
    * Reads again what events may have missed: the status, the lyrics in the Lyrics dialog and the history in History.
    * The server sends the selection, its suggestions and anything waiting for the musician when the stream opens.
@@ -68,9 +64,10 @@ export class OdeClient {
     await this.refresh();
   }
 
-  /** Saves the lyrics waiting to be saved, then closes the dialog back to Live. */
+  /** Saves the lyrics waiting to be saved, then closes the dialog back to Live; a failed save keeps it open, with the reason on the panel. */
   async close(): Promise<void> {
     await this.lyrics.flush();
+    if (this.lyrics.getSnapshot().saveError !== null) return;
     LiveDialog.close(DialogResult.Done);
   }
 
@@ -82,7 +79,7 @@ export class OdeClient {
     try {
       this.store.setVersions(await this.api.getVersions());
     } catch (error) {
-      this.store.setHistoryError(`The history couldn't be read: ${errorMessage(error)}`);
+      this.store.setHistoryError(`Reading the history stopped: ${errorMessage(error)}`);
     }
   }
 
@@ -95,7 +92,7 @@ export class OdeClient {
     try {
       await this.api.chat({ text: request });
     } catch (error) {
-      this.store.setError(`Ode didn't get that: ${errorMessage(error)}`);
+      this.store.setError(`Your request stayed here: ${errorMessage(error)}`);
     }
   }
 
@@ -110,7 +107,7 @@ export class OdeClient {
     try {
       await this.api.why({ versionId });
     } catch (error) {
-      this.store.setError(`Ode couldn't answer: ${errorMessage(error)}`);
+      this.store.setError(`Ode's answer stopped: ${errorMessage(error)}`);
     }
   }
 
@@ -121,7 +118,7 @@ export class OdeClient {
     try {
       await this.api.again({ versionId });
     } catch (error) {
-      this.store.setError(`Ode couldn't try again: ${errorMessage(error)}`);
+      this.store.setError(`Another take stopped: ${errorMessage(error)}`);
     }
   }
 
@@ -132,9 +129,9 @@ export class OdeClient {
     this.store.startRequest();
     try {
       const outcome = await this.api.undo({ versionId });
-      if (!outcome.restored) this.store.setError(refusal("Couldn't undo", outcome));
+      if (!outcome.restored) this.store.setError(refusal("Undo stopped", outcome));
     } catch (error) {
-      this.store.setError(`Couldn't undo: ${errorMessage(error)}`);
+      this.store.setError(`Undo stopped: ${errorMessage(error)}`);
     } finally {
       this.undoing = false;
     }
@@ -144,7 +141,7 @@ export class OdeClient {
     try {
       await this.api.stop();
     } catch (error) {
-      this.store.setError(`Ode couldn't stop: ${errorMessage(error)}`);
+      this.store.setError(`Stop stayed here: ${errorMessage(error)}`);
     }
   }
 
@@ -154,7 +151,7 @@ export class OdeClient {
       await this.api.answer(questionId, { choice });
     } catch (error) {
       this.store.setQuestionAnswered(questionId, false);
-      this.store.setError(`Your answer didn't reach Ode: ${errorMessage(error)}`);
+      this.store.setError(`Your answer stayed here: ${errorMessage(error)}`);
     }
   }
 
@@ -165,7 +162,7 @@ export class OdeClient {
       await this.api.decide(approvalId, { decision });
     } catch (error) {
       this.store.setApprovalDecided(approvalId, false);
-      this.store.setError(`Your choice didn't reach Ode: ${errorMessage(error)}`);
+      this.store.setError(`Your choice stayed here: ${errorMessage(error)}`);
     }
   }
 
@@ -176,7 +173,7 @@ export class OdeClient {
       this.store.setMode((await this.api.setMode({ mode })).mode);
     } catch (error) {
       this.store.setMode(previous);
-      this.store.setError(`The mode didn't change: ${errorMessage(error)}`);
+      this.store.setError(`The mode stayed as it was: ${errorMessage(error)}`);
     }
   }
 
@@ -214,7 +211,7 @@ export class OdeClient {
   }
 }
 
-/** "Couldn't undo: You have changed the Set since…", from the reasons the server gave. */
+/** "Undo stopped: You have changed the Set since…", from the reasons the server gave. */
 function refusal(what: string, outcome: RestoreResult): string {
   const reasons = outcome.skipped.join("; ");
   return reasons ? `${what}: ${reasons}` : `${what}.`;

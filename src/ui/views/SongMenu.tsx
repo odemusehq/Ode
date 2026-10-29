@@ -59,7 +59,18 @@ export function SongMenu() {
   if (naming) {
     return (
       <form className="song-menu" onSubmit={(event) => void create(event)}>
-        <TextInput value={draft} placeholder="The new song's title" autoFocus onChange={(event) => setDraft(event.target.value)} />
+        <TextInput
+          aria-label="The new song's title"
+          value={draft}
+          placeholder="The new song's title"
+          autoFocus
+          onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key !== "Escape") return;
+            event.preventDefault();
+            setNaming(false);
+          }}
+        />
         <Button type="submit" variant={ButtonVariant.Primary}>
           Start
         </Button>

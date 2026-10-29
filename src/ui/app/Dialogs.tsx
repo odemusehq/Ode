@@ -1,4 +1,4 @@
-import { Button, ButtonVariant } from "../../ui-kit";
+import { Button, ButtonVariant, Notice, Tone } from "../../ui-kit";
 import { HistoryView } from "../views/HistoryView";
 import { LyricsPanel } from "../views/LyricsPanel";
 import { NowPanel } from "../views/NowPanel";
@@ -29,7 +29,7 @@ export function LyricsDialog() {
       <div className="app-body">
         <LyricsPanel />
       </div>
-      <DialogFooter />
+      <DialogFooter showsErrors />
       <StatusBar />
     </div>
   );
@@ -43,7 +43,7 @@ export function HistoryDialog() {
       <div className="app-body">
         <HistoryView />
       </div>
-      <DialogFooter />
+      <DialogFooter showsErrors />
       <StatusBar />
     </div>
   );
@@ -51,14 +51,17 @@ export function HistoryDialog() {
 
 /**
  * The model's credit where its licence asks for one, and Close back to Live; while Ode works Close waits, since Live
- * waits behind the dialog for Ode too.
+ * waits behind the dialog for Ode too. Lyrics and History show here why a song switch went wrong (Ask Ode shows it
+ * under its result line).
  */
-function DialogFooter() {
+function DialogFooter({ showsErrors = false }: { showsErrors?: boolean }) {
   const client = useClient();
   const busy = useAppState((state) => state.busy);
   const credit = useAppState((state) => state.credit);
+  const error = useAppState((state) => state.error);
   return (
     <footer className="app-footer">
+      {showsErrors && error && <Notice tone={Tone.Danger}>{error}</Notice>}
       {credit && <p className="app-footer__credit">{credit}</p>}
       {LiveDialog.hosted && (
         <Button variant={ButtonVariant.Secondary} disabled={busy} onClick={() => void client.close()}>
