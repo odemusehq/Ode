@@ -90,13 +90,14 @@ class StagedCalls {
   }
 
   /**
-   * The first creating step from `from` on where nothing else is inserted into the same track or chain
-   * (Live checks positions before a step runs, so two insertions into one place can't share a step).
+   * The first creating step from `from` on that is free of other insertions into the same track. Live looks up every
+   * place in a step before the step runs, and an insertion moves the devices after it, racks and their chains
+   * included, so each insertion into a track gets a step of its own.
    */
-  insertionStage(container: string, from: number): number {
-    const last = this.lastInsertion.get(container);
+  insertionStage(track: string, from: number): number {
+    const last = this.lastInsertion.get(track);
     const stage = last === undefined ? from : Math.max(from, last + NEXT_CREATING_STEP);
-    this.lastInsertion.set(container, stage);
+    this.lastInsertion.set(track, stage);
     return stage;
   }
 
@@ -152,11 +153,12 @@ export class RestorePlanner {
   /** The removed tracks that are deleted (every one but a group track), which moves the tracks after them up. */
   private deletedTracks: TrackKey[] = [];
   private addedTracks: TrackKey[] = [];
-  /** Devices removed or added whole: what is inside them goes with them. */
-  private wholeDevices: { track: TrackKey; path: number[] }[] = [];
-  /** Devices paired with a different device of the same class (other parameters): their values don't carry over. */
+  /** Devices removed whole, by their place in the current Set: what is inside them goes with them. */
+  private removedDevices: { track: TrackKey; path: number[] }[] = [];
+  /** Devices added whole, by their place in the version restored: what is inside them comes with them. */
+  private addedDevices: { track: TrackKey; path: number[] }[] = [];
+  /** Devices paired with a different device of the same class (other parameters), by their place in the current Set: their values stay behind. */
   private differentDevices: { track: TrackKey; path: number[] }[] = [];
-  /** Where each return track the restore adds will be, by its place in the version restored. */
 
   constructor(private readonly current: SetSnapshot) {
     this.lookup = new SetLookup(current);
@@ -190,10 +192,8 @@ export class RestorePlanner {
       .filter((change) => !RestorePlanner.isGroup(change) && RestorePlanner.trackOf(change).list === TrackList.Tracks)
       .map((change) => RestorePlanner.trackOf(change));
     this.addedTracks = RestorePlanner.presence(changes, "track", ChangeKind.Added).map((change) => RestorePlanner.trackOf(change));
-    this.wholeDevices = [
-      ...RestorePlanner.presence(changes, "device", ChangeKind.Removed),
-      ...RestorePlanner.presence(changes, "device", ChangeKind.Added),
-    ].map((change) => RestorePlanner.devicePlace(change));
+    this.removedDevices = RestorePlanner.presence(changes, "device", ChangeKind.Removed).map((change) => RestorePlanner.devicePlace(change));
+    this.addedDevices = RestorePlanner.presence(changes, "device", ChangeKind.Added).map((change) => RestorePlanner.devicePlace(change));
     this.differentDevices = RestorePlanner.presence(changes, "device", ChangeKind.Changed)
       .filter((change) => RestorePlanner.isDifferentDevice(change))
       .map((change) => RestorePlanner.devicePlace(change));
@@ -213,9 +213,11 @@ export class RestorePlanner {
         if (target.field === "present") this.planClipPresence(change, target.track, target.clip);
         else this.planClipField(change, target.track, target.clip, target.field);
       } else {
+        // Each change is compared with the devices whose places use the same Set: an addition's with the version restored, the others' with the current Set.
         const path = [...target.chain, target.index];
         const inside = (devices: { track: TrackKey; path: number[] }[]) => RestorePlanner.within(devices, target.track, path, false);
-        if (this.coveredTrack(target.track) || inside(this.wholeDevices) || inside(this.differentDevices)) continue;
+        const covering = change.kind === ChangeKind.Added ? [this.addedDevices] : [this.removedDevices, this.differentDevices];
+        if (this.coveredTrack(target.track) || covering.some(inside)) continue;
         if (target.field === "parameter") this.planParameter(change, target.track, target.chain, target.index, target.parameter);
         else if (change.kind === ChangeKind.Removed) this.planDeviceRemoval(change, target.track, target.chain, target.index);
         else if (change.kind === ChangeKind.Added) additions.push({ change, track: target.track, chain: target.chain, index: target.index });
@@ -544,7 +546,7 @@ export class RestorePlanner {
       this.skipped.push(`${label} (plug-ins and presets can't be added back)`);
       return;
     }
-    const stage = this.staged.insertionStage(JSON.stringify([track, chain]), from);
+    const stage = this.staged.insertionStage(JSON.stringify(track), from);
     const ref: DeviceRef = { track, ...(chain.length > 0 ? { chain } : {}), index };
     if (chain.length === 0) {
       this.staged.add(stage, { op: "track_insert_device", args: { track, device: name, index }, label });
@@ -667,12 +669,21 @@ export class RestorePlanner {
     return DEVICE_CLASSES.get(device.className) ?? (LIVE_DEVICES.has(device.name) ? device.name : null);
   }
 
-  /** Per track and chain, from the first position to the last, so each insertion lands where it belongs. */
+  /**
+   * Per track, by the path into racks, step by step: a device before the rack whose chain holds another goes first, so
+   * the rack is where the later path expects it, and each insertion lands where it belongs.
+   */
   private static inInsertOrder(additions: DeviceAddition[]): DeviceAddition[] {
-    const container = (addition: DeviceAddition) => JSON.stringify([addition.track.list, addition.track.index, addition.chain]);
+    const key = (addition: DeviceAddition) => [addition.track.index, ...addition.chain, addition.index];
     return [...additions].sort((a, b) => {
-      const byContainer = container(a).localeCompare(container(b));
-      return byContainer !== 0 ? byContainer : a.index - b.index;
+      if (a.track.list !== b.track.list) return a.track.list < b.track.list ? -1 : 1;
+      const left = key(a);
+      const right = key(b);
+      for (let step = 0; step < Math.min(left.length, right.length); step++) {
+        const difference = left[step]! - right[step]!;
+        if (difference !== 0) return difference;
+      }
+      return left.length - right.length;
     });
   }
 
