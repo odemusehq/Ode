@@ -13,6 +13,8 @@ export interface TrackLevel {
 /** The gain-staging problems levelCheck reports. */
 export enum LevelIssue {
   Silent = "silent",
+  /** The track sounds, and the stretch is too short or too quiet for a loudness reading. */
+  Unmeasured = "loudness unmeasured",
   Clipping = "clipping",
   LittleHeadroom = "little headroom",
   TooQuiet = "too quiet",
@@ -64,17 +66,26 @@ export class LevelChecker {
 
   check(tracks: readonly TrackLevel[]): LevelFinding[] {
     const findings: LevelFinding[] = [];
-    const audible = tracks.filter((track) => Number.isFinite(track.peak) && Number.isFinite(track.loudness));
+    // Silence is a track without a peak; a track that sounds too briefly or too softly for a loudness reading keeps its peak checks.
+    const sounding = tracks.filter((track) => Number.isFinite(track.peak));
+    const measured = sounding.filter((track) => Number.isFinite(track.loudness));
     for (const track of tracks) {
-      if (!audible.includes(track)) {
-        findings.push({ track: track.name, issue: LevelIssue.Silent, advice: `${track.name} has no audio in this range.` });
+      if (!sounding.includes(track)) {
+        findings.push({ track: track.name, issue: LevelIssue.Silent, advice: `${track.name} is silent in this range.` });
         continue;
       }
       const finding = this.peakFinding(track);
       if (finding) findings.push(finding);
+      if (!measured.includes(track)) {
+        findings.push({
+          track: track.name,
+          issue: LevelIssue.Unmeasured,
+          advice: `${track.name} peaks at ${signed(track.peak)} dBFS here; its loudness needs a longer or louder stretch to read, so check a longer stretch to compare it with the other tracks.`,
+        });
+      }
     }
-    findings.push(...this.balanceFindings(audible));
-    const hot = this.hotMixFinding(audible);
+    findings.push(...this.balanceFindings(measured));
+    const hot = this.hotMixFinding(measured);
     if (hot) findings.push(hot);
     return findings;
   }
