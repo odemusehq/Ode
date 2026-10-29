@@ -34,6 +34,10 @@ export const KeyInput = z
   .object({
     root: z.number().int().min(0).max(PITCH_CLASS_MAX).describe("Tonic pitch class: 0 = C, 1 = C#/Db … 11 = B."),
     scale: z.string().describe('Scale name as in Live: "Major", "Minor", "Dorian", "Mixolydian"…'),
+    intervals: z
+      .array(z.number().int().min(0).max(PITCH_CLASS_MAX))
+      .optional()
+      .describe("The scale's steps above the tonic in semitones, as Live gives them (Harmonic Minor: 0 2 3 5 7 8 11); they set the scale's notes."),
   })
   .describe("Key of the song.");
 

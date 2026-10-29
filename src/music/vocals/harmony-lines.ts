@@ -52,8 +52,9 @@ export class HarmonyVoiceWriter {
   private readonly chords: ChordTimeline;
   private readonly meter: Meter;
 
-  constructor(chords: ChordEvent[], lead: Note[], meter: Meter = new Meter()) {
-    this.key = new KeyFinder().find(chords, lead);
+  /** `key`: the song's key when it is known; otherwise it is found from the chords and the lead. */
+  constructor(chords: ChordEvent[], lead: Note[], meter: Meter = new Meter(), key?: MusicalKey) {
+    this.key = key ?? new KeyFinder().find(chords, lead);
     this.chords = new ChordTimeline(chords);
     this.meter = meter;
   }
@@ -154,6 +155,6 @@ export class HarmonyVoiceWriter {
 }
 
 /** Harmony lines for a lead melody over chords: one note list per part (1–3 parts). */
-export function harmonyLines(melody: Note[], chords: ChordEvent[], parts: number, range?: PitchRange, meter: Meter = new Meter()): Note[][] {
-  return new HarmonyVoiceWriter(chords, melody, meter).write(melody, parts, range);
+export function harmonyLines(melody: Note[], chords: ChordEvent[], parts: number, range?: PitchRange, meter: Meter = new Meter(), key?: MusicalKey): Note[][] {
+  return new HarmonyVoiceWriter(chords, melody, meter, key).write(melody, parts, range);
 }

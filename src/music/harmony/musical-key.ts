@@ -4,6 +4,8 @@ import { Interval, Mode, Note } from "tonal";
 export interface KeySpec {
   root: number;
   scale: string;
+  /** The scale's steps above the tonic in semitones, as Live gives them; when present they set the scale's notes. */
+  intervals?: number[];
 }
 
 const PITCH_CLASSES = 12;
@@ -45,20 +47,28 @@ export class MusicalKey {
   readonly scale: number[];
   readonly minor: boolean;
 
+  /**
+   * `mode` picks the chords; Live's own scale, when given (its name and its steps above the tonic), sets the scale's
+   * notes, so Harmonic Minor keeps its raised seventh and Whole Tone its six notes.
+   */
   constructor(
     root: number,
     readonly mode: string,
+    private readonly live?: { scale: string; intervals: readonly number[] },
   ) {
     this.root = modulo(root);
     this.minor = MODES_WITH_MINOR_THIRD.has(mode);
     this.tonicName = (this.minor ? MINOR_SPELLINGS : MAJOR_SPELLINGS)[this.root] ?? "C";
-    this.scale = Mode.get(mode).intervals.map((interval) => modulo(this.root + Interval.semitones(interval)));
+    this.scale = live
+      ? live.intervals.map((interval) => modulo(this.root + interval))
+      : Mode.get(mode).intervals.map((interval) => modulo(this.root + Interval.semitones(interval)));
   }
 
   static from(spec: KeySpec): MusicalKey {
     const name = spec.scale.trim().toLowerCase();
     const mode = MODE_NAMES.get(name) ?? PARENT_MODES.find(([pattern]) => pattern.test(name))?.[1] ?? "ionian";
-    return new MusicalKey(spec.root, mode);
+    const live = spec.intervals && spec.intervals.length > 0 ? { scale: spec.scale.trim(), intervals: spec.intervals } : undefined;
+    return new MusicalKey(spec.root, mode, live);
   }
 
   static ofMajor(root: number): MusicalKey {
@@ -71,11 +81,12 @@ export class MusicalKey {
 
   get label(): string {
     const name = this.mode === "ionian" ? "major" : this.mode === "aeolian" ? "minor" : this.mode;
-    return `${this.tonicName} ${name}`;
+    return `${this.tonicName} ${this.live ? this.live.scale.toLowerCase() : name}`;
   }
 
-  /** The key in Live's form, with Live's scale names. */
+  /** The key in Live's form, with Live's scale names, and Live's own steps when the key came with them. */
   get spec(): KeySpec {
+    if (this.live) return { root: this.root, scale: this.live.scale, intervals: [...this.live.intervals] };
     const scale =
       this.mode === "ionian" ? "Major" : this.mode === "aeolian" ? "Minor" : this.mode.charAt(0).toUpperCase() + this.mode.slice(1);
     return { root: this.root, scale };

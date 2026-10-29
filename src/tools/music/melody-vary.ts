@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { MelodyVariation } from "../../music/melody/melody-plan";
+import { MusicalKey } from "../../music/harmony/musical-key";
 import { varyMelody } from "../../music/melody/melody-varier";
 import { Meter } from "../../music/prosody/meter";
 import { defineTool } from "../define";
@@ -24,7 +25,9 @@ export const melodyVaryTool = defineTool({
   },
   changes: "none",
   async run({ notes, how, seed }, ctx) {
-    const { numerator, denominator } = (await songDefaults(ctx)).timeSignature;
-    return { notes: varyMelody(notes, how, seed, new Meter(numerator, denominator)) };
+    const defaults = await songDefaults(ctx);
+    const { numerator, denominator } = defaults.timeSignature;
+    const key = defaults.key ? MusicalKey.from(defaults.key) : undefined;
+    return { notes: varyMelody(notes, how, seed, new Meter(numerator, denominator), key) };
   },
 });

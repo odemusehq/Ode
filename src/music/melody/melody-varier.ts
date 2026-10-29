@@ -37,12 +37,14 @@ export class MelodyVarier {
   constructor(
     private readonly random: SeededRandom,
     private readonly meter: Meter = new Meter(),
+    /** The song's key when it is known; otherwise it is found from the melody. */
+    private readonly key?: MusicalKey,
   ) {}
 
   vary(notes: Note[], how: MelodyVariation): Note[] {
     const line = melodyLine(notes);
     if (line.length === 0) return [];
-    const key = new KeyFinder().find([], line);
+    const key = this.key ?? new KeyFinder().find([], line);
     switch (how) {
       case MelodyVariation.Rhythm:
         return this.varyRhythm(line);
@@ -174,6 +176,6 @@ export class MelodyVarier {
 }
 
 /** A variation of a melody: "rhythm", "contour", "ending" or "ornament". */
-export function varyMelody(notes: Note[], how: MelodyVariation, seed: number = DEFAULT_SEED, meter: Meter = new Meter()): Note[] {
-  return new MelodyVarier(new SeededRandom(seed), meter).vary(notes, how);
+export function varyMelody(notes: Note[], how: MelodyVariation, seed: number = DEFAULT_SEED, meter: Meter = new Meter(), key?: MusicalKey): Note[] {
+  return new MelodyVarier(new SeededRandom(seed), meter, key).vary(notes, how);
 }
