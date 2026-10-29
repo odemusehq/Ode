@@ -46,6 +46,10 @@
       "height": 680
     }
   },
+  "notice": {
+    "width": 380,
+    "height": 170
+  },
   "storage": {
     "renameRetries": 5,
     "renameRetryMs": 40

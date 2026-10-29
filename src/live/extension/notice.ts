@@ -1,18 +1,16 @@
 import type { Ui } from "@ableton-extensions/sdk";
+import { OdeConfig } from "../../shared/config";
 import { describeError } from "./errors";
 import type { Version } from "./sdk";
 
 /** A small dialog that tells the musician something, with a Close button. */
 export class Notice {
-  private static readonly WIDTH = 380;
-  private static readonly HEIGHT = 170;
-
   constructor(private readonly ui: Ui<Version>) {}
 
   async show(title: string, message: string): Promise<void> {
     try {
       const page = `data:text/html,${encodeURIComponent(Notice.page(title, message))}`;
-      await this.ui.showModalDialog(page, Notice.WIDTH, Notice.HEIGHT);
+      await this.ui.showModalDialog(page, OdeConfig.notice.width, OdeConfig.notice.height);
     } catch (error) {
       console.error(`Ode could not show "${title}": ${describeError(error)}`);
     }

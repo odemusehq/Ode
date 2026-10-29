@@ -32,10 +32,16 @@ class OdeExtension implements DialogHost {
       return;
     }
     const set = new LiveSet(this.live);
-    const operations = createOperationRegistry({ live: this.live, set, refs: new ReferenceResolver(set), describe: new Describer(set) });
-    const app = new OdeApp(new OdeConfig(storageDirectory, tempDirectory), new InProcessLive(operations), new BundledTexts(texts), ui);
-    await app.start();
-    this.app = app;
+    try {
+      const operations = createOperationRegistry({ live: this.live, set, refs: new ReferenceResolver(set), describe: new Describer(set) });
+      const app = new OdeApp(new OdeConfig(storageDirectory, tempDirectory), new InProcessLive(operations), new BundledTexts(texts), ui);
+      await app.start();
+      this.app = app;
+    } catch (error) {
+      console.error(`Ode stopped while starting: ${describeError(error)}`);
+      await notice.show("Ode stopped while starting", `${describeError(error)}. Restart Live to try again.`);
+      return;
+    }
     new ContextMenu(this.live, new PointerBuilder(this.live, set, new LocationFinder(set)), this, notice).register();
   }
 

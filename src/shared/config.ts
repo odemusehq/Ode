@@ -91,6 +91,9 @@ export interface DialogSize {
  * bundled as defaults.json. Models and keys are the musician's own, chosen in Settings.
  */
 export class OdeConfig {
+  /** The size of the small notice Ode shows when it has something to tell the musician, ready before the folders are known. */
+  static readonly notice: DialogSize = { ...defaults.notice };
+
   readonly limits: AgentLimits = { ...defaults.agent };
   readonly memory: MemorySettings = { ...defaults.memory };
   readonly versions: VersionSettings = { ...defaults.versions };
