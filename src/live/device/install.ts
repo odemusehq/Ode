@@ -1,12 +1,13 @@
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, posix, sep } from "node:path";
 import { OdeConfig } from "../../shared/config";
 import { AmxdFile } from "./amxd";
 import { DevicePatcher } from "./patcher";
 
 /**
  * Installs the built Ode device in the User Library's Audio Effects presets, where Live's browser lists it. The
- * device's network script goes beside it, and the installed device names the script by its full path.
+ * device's network script goes beside it, and the installed device names the script by its full path, written with
+ * forward slashes as Max reads paths on every system.
  */
 export class DeviceInstaller {
   /** Where the device build writes its files. */
@@ -25,7 +26,7 @@ export class DeviceInstaller {
     const built = JSON.stringify(DevicePatcher.networkLine(DeviceInstaller.networkScript));
     if (!patch.includes(built)) throw new Error("The built Ode device is out of date: run npm run build:device");
     const device = join(presets, DeviceInstaller.deviceFile);
-    const installed = JSON.stringify(DevicePatcher.networkLine(script));
+    const installed = JSON.stringify(DevicePatcher.networkLine(script.split(sep).join(posix.sep)));
     await writeFile(device, AmxdFile.pack(patch.replace(built, () => installed)));
     return device;
   }
