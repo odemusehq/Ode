@@ -138,11 +138,15 @@
   /* Settings dialog: one column of fields */
   --settings-width: 560px;
 
-  /* Lyrics editor */
-  --lyrics-line-height: 22px;
+  /* Lyrics editor: section cards with a rail on the left, the room for the link cable before it, counts on the right */
+  --lyrics-font-size: 15px;
+  --lyrics-line-height: 30px;
+  --lyrics-gutter: 40px;
+  --lyrics-rail-width: 22px;
+  --lyrics-name-width: 200px;
+  --lyrics-meta-width: 64px;
   --lyrics-count-width: 34px;
-  --lyrics-rhyme-width: 16px;
-  --lyrics-mark-width: 14px;
+  --lyrics-rhyme-width: 26px;
 
   /* Menus */
   --menu-min-width: 220px;

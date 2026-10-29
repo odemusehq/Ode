@@ -15,6 +15,10 @@ export enum IconName {
   ChevronRight = "chevron-right",
   Edit = "edit",
   Restore = "restore",
+  Grip = "grip",
+  Link = "link",
+  Lock = "lock",
+  Plus = "plus",
 }
 
 export interface IconProps {
@@ -63,5 +67,22 @@ function iconShape(name: IconName): ReactNode {
       return <path d="M10.5 2.75 13.25 5.5 6 12.75H3.25V10zM9 4.25 11.75 7" />;
     case IconName.Restore:
       return <path d="M2.75 8a5.25 5.25 0 1 0 1.54-3.71M2.75 2.75v3h3M8 5.25V8.5l2 1.25" />;
+    case IconName.Grip:
+      return (
+        <g className="ode-icon__fill">
+          <circle cx="6" cy="4" r="1.1" />
+          <circle cx="10" cy="4" r="1.1" />
+          <circle cx="6" cy="8" r="1.1" />
+          <circle cx="10" cy="8" r="1.1" />
+          <circle cx="6" cy="12" r="1.1" />
+          <circle cx="10" cy="12" r="1.1" />
+        </g>
+      );
+    case IconName.Link:
+      return <path d="M6.75 9.25 9.25 6.75M7.25 4.75l1-1a2.48 2.48 0 0 1 3.5 3.5l-1 1M8.75 11.25l-1 1a2.48 2.48 0 0 1-3.5-3.5l1-1" />;
+    case IconName.Lock:
+      return <path d="M4.5 7.25h7v5.5h-7zM5.75 7.25V5.5a2.25 2.25 0 0 1 4.5 0v1.75" />;
+    case IconName.Plus:
+      return <path d="M8 3.5v9M3.5 8h9" />;
   }
 }

@@ -8,6 +8,8 @@ export interface ConfirmCardProps {
   /** The question, e.g. "Go back to 22:38? Later versions will be deleted." */
   message: ReactNode;
   confirmLabel: string;
+  /** The other choice's label, "Cancel" when left out. */
+  cancelLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
   /** The action is running; the buttons wait for it. */
@@ -15,7 +17,7 @@ export interface ConfirmCardProps {
 }
 
 /** Asks before an action that deletes something. Always inline, in the flow of the page; Escape or Cancel leaves it. */
-export function ConfirmCard({ message, confirmLabel, onConfirm, onCancel, busy }: ConfirmCardProps) {
+export function ConfirmCard({ message, confirmLabel, cancelLabel = "Cancel", onConfirm, onCancel, busy }: ConfirmCardProps) {
   const messageId = useId();
   const cancel = useRef<HTMLButtonElement>(null);
 
@@ -39,7 +41,7 @@ export function ConfirmCard({ message, confirmLabel, onConfirm, onCancel, busy }
           {confirmLabel}
         </Button>
         <Button ref={cancel} onClick={onCancel} disabled={busy}>
-          Cancel
+          {cancelLabel}
         </Button>
       </div>
     </div>
