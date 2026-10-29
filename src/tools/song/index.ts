@@ -41,7 +41,6 @@ const SHEET_FIELD_WORDS: Readonly<Record<keyof LeadSheetPatch, string>> = {
   notes: "notes",
 };
 
-/** The lyric sheet of the release: the title, then the lyrics as they are written, labels included. */
 /** The sheet's credits followed by the new ones it lacks, matched by role and name in any case. */
 function mergedCredits(existing: Credit[], added: Credit[]): Credit[] {
   const key = (credit: Credit) => `${credit.role.trim().toLowerCase()}\n${credit.name.trim().toLowerCase()}`;
@@ -55,6 +54,7 @@ function mergedCredits(existing: Credit[], added: Credit[]): Credit[] {
   return merged;
 }
 
+/** The lyric sheet of the release: the title, then the lyrics as they are written, labels included. */
 function lyricSheet(sheet: LeadSheet): string {
   return `${sheet.title || "Untitled"}\n\n${sheet.lyrics.trim()}\n`;
 }
