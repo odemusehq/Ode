@@ -67,10 +67,6 @@ const LIMIT_MESSAGES: Partial<Record<LoopEnd, string>> = {
 /** Ends that cut the work short, so the request is saved the way a Stop saves it. */
 const CUT_SHORT: ReadonlySet<LoopEnd> = new Set([LoopEnd.TurnLimit, LoopEnd.TokenLimit]);
 
-function errorText(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
 /** The conversation about one song. Each request runs as one agent loop that carries on the song's recent exchanges. */
 export class OdeSession {
   private readonly waiting: OdeRequest[] = [];
@@ -169,7 +165,7 @@ export class OdeSession {
       try {
         hiddenContext = (await this.deps.requests.prepare(request)).hiddenContext;
       } catch (error) {
-        this.deps.emit({ type: "error", message: errorText(error) });
+        this.deps.emit({ type: "error", message: OdeSession.errorText(error) });
         return;
       }
       let reply = "";
@@ -195,13 +191,13 @@ export class OdeSession {
           if (limit) this.deps.emit({ type: "error", message: limit });
           if (result.end === LoopEnd.Reply) await this.conversation.add(request.text, reply);
         } catch (error) {
-          if (!controller.signal.aborted) this.deps.emit({ type: "error", message: errorText(error) });
+          if (!controller.signal.aborted) this.deps.emit({ type: "error", message: OdeSession.errorText(error) });
         }
       }
       try {
         await this.deps.requests.finish(request, reply, controller.signal.aborted || cutShort);
       } catch (error) {
-        this.deps.emit({ type: "error", message: errorText(error) });
+        this.deps.emit({ type: "error", message: OdeSession.errorText(error) });
       }
       this.deps.emit({ type: "done", tokens });
     } finally {
@@ -264,5 +260,9 @@ export class OdeSession {
     if (busy === this.shown.busy && stoppable === this.shown.stoppable) return;
     this.shown = { busy, stoppable };
     this.deps.emit({ type: "busy", busy, stoppable });
+  }
+
+  private static errorText(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
   }
 }

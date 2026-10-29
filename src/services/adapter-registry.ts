@@ -7,7 +7,7 @@ import { OpenAiCompatibleText } from "./adapters/openai-compatible-text";
 import { SelfHostedSingingVoice, SelfHostedSoundGenerator, SelfHostedStemSeparator } from "./adapters/self-hosted";
 import { MetaTranscriber } from "./adapters/transcribers";
 import { Capability, type CapabilityAdapters } from "./capabilities";
-import { Provider, asProvider } from "./providers";
+import { Provider, ProviderName } from "./providers";
 import type { SpeechAudio } from "./speech-audio";
 
 type Factory<C extends Capability> = (role: RoleConfig, speech: SpeechAudio) => CapabilityAdapters[C];
@@ -46,7 +46,7 @@ export class AdapterRegistry {
   constructor(private readonly speech: SpeechAudio) {}
 
   create<C extends Capability>(capability: C, role: RoleConfig): CapabilityAdapters[C] {
-    const provider = asProvider(role.provider);
+    const provider = ProviderName.parse(role.provider);
     const factory = provider ? (AdapterRegistry.TABLE[capability][provider] as Factory<C> | undefined) : undefined;
     if (!factory) {
       const supported = Object.keys(AdapterRegistry.TABLE[capability]).join(", ");

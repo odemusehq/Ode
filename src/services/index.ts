@@ -1,7 +1,7 @@
 import { OdeConfig, ROLES, type Role, type RoleConfig } from "../shared/config";
 import { AdapterRegistry } from "./adapter-registry";
 import { Capability, ROLE_CAPABILITY, type CapabilityAdapters, type SeparatedStems, type TextGenerator } from "./capabilities";
-import { isConfigured, notConfiguredMessage } from "./roles";
+import { RoleCheck } from "./roles";
 import { SpeechAudio } from "./speech-audio";
 import type { DemoVocalInput, RoleSource, Services, Transcript } from "./types";
 
@@ -50,13 +50,13 @@ export class ModelServices implements Services {
 
   async available(): Promise<Record<Role, boolean>> {
     const roles = await this.source.roles();
-    return Object.fromEntries(ROLES.map((role) => [role, isConfigured(roles[role])])) as Record<Role, boolean>;
+    return Object.fromEntries(ROLES.map((role) => [role, RoleCheck.isConfigured(roles[role])])) as Record<Role, boolean>;
   }
 
   private async adapter<C extends Capability>(role: Role, capability: C): Promise<CapabilityAdapters[C]> {
     if (ROLE_CAPABILITY[role] !== capability) throw new Error(`The ${role} role doesn't provide ${capability}.`);
     const settings: RoleConfig = (await this.source.roles())[role];
-    if (!isConfigured(settings)) throw new Error(notConfiguredMessage(role));
+    if (!RoleCheck.isConfigured(settings)) throw new Error(RoleCheck.setupMessage(role));
     const key = JSON.stringify(settings);
     const cached = this.cache.get(role);
     if (cached?.settings === key) return cached.adapter as CapabilityAdapters[C];

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { GridDivision, HumTranscriber, decode } from "../../music/audio";
-import { notConfiguredMessage } from "../../services/roles";
+import { RoleCheck } from "../../services/roles";
 import { defineTool } from "../define";
 import { TrackRefSchema } from "../live/schemas";
 import { ArrangementAudio, requireRange } from "./arrangement-audio";
@@ -79,7 +79,7 @@ async function transcribeWords(
   tempo: number,
 ): Promise<{ words: SungWords } | { wordsNote: string }> {
   if (!(await ctx.services.available()).transcription) {
-    return { wordsNote: `Words were not transcribed (${notConfiguredMessage("transcription")}); the notes are complete.` };
+    return { wordsNote: `The words stay untranscribed (${RoleCheck.setupMessage("transcription")}); the notes are complete.` };
   }
   try {
     return { words: matchWords(await ctx.services.transcribe(path), notes, tempo) };
