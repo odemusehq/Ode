@@ -138,18 +138,16 @@
   --input-min-width: 120px;
   /* A cover art answer to a question. */
   --cover-choice-size: 88px;
-  --strip-message-lines: 3;
-  /* The Now panel scrolls past this height so the history below keeps its room. */
-  --now-max-height: 50vh;
   --history-indent: 22px;
   --history-summary-lines: 2;
-  --z-panel: 5;
+
+  /* The song menu in a dialog's header */
+  --song-menu-width: 360px;
 
   /* Settings dialog: one column of fields */
   --settings-width: 560px;
 
-  /* Lyrics panel: beside the history, or over it on windows narrower than LyricsPanel.css's breakpoint */
-  --lyrics-panel-width: 400px;
+  /* Lyrics editor */
   --lyrics-line-height: 22px;
   --lyrics-count-width: 34px;
   --lyrics-rhyme-width: 16px;

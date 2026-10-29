@@ -1,5 +1,4 @@
 // HTTP API between the UI and the local server. All paths are relative to the server origin.
-import type { LiveStatus } from "./live";
 import type { LyricsSaved, LyricsState, LyricsWrite } from "./lyrics";
 import type { Mode } from "./personalisation";
 import type { Suggestion } from "./events";
@@ -23,7 +22,6 @@ export const API = {
   again: "/api/again", // POST VersionRequest → { ok: true } (another take of that change by Ode, in place)
   why: "/api/why", // POST VersionRequest → { ok: true } (the answer arrives as an "answer" event)
   mode: "/api/mode", // PUT ModeRequest → { mode: Mode }
-  speech: "/api/speech", // POST a mono WAV of the musician speaking → { text } (also sent to Ode as a request)
   songs: "/api/songs", // GET → SongsResponse; POST { title } → SongEntry (a new song, now in use)
   songsOpen: "/api/songs/open", // POST { id } → SongEntry (that song, now in use)
   settings: "/api/settings", // GET → SettingsResponse; PUT SettingsUpdate → SettingsView
@@ -48,7 +46,6 @@ export interface QuestionAnswer {
 }
 
 export interface StatusResponse {
-  live: LiveStatus;
   busy: boolean;
   /** False while Ode does work Stop can't interrupt (Undo, a restore). */
   stoppable: boolean;

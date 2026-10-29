@@ -39,7 +39,6 @@ export class Store {
   setStatus(status: StatusResponse): void {
     this.update({
       ...this.state,
-      live: status.live,
       busy: status.busy,
       stoppable: status.busy && status.stoppable,
       progress: status.busy ? this.state.progress : null,
@@ -83,10 +82,6 @@ export class Store {
   setApprovalDecided(id: string, decided: boolean): void {
     const approvals = this.state.approvals.map((approval) => (approval.id === id ? { ...approval, decided } : approval));
     this.update({ ...this.state, approvals });
-  }
-
-  toggleLyrics(): void {
-    this.update({ ...this.state, lyricsOpen: !this.state.lyricsOpen });
   }
 
   private update(next: AppState): void {

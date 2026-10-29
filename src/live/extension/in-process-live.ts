@@ -1,4 +1,4 @@
-import type { LiveConnections, LiveLink, LiveStatus } from "../../shared/live";
+import type { LiveConnections, LiveLink } from "../../shared/live";
 import type { OperationRegistry } from "./ops/registry";
 
 /**
@@ -11,10 +11,6 @@ export class InProcessLive implements LiveConnections {
 
   constructor(operations: OperationRegistry) {
     this.extension = { call: async <R>(op: string, args: unknown) => InProcessLive.plain(await operations.run(op, args)) as R };
-  }
-
-  status(): LiveStatus {
-    return { extension: true };
   }
 
   private static plain(value: unknown): unknown {

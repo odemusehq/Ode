@@ -7,15 +7,12 @@ export enum IconName {
   Check = "check",
   Alert = "alert",
   Info = "info",
-  Microphone = "microphone",
-  Note = "note",
   Undo = "undo",
   Again = "again",
   Help = "help",
   More = "more",
   ChevronDown = "chevron-down",
   ChevronRight = "chevron-right",
-  Copy = "copy",
   Edit = "edit",
   Restore = "restore",
 }
@@ -44,10 +41,6 @@ function iconShape(name: IconName): ReactNode {
       return <path d="M8 2.5 14 13.5H2zM8 6.5v3M8 11.5v.25" />;
     case IconName.Info:
       return <path d="M8 14A6 6 0 1 0 8 2a6 6 0 0 0 0 12zM8 7.5v3.5M8 5v.25" />;
-    case IconName.Microphone:
-      return <path d="M8 2.25a2 2 0 0 1 2 2V8a2 2 0 0 1-4 0V4.25a2 2 0 0 1 2-2zM4.25 7.75a3.75 3.75 0 0 0 7.5 0M8 11.5v2.25" />;
-    case IconName.Note:
-      return <path d="M6 12.25a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0zm0 0V4l7-1.5v8.25m0 0a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0z" />;
     case IconName.Undo:
       return <path d="M5 3.5 2 6.5l3 3M2 6.5h7.5a3.5 3.5 0 0 1 0 7H7" />;
     case IconName.Again:
@@ -66,8 +59,6 @@ function iconShape(name: IconName): ReactNode {
       return <path d="m4 6 4 4 4-4" />;
     case IconName.ChevronRight:
       return <path d="m6 4 4 4-4 4" />;
-    case IconName.Copy:
-      return <path d="M6 6h7v7.5H6zM3.5 10.5V2.5h7" />;
     case IconName.Edit:
       return <path d="M10.5 2.75 13.25 5.5 6 12.75H3.25V10zM9 4.25 11.75 7" />;
     case IconName.Restore:

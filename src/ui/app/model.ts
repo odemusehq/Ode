@@ -1,6 +1,5 @@
 import type { ApprovalRequest } from "../../shared/api";
 import type { ResultKind, Suggestion } from "../../shared/events";
-import type { LiveStatus } from "../../shared/live";
 import type { Mode } from "../../shared/personalisation";
 import type { VersionListItem } from "../../shared/versions";
 
@@ -44,6 +43,14 @@ export interface ResultLine {
   overtaken: boolean;
 }
 
+/** One step of Ode's work, as the working view lists it. */
+export interface Step {
+  id: string;
+  /** In the musician's words: "Writing a bass line for Verse 1". */
+  label: string;
+  status: "running" | "done" | "error";
+}
+
 /** Ode's short answer to Why? about one of its changes. */
 export interface WhyAnswer {
   versionId: string;
@@ -57,17 +64,20 @@ export interface AppState {
   stoppable: boolean;
   /** Null until the server says which mode Ode is in. */
   mode: Mode | null;
-  /** The song's title, or the Set's file name. */
+  /** The song's title. */
   title: string;
   /** History groups consecutive versions by the same author within this many minutes; null until known. */
   versionGroupMinutes: number | null;
-  live: LiveStatus | null;
   /** What the musician selected or pointed at in Live, in words; null means the whole song. */
   focus: string | null;
   /** One-tap actions for what is selected, fixes first. */
   suggestions: readonly Suggestion[];
   /** The latest progress line while Ode works. */
   progress: string | null;
+  /** Ode's latest note about its next step, while it works. */
+  thought: string | null;
+  /** The steps of the latest request, in order. */
+  steps: readonly Step[];
   result: ResultLine | null;
   answer: WhyAnswer | null;
   /** One line saying what went wrong. */
@@ -78,7 +88,6 @@ export interface AppState {
   versions: readonly VersionListItem[] | null;
   /** Why the history couldn't be read. */
   historyError: string | null;
-  lyricsOpen: boolean;
 }
 
 export function initialState(): AppState {
@@ -89,10 +98,11 @@ export function initialState(): AppState {
     mode: null,
     title: "",
     versionGroupMinutes: null,
-    live: null,
     focus: null,
     suggestions: [],
     progress: null,
+    thought: null,
+    steps: [],
     result: null,
     answer: null,
     error: null,
@@ -100,6 +110,5 @@ export function initialState(): AppState {
     approvals: [],
     versions: null,
     historyError: null,
-    lyricsOpen: false,
   };
 }

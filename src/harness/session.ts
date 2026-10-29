@@ -229,7 +229,7 @@ export class OdeSession {
   private readonly events: LoopEvents = {
     thought: (text) => this.deps.emit({ type: "thought", text }),
     toolStarted: (id, name, label) => {
-      this.deps.emit({ type: "tool", id, name, status: "started" });
+      this.deps.emit({ type: "tool", id, name, status: "started", summary: label });
       this.deps.emit({ type: "progress", text: label });
     },
     toolFinished: (id, ok) => this.deps.emit({ type: "tool", id, name: "", status: ok ? "done" : "error" }),

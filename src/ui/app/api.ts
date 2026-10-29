@@ -9,6 +9,7 @@ import type {
   QuestionAnswer,
   RestoreRequest,
   RestoreResult,
+  SongsResponse,
   StatusResponse,
   VersionDetail,
   VersionListItem,
@@ -25,7 +26,6 @@ enum HttpMethod {
 }
 
 const JSON_TYPE = "application/json";
-const WAV_TYPE = "audio/wav";
 
 export interface OkResponse {
   ok: boolean;
@@ -33,11 +33,6 @@ export interface OkResponse {
 
 export interface ModeResponse {
   mode: Mode;
-}
-
-export interface SpeechResponse {
-  /** What the musician said, in words; the server also sends it to Ode as a request. */
-  text: string;
 }
 
 export class ApiError extends Error {
@@ -91,13 +86,6 @@ export class OdeApi {
     return this.request(HttpMethod.Put, API.mode, request);
   }
 
-  /** Sends a mono WAV of the musician speaking; the server writes it down and sends it to Ode. */
-  async speech(wav: Blob): Promise<SpeechResponse> {
-    const response = await fetch(API.speech, { method: HttpMethod.Post, headers: { "Content-Type": WAV_TYPE }, body: wav });
-    if (!response.ok) throw new ApiError(response.status, await readError(response));
-    return (await response.json()) as SpeechResponse;
-  }
-
   getLyrics(): Promise<LyricsState> {
     return this.request(HttpMethod.Get, API.lyrics);
   }
@@ -128,6 +116,20 @@ export class OdeApi {
 
   nameVersion(id: string, request: VersionNameRequest): Promise<VersionListItem> {
     return this.request(HttpMethod.Post, API.versionName(id), request);
+  }
+
+  getSongs(): Promise<SongsResponse> {
+    return this.request(HttpMethod.Get, API.songs);
+  }
+
+  /** Switches Ode to another song: its lyrics, history and conversation. */
+  openSong(id: string): Promise<SongsResponse["songs"][number]> {
+    return this.request(HttpMethod.Post, API.songsOpen, { id });
+  }
+
+  /** Starts a new song with this title and switches to it. */
+  createSong(title: string): Promise<SongsResponse["songs"][number]> {
+    return this.request(HttpMethod.Post, API.songs, { title });
   }
 
   getSettings(): Promise<SettingsResponse> {

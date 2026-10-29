@@ -1,4 +1,3 @@
-import type { LiveStatus } from "./live";
 import type { SelectionInfo } from "./live-ops";
 import type { LyricsState } from "./lyrics";
 import type { Mode } from "./personalisation";
@@ -56,7 +55,6 @@ export type UiEvent =
   /** A request finished; tokens is what its model calls used. */
   | { type: "done"; tokens?: number }
   | { type: "error"; message: string }
-  | { type: "live-status"; status: LiveStatus }
   /** The shared lyrics changed: saved from the window, by Ode, or by a restore. */
   | { type: "lyrics"; lyrics: LyricsState }
   /** The song's title, when it changes or another Set opens. */

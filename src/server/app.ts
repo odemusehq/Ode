@@ -154,12 +154,10 @@ export class OdeApp {
     this.server = new OdeServer({
       config,
       bus: this.bus,
-      live,
       song: this.song,
       songs: this.songs,
       lyrics: this.lyrics,
       prefs: this.prefs,
-      services: this.services,
       settings: this.settings,
       models: this.models,
       approvals: this.approvals,
@@ -167,7 +165,6 @@ export class OdeApp {
       sessions: this.sessions,
       versions: this.versionActions,
       selection: this.selection,
-      temp: this.temp,
       ui,
     });
   }

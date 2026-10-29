@@ -4,11 +4,12 @@ import { NowInput } from "./NowInput";
 import { QuestionCard } from "./QuestionCard";
 import { ResultLine } from "./ResultLine";
 import { SuggestionChips } from "./SuggestionChips";
+import { WorkingSteps } from "./WorkingSteps";
 import "./NowPanel.css";
 
 const WHOLE_SONG = "Whole song";
 
-/** The top of the Ode window: what you're on, suggestions, the input, what Ode is doing or did, and its questions. */
+/** The body of Ask Ode: what you're on, suggestions, the input, what Ode is doing or did, its steps, and its questions. */
 export function NowPanel() {
   const focus = useAppState((state) => state.focus) ?? WHOLE_SONG;
   const questions = useAppState((state) => state.questions);
@@ -25,6 +26,7 @@ export function NowPanel() {
       <SuggestionChips />
       <NowInput />
       <ResultLine />
+      <WorkingSteps />
       {questions.map((question) => (
         <QuestionCard key={question.id} question={question} />
       ))}

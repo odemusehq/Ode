@@ -1,22 +1,26 @@
 import type { Suggestion, UiEvent } from "../../shared/events";
 import { VersionAuthor } from "../../shared/versions";
 import type { VersionListItem } from "../../shared/versions";
-import type { AppState } from "./model";
+import type { AppState, Step } from "./model";
 
 type QuestionEvent = Extract<UiEvent, { type: "question" }>;
 type ApprovalEvent = Extract<UiEvent, { type: "approval" }>;
 
 /**
- * Applies one server event to the app state. Ode is not a chat: its replies arrive as result lines, so messages,
- * tool calls and subagents are not shown. The lyrics are kept by SharedLyrics.
+ * Applies one server event to the app state. Ode works in place of a chat: its replies arrive as result lines, and
+ * while it works its steps and its short notes show. The lyrics are kept by SharedLyrics.
  */
 export function reduceEvent(state: AppState, event: UiEvent): AppState {
   switch (event.type) {
     case "message":
-    case "tool":
-    case "subagent":
     case "lyrics":
       return state;
+    case "tool":
+      return event.status === "started"
+        ? addStep(state, { id: event.id, label: event.summary ?? event.name, status: "running" })
+        : setStep(state, event.id, event.status);
+    case "subagent":
+      return event.status === "started" ? addStep(state, { id: event.id, label: event.task, status: "running" }) : setStep(state, event.id, "done");
     case "approval":
       return addApproval(state, event);
     case "approval-resolved":
@@ -24,8 +28,9 @@ export function reduceEvent(state: AppState, event: UiEvent): AppState {
     case "busy":
       return event.busy ? startWork(state, event.stoppable) : finishWork(state);
     case "progress":
-    case "thought":
       return { ...state, progress: event.text };
+    case "thought":
+      return { ...state, thought: event.text };
     case "result":
       // An error the same request reported just before stays on screen.
       return { ...state, result: { text: event.text, versionId: event.versionId, kind: event.kind, overtaken: false } };
@@ -49,8 +54,6 @@ export function reduceEvent(state: AppState, event: UiEvent): AppState {
       return finishWork(state);
     case "error":
       return { ...state, error: event.message, progress: null };
-    case "live-status":
-      return { ...state, live: event.status };
     case "title":
       return { ...state, title: event.title };
   }
@@ -61,13 +64,22 @@ function fixesFirst(items: readonly Suggestion[]): Suggestion[] {
   return [...items.filter((item) => item.fix), ...items.filter((item) => !item.fix)];
 }
 
-/** A new request: the old progress and error go. */
+/** A new request: the old progress, steps and error go. */
 function startWork(state: AppState, stoppable: boolean): AppState {
-  return { ...state, busy: true, stoppable, progress: null, error: null };
+  return { ...state, busy: true, stoppable, progress: null, thought: null, steps: [], error: null };
 }
 
+/** The work ended: its steps stay listed under the result. */
 export function finishWork(state: AppState): AppState {
-  return { ...state, busy: false, stoppable: false, progress: null };
+  return { ...state, busy: false, stoppable: false, progress: null, thought: null };
+}
+
+function addStep(state: AppState, step: Step): AppState {
+  return { ...state, steps: [...state.steps.filter((item) => item.id !== step.id), step] };
+}
+
+function setStep(state: AppState, id: string, status: Step["status"]): AppState {
+  return { ...state, steps: state.steps.map((step) => (step.id === id ? { ...step, status } : step)) };
 }
 
 /**

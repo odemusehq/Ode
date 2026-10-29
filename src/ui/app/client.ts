@@ -1,14 +1,11 @@
 import { API } from "../../shared/api";
-import type { RestoreResult } from "../../shared/api";
+import type { RestoreResult, SongsResponse } from "../../shared/api";
 import type { Suggestion, UiEvent } from "../../shared/events";
 import type { Mode } from "../../shared/personalisation";
 import { OdeApi, errorMessage } from "./api";
-import { UI_CONFIG } from "./config";
-import { Debouncer } from "./debounce";
 import { EventStream } from "./events";
 import { Layout } from "./layout";
 import type { Decision } from "./model";
-import { REQUESTS } from "./requests";
 import { SharedLyrics } from "./shared-lyrics";
 import { Store } from "./state";
 
@@ -16,10 +13,9 @@ import { Store } from "./state";
 export class OdeClient {
   readonly store = new Store();
   readonly api = new OdeApi();
-  /** The lyrics the musician and Ode both edit; the Ode window keeps them in step, the strip leaves them. */
+  /** The lyrics the musician and Ode both edit; the Lyrics dialog keeps them in step. */
   readonly lyrics = new SharedLyrics(this.api);
   private readonly stream: EventStream;
-  private readonly versionsCheck = new Debouncer(UI_CONFIG.versionsCheckDelayMs);
   /** An Undo is on its way; a second press doesn't go back a second version. */
   private undoing = false;
 
@@ -31,26 +27,42 @@ export class OdeClient {
     });
   }
 
+  /** Settings reads its own data; the other dialogs follow Ode's event stream. History first saves what changed in Live by hand. */
   start(): void {
     if (this.layout === Layout.Settings) return;
     this.stream.start();
-    if (this.layout === Layout.Full) window.addEventListener("focus", this.handleFocus);
+    if (this.layout === Layout.History) void this.checkVersions();
   }
 
   stop(): void {
-    window.removeEventListener("focus", this.handleFocus);
-    this.versionsCheck.cancel();
     this.stream.stop();
   }
 
   /**
-   * Reads again what events may have missed: the status, and in the Ode window the lyrics and the history. The
-   * server sends the selection, its suggestions and anything waiting for the musician when the stream opens.
+   * Reads again what events may have missed: the status, the lyrics in the Lyrics dialog and the history in History.
+   * The server sends the selection, its suggestions and anything waiting for the musician when the stream opens.
    */
   async refresh(): Promise<void> {
     const reads = [this.refreshStatus()];
-    if (this.layout === Layout.Full) reads.push(this.lyrics.load(), this.loadVersions());
+    if (this.layout === Layout.Lyrics) reads.push(this.lyrics.load(true));
+    if (this.layout === Layout.History) reads.push(this.loadVersions());
     await Promise.allSettled(reads);
+  }
+
+  songs(): Promise<SongsResponse> {
+    return this.api.getSongs();
+  }
+
+  /** Switches Ode to another song, then reads that song's title, lyrics or history. Throws when it fails. */
+  async openSong(id: string): Promise<void> {
+    await this.api.openSong(id);
+    await this.refresh();
+  }
+
+  /** Starts a new song and switches to it. Throws when it fails. */
+  async createSong(title: string): Promise<void> {
+    await this.api.createSong(title);
+    await this.refresh();
   }
 
   async refreshStatus(): Promise<void> {
@@ -80,22 +92,6 @@ export class OdeClient {
 
   tap(suggestion: Suggestion): Promise<void> {
     return this.send(suggestion.request);
-  }
-
-  hum(): Promise<void> {
-    return this.send(REQUESTS.hum);
-  }
-
-  /** Sends what the musician said; the server writes it down and sends it to Ode. Returns the words, or null. */
-  async sendSpeech(wav: Blob): Promise<string | null> {
-    this.store.startRequest();
-    await this.lyrics.flush();
-    try {
-      return (await this.api.speech(wav)).text;
-    } catch (error) {
-      this.store.setError(`Ode didn't get what you said: ${errorMessage(error)}`);
-      return null;
-    }
   }
 
   /** Asks why Ode made the change with this version; the short answer goes under its result line. */
@@ -194,20 +190,10 @@ export class OdeClient {
 
   private receive(event: UiEvent): void {
     this.store.apply(event);
-    if (this.layout !== Layout.Full) return;
-    if (event.type === "lyrics") {
-      this.lyrics.receive(event.lyrics);
-    } else if (event.type === "title") {
-      // Sent when another Set opens, too: its lyrics and history replace these.
-      void this.lyrics.load(true);
-      void this.loadVersions();
-    }
+    if (event.type === "lyrics" && this.layout === Layout.Lyrics) this.lyrics.receive(event.lyrics);
+    // Another song is in use: its lyrics and history replace these.
+    if (event.type === "title") void this.refresh();
   }
-
-  /** The musician comes back to the window: what they changed in Live meanwhile becomes a version. */
-  private readonly handleFocus = (): void => {
-    this.versionsCheck.schedule(() => void this.checkVersions());
-  };
 
   private async checkVersions(): Promise<void> {
     try {

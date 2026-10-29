@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { readFile, rm, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { basename, extname, join } from "node:path";
 import { serve } from "@hono/node-server";
 import { Hono, type Context } from "hono";
@@ -7,21 +7,18 @@ import { getCookie, setCookie } from "hono/cookie";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
 import { API, type SongsResponse, type StatusResponse } from "../shared/api";
-import type { LiveConnections } from "../shared/live";
 import type { UiEvent } from "../shared/events";
 import type { DialogView, OdeConfig } from "../shared/config";
 import { Mode } from "../shared/personalisation";
 import { VersionAuthor, type RestoreResult } from "../shared/versions";
 import type { LyricsStore } from "../mneme/lyrics-store";
 import { VersionNotFoundError } from "../mneme/version-history";
-import type { TempFolder } from "../mneme/paths";
 import type { PreferencesStore } from "../mneme/preferences";
 import type { SettingsStore } from "../mneme/settings-store";
 import type { SongStore } from "../mneme/song-store";
 import type { ModelRoles } from "../services/model-roles";
 import { ProviderCatalog } from "../services/provider-catalog";
 import { ModelListRequestSchema, SettingsUpdateSchema, type SettingsResponse } from "../shared/settings";
-import type { Services } from "../services/types";
 import { Decision, type Approvals } from "../harness/approvals";
 import { SessionBusyError } from "../harness/session";
 import type { SessionManager } from "../harness/session-manager";
@@ -39,12 +36,10 @@ export type UiFiles = Readonly<Record<string, string>>;
 export interface ServerDeps {
   config: OdeConfig;
   bus: EventBus;
-  live: LiveConnections;
   song: SongStore;
   songs: SongSwitcher;
   lyrics: LyricsStore;
   prefs: PreferencesStore;
-  services: Services;
   settings: SettingsStore;
   models: ModelRoles;
   approvals: Approvals;
@@ -52,7 +47,6 @@ export interface ServerDeps {
   sessions: SessionManager;
   versions: VersionActions;
   selection: SelectionState;
-  temp: TempFolder;
   ui: UiFiles;
 }
 
@@ -172,7 +166,7 @@ export class OdeServer {
 
   private routeApi(): void {
     const { app } = this;
-    const { bus, live, song, lyrics, prefs, approvals, questions, sessions, selection, services, config } = this.deps;
+    const { bus, song, lyrics, prefs, approvals, questions, sessions, selection, config } = this.deps;
 
     app.post(API.chat, async (c) => {
       const parsed = TextSchema.safeParse(await OdeServer.body(c));
@@ -190,7 +184,6 @@ export class OdeServer {
 
     app.get(API.status, async (c) => {
       const status: StatusResponse = {
-        live: live.status(),
         busy: sessions.current.isBusy,
         stoppable: sessions.current.isStoppable,
         mode: await prefs.mode(),
@@ -236,21 +229,6 @@ export class OdeServer {
       return c.json({ mode });
     });
 
-    app.post(API.speech, async (c) => {
-      const audio = Buffer.from(await c.req.arrayBuffer());
-      if (audio.length === 0) return c.json({ error: "Send the recording as a WAV file." }, 400);
-      const path = await this.deps.temp.file("wav");
-      try {
-        await writeFile(path, audio);
-        const text = (await services.transcribe(path)).text.trim();
-        if (text) void sessions.current.send({ text });
-        return c.json({ text });
-      } catch (error) {
-        return c.json({ error: OdeServer.messageOf(error) }, 503);
-      } finally {
-        await rm(path, { force: true });
-      }
-    });
   }
 
   /** History, Undo, Again and Why?. */
@@ -372,12 +350,11 @@ export class OdeServer {
 
   /** Sends what is going on now to a window that just connected (questions and approvals still waiting included), then every event. */
   private eventStream(c: Context) {
-    const { bus, live, sessions, approvals, questions, selection, prefs } = this.deps;
+    const { bus, sessions, approvals, questions, selection, prefs } = this.deps;
     return streamSSE(c, async (stream) => {
       const send = (event: UiEvent) => {
         void stream.writeSSE({ data: JSON.stringify(event) });
       };
-      send({ type: "live-status", status: live.status() });
       send({ type: "busy", busy: sessions.current.isBusy, stoppable: sessions.current.isStoppable });
       send({ type: "mode", mode: await prefs.mode() });
       for (const approval of approvals.pending()) send({ type: "approval", ...approval });

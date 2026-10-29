@@ -1,4 +1,4 @@
-import type { ArrangementClipRef, ClipRef, ClipSlotRef, DeviceRef, LiveConnections, LiveLink, LiveStatus, LocatorRef, Note, ParameterRef, SceneRef, TrackRef } from "../shared/live";
+import type { ArrangementClipRef, ClipRef, ClipSlotRef, DeviceRef, LiveConnections, LiveLink, LocatorRef, Note, ParameterRef, SceneRef, TrackRef } from "../shared/live";
 import { MIXER_INDEX } from "../shared/live";
 import type { ClipInfo, ExtensionOpArgs, MixerInfo, ParameterInfo, TrackSummary } from "../shared/live-ops";
 import type { ChainSnapshot, DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
@@ -48,10 +48,6 @@ export class FakeSetLive implements LiveConnections {
   /** Changes the Set the way the musician would by hand, without logging an operation. */
   edit(change: (set: SetSnapshot) => void): void {
     change(this.state);
-  }
-
-  status(): LiveStatus {
-    return { extension: true };
   }
 
   private extensionHandlers(): Record<string, Handler> {

@@ -10,7 +10,6 @@ import { TOP_OF_TEXT, TextCaret } from "./text-caret";
 import type { TextSelection } from "./text-caret";
 import "./LyricsPanel.css";
 
-export const LYRICS_PANEL_ID = "ode-lyrics";
 
 /** The song's lyrics as one text that the musician and Ode both edit, with each sung line's checks beside it. */
 export function LyricsPanel() {
@@ -19,12 +18,10 @@ export function LyricsPanel() {
   const titleId = useId();
 
   return (
-    <aside id={LYRICS_PANEL_ID} className="lyrics" aria-labelledby={titleId}>
-      <div className="pane-header">
-        <h2 id={titleId} className="pane-header__title">
-          Lyrics
-        </h2>
-      </div>
+    <section className="lyrics" aria-labelledby={titleId}>
+      <h2 id={titleId} className="ode-visually-hidden">
+        Lyrics
+      </h2>
       {stored ? (
         <LyricsEditor text={text} stored={stored} replaced={replaced} />
       ) : loadError ? (
@@ -33,7 +30,7 @@ export function LyricsPanel() {
         <p className="lyrics__reading">Reading the lyrics…</p>
       )}
       {saveError && <ProblemLine message={saveError} onRetry={() => client.lyrics.retrySave()} />}
-    </aside>
+    </section>
   );
 }
 

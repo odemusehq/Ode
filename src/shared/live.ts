@@ -136,10 +136,6 @@ export interface LivePointer {
   time: string;
 }
 
-export interface LiveStatus {
-  extension: boolean;
-}
-
 /** Runs one of the extension's operations on the Set open in Live. */
 export interface LiveLink {
   call<R = unknown>(op: string, args: unknown): Promise<R>;
@@ -147,5 +143,4 @@ export interface LiveLink {
 
 export interface LiveConnections {
   extension: LiveLink;
-  status(): LiveStatus;
 }

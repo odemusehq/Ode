@@ -1,10 +1,8 @@
 .lyrics {
   display: flex;
-  flex: none;
+  flex: 1;
   flex-direction: column;
-  width: var(--lyrics-panel-width);
   min-height: 0;
-  border-left: var(--border-width) solid var(--color-border);
   background: var(--color-surface);
 }
 
@@ -150,13 +148,3 @@
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 719px) {
-  /* Too narrow for both: the lyrics go over the history. Keep in step with --lyrics-panel-width plus room for the history. */
-  .lyrics {
-    position: absolute;
-    inset: 0;
-    z-index: var(--z-panel);
-    width: auto;
-    border-left: 0;
-  }
-}
