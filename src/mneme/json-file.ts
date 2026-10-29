@@ -12,10 +12,6 @@ export interface JsonFileOptions {
   mode?: number;
 }
 
-function isMissingFile(error: unknown): boolean {
-  return (error as NodeJS.ErrnoException | undefined)?.code === "ENOENT";
-}
-
 /** A JSON document on disk, validated on read, written atomically, with updates serialised. */
 export class JsonFile<T> {
   private queue: Promise<unknown> = Promise.resolve();
@@ -33,15 +29,13 @@ export class JsonFile<T> {
     try {
       text = await readFile(this.path, "utf8");
     } catch (error) {
-      if (isMissingFile(error)) return this.createDefault();
+      if (JsonFile.isMissing(error)) return this.createDefault();
       throw error;
     }
     try {
       return this.schema.parse(JSON.parse(text));
     } catch (error) {
-      const aside = `${this.path}.unreadable-${Date.now()}`;
-      await rename(this.path, aside).catch(() => undefined);
-      console.error(`Ode set ${this.path} aside as ${aside}: ${error instanceof Error ? error.message : String(error)}`);
+      await JsonFile.setAside(this.path, error);
       return this.createDefault();
     }
   }
@@ -56,6 +50,18 @@ export class JsonFile<T> {
       await JsonFile.writeAtomically(this.path, `${JSON.stringify(next, null, 2)}\n`, this.options.mode);
       return next;
     });
+  }
+
+  /** True for the error a read gives when the file is absent. */
+  static isMissing(error: unknown): boolean {
+    return (error as NodeJS.ErrnoException | undefined)?.code === "ENOENT";
+  }
+
+  /** Moves a damaged file aside as <path>.unreadable-<time>, keeping it for the musician, so Ode carries on without it. */
+  static async setAside(path: string, reason: unknown): Promise<void> {
+    const aside = `${path}.unreadable-${Date.now()}`;
+    await rename(path, aside).catch(() => undefined);
+    console.error(`Ode set ${path} aside as ${aside}: ${reason instanceof Error ? reason.message : String(reason)}`);
   }
 
   /**

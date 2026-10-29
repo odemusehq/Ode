@@ -66,10 +66,6 @@ interface Entry {
   line: string;
 }
 
-function isMissingFile(error: unknown): boolean {
-  return (error as NodeJS.ErrnoException | undefined)?.code === "ENOENT";
-}
-
 function looksLikeSnapshot(value: unknown): boolean {
   if (typeof value !== "object" || value === null) return false;
   const parts = value as Record<string, unknown>;
@@ -194,8 +190,16 @@ export class VersionHistory {
     summary: string | ((changes: SetChange[]) => string),
     request?: string,
   ): Promise<Version | null> {
-    const entries = await this.entries();
-    const previous = entries.length > 0 ? await this.newestSnapshot(entries) : null;
+    let entries = await this.entries();
+    let previous: SetSnapshot | null = null;
+    if (entries.length > 0) {
+      try {
+        previous = await this.newestSnapshot(entries);
+      } catch (error) {
+        await this.startAfresh(error);
+        entries = [];
+      }
+    }
     const changes = previous ? SetDiff.between(previous, snapshot) : [];
     if (previous && changes.length === 0) return null;
     const version: Version = {
@@ -248,7 +252,7 @@ export class VersionHistory {
       const extension = VersionHistory.SNAPSHOT_EXTENSION;
       return new Set(names.filter((name) => name.endsWith(extension)).map((name) => name.slice(0, -extension.length)));
     } catch (error) {
-      if (isMissingFile(error)) return new Set();
+      if (JsonFile.isMissing(error)) return new Set();
       throw error;
     }
   }
@@ -271,12 +275,31 @@ export class VersionHistory {
     return entries;
   }
 
+  /**
+   * The versions in versions.jsonl. Each version builds on the one before, so a damaged line ends the history there:
+   * the file is set aside whole and the versions before that line are written back.
+   */
   private async readEntries(): Promise<Entry[]> {
-    const text = await readFile(this.file, "utf8");
-    return text
-      .split("\n")
-      .filter((line) => line.trim().length > 0)
-      .map((line) => ({ version: VersionSchema.parse(JSON.parse(line)) as Version, line }));
+    const lines = (await readFile(this.file, "utf8")).split("\n").filter((line) => line.trim().length > 0);
+    const entries: Entry[] = [];
+    for (const line of lines) {
+      try {
+        entries.push({ version: VersionSchema.parse(JSON.parse(line)) as Version, line });
+      } catch (error) {
+        await JsonFile.setAside(this.file, error);
+        await this.write(entries);
+        return entries;
+      }
+    }
+    return entries;
+  }
+
+  /** Starts the history again from the Set as it is now, keeping the old one aside, when its snapshots are unreadable. */
+  private async startAfresh(reason: unknown): Promise<void> {
+    await JsonFile.setAside(this.file, reason);
+    await JsonFile.setAside(this.snapshots, reason);
+    this.cache = null;
+    this.newest = null;
   }
 
   /** The file's modification time and size, or "" when there is no file yet. */
@@ -285,7 +308,7 @@ export class VersionHistory {
       const info = await stat(this.file);
       return `${info.mtimeMs}:${info.size}`;
     } catch (error) {
-      if (isMissingFile(error)) return "";
+      if (JsonFile.isMissing(error)) return "";
       throw error;
     }
   }
