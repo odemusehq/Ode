@@ -49,6 +49,28 @@ export class LyricsSections {
     return sections.map((section) => (section.name === null ? section.lines : [`[${section.name}]`, ...section.lines]).join("\n")).join("\n\n");
   }
 
+  /**
+   * The text with every set of linked copies matching. Where copies of a name differ, the copy that changed since
+   * `base` is written into the others (the first such copy, when several changed); a text whose copies match stays as it is.
+   */
+  static unifyLinked(base: string, text: string): string {
+    const sections = LyricsSections.parse(text);
+    const before = new Map<string, string>();
+    for (const section of LyricsSections.parse(base)) {
+      if (section.name !== null && !before.has(section.name)) before.set(section.name, section.lines.join("\n"));
+    }
+    const chosen = new Map<string, string[]>();
+    for (const section of sections) {
+      if (section.name === null || chosen.has(section.name)) continue;
+      const copies = sections.filter((other) => other.name === section.name);
+      if (new Set(copies.map((copy) => copy.lines.join("\n"))).size < 2) continue;
+      const changed = copies.find((copy) => copy.lines.join("\n") !== before.get(section.name ?? "")) ?? section;
+      chosen.set(section.name, changed.lines);
+    }
+    if (chosen.size === 0) return text;
+    return LyricsSections.join(sections.map((section) => ({ name: section.name, lines: [...((section.name !== null && chosen.get(section.name)) || section.lines)] })));
+  }
+
   /** The name without a trailing number: "Verse 2" gives "Verse". */
   static baseName(name: string): string {
     return name.replace(TRAILING_NUMBER, "");

@@ -75,6 +75,8 @@ export const LeadSheetSchema = z.object({
   links: z.array(ClipLinkSchema).default([]),
   /** Things the musician asked Ode to keep exactly as they are (free text or tags). */
   locked: z.array(z.string()).default([]),
+  /** The names of the lyrics' sections that ask for perfect rhymes, set in the Lyrics editor. */
+  strictRhymes: z.array(z.string()).default([]),
   credits: z.array(CreditSchema).default([]),
   notes: z.array(z.string()).default([]),
 });

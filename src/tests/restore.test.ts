@@ -84,7 +84,7 @@ test("what can't be put back, such as a plug-in removed by hand, is listed inste
   live.edit((current) => {
     at(current.tracks, 2).devices.pop();
   });
-  const unused = { songId: "night-bus", analysis: { lines: [], scheme: [], notes: [] }, revision: 0 };
+  const unused = { songId: "night-bus", analysis: { lines: [], scheme: [], notes: [] }, revision: 0, strictRhymes: [] };
   const runner = new RestoreRunner(live, { update: async () => TestSets.sheet() }, { replace: async (text) => ({ ...unused, text }) });
   const result = await runner.putBack(live.snapshot(), before);
   assert.equal(result.complete, true);

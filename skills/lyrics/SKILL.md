@@ -29,6 +29,7 @@ A good lyric sounds like a person talking, fits its melody, and makes the listen
    - Edit the existing lines in the lyrics: the same line under the same label. New lines go where they are sung: verse 2's lines under a "[Verse 2]" label after verse 1; a new bridge where the bridge is sung.
    - Write a single version of each line, and keep alternatives out of the text, the clips and the takes. Again gives another take, and the version history keeps every earlier one.
    - Leave a line the lead sheet lists as locked exactly as it is. If it causes a problem (its count, its rhyme), work around it in the lines you may change, and say so in the result line.
+   - Sections that share a label (two "[Chorus]" sections) are linked copies: change one copy and the save writes the change into the others.
    - A chorus is sung more than once: change a chorus line in every copy of the chorus in the text, unless the musician varied the last chorus on purpose.
    - Keep the musician's best words, and change only what the request is about.
 4. **Verify** every line you wrote or changed:

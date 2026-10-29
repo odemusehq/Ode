@@ -28,6 +28,7 @@ export function LyricsPanel() {
   const client = useClient();
   const { text, stored, saveError, loadError } = useLyrics();
   const titleId = useId();
+  const strictRhymes = stored?.strictRhymes;
 
   return (
     <section className="lyrics" aria-labelledby={titleId}>
@@ -35,7 +36,7 @@ export function LyricsPanel() {
         Lyrics
       </h2>
       {stored ? (
-        <LyricsEditor text={text} />
+        <LyricsEditor text={text} strictRhymes={strictRhymes ?? []} />
       ) : loadError ? (
         <ProblemLine message={loadError} onRetry={() => void client.lyrics.load()} />
       ) : (
@@ -48,6 +49,8 @@ export function LyricsPanel() {
 
 interface LyricsEditorProps {
   text: string;
+  /** The names of the sections that ask for perfect rhymes. */
+  strictRhymes: readonly string[];
 }
 
 interface CardQuestion {
@@ -59,7 +62,7 @@ interface CardQuestion {
  * The lyrics as section cards. Every change becomes the whole text again, labels included, so Ode reads and writes the
  * same text the musician sees; sections that share a name are linked copies and change together.
  */
-function LyricsEditor({ text }: LyricsEditorProps) {
+function LyricsEditor({ text, strictRhymes }: LyricsEditorProps) {
   const client = useClient();
   const sections = useMemo(() => LyricsSections.parse(text), [text]);
   const [renaming, setRenaming] = useState<number | null>(null);
@@ -265,7 +268,17 @@ function LyricsEditor({ text }: LyricsEditorProps) {
               new SectionLinker(list.current, cable.current).start(index, event.currentTarget, accepts, link);
             }}
             onPartners={(show) => setPartners(show ? section.name : null)}
-            renderMarks={marksBehind(false)}
+            renderMarks={marksBehind(section.name !== null && strictRhymes.includes(section.name))}
+            extras={
+              section.name !== null && (
+                <StrictToggle
+                  on={strictRhymes.includes(section.name)}
+                  onChange={(strict) => {
+                    if (section.name !== null) void client.lyrics.setStrictRhymes(section.name, strict).catch(() => undefined);
+                  }}
+                />
+              )
+            }
           />
         ))}
         <Button variant={ButtonVariant.Quiet} className="lyrics-editor__add" onClick={addSection}>
@@ -284,6 +297,27 @@ function LyricsEditor({ text }: LyricsEditorProps) {
         />
       )}
     </div>
+  );
+}
+
+interface StrictToggleProps {
+  on: boolean;
+  onChange: (on: boolean) => void;
+}
+
+/** Perfect rhymes for every section with this name: near rhymes there get a dashed line, and Ode keeps the rhymes perfect. */
+function StrictToggle({ on, onChange }: StrictToggleProps) {
+  return (
+    <button
+      type="button"
+      className={cx("section__strict", on && "section__strict--on")}
+      aria-pressed={on}
+      title="Ask for perfect rhymes in this section"
+      onClick={() => onChange(!on)}
+    >
+      <Icon name={IconName.Lock} />
+      Strict rhymes
+    </button>
   );
 }
 

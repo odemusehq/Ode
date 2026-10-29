@@ -60,6 +60,7 @@ const NameSchema = z.object({ name: z.string() });
 const ModeSchema = z.object({ mode: z.enum(Mode) });
 const LyricsWriteSchema = z.object({ songId: z.string().min(1).optional(), text: z.string(), baseRevision: z.number().int().min(0) });
 const LyricsCheckSchema = z.object({ lines: z.array(z.string()) });
+const StrictRhymesSchema = z.object({ name: z.string().trim().min(1), strict: z.boolean() });
 const VersionRequestSchema = z.object({ versionId: z.string().min(1) });
 const SongOpenSchema = z.object({ id: z.string().min(1) });
 const SongCreateSchema = z.object({ title: z.string() });
@@ -266,6 +267,12 @@ export class OdeServer {
       const accent = (await prefs.effective(await song.read())).pronunciation;
       const answer: LyricsCheckResponse = await this.deps.lyricsChecker.check(parsed.data.lines, accent);
       return c.json(answer);
+    });
+
+    app.post(API.lyricsStrict, async (c) => {
+      const parsed = StrictRhymesSchema.safeParse(await OdeServer.body(c));
+      if (!parsed.success) return c.json({ error: "Send { name, strict } with the section's name." }, 400);
+      return c.json(await lyrics.setStrictRhymes(parsed.data.name, parsed.data.strict));
     });
 
     app.get("/api/release/file/:name", async (c) => {

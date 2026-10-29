@@ -23,6 +23,7 @@ const LeadSheetPatchSchema = z
     sections: z.array(SectionSchema),
     links: z.array(ClipLinkSchema),
     locked: z.array(z.string()),
+    strictRhymes: z.array(z.string()),
     credits: z.array(CreditSchema),
     notes: z.array(z.string()),
   } satisfies Record<keyof Omit<LeadSheet, "version" | "lyrics" | "lyricsRevision">, z.ZodType>)
@@ -37,6 +38,7 @@ const SHEET_FIELD_WORDS: Readonly<Record<keyof LeadSheetPatch, string>> = {
   sections: "sections",
   links: "clip links",
   locked: "locked parts",
+  strictRhymes: "sections with strict rhymes",
   credits: "credits",
   notes: "notes",
 };
@@ -65,7 +67,7 @@ export const songTools: AnyTool[] = [
     changes: "none",
     alwaysLoad: true,
     description:
-      "Read the song's lead sheet: title, what the song is about, song-level settings, the lyrics (one text, with its revision), sections (the song form with chords, by start beat and length), links to clips and tracks Ode created (by tag), locked parts, credits and notes. Tempo, key and time signature are Live's: read them from the project map or song_get.",
+      "Read the song's lead sheet: title, what the song is about, song-level settings, the lyrics (one text, with its revision), sections (the song form with chords, by start beat and length), links to clips and tracks Ode created (by tag), locked parts, strictRhymes (the names of the lyrics' sections that ask for perfect rhymes), credits and notes. Tempo, key and time signature are Live's: read them from the project map or song_get.",
     input: {},
     run: (_input, ctx) => ctx.song.read(),
   }),
@@ -73,7 +75,7 @@ export const songTools: AnyTool[] = [
     name: "lead_sheet_update",
     changes: "memory",
     description:
-      "Update the lead sheet: title, intent (what the song is about), song-level settings, sections (the song form with chords), links, locked, credits and notes. Give only the fields that change; each field you give replaces the old value (send the full list for sections, links, locked, credits and notes). The lyrics are saved with lyrics_write; the tempo changes in the Set with song_set_tempo, and the key, scale and time signature are the musician's to set in Live.",
+      "Update the lead sheet: title, intent (what the song is about), song-level settings, sections (the song form with chords), links, locked, strictRhymes, credits and notes. Give only the fields that change; each field you give replaces the old value (send the full list for sections, links, locked, strictRhymes, credits and notes). The lyrics are saved with lyrics_write; the tempo changes in the Set with song_set_tempo, and the key, scale and time signature are the musician's to set in Live.",
     input: LeadSheetPatchSchema.shape,
     describe: (patch) => {
       const fields = (Object.keys(patch) as (keyof LeadSheetPatch)[]).filter((field) => patch[field] !== undefined);
@@ -98,7 +100,7 @@ export const songTools: AnyTool[] = [
     name: "lyrics_write",
     changes: "memory",
     description:
-      'Save the song\'s lyrics. text: the whole new text, laid out as lyrics_read gives it (without the line numbers): one sung line per line, a blank line between stanzas, labels such as "[Chorus]" on their own lines; keep the labels and the layout, changing them only when the change is about them, change a repeated chorus in every copy, and leave what the lead sheet\'s locked list names exactly as it is. baseRevision: the revision of the text you edited, from lyrics_read. When the musician saved in between, both changes are merged line by line; where you both changed the same lines, the musician\'s lines are kept. Returns { revision, conflicts }: conflicts are the line numbers where the musician\'s lines were kept and yours set aside (say so in your result line); when the text saved differs from what you sent, lines gives it, numbered, to write your next change from. A save edited from a revision that is too old is refused: read the lyrics again and redo the change.',
+      'Save the song\'s lyrics. text: the whole new text, laid out as lyrics_read gives it (without the line numbers): one sung line per line, a blank line between stanzas, labels such as "[Chorus]" on their own lines; keep the labels and the layout, changing them only when the change is about them, and leave what the lead sheet\'s locked list names exactly as it is. Sections with the same label are linked copies: the save writes the copy you changed into the others, so change one copy (or all of them the same way). baseRevision: the revision of the text you edited, from lyrics_read. When the musician saved in between, both changes are merged line by line; where you both changed the same lines, the musician\'s lines are kept. Returns { revision, conflicts }: conflicts are the line numbers where the musician\'s lines were kept and yours set aside (say so in your result line); when the text saved differs from what you sent, lines gives it, numbered, to write your next change from. A save edited from a revision that is too old is refused: read the lyrics again and redo the change.',
     input: {
       text: z.string().describe("The whole lyrics, one line per line"),
       baseRevision: z.number().int().min(0).describe("The revision lyrics_read gave for the text you edited"),

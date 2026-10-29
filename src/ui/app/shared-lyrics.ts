@@ -91,6 +91,19 @@ export class SharedLyrics {
     void this.save();
   }
 
+  /** Turns perfect rhymes on or off for the sections called `name`. */
+  async setStrictRhymes(name: string, strict: boolean): Promise<void> {
+    this.takeStrictRhymes(await this.api.setStrictRhymes({ name, strict }));
+  }
+
+  /** The sections asking for perfect rhymes changed while the text stayed the same. */
+  private takeStrictRhymes(state: LyricsState): void {
+    const { stored } = this.snapshot;
+    if (stored && stored.songId === state.songId && stored.strictRhymes.join("\n") !== state.strictRhymes.join("\n")) {
+      this.update({ stored: { ...stored, strictRhymes: state.strictRhymes } });
+    }
+  }
+
   /**
    * Stored lyrics newer than the ones known: shown at once unless the musician has edits on the way. Another song's
    * lyrics always replace these, since its revisions count from its own start. False when older.
@@ -103,7 +116,10 @@ export class SharedLyrics {
       this.adopt(state);
       return true;
     }
-    if (stored && state.revision <= stored.revision) return false;
+    if (stored && state.revision <= stored.revision) {
+      if (state.revision === stored.revision) this.takeStrictRhymes(state);
+      return false;
+    }
     if (this.saving) {
       // The save's answer decides what the editor shows.
       this.update({ stored: state, loadError: null });

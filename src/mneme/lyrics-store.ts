@@ -1,6 +1,7 @@
 import { diff3MergeRegions } from "node-diff3";
 import { analyzeLyrics } from "../music/prosody/lyrics-analyzer";
 import type { LyricsSaved, LyricsState } from "../shared/lyrics";
+import { LyricsSections } from "../shared/lyrics-sections";
 import type { LeadSheet } from "../shared/song";
 import { VersionAuthor } from "../shared/versions";
 import { LyricsText } from "./lyrics-text";
@@ -123,12 +124,13 @@ export class LyricsStore {
       const saved = LyricsText.normalize(text);
       const texts = this.texts();
       let conflicts: number[] = [];
+      // Linked copies (sections that share a name) stay identical: the copy the save changed reaches the others.
       const sheet = await this.song.saveLyrics((current) => {
         texts.set(current.lyricsRevision, current.lyrics);
-        if (baseRevision === current.lyricsRevision) return saved;
+        if (baseRevision === current.lyricsRevision) return LyricsSections.unifyLinked(current.lyrics, saved);
         const base = texts.get(baseRevision);
         if (base === undefined) {
-          if (author === VersionAuthor.Musician) return saved;
+          if (author === VersionAuthor.Musician) return LyricsSections.unifyLinked(current.lyrics, saved);
           throw new StaleLyricsError(
             `The lyrics have changed since revision ${baseRevision}: read them again with lyrics_read and make the change on that text.`,
           );
@@ -136,9 +138,19 @@ export class LyricsStore {
         const keep = author === VersionAuthor.Musician ? Keep.Saved : Keep.Stored;
         const merged = LineMerge.run(LyricsText.lines(base), LyricsText.lines(saved), LyricsText.lines(current.lyrics), keep);
         conflicts = merged.conflicts;
-        return merged.lines.join("\n");
+        return LyricsSections.unifyLinked(base, merged.lines.join("\n"));
       });
       return { ...(await this.stored(sheet, song, texts)), conflicts };
+    });
+  }
+
+  /** Turns perfect rhymes on or off for the sections called `name`, and tells the windows. */
+  setStrictRhymes(name: string, strict: boolean): Promise<LyricsState> {
+    return this.enqueue(async () => {
+      const song = this.song.songId;
+      const current = (await this.song.read()).strictRhymes.filter((each) => each !== name);
+      const sheet = await this.song.update({ strictRhymes: strict ? [...current, name] : current });
+      return this.stored(sheet, song, this.texts());
     });
   }
 
@@ -162,7 +174,13 @@ export class LyricsStore {
   /** The text with its analysis in the song's pronunciation; blank and label lines are analysed as empty lines. */
   private async state(sheet: LeadSheet, song: string): Promise<LyricsState> {
     const accent = (await this.prefs.effective(sheet)).pronunciation;
-    return { songId: song, text: sheet.lyrics, revision: sheet.lyricsRevision, analysis: analyzeLyrics(LyricsText.forAnalysis(sheet.lyrics), accent) };
+    return {
+      songId: song,
+      text: sheet.lyrics,
+      revision: sheet.lyricsRevision,
+      analysis: analyzeLyrics(LyricsText.forAnalysis(sheet.lyrics), accent),
+      strictRhymes: sheet.strictRhymes,
+    };
   }
 
   /** The known texts of the open song; another song's revisions start again. */

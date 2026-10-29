@@ -51,6 +51,14 @@ export interface LyricsState {
   text: string;
   revision: number;
   analysis: LyricsAnalysis;
+  /** The names of the sections that ask for perfect rhymes. */
+  strictRhymes: string[];
+}
+
+/** Turns perfect rhymes on or off for every section with this name. */
+export interface StrictRhymesRequest {
+  name: string;
+  strict: boolean;
 }
 
 /**
