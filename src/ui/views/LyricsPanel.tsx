@@ -120,7 +120,8 @@ function CaretLine({ line }: CaretLineProps) {
   return (
     <div className="lyrics-line">
       {words.length > 0 && (
-        <p className="lyrics-line__stress" aria-label={`Stress: ${spokenStress(words)}`}>
+        <p className="lyrics-line__stress">
+          <span className="ode-visually-hidden">Stress: {spokenStress(words)}</span>
           {words.map((word, index) => (
             <StressedWord key={index} word={word} />
           ))}
