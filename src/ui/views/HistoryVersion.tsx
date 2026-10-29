@@ -193,7 +193,7 @@ export function HistoryVersion({ version, kind, selected, onSelect, newer, onOut
 /** A restore changes the current Set while keeping the saved history. */
 function confirmMessage(moment: string, newer: number): string {
   const later = newer === 0 ? "Your saved history stays available." : `${newer} later ${newer === 1 ? "version stays" : "versions stay"} available in History.`;
-  return `Restore the supported changes from ${moment} to the current Set? ${later} Automation and hidden plugin state cannot be restored.`;
+  return `Apply the supported changes from ${moment} to the currently open Live Set? ${later} Automation and hidden plugin state cannot be restored.`;
 }
 
 /** How the restore went, under the version: back, back with what stayed as it is, or stopped and why. */

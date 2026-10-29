@@ -22,7 +22,12 @@ import type { ChatModelOption, ModelListRequest, SettingsResponse, SettingsUpdat
 import type { ConversationExchange } from "../../shared/events";
 
 export type AudioScope = "sample" | "reference" | "processed-bounce";
-export interface AudioAttachment { path: string; name: string; scope: string }
+export interface AudioAttachment {
+  id: string;
+  path: string;
+  name: string;
+  scope: string;
+}
 
 enum HttpMethod {
   Get = "GET",

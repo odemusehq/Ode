@@ -125,6 +125,8 @@ export class OdeServer {
   private readonly app = new Hono();
   private readonly token = randomBytes(OdeServer.TOKEN_BYTES).toString("hex");
   private port = 0;
+  private modifyingRequests = 0;
+  private switchingRequest = false;
 
   constructor(private readonly deps: ServerDeps) {}
 
@@ -169,7 +171,21 @@ export class OdeServer {
         return c.json({ error: upload ? "Choose an audio file to attach." : "Send the request as JSON." }, 415);
       }
     }
-    await next();
+    if (!READS.has(c.req.method) && c.req.path !== API.stop) {
+      const switchesSong = c.req.method === "POST" && (c.req.path === API.songs || c.req.path === API.songsOpen);
+      if (this.switchingRequest || this.deps.songs.isSwitching || (switchesSong && this.modifyingRequests > 0)) {
+        return c.json({ error: "Ode is switching songs, or a request is still arriving. Wait for it to finish, then try again." }, 409);
+      }
+      // Hold admission through body parsing, so an earlier request cannot land in the next song.
+      this.modifyingRequests += 1;
+      if (switchesSong) this.switchingRequest = true;
+      try {
+        await next();
+      } finally {
+        this.modifyingRequests -= 1;
+        if (switchesSong) this.switchingRequest = false;
+      }
+    } else await next();
     for (const [name, value] of Object.entries(SAFETY_HEADERS)) c.res.headers.set(name, value);
   }
 

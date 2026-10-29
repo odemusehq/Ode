@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { test } from "node:test";
 import { OperationRegistry } from "../live/extension/ops/registry";
+import { OdeSession } from "../harness/session";
 import { AgentLoop, LoopEnd, RequestBudget } from "../harness/loop";
 import { ConversationStore } from "../mneme/conversations";
 import { SettingsStore } from "../mneme/settings-store";
@@ -87,4 +88,19 @@ test("an aborted SDK operation waiting behind another operation never starts", a
   await read;
   await assert.rejects(edit, { name: "AbortError" });
   assert.equal(edits, 0);
+});
+
+test("a failed change receipt stays failed in the saved conversation", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "ode-receipt-"));
+  const log = new ConversationStore(folder, 12).log("song");
+  const session = new OdeSession({
+    loop: { run: async (run: { onMutation: () => void }) => { run.onMutation(); return { reply: "Bass changed", tokens: 1, end: LoopEnd.Reply }; } },
+    agents: { systemPrompt: async () => "" }, approvals: { denyAll() {} }, questions: { cancelAll() {} }, emit() {},
+    requests: { prepare: async () => ({ hiddenContext: "fixture" }), finish: async () => { throw new Error("snapshot refused"); } },
+  } as never, log);
+  await session.send({ text: "Change the bass" });
+  const [exchange] = await log.all();
+  assert.equal(exchange?.status, "failed");
+  assert.match(exchange!.reply, /Could not record the changes: snapshot refused/);
+  assert.equal(exchange?.versionId, null);
 });

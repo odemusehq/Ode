@@ -100,14 +100,9 @@ export class RequestContext implements RequestLifecycle {
     return version?.id ?? null;
   }
 
-  /** Saves a version; when that fails the musician sees why, and the result line goes on without it. */
-  private async record(save: () => Promise<RecordedVersion>): Promise<RecordedVersion | null> {
-    try {
-      return await save();
-    } catch (error) {
-      this.deps.emit({ type: "error", message: error instanceof Error ? error.message : String(error) });
-      return null;
-    }
+  /** Recording failures propagate so the saved conversation cannot claim a complete receipt. */
+  private record(save: () => Promise<RecordedVersion>): Promise<RecordedVersion> {
+    return save();
   }
 
   /** When Ode last changed the song, as its history keeps it: the first request after Live starts again reads from there. */

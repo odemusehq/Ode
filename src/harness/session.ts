@@ -241,6 +241,7 @@ export class OdeSession {
     const controller = new AbortController();
     this.controller = controller;
     this.running = request;
+    const beganHere = request.exchangeId === undefined;
     const exchangeId = request.exchangeId ?? await this.conversation.begin(request.text);
     request.exchangeId = exchangeId;
     this.activity = [];
@@ -250,6 +251,7 @@ export class OdeSession {
     let mutations = 0;
     let versionId: string | null = null;
     try {
+      if (beganHere) await this.publishConversation();
       let hiddenContext: string;
       try {
         hiddenContext = (await this.deps.requests.prepare(request)).hiddenContext;
@@ -291,7 +293,10 @@ export class OdeSession {
         const receipt = await this.deps.requests.finish(request, reply, controller.signal.aborted || cutShort || status === "failed", mutations);
         versionId = receipt?.versionId ?? null;
       } catch (error) {
-        this.deps.emit({ type: "error", message: OdeSession.errorText(error) });
+        status = "failed";
+        const message = `Could not record the changes: ${OdeSession.errorText(error)}`;
+        savedReply = [reply, message].filter(Boolean).join("\n\n");
+        this.deps.emit({ type: "error", message });
       }
       this.deps.emit({ type: "done", tokens });
     } finally {

@@ -179,14 +179,17 @@ export class RestorePlanner {
   static canAddBack(device: DeviceSnapshot): boolean {
     if (RestorePlanner.insertName(device) === null) return false;
     if (device.sample && !existsSync(device.sample)) return false;
-    return (device.chains ?? []).every((chain) => chain.devices.every((inner) => RestorePlanner.canAddBack(inner)));
+    return (device.chains ?? []).every((chain) => (chain.mixer?.sends.length ?? 0) === 0 && chain.devices.every((inner) => RestorePlanner.canAddBack(inner)));
   }
 
   /** True when a restore can create the track again with all its devices: a MIDI or audio track. */
   static canAddBackTrack(track: TrackSnapshot): boolean {
     const creatable = track.kind === "midi" || track.kind === "audio";
-    return creatable && track.devices.every((device) => RestorePlanner.canAddBack(device)) && SetLookup.clipsOf(track).every((clip) =>
-      clip.kind !== "midi" || RestorePlanner.canRecreateMidi(clip, "slot" in clip.ref ? Math.max(clip.loopEnd, clip.endMarker) : clip.endTime - clip.startTime));
+    return creatable && track.devices.every((device) => RestorePlanner.canAddBack(device)) && SetLookup.clipsOf(track).every((clip) => {
+      if (clip.kind === "midi") return RestorePlanner.canRecreateMidi(clip, "slot" in clip.ref ? Math.max(clip.loopEnd, clip.endMarker) : clip.endTime - clip.startTime);
+      const audio = clip as AudioClipInfo;
+      return Boolean(audio.filePath && existsSync(audio.filePath)) && (!audio.warping || audio.warpMarkers.length <= DEFAULT_WARP_MARKERS);
+    });
   }
 
   plan(changes: SetChange[]): RestorePlan {
@@ -422,7 +425,7 @@ export class RestorePlanner {
     const named = { ...(clip.name ? { name: clip.name } : {}), ...(clip.tag ? { tag: clip.tag } : {}) };
     const audio = clip.kind === "audio" ? (clip as AudioClipInfo) : null;
     if (audio && !(audio.filePath && existsSync(audio.filePath))) {
-      this.skipped.push(`${label} (its audio file is missing)`);
+      this.blocked.push(`${label} (its audio file is missing)`);
       return;
     }
     const length = "slot" in key ? Math.max(clip.loopEnd, clip.endMarker) : clip.endTime - clip.startTime;
@@ -448,7 +451,7 @@ export class RestorePlanner {
       if ("slot" in key) this.staged.add(stage, { op: "clip_slot_create_audio_clip", args: { slot: { track, slot: key.slot }, ...settings }, label });
       else if (key.lane !== undefined) this.staged.add(stage, { op: "take_lane_create_audio_clip", args: { lane: { track, lane: key.lane }, start: key.start, length, ...settings }, label });
       else this.staged.add(stage, { op: "track_create_audio_clip", args: { track, start: key.start, length, ...settings }, label });
-      if (audio.warping && audio.warpMarkers.length > DEFAULT_WARP_MARKERS) this.skipped.push(`${label} · warp markers`);
+      if (audio.warping && audio.warpMarkers.length > DEFAULT_WARP_MARKERS) this.blocked.push(`${label} · its custom warp markers cannot be reconstructed by this SDK`);
     } else {
       const notes = clip.notes ?? [];
       if ("slot" in key) this.staged.add(stage, { op: "clip_slot_create_midi_clip", args: { slot: { track, slot: key.slot }, length, notes, ...named }, label });

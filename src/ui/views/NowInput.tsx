@@ -43,7 +43,7 @@ export function NowInput() {
     const sentText = text;
     const sentAttachments = attachments;
     const sentSong = currentSong.current;
-    const audio = sentAttachments.map((file) => `Audio attachment (${file.scope}): ${file.name}\nManaged path: ${file.path}`).join("\n\n");
+    const audio = sentAttachments.map((file) => `Audio attachment (${file.scope}): ${file.name}\nManaged audio ID: ${file.id} (reopen with library_audio_open if the working path expires)\nManaged path: ${file.path}`).join("\n\n");
     const request = [sentText, audio].filter(Boolean).join("\n\n");
     setSending(true);
     try {

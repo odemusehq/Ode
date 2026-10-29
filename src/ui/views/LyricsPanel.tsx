@@ -37,7 +37,7 @@ export function LyricsPanel() {
         Lyrics
       </h2>
       {stored ? (
-        <LyricsEditor text={text} strictRhymes={strictRhymes ?? []} />
+        <LyricsEditor key={stored.songId} text={text} strictRhymes={strictRhymes ?? []} />
       ) : loadError ? (
         <ProblemLine message={loadError} onRetry={() => void client.lyrics.load()} />
       ) : (
