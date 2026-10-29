@@ -7,7 +7,7 @@ import { MODE_DESCRIPTIONS, MODE_LABELS, MODE_ORDER } from "../app/modes";
 
 const MENU_LABEL = "Mode";
 
-/** The header's mode menu: Auto, Manual or Let me hear it, each with a line saying what it does. */
+/** The header's mode menu: Auto or Manual, each with a line saying what it does. */
 export function ModePicker() {
   const client = useClient();
   const mode = useAppState((state) => state.mode);

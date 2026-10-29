@@ -88,7 +88,7 @@ export const trackTools = [
     op: "track_insert_device",
     changes: "set",
     description:
-      'Insert one of Live\'s built-in instruments or effects, with its default preset, into a track\'s device chain (e.g. "Drift", "Operator", "Wavetable", "Meld", "Simpler", "Sampler", "Drum Rack", "EQ Eight", "Compressor", "Glue Compressor", "Multiband Dynamics", "Saturator", "Reverb", "Delay", "Echo", "Auto Filter", "Chorus-Ensemble", "Utility", "Limiter"). Third-party plug-ins and presets load with browser_load instead.',
+      'Insert one of Live\'s built-in instruments or effects, with its default sound, into a track\'s device chain (e.g. "Drift", "Operator", "Wavetable", "Meld", "Simpler", "Sampler", "Drum Rack", "EQ Eight", "Compressor", "Glue Compressor", "Multiband Dynamics", "Saturator", "Reverb", "Delay", "Echo", "Auto Filter", "Chorus-Ensemble", "Utility", "Limiter"). Plug-ins the musician already added take parameter changes through parameter_set.',
     input: {
       track: TrackRefSchema,
       device: z.string().min(1).describe("Exact name of the built-in Live device"),

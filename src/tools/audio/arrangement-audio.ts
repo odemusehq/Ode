@@ -9,7 +9,7 @@ const RENDER_LIMITS: Readonly<Record<TrackKind, string | null>> = {
   midi: "MIDI track: only Arrangement audio tracks can be rendered. Freeze and flatten it, or resample it onto an audio track, then check again.",
   group: "group track: check the audio tracks inside it instead.",
   return: "return track: only Arrangement audio tracks can be rendered.",
-  main: "Main track: use master_check to measure it.",
+  main: "Main track: check the audio tracks that feed it instead.",
 };
 
 export interface RenderableTrack {

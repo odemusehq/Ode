@@ -47,7 +47,7 @@ export const rackTools = [
   extensionTool({
     op: "chain_insert_device",
     changes: "set",
-    description: "Insert a built-in Live device (default preset) into a chain of a rack. device is the rack; chain is the 0-based chain index.",
+    description: "Insert a built-in Live device, with its default sound, into a chain of a rack. device is the rack; chain is the 0-based chain index.",
     input: {
       device: DeviceRefSchema,
       chain: z.number().int().min(0),

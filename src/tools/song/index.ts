@@ -59,7 +59,7 @@ export const songTools: AnyTool[] = [
     name: "lead_sheet_update",
     changes: "memory",
     description:
-      "Update the lead sheet: title, intent (what the song is about), song-level settings, sections (the song form with chords), links, locked, credits and notes. Give only the fields that change; each field you give replaces the old value (send the full list for sections, links, locked, credits and notes). The lyrics are saved with lyrics_write; tempo, key and time signature are changed in Live (song_set_tempo, song_set_key, song_set_time_signature).",
+      "Update the lead sheet: title, intent (what the song is about), song-level settings, sections (the song form with chords), links, locked, credits and notes. Give only the fields that change; each field you give replaces the old value (send the full list for sections, links, locked, credits and notes). The lyrics are saved with lyrics_write; the tempo changes in the Set with song_set_tempo, and the key, scale and time signature are the musician's to set in Live.",
     input: LeadSheetPatchSchema.shape,
     describe: (patch) => {
       const fields = (Object.keys(patch) as (keyof LeadSheetPatch)[]).filter((field) => patch[field] !== undefined);

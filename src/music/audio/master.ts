@@ -64,7 +64,7 @@ export class MasterChecker {
     if (!Number.isFinite(measure.integrated)) {
       return {
         ok: false,
-        advice: ["No audio was measured: check that the song played during the measurement and that the Ode device is on the Master track."],
+        advice: ["No audio was measured: check that the song played during the measurement."],
       };
     }
     const advice: string[] = [];

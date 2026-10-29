@@ -30,7 +30,7 @@ export class PreferencesStore {
     return this.file.read();
   }
 
-  /** How Ode applies changes: Auto (the default), Manual or Let me hear it. */
+  /** How Ode applies changes: Auto (the default) or Manual. */
   async mode(): Promise<Mode> {
     return (await this.file.read()).mode;
   }

@@ -55,7 +55,7 @@ export const mediaTools: AnyTool[] = [
     name: "cover_art_create",
     changes: "memory",
     description:
-      `Create cover art choices for the song from a written brief (subject, mood, colours, style; no text or logos unless asked): several images at 3000 × 3000 pixels, the size release platforms ask for, saved in the song's release folder as cover-1.png, cover-2.png and so on, numbered after any earlier choices, which stay. Then let the musician pick one with ask_musician (options "Cover 1", "Cover 2"…, images the files returned, in the same order) and keep their pick with cover_art_choose; in Let me hear it mode pick the one that fits the song best and say so. Base the brief on what the song is about; never imitate another artist's artwork. Returns { choices }: the new files.`,
+      `Create cover art choices for the song from a written brief (subject, mood, colours, style; no text or logos unless asked): several images at 3000 × 3000 pixels, the size release platforms ask for, saved in the song's release folder as cover-1.png, cover-2.png and so on, numbered after any earlier choices, which stay. Then let the musician pick one with ask_musician (options "Cover 1", "Cover 2"…, images the files returned, in the same order) and keep their pick with cover_art_choose. Base the brief on what the song is about; never imitate another artist's artwork. Returns { choices }: the new files.`,
     input: { brief: z.string().min(10) },
     describe: () => "Release · cover art choices",
     run: async ({ brief }, ctx) => {

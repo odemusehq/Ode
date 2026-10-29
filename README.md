@@ -1,41 +1,40 @@
 # Ode
 
-Ode is an AI co-writer and co-producer inside Ableton Live. It helps with every part of making a song — idea, lyrics, topline, chords, drums, bass, sounds, arrangement, vocals, mixing, mastering and release — in any order, while the musician stays the author. Select something in Live, tap a suggestion or type a few words: Ode changes the Set in place, checks the craft details with code, plays what it changed, and keeps every version of the Set so you can go back.
+Ode is an AI co-writer and co-producer inside Ableton Live. It helps with every part of making a song — idea, lyrics, topline, chords, drums, bass, sounds, arrangement, vocals, mixing, mastering and release — in any order, while the musician stays the author. Right-click something in Live and choose **Ask Ode**: Ode changes the Set in place, checks the craft details with code, shows each step while it works, and keeps every version of the song so you can go back.
 
-## Requirements
-- macOS or Windows, Node.js 24.16 or later
-- Ableton Live 12 Suite; Live extensions currently need the Live beta with Developer Mode turned on (Settings → Extensions)
-- The Ableton Extensions SDK: copy its `ableton-extensions-sdk` and `ableton-extensions-cli` packages (.tgz) into `vendor/`, a git-ignored folder that keeps the SDK on your machine
-- Model provider keys, described in `.env.example`
+## Install
+Ode is one Live extension. It needs Ableton Live 12 Suite on macOS or Windows; Live extensions are in the Live beta for now.
 
-## Setup
+1. Download `Ode-<version>.ablx` from the latest release.
+2. In Live, open Settings → Extensions and drop the file on the page.
+3. Right-click a track and choose **Ode: Settings**: pick the provider (Meta, Baseten or Modal), the model and paste your key.
+
+Then right-click a clip, a track or a time selection and choose **Ask Ode**. **Ode: Lyrics** opens the song's lyrics, which you and Ode both edit, and **Ode: History** every version of the song.
+
+## Develop
+- Node.js 24.16 or later.
+- The Ableton Extensions SDK: copy its `ableton-extensions-sdk` and `ableton-extensions-cli` packages (.tgz) into `vendor/`, a git-ignored folder that keeps the SDK on your machine.
+- In Live beta, turn on Developer Mode (Settings → Extensions).
+
 ```bash
-cp .env.example .env    # then add your keys
+cp .env.example .env     # where Live is, and your development folder
 npm install
-npm run build           # UI, Live extension and Ode device
-npm run bridge:install  # Python bridge for loading plug-ins, presets and samples
+npm run build:ui         # the dialogs' pages
+npm run live:extension   # builds the extension and runs it in Live
 ```
 
-In Live:
-1. Settings → Link, Tempo & MIDI → choose **Ode** as a Control Surface.
-2. Put the **Ode** device (User Library → Presets → Audio Effects → Max Audio Effect) on the Main track.
-
-Run:
-```bash
-npm start                # Ode's local server
-npm run live:extension   # loads the Ode extension into the Live beta (Developer Mode)
-```
+`npm run release:package` builds `release/Ode-<version>.ablx`; a version tag (`npm version <x.y.z>`) makes the release on GitHub.
 
 ## Project layout
-- `skills/` — songwriting and production skills the agents load when a task calls for them
-- `src/agents`, `src/harness` — the main agent, its subagents and the agent runtime
-- `src/tools` — every tool the agents use, including one per Live operation
+- `skills/` — songwriting and production skills the agent reads when a task calls for them
+- `src/agents`, `src/harness` — the main agent, its subagents and Ode's agent loop
+- `src/tools` — every tool the agent uses, including one per Live operation
 - `src/music` — pronunciation, rhyme, prosody, melody, harmony, rhythm and audio analysis
-- `src/services` — model providers by role
-- `src/mneme` — memory of the artist and the song, and settings
-- `src/server` — the local server
-- `src/live` — the Live extension, the Max for Live device and the Python bridge
-- `src/ui`, `src/ui-kit` — the interface shown inside Live
+- `src/services` — model providers and the bundled provider list
+- `src/mneme` — memory of the artist and the songs, and Settings
+- `src/server` — Ode's local server inside the extension, which the dialogs load from
+- `src/live/extension` — the Live extension: Live's right-click menus and the SDK operations
+- `src/ui`, `src/ui-kit` — the dialogs: Ask Ode, Lyrics, History and Settings
 
 ## License
 This project is licensed under the PolyForm Strict License 1.0.0.
