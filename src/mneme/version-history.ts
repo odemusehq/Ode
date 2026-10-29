@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
 import type { SetSnapshot } from "../shared/set-snapshot";
@@ -285,9 +285,7 @@ export class VersionHistory {
 
   private async write(entries: Entry[]): Promise<void> {
     await mkdir(this.dir, { recursive: true });
-    const temporary = `${this.file}.tmp`;
-    await writeFile(temporary, entries.map((entry) => `${entry.line}\n`).join(""), "utf8");
-    await rename(temporary, this.file);
+    await JsonFile.writeAtomically(this.file, entries.map((entry) => `${entry.line}\n`).join(""));
     this.cache = { stamp: await this.stamp(), entries };
   }
 

@@ -11,44 +11,53 @@ const DeviceDeletionSchema = z.object({ device: DeviceRefSchema });
 const TrackDeletionSchema = z.object({ track: TrackRefSchema });
 const GroupSchema = z.object({ calls: z.array(z.object({ op: z.string(), args: z.unknown() })) });
 
+/** One deletion inside a call: what it removes, found in the Set as it is when the call runs. */
+type Deletion = (snapshot: SetSnapshot) => boolean;
+
 /**
  * Finds the deletions a restore would leave out, so they wait for Apply in every mode: a device a restore can't add
  * back (a plug-in, a preset, a rack holding one) or a track holding one, or a group track. What is deleted is looked
- * up in the latest snapshot; when the snapshot lacks it, the deletion waits too.
+ * up in a fresh reading of the Set, since Ode's own earlier changes move what each index points at; when the Set
+ * lacks it, the deletion waits too.
  */
 export class DeletionChecker implements DeletionCheck {
-  constructor(private readonly reader: Pick<SetReader, "latest">) {}
+  constructor(private readonly reader: SetReader) {}
 
-  cantBeUndone(tool: string, input: unknown): boolean {
+  async cantBeUndone(tool: string, input: unknown): Promise<boolean> {
+    const deletions = DeletionChecker.deletions(tool, input);
+    if (deletions.length === 0) return false;
+    const snapshot = await this.reader.read();
+    return deletions.some((stays) => !stays(snapshot));
+  }
+
+  /** For each deletion in the call, a check that a restore brings back what it removes. */
+  private static deletions(tool: string, input: unknown): Deletion[] {
     switch (tool) {
       case "track_delete_device":
       case "chain_delete_device": {
         const parsed = DeviceDeletionSchema.safeParse(input);
-        return parsed.success && !this.deviceComesBack(parsed.data.device);
+        return parsed.success ? [(snapshot) => DeletionChecker.deviceComesBack(snapshot, parsed.data.device)] : [];
       }
       case "song_delete_track": {
         const parsed = TrackDeletionSchema.safeParse(input);
-        return parsed.success && !this.trackComesBack((snapshot) => new SetLookup(snapshot).track(parsed.data.track));
+        return parsed.success ? [(snapshot) => DeletionChecker.trackComesBack(new SetLookup(snapshot).track(parsed.data.track))] : [];
       }
       case "apply_as_one_undo_step": {
         const parsed = GroupSchema.safeParse(input);
-        return parsed.success && parsed.data.calls.some((call) => this.cantBeUndone(call.op, call.args));
+        return parsed.success ? parsed.data.calls.flatMap((call) => DeletionChecker.deletions(call.op, call.args)) : [];
       }
       default:
-        return false;
+        return [];
     }
   }
 
-  private deviceComesBack(ref: DeviceRef): boolean {
-    const snapshot = this.reader.latest;
-    const track = snapshot ? new SetLookup(snapshot).track(ref.track) : undefined;
+  private static deviceComesBack(snapshot: SetSnapshot, ref: DeviceRef): boolean {
+    const track = new SetLookup(snapshot).track(ref.track);
     const device = track ? SetLookup.deviceAt(track, ref.chain ?? [], ref.index) : undefined;
     return device !== undefined && RestorePlanner.canAddBack(device);
   }
 
-  private trackComesBack(find: (snapshot: SetSnapshot) => TrackSnapshot | undefined): boolean {
-    const snapshot = this.reader.latest;
-    const track = snapshot ? find(snapshot) : undefined;
+  private static trackComesBack(track: TrackSnapshot | undefined): boolean {
     return track !== undefined && RestorePlanner.canAddBackTrack(track);
   }
 }

@@ -30,6 +30,8 @@ export class Approvals {
   constructor(private readonly emit: (event: UiEvent) => void) {}
 
   request(tool: string, input: unknown, summary: string, signal: AbortSignal): Promise<Decision> {
+    // Stop pressed before the change came up: it is skipped, and its card stays away.
+    if (signal.aborted) return Promise.resolve(Decision.Deny);
     const id = randomUUID();
     return new Promise<Decision>((resolve) => {
       this.waiting.set(id, { tool, summary, input, resolve });

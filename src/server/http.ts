@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { basename, extname, join } from "node:path";
 import { serve } from "@hono/node-server";
@@ -133,12 +133,18 @@ export class OdeServer {
 
   /** Lets in requests that carry the token, in the address (a dialog's first request) or in the cookie it then gets. */
   private async authorize(c: Context, next: () => Promise<void>) {
-    if (c.req.query("token") === this.token) {
+    if (this.carriesToken(c.req.query("token"))) {
       setCookie(c, TOKEN_COOKIE, this.token, { httpOnly: true, sameSite: "Strict", path: "/" });
       return next();
     }
-    if (getCookie(c, TOKEN_COOKIE) === this.token) return next();
+    if (this.carriesToken(getCookie(c, TOKEN_COOKIE))) return next();
     return c.text("Open Ode from Live's right-click menu.", 403);
+  }
+
+  /** Compares in constant time, so the token's characters stay hidden from timing. */
+  private carriesToken(value: string | undefined): boolean {
+    if (value === undefined || value.length !== this.token.length) return false;
+    return timingSafeEqual(Buffer.from(value), Buffer.from(this.token));
   }
 
   /** The songs the musician works on with Ode, and moving between them. */

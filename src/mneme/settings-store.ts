@@ -18,7 +18,8 @@ export class SettingsStore {
     folder: string,
     private readonly catalog: ProviderCatalog,
   ) {
-    this.file = new JsonFile(join(folder, "settings.json"), ModelSettingsSchema, () => this.initial());
+    // The file holds the musician's keys, so only its owner reads it.
+    this.file = new JsonFile(join(folder, "settings.json"), ModelSettingsSchema, () => this.initial(), { mode: 0o600 });
   }
 
   read(): Promise<ModelSettings> {
@@ -30,16 +31,20 @@ export class SettingsStore {
   }
 
   async update(change: SettingsUpdate): Promise<SettingsView> {
+    // A saved key stays with the provider it belongs to: choosing another provider starts with that provider's key.
     const next = await this.file.update((current) => ({
       provider: change.provider,
       model: change.model,
-      key: change.key ?? current.key,
+      key: change.key ?? (change.provider === current.provider ? current.key : ""),
       metaKey: change.metaKey ?? current.metaKey,
       services: Object.fromEntries(
         OPTIONAL_ROLES.flatMap((role) => {
           const service = change.services[role];
           if (!service?.provider) return [];
-          const kept: ServiceSettings = { ...service, apiKey: service.apiKey ?? current.services[role]?.apiKey ?? "" };
+          const saved = current.services[role];
+          const sameService = saved?.provider === service.provider && saved.baseUrl === service.baseUrl;
+          const apiKey = service.apiKey ?? (sameService ? saved.apiKey : "");
+          const kept: ServiceSettings = { ...service, apiKey };
           return [[role, kept]];
         }),
       ),

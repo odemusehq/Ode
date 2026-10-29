@@ -136,6 +136,7 @@ export class OdeApp {
         prefs: this.prefs,
         requests,
         deletions: new DeletionChecker(this.reader),
+        snapshots: this.reader,
         emit,
       },
       new ConversationStore(join(this.paths.workspace, "conversations"), config.limits.historyExchanges),

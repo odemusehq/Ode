@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import type { ProxyOptions } from "vite";
+import type { Plugin, ProxyOptions } from "vite";
 import { DevConfig } from "./src/shared/dev-config.ts";
 
 const EVENT_STREAM = "text/event-stream";
@@ -30,10 +30,25 @@ function apiProxy(): ProxyOptions {
   };
 }
 
+/** The dev server forwards /api for its own pages alone, so a page from another site reaches Ode through it in vain. */
+function ownPagesOnly(): Plugin {
+  return {
+    name: "ode-own-pages-only",
+    configureServer(server) {
+      server.middlewares.use("/api", (request, response, next) => {
+        const site = request.headers["sec-fetch-site"];
+        if (site === undefined || site === "same-origin" || site === "none") return next();
+        response.statusCode = 403;
+        response.end("Ode's development server answers its own pages.");
+      });
+    },
+  };
+}
+
 export default defineConfig(({ command }) => ({
   root: fileURLToPath(new URL("./src/ui", import.meta.url)),
   base: "/",
-  plugins: [react()],
+  plugins: [react(), ownPagesOnly()],
   build: {
     outDir: "../../dist/ui",
     emptyOutDir: true,

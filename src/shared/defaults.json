@@ -21,9 +21,25 @@
     "coverChoices": 4
   },
   "dialogs": {
-    "ask": { "width": 760, "height": 680 },
-    "lyrics": { "width": 760, "height": 680 },
-    "history": { "width": 760, "height": 680 },
-    "settings": { "width": 600, "height": 680 }
+    "ask": {
+      "width": 760,
+      "height": 680
+    },
+    "lyrics": {
+      "width": 760,
+      "height": 680
+    },
+    "history": {
+      "width": 760,
+      "height": 680
+    },
+    "settings": {
+      "width": 600,
+      "height": 680
+    }
+  },
+  "storage": {
+    "renameRetries": 5,
+    "renameRetryMs": 40
   }
 }

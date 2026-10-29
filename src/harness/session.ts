@@ -3,7 +3,7 @@ import type { ConversationLog } from "../mneme/conversations";
 import type { PreferencesStore } from "../mneme/preferences";
 import type { UiEvent } from "../shared/events";
 import { Mode } from "../shared/personalisation";
-import type { AnyTool } from "../tools/define";
+import type { AnyTool, SetReader } from "../tools/define";
 import type { OdeAgents } from "../agents/agents";
 import { Decision, type Approvals } from "./approvals";
 import { LoopEnd, type AgentLoop, type LoopEvents, type ToolGate } from "./loop";
@@ -37,7 +37,7 @@ export interface OpenQuestions {
 /** Deletions a restore couldn't undo; they wait for Apply in every mode. */
 export interface DeletionCheck {
   /** True when the call deletes a device or a track that a restore can't add back, or when what it deletes can't be found. */
-  cantBeUndone(tool: string, input: unknown): boolean;
+  cantBeUndone(tool: string, input: unknown): Promise<boolean>;
 }
 
 export interface SessionDeps {
@@ -49,6 +49,8 @@ export interface SessionDeps {
   prefs: PreferencesStore;
   requests: RequestLifecycle;
   deletions: DeletionCheck;
+  /** Read again before a change waits for Apply, so its card names what the change touches now. */
+  snapshots: SetReader;
   emit: (event: UiEvent) => void;
 }
 
@@ -220,6 +222,7 @@ export class OdeSession {
     check: async (tool, input, signal) => {
       if (this.running?.reply && tool.changes !== "none") return "This request only answers Why?: explain, and leave the Set as it is.";
       if (!(await this.needsApproval(tool, input))) return null;
+      await this.deps.snapshots.read().catch(() => undefined);
       const decision = await this.deps.approvals.request(tool.name, input, this.deps.labels.for(tool.name, input), signal);
       return decision === Decision.Allow ? null : "The musician skipped this change.";
     },
@@ -247,7 +250,7 @@ export class OdeSession {
   private async needsApproval(tool: AnyTool, input: Record<string, unknown>): Promise<boolean> {
     if (CONSENT_TOOLS.has(tool.name)) return true;
     if (tool.changes === "none") return false;
-    if (this.deps.deletions.cantBeUndone(tool.name, input)) return true;
+    if (await this.deps.deletions.cantBeUndone(tool.name, input)) return true;
     return (await this.deps.prefs.mode()) === Mode.Manual;
   }
 

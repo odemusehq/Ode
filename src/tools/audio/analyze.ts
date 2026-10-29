@@ -23,7 +23,7 @@ export const audioAnalyze = defineTool({
   },
   changes: "none",
   async run(input, ctx) {
-    let path = input.path;
+    let path = input.path ? await ctx.temp.inside(input.path) : undefined;
     let source = input.path ?? "";
     if (!path) {
       if (!input.track || input.start === undefined || input.end === undefined) {

@@ -15,7 +15,7 @@ const audioSource = {
 };
 
 async function resolveAudio(input: { path?: string; track?: unknown; start?: number; end?: number }, ctx: ToolContext): Promise<string> {
-  if (input.path) return input.path;
+  if (input.path) return ctx.temp.inside(input.path);
   if (input.track === undefined || input.start === undefined || input.end === undefined) {
     throw new Error("Give either path, or track with start and end.");
   }

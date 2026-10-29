@@ -153,7 +153,7 @@ class ScenarioRun {
     const deletions = new DeletionChecker(reader);
     const conversations = new ConversationStore(join(paths.workspace, "conversations"), config.limits.historyExchanges);
     const session = new OdeSession(
-      { loop, agents, labels, approvals, questions, prefs, requests, deletions, emit },
+      { loop, agents, labels, approvals, questions, prefs, requests, deletions, snapshots: reader, emit },
       conversations.log(this.scenario.name),
     );
     const before = await reader.read();

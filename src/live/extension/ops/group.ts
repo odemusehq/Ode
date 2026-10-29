@@ -11,6 +11,9 @@ import { indexOfObject, type Live, type Version } from "../sdk";
 import { NewName, TaggedName } from "../tags";
 import type { OperationTable, Run } from "./operation";
 
+/** The audio formats Live opens, by file extension. */
+const AUDIO_FILE = /\.(wav|wave|aif|aiff|aifc|flac|mp3|ogg|m4a)$/i;
+
 /** What every group of operations works with. */
 export interface LiveServices {
   readonly live: Live;
@@ -110,7 +113,9 @@ export abstract class OperationGroup<K extends ExtensionOp> {
     if (!(end > start)) throw new RangeError("end must be after start");
   }
 
+  /** Live takes audio files here, so a path to anything else (a document, a key file) stays out of the Set. */
   protected static checkFile(filePath: string): void {
     if (typeof filePath !== "string" || filePath.trim() === "") throw new TypeError("filePath must be the full path of a file");
+    if (!AUDIO_FILE.test(filePath)) throw new TypeError("filePath must be an audio file: WAV, AIFF, FLAC, MP3, Ogg or M4A");
   }
 }
