@@ -135,7 +135,8 @@ export class Mneme {
     await this.songs.update((songs) => [...songs.filter((song) => song.songId !== entry.songId), { ...entry, updated }]);
   }
 
-  async pastLyrics(excludeSongId?: string | null): Promise<string[]> {
+  /** The lyrics of every song but the one given, so a song is compared with the artist's other songs. */
+  async pastLyrics(excludeSongId: string): Promise<string[]> {
     const songs = await this.songs.read();
     return songs.filter((song) => song.songId !== excludeSongId).flatMap((song) => song.lyrics);
   }

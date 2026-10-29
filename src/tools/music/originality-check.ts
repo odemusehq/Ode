@@ -79,7 +79,7 @@ export const originalityCheckTool = defineTool({
   },
   changes: "none",
   async run({ text }, ctx) {
-    const report = originalityCheck(text, await ctx.mneme.pastLyrics());
+    const report = originalityCheck(text, await ctx.mneme.pastLyrics(ctx.song.songId));
     const quotationCheck = await checkQuotes(ctx, text);
     const quoteRisk = quotationCheck.possibleQuotes.length > 0 ? QuoteRisk.Possible : report.quoteRisk;
     return { ...report, quoteRisk, quotationCheck, warning: WARNING };
