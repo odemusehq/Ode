@@ -82,7 +82,7 @@ class EnvReader {
 
   path(key: string): string {
     const value = this.required(key);
-    return value.startsWith("~/") ? join(homedir(), value.slice(2)) : value;
+    return /^~[\\/]/.test(value) ? join(homedir(), value.slice(2)) : value;
   }
 
   assertComplete(): void {
@@ -127,12 +127,14 @@ export class OdeConfig {
     ) as Record<Role, RoleConfig>;
     // The agent runtime talks to one endpoint, so subagents share the main agent's endpoint and key.
     roles.subagent = { ...roles.main, model: reader.required("ODE_SUBAGENT_MODEL") };
+    // Live's default User Library folder depends on the system, so .env holds one for each.
+    const userLibrary = process.platform === "win32" ? "ODE_ABLETON_USER_LIBRARY_WINDOWS" : "ODE_ABLETON_USER_LIBRARY_MACOS";
     const config = new OdeConfig(
       reader.required("ODE_HOST"),
       reader.number("ODE_PORT"),
       reader.number("ODE_BRIDGE_PORT"),
       reader.required("ODE_LIVE_APP"),
-      reader.path("ODE_ABLETON_USER_LIBRARY"),
+      reader.path(userLibrary),
       reader.path("ODE_USER_DIR"),
       roles,
       {

@@ -1,4 +1,4 @@
-import { constants } from "node:fs";
+import { constants, existsSync } from "node:fs";
 import { copyFile } from "node:fs/promises";
 import { join } from "node:path";
 import { BridgeInstaller } from "../live/bridge/install";
@@ -16,6 +16,11 @@ class ReleaseSetup {
   async run(): Promise<void> {
     const created = await this.createSettings();
     const config = OdeConfig.load();
+    if (!existsSync(config.abletonUserLibrary)) {
+      throw new Error(
+        `Ode looks for your Ableton User Library at ${config.abletonUserLibrary}. Open Live once so it makes that folder, or set your User Library's folder in .env, then run npm run setup again.`,
+      );
+    }
     const device = await new DeviceInstaller(config).install();
     const bridge = await new BridgeInstaller(config).install();
     console.log(
