@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, rm, stat } from "node:fs/promises";
+import { mkdir, open, readdir, readFile, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
 import type { SetSnapshot } from "../shared/set-snapshot";
@@ -115,6 +115,30 @@ export class VersionHistory {
     return this.enqueue(async () => (await this.entries()).map((entry) => structuredClone(entry.version)));
   }
 
+  /** The newest `count` versions, oldest first. */
+  tail(count: number): Promise<Version[]> {
+    return this.enqueue(async () => (await this.entries()).slice(-count).map((entry) => structuredClone(entry.version)));
+  }
+
+  /** The versions `author` made after `time`, oldest first. */
+  since(time: string, author: VersionAuthor): Promise<Version[]> {
+    return this.enqueue(async () =>
+      (await this.entries()).filter((entry) => entry.version.author === author && entry.version.time > time).map((entry) => structuredClone(entry.version)),
+    );
+  }
+
+  /** The newest version `author` made, or null before their first. */
+  latestBy(author: VersionAuthor): Promise<Version | null> {
+    return this.enqueue(async () => {
+      const entries = await this.entries();
+      for (let index = entries.length - 1; index >= 0; index--) {
+        const version = entries[index]?.version;
+        if (version?.author === author) return structuredClone(version);
+      }
+      return null;
+    });
+  }
+
   /** Every version as History lists it, newest first. */
   items(): Promise<VersionListItem[]> {
     return this.enqueue(async () => (await this.entries()).map((entry) => VersionHistory.item(entry.version)).reverse());
@@ -212,7 +236,7 @@ export class VersionHistory {
     if (request !== undefined) version.request = request;
     const keepsSnapshot = !previous || (await this.snapshotDue(entries));
     if (keepsSnapshot) await this.snapshotFile(version.id).write(snapshot);
-    await this.write([...entries, { version, line: JSON.stringify(version) }]);
+    await this.append(entries, { version, line: JSON.stringify(version) });
     // The same Set snapshotAt would rebuild for this version.
     this.newest = { id: version.id, snapshot: keepsSnapshot || !previous ? structuredClone(snapshot) : SetDiff.apply(previous, changes) };
     return structuredClone(version);
@@ -311,6 +335,19 @@ export class VersionHistory {
       if (JsonFile.isMissing(error)) return "";
       throw error;
     }
+  }
+
+  /** Adds one version at the end of versions.jsonl, synced to disk; a line a crash cut short is set aside on the next read. */
+  private async append(entries: readonly Entry[], entry: Entry): Promise<void> {
+    await mkdir(this.dir, { recursive: true });
+    const file = await open(this.file, "a");
+    try {
+      await file.appendFile(`${entry.line}\n`, "utf8");
+      await file.sync();
+    } finally {
+      await file.close();
+    }
+    this.cache = { stamp: await this.stamp(), entries: [...entries, entry] };
   }
 
   private async write(entries: Entry[]): Promise<void> {

@@ -113,7 +113,7 @@ export class VersionActions {
   async undo(versionId: string): Promise<RestoreResult> {
     const result = await this.session.exclusive(async () => {
       const recorded = await this.deps.recorder.handEdits();
-      const { latest, previous } = VersionActions.changeToActOn(await this.history.list(), versionId, OdeAction.Undo);
+      const { latest, previous } = await this.changeToActOn(versionId, OdeAction.Undo);
       this.deps.emit({ type: "progress", text: `Undoing: ${latest.summary}` });
       const outcome = await this.runner.putBack(recorded.snapshot, await this.history.snapshotAt(previous.id));
       if (!outcome.complete) return this.stoppedPartWay(outcome);
@@ -134,7 +134,7 @@ export class VersionActions {
   async again(versionId: string): Promise<void> {
     await this.session.exclusive(async (stopped) => {
       const recorded = await this.deps.recorder.handEdits();
-      const { latest, previous } = VersionActions.changeToActOn(await this.history.list(), versionId, OdeAction.Again);
+      const { latest, previous } = await this.changeToActOn(versionId, OdeAction.Again);
       if (!latest.request) throw new RefusedError("Ode's last change doesn't say what was asked, so it can't be tried again.");
       this.deps.emit({ type: "progress", text: "Going back to before the last take" });
       const outcome = await this.runner.putBack(recorded.snapshot, await this.history.snapshotAt(previous.id));
@@ -156,7 +156,7 @@ export class VersionActions {
    * "answer" event). RefusedError when the change isn't the newest version any more.
    */
   async why(versionId: string): Promise<void> {
-    VersionActions.changeToActOn(await this.history.list(), versionId, OdeAction.Why);
+    await this.changeToActOn(versionId, OdeAction.Why);
     void this.session.send({ text: WHY_REQUEST, reply: { versionId } });
   }
 
@@ -203,14 +203,15 @@ export class VersionActions {
    * The change an action applies to: the newest version, made by Ode and named by versionId, with the version before it. Otherwise RefusedError saying why, from the history: the musician changed the Set
    * since a change by Ode, Ode changed it again since, or there is no change by Ode.
    */
-  private static changeToActOn(versions: Version[], versionId: string, action: OdeAction): { latest: Version; previous: Version } {
-    const latest = versions.at(-1);
-    const previous = versions.at(-2);
+  private async changeToActOn(versionId: string, action: OdeAction): Promise<{ latest: Version; previous: Version }> {
+    const recent = await this.history.tail(2);
+    const latest = recent.at(-1);
+    const previous = recent.length === 2 ? recent[0] : undefined;
     if (latest?.author === VersionAuthor.Ode && previous) {
       if (latest.id === versionId) return { latest, previous };
       throw new RefusedError(NEWER_CHANGE);
     }
-    const editedSince = latest?.author === VersionAuthor.Musician && versions.some((version) => version.author === VersionAuthor.Ode);
+    const editedSince = latest?.author === VersionAuthor.Musician && (await this.history.latestBy(VersionAuthor.Ode)) !== null;
     throw new RefusedError(editedSince ? REFUSALS[action].editedSince : REFUSALS[action].nothing);
   }
 

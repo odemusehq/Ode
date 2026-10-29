@@ -105,8 +105,7 @@ export class RequestContext implements RequestLifecycle {
 
   /** When Ode last changed the song, as its history keeps it: the first request after Live starts again reads from there. */
   private async lastOdeVersionTime(): Promise<string | null> {
-    const versions = await this.deps.versions.history.list();
-    return versions.filter((version) => version.author === VersionAuthor.Ode).at(-1)?.time ?? null;
+    return (await this.deps.versions.history.latestBy(VersionAuthor.Ode))?.time ?? null;
   }
 
   /** Why?: the change asked about, and how to answer. Live stays unread. */
@@ -135,9 +134,7 @@ export class RequestContext implements RequestLifecycle {
         ? recorded.version && recorded.changes.length > 0
           ? [recorded.version]
           : []
-        : (await this.deps.versions.history.list()).filter(
-            (version) => version.author === VersionAuthor.Musician && version.changes.length > 0 && version.time > since,
-          );
+        : (await this.deps.versions.history.since(since, VersionAuthor.Musician)).filter((version) => version.changes.length > 0);
     if (versions.length === 0) return "Hand edits since the last request: none.";
     const text = [
       "Hand edits since the last request (saved as versions):",
@@ -152,7 +149,7 @@ export class RequestContext implements RequestLifecycle {
 
   /** Again: the Set is already back to before Ode's last take. */
   private async againPart(): Promise<string> {
-    const last = (await this.deps.versions.history.list()).filter((version) => version.author === VersionAuthor.Ode).at(-1);
+    const last = await this.deps.versions.history.latestBy(VersionAuthor.Ode);
     const previous = last ? ` ("${last.summary}")` : "";
     return `Again: the musician wants another take of this request. The Set is back to how it was before your last take${previous}. Make a clearly different take, in place.`;
   }
