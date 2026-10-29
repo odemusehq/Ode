@@ -27,6 +27,11 @@ const WAV_PCM = 1;
 const WAV_FLOAT = 3;
 const WAV_EXTENSIBLE = 0xfffe;
 
+/** Bit depths Ode decodes, by sample kind. */
+const SIGNED_BITS: readonly number[] = [8, 16, 24, 32];
+const UNSIGNED_BITS: readonly number[] = [8];
+const FLOAT_BITS: readonly number[] = [32, 64];
+
 /**
  * Reads the audio files Ode works with: WAV (PCM, float, extensible) and AIFF / AIFF-C, which is what Live
  * renders and records. Other formats should be exported as WAV first.
@@ -40,7 +45,23 @@ export class AudioFileDecoder {
     if (form === "RIFF" && kind === "WAVE") block = this.wav(view, name);
     else if (form === "FORM" && (kind === "AIFF" || kind === "AIFC")) block = this.aiff(view, kind === "AIFC", name);
     else throw new Error(`${name}: Ode reads WAV and AIFF files; export the audio as WAV`);
-    return { sampleRate: block.sampleRate, channels: AudioFileDecoder.samples(view, block) };
+    const readable = AudioFileDecoder.readable(view, block, name);
+    return { sampleRate: readable.sampleRate, channels: AudioFileDecoder.samples(view, readable) };
+  }
+
+  /**
+   * The block as Ode can read it: one channel or more, a bit depth Ode decodes, a positive sample rate, and at most
+   * the frames the file's bytes hold, so a damaged header gives an error or a shorter file.
+   */
+  private static readable(view: DataView, block: PcmBlock, name: string): PcmBlock {
+    const { kind, bits } = block.encoding;
+    const depths = kind === SampleKind.Float ? FLOAT_BITS : kind === SampleKind.UnsignedInt ? UNSIGNED_BITS : SIGNED_BITS;
+    if (!Number.isInteger(block.channels) || block.channels < 1) throw new Error(`${name}: the header names ${block.channels} channels; export the audio as WAV again`);
+    if (!depths.includes(bits)) throw new Error(`${name}: ${bits}-bit audio is outside what Ode reads; export as 16- or 24-bit WAV`);
+    if (!Number.isFinite(block.sampleRate) || block.sampleRate <= 0) throw new Error(`${name}: the header names a sample rate of ${block.sampleRate}; export the audio as WAV again`);
+    const held = Math.floor(Math.max(0, view.byteLength - block.start) / (block.channels * (bits / 8)));
+    const frames = Number.isFinite(block.frames) ? Math.max(0, Math.min(block.frames, held)) : held;
+    return { ...block, frames };
   }
 
   private wav(view: DataView, name: string): PcmBlock {
@@ -122,7 +143,11 @@ export class AudioFileDecoder {
   }
 
   private static sample(view: DataView, offset: number, { kind, bits, littleEndian }: SampleEncoding): number {
-    if (kind === SampleKind.Float) return bits === 64 ? view.getFloat64(offset, littleEndian) : view.getFloat32(offset, littleEndian);
+    if (kind === SampleKind.Float) {
+      const value = bits === 64 ? view.getFloat64(offset, littleEndian) : view.getFloat32(offset, littleEndian);
+      // A damaged float sample (NaN or infinity) reads as silence, so one bad sample leaves the measurements whole.
+      return Number.isFinite(value) ? value : 0;
+    }
     if (kind === SampleKind.UnsignedInt) return (view.getUint8(offset) - 128) / 128;
     switch (bits) {
       case 16:
