@@ -21,7 +21,7 @@ const GENRE_NAMES: readonly [RegExp, Genre][] = [
   [/hip.?hop|rap|boom.?bap/, Genre.HipHop],
   [/drum.?(and|&|n).?bass|dnb|d&b|jungle/, Genre.DrumAndBass],
   [/techno/, Genre.Techno],
-  [/house|disco|edm|dance|garage/, Genre.House],
+  [/house|disco|edm|dance(?!hall)|garage(?!\s*rock)/, Genre.House],
   [/r&b|rnb|r ?and ?b|soul|neo/, Genre.RnB],
   [/funk/, Genre.Funk],
   [/reggaeton|dembow|latin/, Genre.Reggaeton],

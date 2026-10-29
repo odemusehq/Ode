@@ -75,7 +75,7 @@ const STYLE_NAMES: readonly [RegExp, HarmonyStyle][] = [
   [/rock|metal|punk|grunge/, HarmonyStyle.Rock],
   [/folk|country|bluegrass|americana|singer/, HarmonyStyle.Folk],
   [/ballad/, HarmonyStyle.Ballad],
-  [/house|techno|edm|dance|trance|drum|dnb|garage|dubstep/, HarmonyStyle.Dance],
+  [/house|techno|edm|dance(?!hall)|trance|drum|dnb|garage|dubstep/, HarmonyStyle.Dance],
   [/funk|disco/, HarmonyStyle.Funk],
   [/reggaeton|latin|afro|dancehall|reggae|salsa/, HarmonyStyle.Latin],
   [/pop/, HarmonyStyle.Pop],
