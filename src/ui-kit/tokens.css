@@ -113,13 +113,11 @@
 
   /*
    * Logo lockup, by the brand's logo rules: the whole note is as tall as the capitals with its bottom on the
-   * baseline, and the gap from its last band to the name is 0.15 cap heights. In the symbol's 96-unit square
-   * the note is 47.39 units tall, starts at x 8, its last band ends at x 87.70 and its bottom is at y 71.70.
+   * baseline, and the gap from its last band to the name is 0.15 cap heights. The symbol images are trimmed to
+   * the note, which is 851 by 506 pixels in the brand kit's export.
    */
-  --lockup-symbol-size: calc(var(--cap-height-heading) * 96 / 47.39);
-  --lockup-symbol-inset-left: calc(var(--lockup-symbol-size) * 8 / 96);
-  --lockup-symbol-inset-right: calc(var(--lockup-symbol-size) * 8.3 / 96);
-  --lockup-symbol-drop: calc(var(--lockup-symbol-size) * 24.3 / 96);
+  --lockup-symbol-height: var(--cap-height-heading);
+  --lockup-symbol-width: calc(var(--cap-height-heading) * 851 / 506);
   --lockup-gap: calc(var(--cap-height-heading) * 0.15);
   --scrollbar-size: 8px;
   --opacity-disabled: 0.45;

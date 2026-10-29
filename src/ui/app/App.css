@@ -139,12 +139,15 @@
   white-space: nowrap;
 }
 
+/* A background image at display size, as the website shows the logo; an empty inline block sits on the baseline. */
 .logo-lockup__symbol {
-  width: var(--lockup-symbol-size);
-  height: var(--lockup-symbol-size);
-  margin-left: calc(-1 * var(--lockup-symbol-inset-left));
-  margin-right: calc(var(--lockup-gap) - var(--lockup-symbol-inset-right));
-  vertical-align: calc(-1 * var(--lockup-symbol-drop));
+  display: inline-block;
+  width: var(--lockup-symbol-width);
+  height: var(--lockup-symbol-height);
+  margin-right: var(--lockup-gap);
+  background: url("/odemuse-symbol-2x.webp") center / contain no-repeat;
+  background-image: image-set(url("/odemuse-symbol-1x.webp") 1x, url("/odemuse-symbol-2x.webp") 2x);
+  user-select: none;
 }
 
 .status-bar {
