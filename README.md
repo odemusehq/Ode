@@ -3,7 +3,7 @@
 Ode is an AI co-writer and co-producer inside Ableton Live. It helps with every part of making a song — idea, lyrics, topline, chords, drums, bass, sounds, arrangement, vocals, mixing, mastering and release — in any order, while the musician stays the author. Select something in Live, tap a suggestion or type a few words: Ode changes the Set in place, checks the craft details with code, plays what it changed, and keeps every version of the Set so you can go back.
 
 ## Requirements
-- macOS, Node.js 24.16 or later
+- macOS or Windows, Node.js 24.16 or later
 - Ableton Live 12 Suite; Live extensions currently need the Live beta with Developer Mode turned on (Settings → Extensions)
 - The Ableton Extensions SDK: copy its `ableton-extensions-sdk` and `ableton-extensions-cli` packages (.tgz) into `vendor/`, a git-ignored folder that keeps the SDK on your machine
 - Model provider keys, described in `.env.example`
@@ -18,7 +18,7 @@ npm run bridge:install  # Python bridge for loading plug-ins, presets and sample
 
 In Live:
 1. Settings → Link, Tempo & MIDI → choose **Ode** as a Control Surface.
-2. Put the **Ode** device (User Library → Presets → Audio Effects → Max Audio Effect) on the Master track.
+2. Put the **Ode** device (User Library → Presets → Audio Effects → Max Audio Effect) on the Main track.
 
 Run:
 ```bash
