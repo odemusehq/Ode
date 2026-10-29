@@ -5,7 +5,7 @@ import { contractionSounds, droppedGBase, elisionBases, POETIC_FORMS, splitContr
 import { parseIpa } from "./ipa";
 import { LetterToSound } from "./letter-to-sound";
 import { applySuffix, stemCandidates } from "./morphology";
-import { numberWords } from "./numbers";
+import { NumberReading } from "./numbers";
 import { isVowel } from "./phoneme";
 import {
   joinPronunciations,
@@ -162,11 +162,14 @@ export abstract class Lexicon {
     );
   }
 
+  /** Each way of saying the number, the likeliest first; certain only when there is one way and every word is known. */
   private number(word: string): Pronunciation[] | undefined {
-    const words = numberWords(word);
-    if (!words) return undefined;
-    const parts = words.map((spoken) => this.resolve(spoken)[0]).filter((part): part is Pronunciation => part !== undefined);
-    return [joinPronunciations(parts, parts.every((part) => part.certain))];
+    const readings = NumberReading.readings(word);
+    if (!readings) return undefined;
+    return readings.map((words) => {
+      const parts = words.map((spoken) => this.resolve(spoken)[0]).filter((part): part is Pronunciation => part !== undefined);
+      return joinPronunciations(parts, readings.length === 1 && parts.every((part) => part.certain));
+    });
   }
 
   private otherSpelling(word: string): Pronunciation[] | undefined {

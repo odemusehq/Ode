@@ -3,6 +3,7 @@ import britishPatterns from "hyphen/patterns/en-gb.js";
 import americanPatterns from "hyphen/patterns/en-us.js";
 import type { Accent } from "../../shared/personalisation";
 import { vowelGroups } from "./grapheme-aligner";
+import { NumberReading } from "./numbers";
 
 /** Hyphenators built from the hyphen package's TeX patterns, per spelling. */
 const HYPHENATION: Readonly<Record<Accent, Hyphenate>> = { us: createHyphenator(americanPatterns), uk: createHyphenator(britishPatterns) };
@@ -39,7 +40,9 @@ export class SyllableSpeller {
     const key = `${word}|${count}`;
     const cached = this.cache.get(key);
     if (cached) return [...cached];
-    const pieces = this.hyphenate(word);
+    // Digits are spelled from the words they are said as ("1975" → nine-teen-se-ven-ty-five).
+    const said = NumberReading.readings(word)?.[0] ?? [word];
+    const pieces = said.flatMap((part) => this.hyphenate(part));
     while (pieces.length > Math.max(count, 1)) this.mergeBest(pieces);
     while (pieces.length < count) {
       if (!this.splitBest(pieces)) break;
