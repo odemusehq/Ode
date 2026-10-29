@@ -26,6 +26,7 @@ const MINOR_THIRD = 3;
 const MAJOR_THIRD = 4;
 const PERFECT_FOURTH = 5;
 const PERFECT_FIFTH = 7;
+const DIMINISHED_SEVENTH = 9;
 const MINOR_SEVENTH = 10;
 const MAJOR_SEVENTH = 11;
 
@@ -37,6 +38,10 @@ const SYMBOL_REWRITES: readonly [RegExp, string][] = [
   [/Δ/g, "maj7"],
   [/−/g, "m"],
   [/min(?!or)/g, "m"],
+  // Half-diminished (ø, ø7) and diminished (°, °7) signs, and a minus straight after the root ("C-7").
+  [/ø7?/g, "m7b5"],
+  [/°/g, "dim"],
+  [/^([A-G][#b]?)-/, "$1m"],
 ];
 const ROOT_AND_REST = /^([A-G][#b]?)([^/]*)(?:\/([A-G][#b]?))?$/;
 
@@ -157,9 +162,11 @@ export class ChordSymbol {
     if (rest.includes("sus2")) tones.push(tone(MAJOR_SECOND, ChordTone.Suspension));
     else if (rest.includes("sus")) tones.push(tone(PERFECT_FOURTH, ChordTone.Suspension));
     else tones.push(tone(minor || rest.includes("dim") ? MINOR_THIRD : MAJOR_THIRD, ChordTone.Third));
-    const fifth = rest.includes("dim") ? PERFECT_FIFTH - 1 : rest.includes("aug") || rest.includes("+") ? PERFECT_FIFTH + 1 : PERFECT_FIFTH;
+    const flatFifth = rest.includes("dim") || rest.includes("b5");
+    const fifth = flatFifth ? PERFECT_FIFTH - 1 : rest.includes("aug") || rest.includes("+") ? PERFECT_FIFTH + 1 : PERFECT_FIFTH;
     tones.push(tone(fifth, ChordTone.Fifth));
     if (rest.includes("maj7")) tones.push(tone(MAJOR_SEVENTH, ChordTone.Seventh));
+    else if (rest.includes("dim7")) tones.push(tone(DIMINISHED_SEVENTH, ChordTone.Seventh));
     else if (rest.includes("7")) tones.push(tone(MINOR_SEVENTH, ChordTone.Seventh));
     const bass = bassName ? Note.chroma(bassName) : root;
     return new ChordSymbol(symbol, root, bass, tones);
