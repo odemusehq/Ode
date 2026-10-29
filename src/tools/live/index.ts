@@ -29,7 +29,7 @@ const applyAsOneUndoStep = defineTool({
   name: "apply_as_one_undo_step",
   changes: "set",
   description:
-    "Run several Live operations as one undo step, so the musician can undo the whole change at once (for example: write notes into three clips, set four mixer levels, rename the locators). Each call is { op, args } where op is one of the Live tool names and args are that tool's inputs. Every reference is looked up before anything changes, so a call can't use something created by an earlier call in the same group: create new tracks or clips first, then group the edits. Results come back in order.",
+    "Run several Live operations as one undo step, so the musician can undo the whole change at once (for example: write notes into three clips, set four mixer levels, rename the locators). Each call is { op, args } where op is one of the Live tool names and args are that tool's inputs. Every reference is looked up before anything changes, so each call refers to what exists before the group runs: create new tracks or clips first, then group the edits. A group that creates objects takes two undo entries in Live, one for the new objects and one for their names and notes. Results come back in order.",
   input: {
     calls: z
       .array(z.object({ op: z.enum(GROUPABLE_OPS), args: z.record(z.string(), z.unknown()) }))
@@ -44,10 +44,12 @@ const applyAsOneUndoStep = defineTool({
       })
       .join("; "),
   run: async ({ calls }, ctx) => {
-    const checked = calls.map((call) => {
+    const checked = calls.map((call, index) => {
       const definition = byName.get(call.op);
-      if (!definition) throw new Error(`${call.op} can't be grouped`);
-      return { op: call.op, args: z.object(definition.input).parse(call.args) };
+      if (!definition) throw new Error(`call ${index + 1}: ${call.op} runs on its own, outside a group`);
+      const args = z.object(definition.input).safeParse(call.args);
+      if (!args.success) throw new Error(`call ${index + 1} (${call.op}): ${z.prettifyError(args.error)}`);
+      return { op: call.op, args: args.data };
     });
     return ctx.live.extension.call("apply_as_one_undo_step", { calls: checked });
   },
