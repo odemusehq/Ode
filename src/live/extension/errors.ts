@@ -1,4 +1,4 @@
-/** A reference that points at nothing in the Set; the message names the reference. */
+/** A reference whose target is missing from the Set; the message names the reference. */
 export class NotFoundError extends Error {
   constructor(what: string) {
     super(`not found: ${what}`);
@@ -13,21 +13,21 @@ export class LiveError extends Error {
     this.name = "LiveError";
   }
 
-  /** Waits for `work`; a failure becomes "Live could not <action>". */
+  /** Waits for `work`; a failure becomes "Live failed to <action>". */
   static async guard<T>(work: Promise<T>, action: string): Promise<T> {
     try {
       return await work;
     } catch (error) {
       const reason = reasonOf(error);
-      throw new LiveError(reason ? `Live could not ${action}: ${reason}` : `Live could not ${action}`);
+      throw new LiveError(reason ? `Live failed to ${action}: ${reason}` : `Live failed to ${action}`);
     }
   }
 }
 
-/** Something Live refused to read; the message names it, as in 'couldn't read track 3 "Bass": <reason>'. */
+/** Something Live refused to read; the message names it, as in 'reading track 3 "Bass" failed: <reason>'. */
 export class UnreadableError extends Error {
   constructor(what: string, cause: unknown) {
-    super(`couldn't read ${what}: ${describeError(cause)}`, { cause });
+    super(`reading ${what} failed: ${describeError(cause)}`, { cause });
     this.name = "UnreadableError";
   }
 

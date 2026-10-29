@@ -79,7 +79,7 @@ export class SongOperations extends OperationGroup<SongOp> {
 
   private deleteTrack({ track }: OpArgs<"song_delete_track">): OpRun<"song_delete_track"> {
     const target = this.refs.track(track);
-    if (this.set.tracks().position(target).kind === "main") throw new Error("the main track can't be deleted");
+    if (this.set.tracks().position(target).kind === "main") throw new Error("the main track stays in every Set");
     const song = this.set.song;
     return async () => {
       await LiveError.guard(song.deleteTrack(target), "delete the track");

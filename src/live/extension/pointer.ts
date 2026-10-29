@@ -91,7 +91,7 @@ export class PointerBuilder {
     if (object instanceof Scene) return this.scene(object);
     if (object instanceof Sample) return this.sample(object, tracks, labels);
     if (object instanceof Device) return this.device(object, tracks, labels);
-    throw new Error("Ode can't point at this kind of object");
+    throw new Error("Ode points only at tracks, clips, clip slots, scenes, devices and samples");
   }
 
   /** 'MIDI clip "Verse melody" on track 3 "Keys", beats 32–64'. */
@@ -120,7 +120,7 @@ export class PointerBuilder {
 
   private sample(sample: Sample<Version>, tracks: TrackDirectory, labels: Labels): PointerParts {
     const simpler = sample.parent;
-    if (!(simpler instanceof Simpler)) throw new Error("Ode could not tell which Simpler holds this sample");
+    if (!(simpler instanceof Simpler)) throw new Error("Ode is unsure which Simpler holds this sample");
     const location = this.locations.device(simpler, tracks);
     return {
       description: `sample "${basename(sample.filePath)}" in ${PointerBuilder.deviceWords(simpler, location, labels)}`,

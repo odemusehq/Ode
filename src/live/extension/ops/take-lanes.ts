@@ -41,7 +41,7 @@ export class TakeLaneOperations extends OperationGroup<TakeLaneOp> {
     followUps: FollowUps,
   ): OpRun<"take_lane_create_midi_clip"> {
     const found = this.refs.takeLane(lane);
-    if (!(found.track instanceof MidiTrack)) throw new Error(`${takeLaneText(lane)} is not on a MIDI track`);
+    if (!(found.track instanceof MidiTrack)) throw new Error(`a MIDI clip needs a take lane on a MIDI track; ${takeLaneText(lane)} is on a different kind of track`);
     OperationGroup.checkStart(start);
     OperationGroup.checkLength(length);
     const setUp = this.midiClipSetup(name, tag, notes);
@@ -56,7 +56,7 @@ export class TakeLaneOperations extends OperationGroup<TakeLaneOp> {
     followUps: FollowUps,
   ): OpRun<"take_lane_create_audio_clip"> {
     const found = this.refs.takeLane(lane);
-    if (!(found.track instanceof AudioTrack)) throw new Error(`${takeLaneText(lane)} is not on an audio track`);
+    if (!(found.track instanceof AudioTrack)) throw new Error(`an audio clip needs a take lane on an audio track; ${takeLaneText(lane)} is on a different kind of track`);
     OperationGroup.checkFile(filePath);
     OperationGroup.checkStart(start);
     if (length !== undefined) OperationGroup.checkLength(length);

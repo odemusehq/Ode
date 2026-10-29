@@ -36,9 +36,9 @@ interface TrackContext {
 /**
  * The whole Set in one pass: the song, and every track with its mixer, its devices through racks and
  * its clips with their notes or audio. Every parameter value is asked for before any answer is awaited.
- * Nothing is left out, because a snapshot missing an object would be saved in the history as that object
+ * Every object is read, because a snapshot missing an object would be saved in the history as that object
  * removed, and restoring it would delete the real one: a track, clip, device or chain that Live refuses
- * to read stops the snapshot with an error naming it. Only a parameter whose value Live doesn't give
+ * to read stops the snapshot with an error naming it. Only a parameter whose value Live withholds
  * keeps its other details, without the value.
  */
 export class SnapshotOperations extends OperationGroup<SnapshotOp> {
@@ -95,7 +95,7 @@ export class SnapshotOperations extends OperationGroup<SnapshotOp> {
     });
   }
 
-  /** Group, return and main tracks can't hold clips: when Live refuses to list theirs, there are none. */
+  /** Only MIDI and audio tracks hold clips: when Live refuses to list a group, return or main track's clips, the list is empty. */
   private static clipList<T>(context: TrackContext, read: () => T[]): T[] {
     return context.holdsClips ? read() : Describer.safely(read, []);
   }
@@ -156,7 +156,7 @@ export class SnapshotOperations extends OperationGroup<SnapshotOp> {
     });
   }
 
-  /** A parameter whose value Live doesn't give keeps its other details. */
+  /** A parameter whose value Live withholds keeps its other details. */
   private async parameter(parameter: DeviceParameter<Version>, index: number, device: string): Promise<ParameterInfo> {
     const info = UnreadableError.guard(`parameter ${index + 1} of ${device}`, () => this.describe.parameterDetails(parameter, index));
     const value = await parameter.getValue().catch(() => undefined);

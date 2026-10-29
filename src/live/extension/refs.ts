@@ -105,13 +105,13 @@ export class ReferenceResolver {
 
   midiTrack(ref: TrackRef): MidiTrack<Version> {
     const track = this.track(ref);
-    if (!(track instanceof MidiTrack)) throw new Error(`${trackText(ref)} is not a MIDI track`);
+    if (!(track instanceof MidiTrack)) throw new Error(`this needs a MIDI track; ${trackText(ref)} is a different kind of track`);
     return track;
   }
 
   audioTrack(ref: TrackRef): AudioTrack<Version> {
     const track = this.track(ref);
-    if (!(track instanceof AudioTrack)) throw new Error(`${trackText(ref)} is not an audio track`);
+    if (!(track instanceof AudioTrack)) throw new Error(`this needs an audio track; ${trackText(ref)} is a different kind of track`);
     return track;
   }
 
@@ -128,18 +128,18 @@ export class ReferenceResolver {
     if ("tag" in ref) return this.taggedClip(ref.tag);
     if ("slot" in ref) return this.sessionClip(ref);
     if ("start" in ref) return this.arrangementClip(ref);
-    throw new Error(`not a clip reference: ${JSON.stringify(ref)}`);
+    throw new Error(`expected a clip reference: ${JSON.stringify(ref)}`);
   }
 
   midiClip(ref: ClipRef): FoundClip<MidiClip<Version>> {
     const { clip, location } = this.clip(ref);
-    if (!(clip instanceof MidiClip)) throw new Error(`${clipText(ref)} is not a MIDI clip`);
+    if (!(clip instanceof MidiClip)) throw new Error(`this needs a MIDI clip; ${clipText(ref)} is an audio clip`);
     return { clip, location };
   }
 
   audioClip(ref: ClipRef): FoundClip<AudioClip<Version>> {
     const { clip, location } = this.clip(ref);
-    if (!(clip instanceof AudioClip)) throw new Error(`${clipText(ref)} is not an audio clip`);
+    if (!(clip instanceof AudioClip)) throw new Error(`this needs an audio clip; ${clipText(ref)} is a MIDI clip`);
     return { clip, location };
   }
 
@@ -157,9 +157,9 @@ export class ReferenceResolver {
     let container: DeviceContainer = this.track(ref.track);
     for (const step of ReferenceResolver.chainSteps(ref.chain)) {
       const rack = container.devices[step.rack];
-      if (!(rack instanceof RackDevice)) throw new NotFoundError(`${deviceText(ref)} (there is no rack at index ${step.rack} on that path)`);
+      if (!(rack instanceof RackDevice)) throw new NotFoundError(`${deviceText(ref)} (the path needs a rack at index ${step.rack})`);
       const chain = rack.chains[step.chain];
-      if (!chain) throw new NotFoundError(`${deviceText(ref)} (there is no chain at index ${step.chain} on that path)`);
+      if (!chain) throw new NotFoundError(`${deviceText(ref)} (the path needs a chain at index ${step.chain})`);
       container = chain;
     }
     return container;
@@ -167,7 +167,7 @@ export class ReferenceResolver {
 
   device(ref: DeviceRef): FoundDevice {
     const container = this.container(ref);
-    if (ref.index === MIXER_INDEX) throw new Error(`${deviceText(ref)} is not a device; set its volume, pan and sends as parameters`);
+    if (ref.index === MIXER_INDEX) throw new Error(`${deviceText(ref)} is the mixer; set its volume, pan and sends as parameters`);
     const device = container.devices[ref.index];
     if (!device) throw new NotFoundError(deviceText(ref));
     return { device, container, index: ref.index };
@@ -175,19 +175,19 @@ export class ReferenceResolver {
 
   rack(ref: DeviceRef): RackDevice<Version> {
     const { device } = this.device(ref);
-    if (!(device instanceof RackDevice)) throw new Error(`${deviceText(ref)} is not a rack`);
+    if (!(device instanceof RackDevice)) throw new Error(`this needs a rack; ${deviceText(ref)} is a different kind of device`);
     return device;
   }
 
   drumRack(ref: DeviceRef): DrumRack<Version> {
     const { device } = this.device(ref);
-    if (!(device instanceof DrumRack)) throw new Error(`${deviceText(ref)} is not a Drum Rack`);
+    if (!(device instanceof DrumRack)) throw new Error(`this needs a Drum Rack; ${deviceText(ref)} is a different kind of device`);
     return device;
   }
 
   simpler(ref: DeviceRef): Simpler<Version> {
     const { device } = this.device(ref);
-    if (!(device instanceof Simpler)) throw new Error(`${deviceText(ref)} is not a Simpler`);
+    if (!(device instanceof Simpler)) throw new Error(`this needs a Simpler; ${deviceText(ref)} is a different kind of device`);
     return device;
   }
 
@@ -235,7 +235,7 @@ export class ReferenceResolver {
     return { clip, location: { place: ClipPlace.Session, track, slot: index, clipSlot } };
   }
 
-  /** The take lane the reference names; with no lane, the track's main lane first, then its take lanes. */
+  /** The take lane the reference names; without a lane, the track's main lane first, then its take lanes. */
   private arrangementClip(ref: ArrangementClipRef): FoundClip {
     const track = this.track(ref.track);
     const startsThere = (clip: Clip<Version>) => Math.abs(clip.startTime - ref.start) <= BEAT_TOLERANCE;
@@ -287,7 +287,7 @@ export class ReferenceResolver {
       const all = tracks.all;
       return all[ReferenceResolver.indexByName(all, ref.name)];
     }
-    throw new Error(`not a track reference: ${JSON.stringify(ref)}`);
+    throw new Error(`expected a track reference: ${JSON.stringify(ref)}`);
   }
 
   /** The item whose name, with or without Ode's tag, is `name`: an exact match first, then one ignoring case. */

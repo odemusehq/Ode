@@ -51,7 +51,7 @@ export class Labels {
     return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
   }
 
-  /** ' "name"' after a word, or nothing for an empty name. */
+  /** ' "name"' after a word, or an empty string for an empty name. */
   static quoted(name: string): string {
     return name ? ` "${name}"` : "";
   }

@@ -67,7 +67,7 @@ export class LocationFinder {
       return { place: ClipPlace.Arrangement, track, lane: index };
     }
     if (parent instanceof Track) return { place: ClipPlace.Arrangement, track: parent, lane: null };
-    throw new Error("Ode could not tell where this clip is");
+    throw new Error("Ode is unsure where this clip is");
   }
 
   clipSlot(clipSlot: ClipSlot<Version>): Position {
@@ -88,7 +88,7 @@ export class LocationFinder {
     const index = LocationFinder.indexInContainer(container, device);
     while (container instanceof Chain) {
       const rack = container.parent;
-      if (!(rack instanceof RackDevice)) throw new Error("Ode could not tell which rack holds this chain");
+      if (!(rack instanceof RackDevice)) throw new Error("Ode is unsure which rack holds this chain");
       const outer = rack.parent;
       path.unshift(LocationFinder.indexInContainer(outer, rack), indexOfObject(rack.chains, container));
       racks.unshift(rack);
@@ -101,11 +101,11 @@ export class LocationFinder {
 
   private static track(parent: DataModelObject<Version> | null): Track<Version> {
     if (parent instanceof Track) return parent;
-    throw new Error("Ode could not tell which track this belongs to");
+    throw new Error("Ode is unsure which track this belongs to");
   }
 
   private static indexInContainer(container: DataModelObject<Version> | null, device: Device<Version>): number {
     if (container instanceof Track || container instanceof Chain) return indexOfObject(container.devices, device);
-    throw new Error("Ode could not tell where this device is");
+    throw new Error("Ode is unsure where this device is");
   }
 }

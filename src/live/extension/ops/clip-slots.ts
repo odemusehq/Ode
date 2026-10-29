@@ -34,7 +34,7 @@ export class ClipSlotOperations extends OperationGroup<ClipSlotOp> {
     followUps: FollowUps,
   ): OpRun<"clip_slot_create_midi_clip"> {
     const found = this.emptySlot(slot);
-    if (!(found.track instanceof MidiTrack)) throw new Error(`${clipSlotText(slot)} is not on a MIDI track`);
+    if (!(found.track instanceof MidiTrack)) throw new Error(`a MIDI clip needs a slot on a MIDI track; ${clipSlotText(slot)} is on a different kind of track`);
     OperationGroup.checkLength(length);
     const setUp = this.midiClipSetup(name, tag, notes);
     return async () => {
@@ -48,7 +48,7 @@ export class ClipSlotOperations extends OperationGroup<ClipSlotOp> {
     followUps: FollowUps,
   ): OpRun<"clip_slot_create_audio_clip"> {
     const found = this.emptySlot(slot);
-    if (!(found.track instanceof AudioTrack)) throw new Error(`${clipSlotText(slot)} is not on an audio track`);
+    if (!(found.track instanceof AudioTrack)) throw new Error(`an audio clip needs a slot on an audio track; ${clipSlotText(slot)} is on a different kind of track`);
     OperationGroup.checkFile(filePath);
     const settings = OperationGroup.audioClipSettings(warped, loop);
     const naming = new NewName(name, tag);

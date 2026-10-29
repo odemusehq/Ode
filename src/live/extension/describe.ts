@@ -45,7 +45,7 @@ import type { TrackDirectory } from "./track-directory";
 /** The name Ode reports for the mixer of a track or chain. */
 const MIXER_NAME = "Mixer";
 
-/** The Extensions SDK can't read a track's colour, so tracks report this instead of an RGB number. */
+/** The Extensions SDK leaves a track's colour unreadable, so tracks report this placeholder for the RGB number. */
 const UNKNOWN_TRACK_COLOR = -1;
 
 /** Turns Live objects into the plain data that Ode's server works with. */
@@ -120,7 +120,7 @@ export class Describer {
     };
   }
 
-  /** Index of the group track that holds `track`, or null when it isn't in a group. */
+  /** Index of the group track that holds `track`, or null for a track outside every group. */
   groupTrackIndex(track: Track<Version>, tracks: TrackDirectory = this.set.tracks()): number | null {
     const group = Describer.safely(() => track.groupTrack, null);
     return group ? tracks.position(group).index : null;

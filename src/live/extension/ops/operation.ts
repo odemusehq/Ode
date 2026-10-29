@@ -21,7 +21,7 @@ export interface AnyOperation {
 
 export type OperationTable<K extends ExtensionOp> = { readonly [P in K]: Operation<P> };
 
-/** Every operation except apply_as_one_undo_step, which runs the others. */
+/** The regular operations: all those apply_as_one_undo_step can run. */
 export type RegularOp = Exclude<ExtensionOp, "apply_as_one_undo_step">;
 
 export type OpArgs<K extends ExtensionOp> = ExtensionOpArgs[K];

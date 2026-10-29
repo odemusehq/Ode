@@ -82,7 +82,7 @@ export class ContextMenu {
   private addAction(scope: Scope, title: MenuTitle, command: string): void {
     this.live.ui
       .registerContextMenuAction(scope, title, command)
-      .catch((error: unknown) => console.error(`Ode could not add "${title}" to the ${scope} menu: ${describeError(error)}`));
+      .catch((error: unknown) => console.error(`Adding "${title}" to the ${scope} menu failed: ${describeError(error)}`));
   }
 
   /**

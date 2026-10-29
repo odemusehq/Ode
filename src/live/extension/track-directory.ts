@@ -47,7 +47,7 @@ export class TrackDirectory {
 
   position(track: Track<Version>): TrackPosition {
     const place = this.places.get(track.handle.id);
-    if (!place) throw new Error("this track is no longer in the Set");
+    if (!place) throw new Error("this track was removed from the Set");
     switch (place.list) {
       case TrackList.Regular:
         return { kind: this.regularKind(track), index: place.index, ref: { index: place.index } };

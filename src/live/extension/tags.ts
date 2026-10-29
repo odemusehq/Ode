@@ -48,7 +48,7 @@ export class NewName {
     private readonly name: string | undefined,
     private readonly tag: string | undefined,
   ) {
-    if (tag !== undefined && !TaggedName.isTag(tag)) throw new RangeError(`"${tag}" can't be a tag: a tag is a single word`);
+    if (tag !== undefined && !TaggedName.isTag(tag)) throw new RangeError(`"${tag}" is an invalid tag: a tag is a single word`);
   }
 
   /** Names `target`. A copy loses the tag of the object it was copied from unless it gets one of its own. */

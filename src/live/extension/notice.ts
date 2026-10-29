@@ -12,7 +12,7 @@ export class Notice {
       const page = `data:text/html,${encodeURIComponent(Notice.page(title, message))}`;
       await this.ui.showModalDialog(page, OdeConfig.notice.width, OdeConfig.notice.height);
     } catch (error) {
-      console.error(`Ode could not show "${title}": ${describeError(error)}`);
+      console.error(`Showing "${title}" failed: ${describeError(error)}`);
     }
   }
 
