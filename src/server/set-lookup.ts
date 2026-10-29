@@ -1,4 +1,4 @@
-import { BEAT_TOLERANCE, type ClipRef, type TrackRef } from "../shared/live";
+import { BEAT_TOLERANCE, TAG_SEPARATOR, type ClipRef, type TrackRef } from "../shared/live";
 import type { ClipInfo } from "../shared/live-ops";
 import type { DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
 
@@ -38,8 +38,10 @@ export class SetLookup {
     if ("returnIndex" in ref) return this.snapshot.returnTracks[ref.returnIndex];
     if ("main" in ref) return this.snapshot.main;
     if ("tag" in ref) return this.allTracks.find((track) => track.tag === ref.tag);
+    const names = (track: TrackSnapshot) => [track.name, track.tag === undefined ? track.name : `${track.name}${TAG_SEPARATOR}${track.tag}`];
     const lower = ref.name.toLowerCase();
-    return this.allTracks.find((track) => track.name === ref.name) ?? this.allTracks.find((track) => track.name.toLowerCase() === lower);
+    return this.allTracks.find((track) => names(track).includes(ref.name)) ??
+      this.allTracks.find((track) => names(track).some((name) => name.toLowerCase() === lower));
   }
 
 

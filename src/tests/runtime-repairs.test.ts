@@ -10,6 +10,9 @@ import { ConversationStore } from "../mneme/conversations";
 import { SettingsStore } from "../mneme/settings-store";
 import { ProviderCatalog } from "../services/provider-catalog";
 import { OdeConfig } from "../shared/config";
+import { assertUnlocked } from "../tools/locked-material";
+import { ToolRegistry } from "../tools";
+import { TestSets } from "./sets";
 import { Questions } from "../server/questions";
 
 const limits = new OdeConfig("unused", "unused").limits;
@@ -103,4 +106,54 @@ test("a failed change receipt stays failed in the saved conversation", async () 
   assert.equal(exchange?.status, "failed");
   assert.match(exchange!.reply, /Could not record the changes: snapshot refused/);
   assert.equal(exchange?.versionId, null);
+});
+
+test("identifiable locked tracks and lyric sections cannot be changed through a tool or group", async () => {
+  const snapshot = TestSets.small();
+  snapshot.sheet = TestSets.sheet();
+  const track = snapshot.tracks[1]!;
+  snapshot.sheet.locked = [track.name, "Chorus"];
+  snapshot.sheet.lyrics = "[Verse]\nnew words\n[Chorus]\nkeep me";
+  assert.throws(() => assertUnlocked("track_set", { track: { index: 1 }, mute: true }, snapshot), /locked/);
+  assert.throws(() => assertUnlocked("apply_as_one_undo_step", { calls: [{ op: "track_set", args: { track: { name: track.name }, mute: true } }] }, snapshot), /locked/);
+  assert.throws(() => assertUnlocked("lyrics_write", { text: "[Verse]\nnew words\n[Chorus]\nchanged" }, snapshot), /locked/);
+  assert.doesNotThrow(() => assertUnlocked("lyrics_write", { text: "[Verse]\nother words\n[Chorus]\nkeep me" }, snapshot));
+  assert.throws(() => assertUnlocked("lyrics_write", { text: "[ Chorus ]\nnew words\n[Chorus]\nkeep me" }, snapshot), /locked/);
+  assert.doesNotThrow(() => assertUnlocked("song_duplicate_track", { track: { index: 1 } }, snapshot));
+  assert.doesNotThrow(() => assertUnlocked("apply_as_one_undo_step", { calls: [{ op: "track_get", args: { track: { index: 1 } } }] }, snapshot));
+
+  track.tag = "ba55";
+  for (const lock of [track.name, track.tag, `${track.name} ·${track.tag}`]) {
+    snapshot.sheet.locked = [lock];
+    for (const ref of [{ index: 1 }, { name: track.name }, { name: `${track.name} ·${track.tag}` }, { tag: track.tag }]) {
+      assert.throws(() => assertUnlocked("track_set", { track: ref, mute: true }, snapshot), /locked/);
+    }
+    assert.throws(() => assertUnlocked("parameter_set", { parameter: { device: { track: { index: 1 }, index: 0 }, parameter: 0 }, value: 1 }, snapshot), /locked/);
+  }
+  const clip = track.arrangementClips[0]!;
+  snapshot.sheet.locked = [clip.name];
+  assert.throws(() => assertUnlocked("song_delete_track", { track: { index: 1 } }, snapshot), /locked/);
+  assert.throws(() => assertUnlocked("track_clear_range", { track: { index: 1 }, start: 4, end: 8 }, snapshot), /locked/);
+  assert.doesNotThrow(() => assertUnlocked("track_clear_range", { track: { index: 1 }, start: clip.endTime, end: clip.endTime + 4 }, snapshot));
+  track.clipSlots = [{ slot: 0, clip }];
+  assert.throws(() => assertUnlocked("song_delete_scene", { scene: { index: 0 } }, snapshot), /locked/);
+  snapshot.song.scenes[0]!.name = "Verse ·sceneTag";
+  assert.throws(() => assertUnlocked("song_delete_scene", { scene: { name: "Verse" } }, snapshot), /locked/);
+  snapshot.tracks[0]!.kind = "group";
+  track.groupTrack = 0;
+  assert.throws(() => assertUnlocked("song_delete_track", { track: { index: 0 } }, snapshot), /locked/);
+
+  clip.tag = "keep";
+  snapshot.sheet.locked = ["bass part"];
+  const link = { tag: "keep", role: "bass part", description: "protected part" };
+  snapshot.sheet.links = [link];
+  assert.throws(() => assertUnlocked("lead_sheet_update", { links: [] }, snapshot), /locked/);
+  assert.doesNotThrow(() => assertUnlocked("lead_sheet_update", { links: [{ ...link, description: "same protected part" }] }, snapshot));
+
+  const folder = await mkdtemp(join(tmpdir(), "ode-unlock-"));
+  const registry = new ToolRegistry({
+    config: new OdeConfig(folder, folder), live: { extension: { call: async () => undefined } },
+    song: { read: async () => snapshot.sheet }, snapshots: { read: async () => { throw new Error("Live unreadable"); } },
+  } as never);
+  assert.equal((await registry.run("voice_reference_clear", {})).ok, true);
 });

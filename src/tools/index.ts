@@ -1,3 +1,4 @@
+import { assertUnlocked } from "./locked-material";
 import type { ChatCompletionTool } from "openai/resources/chat/completions";
 import { z } from "zod";
 import type { AnyTool, ToolContext } from "./define";
@@ -74,6 +75,21 @@ export class ToolRegistry {
     const parsed = z.object(definition.input).safeParse(input);
     if (!parsed.success) return { ok: false, text: `The input for ${name} needs fixing: ${z.prettifyError(parsed.error)}` };
     try {
+      // Group arguments are otherwise parsed only by the batch runner. Mediation must see the same canonical
+      // references, including union ordering/stripped fields, before it decides what material a call affects.
+      if (name === "apply_as_one_undo_step") {
+        const group = parsed.data as { calls: { op: string; args: Record<string, unknown> }[] };
+        for (const call of group.calls) {
+          const operation = this.byName.get(call.op);
+          if (!operation) throw new Error(`Unknown grouped operation: ${call.op}`);
+          call.args = z.object(operation.input).parse(call.args);
+        }
+      }
+      if (definition.changes === "set" || name === "lyrics_write" || name === "lead_sheet_update") {
+        const sheet = await this.ctx.song.read();
+        if (sheet.locked.length > 0) assertUnlocked(name, parsed.data, await this.ctx.snapshots.read());
+      }
+      signal?.throwIfAborted();
       const extension = this.ctx.live.extension;
       const live = signal ? { extension: { call: <R>(op: string, args: unknown) => extension.call<R>(op, args, signal) } } : this.ctx.live;
       return { ok: true, text: JSON.stringify((await definition.run(parsed.data, { ...this.ctx, live, signal })) ?? { done: true }) };

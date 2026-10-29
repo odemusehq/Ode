@@ -85,6 +85,7 @@ export class OdeSession {
   private draining = false;
   private accepting = 0;
   private stopEpoch = 0;
+  private retired = false;
   private activity: ConversationActivity[] = [];
   private rationale = "";
   private acceptance: Promise<unknown> = Promise.resolve();
@@ -112,6 +113,7 @@ export class OdeSession {
 
   /** Persist acceptance before replying to HTTP; execution continues independently. */
   async accept(request: OdeRequest): Promise<void> {
+    if (this.retired) throw new SessionBusyError("That song is no longer active. Send the request to the open song.");
     const epoch = this.stopEpoch;
     this.accepting += 1;
     this.showBusy();
@@ -172,7 +174,14 @@ export class OdeSession {
   }
 
   private async publishConversation(): Promise<void> {
-    this.deps.emit({ type: "conversation", songId: this.songId, exchanges: await this.transcript() });
+    const exchanges = await this.transcript();
+    if (!this.retired) this.deps.emit({ type: "conversation", songId: this.songId, exchanges });
+  }
+
+  /** Late disk callbacks from a closed song must not replace the current conversation. */
+  retire(): void {
+    this.retired = true;
+    this.stop();
   }
 
   /** Runs this request before any other waiting one (used by Again, from inside exclusive work). */
@@ -327,6 +336,15 @@ export class OdeSession {
   private readonly gate: ToolGate = {
     check: async (tool, input, signal) => {
       if (this.running?.reply && tool.changes !== "none") return "This request only answers Why?: explain, and leave the Set as it is.";
+      if (tool.name === "lead_sheet_update" && Array.isArray(input.locked)) {
+        const requested = input.locked;
+        const current = (await this.deps.snapshots.read()).sheet?.locked ?? [];
+        const removed = current.filter((part) => !requested.includes(part));
+        if (removed.length > 0) {
+          const decision = await this.deps.approvals.request(tool.name, input, `Unlock ${removed.join(", ")} · ${this.deps.labels.for(tool.name, input)}`, signal);
+          return decision === Decision.Allow ? null : "The musician kept the material locked.";
+        }
+      }
       if (!(await this.needsApproval(tool, input))) return null;
       await this.deps.snapshots.read().catch(() => undefined);
       const decision = await this.deps.approvals.request(tool.name, input, this.deps.labels.for(tool.name, input), signal);
