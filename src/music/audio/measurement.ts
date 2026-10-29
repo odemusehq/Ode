@@ -6,7 +6,6 @@ import { TruePeakMeter, samplePeak } from "./true-peak";
 import { durationSeconds } from "./types";
 import type { TrackLevel } from "./levels";
 import type { LoudnessReading } from "./loudness";
-import type { MasterMeasure } from "./master";
 import type { TrackSpectrum } from "./masking";
 import type { AudioData } from "./types";
 
@@ -36,17 +35,6 @@ export class AudioMeasurement {
     this.samplePeak = samplePeak(audio);
     this.spectrum = new SpectrumAnalyzer(audio.sampleRate, bands).analyze(audio);
     this.tone = new ToneProfile(this.spectrum, bands);
-  }
-
-  /** The readings masterCheck needs. */
-  toMasterMeasure(): MasterMeasure {
-    return {
-      integrated: this.loudness.integrated,
-      truePeak: this.truePeak,
-      shortTermMax: this.loudness.shortTermMax,
-      range: this.loudness.range,
-      spectrum: this.spectrum,
-    };
   }
 
   /** The readings levelCheck needs for a track of this name. */

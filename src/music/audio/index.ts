@@ -28,6 +28,4 @@ export { maskingCheck, MaskingDetector } from "./masking";
 export type { MaskingPair, TrackSpectrum } from "./masking";
 export { levelCheck, LevelChecker, LevelIssue } from "./levels";
 export type { LevelFinding, TrackLevel } from "./levels";
-export { masterCheck, MasterChecker } from "./master";
-export type { MasterCheckResult, MasterMeasure } from "./master";
 export { roleFromName, TrackRole } from "./track-role";
