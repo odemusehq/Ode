@@ -1,11 +1,13 @@
-/** The Ode device opens the UI twice: compact in the device area, full in the Ode window. */
+/** Which view a page shows, from its ?view= parameter: the full window, the compact strip, or Settings. */
 export enum Layout {
   Full = "full",
   Compact = "compact",
+  Settings = "settings",
 }
 
 const VIEW_PARAMETER = "view";
 
 export function layoutFromUrl(): Layout {
-  return new URLSearchParams(window.location.search).get(VIEW_PARAMETER) === Layout.Compact ? Layout.Compact : Layout.Full;
+  const view = new URLSearchParams(window.location.search).get(VIEW_PARAMETER);
+  return (Object.values(Layout) as string[]).includes(view ?? "") ? (view as Layout) : Layout.Full;
 }

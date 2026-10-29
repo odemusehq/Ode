@@ -28,6 +28,8 @@ export { PianoRoll, pitchRangeOf } from "./components/PianoRoll";
 export type { PianoRollProps, PitchRange } from "./components/PianoRoll";
 export { ProgressLine } from "./components/ProgressLine";
 export type { ProgressLineProps } from "./components/ProgressLine";
+export { Select } from "./components/Select";
+export type { SelectOption, SelectProps } from "./components/Select";
 export { TextInput } from "./components/TextInput";
 export { Toggle } from "./components/Toggle";
 export type { ToggleProps } from "./components/Toggle";

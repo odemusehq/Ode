@@ -32,6 +32,7 @@ export class OdeClient {
   }
 
   start(): void {
+    if (this.layout === Layout.Settings) return;
     this.stream.start();
     if (this.layout === Layout.Full) window.addEventListener("focus", this.handleFocus);
   }

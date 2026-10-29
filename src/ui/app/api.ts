@@ -17,6 +17,7 @@ import type {
   VersionRequest,
 } from "../../shared/api";
 import type { Mode } from "../../shared/personalisation";
+import type { ChatModelOption, ModelListRequest, SettingsResponse, SettingsUpdate, SettingsView } from "../../shared/settings";
 
 enum HttpMethod {
   Get = "GET",
@@ -137,6 +138,19 @@ export class OdeApi {
   /** Saves the hand edits, then copies the project as it is now. */
   copyNow(): Promise<CopyResult> {
     return this.request(HttpMethod.Post, API.copyNow);
+  }
+
+  getSettings(): Promise<SettingsResponse> {
+    return this.request(HttpMethod.Get, API.settings);
+  }
+
+  saveSettings(update: SettingsUpdate): Promise<SettingsView> {
+    return this.request(HttpMethod.Put, API.settings, update);
+  }
+
+  /** The models a provider offers, or the ones the key reaches where the provider lists them (Modal's endpoints). */
+  listModels(request: ModelListRequest): Promise<ChatModelOption[]> {
+    return this.request(HttpMethod.Post, API.settingsModels, request);
   }
 
   getStatus(): Promise<StatusResponse> {

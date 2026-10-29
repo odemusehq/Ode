@@ -145,6 +145,9 @@
   --history-summary-lines: 2;
   --z-panel: 5;
 
+  /* Settings dialog: one column of fields */
+  --settings-width: 560px;
+
   /* Lyrics panel: beside the history, or over it on windows narrower than LyricsPanel.css's breakpoint */
   --lyrics-panel-width: 400px;
   --lyrics-line-height: 22px;

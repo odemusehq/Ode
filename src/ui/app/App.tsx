@@ -1,3 +1,4 @@
+import { SettingsView } from "../views/SettingsView";
 import { CompactStrip } from "./CompactStrip";
 import { useClient } from "./hooks";
 import { Layout } from "./layout";
@@ -6,5 +7,12 @@ import "./App.css";
 
 export function App() {
   const { layout } = useClient();
-  return layout === Layout.Compact ? <CompactStrip /> : <MainLayout />;
+  switch (layout) {
+    case Layout.Compact:
+      return <CompactStrip />;
+    case Layout.Settings:
+      return <SettingsView />;
+    default:
+      return <MainLayout />;
+  }
 }

@@ -11,4 +11,6 @@ export const UI_CONFIG = {
   humBars: 4,
   /** Largest line-by-line comparison (lines before times lines after) worked out in full; past it only the shared start and end match. */
   lineDiffMaxCells: 1_000_000,
+  /** Wait after the last keystroke in a key before asking the provider which models it reaches. */
+  modelListDelayMs: 600,
 } as const;
