@@ -1,3 +1,4 @@
+import { OdeConfig } from "../shared/config";
 import type { Accent } from "../shared/personalisation";
 
 export interface SpellingGuess {
@@ -99,17 +100,21 @@ export class SpellingDetector {
       if (ukWords.has(word) || SpellingDetector.UK_ONLY.has(word)) uk += 1;
       if (usWords.has(word)) us += 1;
     }
+    const { minConfidence, wordsForFullEvidence, izeWeight } = OdeConfig.spelling;
     const text = words.join(" ");
     for (const match of text.matchAll(SpellingDetector.ISE)) {
-      if (!SpellingDetector.NOT_ISE_VERBS.has(match[0])) uk += 1;
+      // "promised" and "surprising" are forms of verbs spelled "-ise" everywhere, so the UK count stays as it is for them.
+      const stem = match[0].slice(0, match[0].length - (match[1]?.length ?? 0));
+      if (!SpellingDetector.NOT_ISE_VERBS.has(`${stem}ise`)) uk += 1;
     }
-    for (const _match of text.matchAll(SpellingDetector.IZE)) us += 0.5;
+    for (const _match of text.matchAll(SpellingDetector.IZE)) us += izeWeight;
     const total = uk + us;
-    if (total === 0) return null;
-    const value: Accent = uk >= us ? "uk" : "us";
+    if (total === 0 || uk === us) return null;
+    const value: Accent = uk > us ? "uk" : "us";
     const margin = Math.abs(uk - us) / total;
-    const evidence = Math.min(1, total / 5);
-    return { value, confidence: Number((margin * evidence).toFixed(2)) };
+    const evidence = Math.min(1, total / wordsForFullEvidence);
+    const confidence = Number((margin * evidence).toFixed(2));
+    return confidence >= minConfidence ? { value, confidence } : null;
   }
 
   /** The accent suggested by the computer's language setting, if it is an English locale. */

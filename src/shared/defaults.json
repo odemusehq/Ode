@@ -58,6 +58,11 @@
     "width": 380,
     "height": 170
   },
+  "spelling": {
+    "minConfidence": 0.3,
+    "wordsForFullEvidence": 5,
+    "izeWeight": 0.5
+  },
   "storage": {
     "renameRetries": 5,
     "renameRetryMs": 40

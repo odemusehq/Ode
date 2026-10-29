@@ -77,6 +77,15 @@ export interface ServiceSettings {
   coverSize: number;
 }
 
+export interface SpellingSettings {
+  /** A spelling guess below this confidence (0–1) leaves the choice to the computer's language setting. */
+  minConfidence: number;
+  /** How many UK or US spellings make the evidence count in full. */
+  wordsForFullEvidence: number;
+  /** How much one "-ize" word counts towards US spelling, since UK English uses "-ize" too. */
+  izeWeight: number;
+}
+
 export interface ServerSettings {
   /** How often the event stream to an open dialog sends a keepalive, in milliseconds. */
   keepaliveMs: number;
@@ -108,6 +117,8 @@ export interface DialogSize {
 export class OdeConfig {
   /** The size of the small notice Ode shows when it has something to tell the musician, ready before the folders are known. */
   static readonly notice: DialogSize = { ...defaults.notice };
+  /** How sure Ode must be before it reads the lyrics' spelling as UK or US. */
+  static readonly spelling: SpellingSettings = { ...defaults.spelling };
   /** What the model services ask of each provider, the same for every copy of Ode. */
   static readonly services: ServiceSettings = { ...defaults.services };
 
