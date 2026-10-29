@@ -8,8 +8,6 @@ export enum Mode {
   Auto = "auto",
   /** Ode asks before every change to the Set. */
   Manual = "manual",
-  /** Ode applies everything straight away and plays it. */
-  LetMeHearIt = "let-me-hear-it",
 }
 
 export interface VocalRange {

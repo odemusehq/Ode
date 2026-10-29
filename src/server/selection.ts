@@ -1,4 +1,4 @@
-import type { ClipRef, ClipSlotRef, DeviceRef, LiveConnections, LivePointer, TrackRef } from "../shared/live";
+import type { ClipRef, ClipSlotRef, DeviceRef, LivePointer, TrackRef } from "../shared/live";
 import type { ClipInfo, SelectionInfo } from "../shared/live-ops";
 import type { SetSnapshot } from "../shared/set-snapshot";
 import type { Suggestion, UiEvent } from "../shared/events";
@@ -8,7 +8,6 @@ import type { SnapshotReader } from "./snapshot-reader";
 import type { SuggestionFinder } from "./suggestions";
 
 export interface SelectionDeps {
-  live: LiveConnections;
   reader: SnapshotReader;
   versions: SongVersions;
   finder: SuggestionFinder;
@@ -27,36 +26,25 @@ interface PointerTarget {
   device?: DeviceRef;
 }
 
-/**
- * What the musician is on in Live: the selection the Ode device follows, or what they pointed at with
- * "Ode…". Shown in words with its one-tap suggestions.
- */
+/** What the musician pointed at with a right-click "Ask Ode", shown in words with its one-tap suggestions. */
 export class SelectionState {
   static readonly WHOLE_SONG = "Whole song";
   private selection: SelectionInfo | null = null;
   private label = SelectionState.WHOLE_SONG;
   private items: Suggestion[] = [];
   private pointedAt: LivePointer | null = null;
-  private pointerIsLatest = false;
   private shown = 0;
 
   constructor(private readonly deps: SelectionDeps) {}
 
-  /** What was pointed at with "Ode…", until the musician selects something else in Live. */
+  /** What the musician last pointed at with "Ask Ode". */
   get pointer(): LivePointer | null {
-    return this.pointerIsLatest ? this.pointedAt : null;
+    return this.pointedAt;
   }
 
-  /** The Ode device reported a new selection. */
-  async select(selection: SelectionInfo): Promise<void> {
-    this.pointerIsLatest = false;
-    await this.show(selection);
-  }
-
-  /** The musician right-clicked something in Live and chose "Ode…". */
+  /** The musician right-clicked something in Live and chose "Ask Ode". */
   async point(pointer: LivePointer): Promise<void> {
     this.pointedAt = pointer;
-    this.pointerIsLatest = true;
     await this.show(SelectionState.fromPointer(pointer, this.selection));
   }
 
@@ -105,8 +93,7 @@ export class SelectionState {
   private async snapshotFor(selection: SelectionInfo): Promise<SetSnapshot | null> {
     const known = this.deps.reader.latest ?? (await this.deps.versions.history.latest().catch(() => null));
     if (known && SelectionState.holds(known, selection)) return known;
-    const { extension, device } = this.deps.live;
-    if (this.deps.busy() || !extension.connected() || !device.connected()) return known;
+    if (this.deps.busy()) return known;
     try {
       return await this.deps.reader.read();
     } catch {
@@ -145,12 +132,6 @@ export class SelectionState {
     const clip: ClipRef | null = target.clip ?? slot ?? null;
     const clipTrack = clip && "track" in clip ? clip.track : null;
     const track = clipTrack ?? target.track ?? target.device?.track ?? target.tracks?.[0] ?? null;
-    return {
-      track,
-      clip,
-      scene: previous?.scene ?? null,
-      time: previous?.time ?? null,
-      isPlaying: previous?.isPlaying ?? false,
-    };
+    return { track, clip, scene: previous?.scene ?? null };
   }
 }

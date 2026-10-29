@@ -1,9 +1,8 @@
-import { readFileSync } from "node:fs";
+import lines from "./data/britfone.main.3.0.1.json";
 import { parseIpa } from "./ipa";
 import type { Pronunciation } from "./pronunciation";
 
-/** Britfone 3.0.1 (MIT licence, see britfone.LICENSE.txt beside the data file). */
-const DATA_FILE = new URL("./data/britfone.main.3.0.1.csv", import.meta.url);
+/** Britfone 3.0.1 (MIT licence, see britfone.LICENSE.txt beside the data file), one "word, pronunciation" entry per line. */
 const FIELD_SEPARATOR = ", ";
 /** Britfone joins multi-word entries with "_"; Ode looks up single words only. */
 const MULTI_WORD_MARK = "_";
@@ -32,7 +31,7 @@ export class BritfoneDictionary {
   private load(): Map<string, Pronunciation[]> {
     if (this.entries) return this.entries;
     const entries = new Map<string, Pronunciation[]>();
-    for (const line of readFileSync(DATA_FILE, "utf8").split("\n")) {
+    for (const line of lines) {
       const separator = line.indexOf(FIELD_SEPARATOR);
       if (separator <= 0) continue;
       const key = line.slice(0, separator);

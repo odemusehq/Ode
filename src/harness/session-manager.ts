@@ -1,11 +1,11 @@
 import type { ConversationStore } from "../mneme/conversations";
 import { OdeSession, type SessionDeps } from "./session";
 
-/** One conversation per song (per Live Set), carried on when the Set is opened again. */
+/** One conversation per song, carried on whenever the musician comes back to it. */
 export class SessionManager {
-  private static readonly NO_SET = "no-set";
+  private static readonly NO_SONG = "no-song";
   private session: OdeSession;
-  private key = SessionManager.NO_SET;
+  private key = SessionManager.NO_SONG;
 
   constructor(
     private readonly deps: SessionDeps,
@@ -18,19 +18,11 @@ export class SessionManager {
     return this.session;
   }
 
-  /**
-   * Switches to the conversation of another Set. With carryOver (the same Set, saved for the first time or under a
-   * new name) the current conversation continues under the Set's new key.
-   */
-  async switchTo(setId: string, carryOver = false): Promise<void> {
-    if (setId === this.key) return;
-    const previous = this.key;
-    this.key = setId;
-    if (carryOver) {
-      this.session.continueIn(await this.conversations.rename(previous, setId));
-      return;
-    }
+  /** Switches to the conversation of another song. */
+  switchTo(songId: string): void {
+    if (songId === this.key) return;
+    this.key = songId;
     this.session.stop();
-    this.session = new OdeSession(this.deps, this.conversations.log(setId));
+    this.session = new OdeSession(this.deps, this.conversations.log(songId));
   }
 }

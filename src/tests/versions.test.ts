@@ -42,12 +42,9 @@ test("the diff labels each change in plain words", () => {
   assert.ok(labels.includes("Song · key A minor → C major"), labels.join("\n"));
 });
 
-test("the playhead, playing and the selection are not changes", () => {
-  const moved = TestSets.small();
-  moved.transport.playing = true;
-  moved.transport.time = 37;
-  moved.selection = { track: { index: 0 }, clip: null, scene: null, time: 37, isPlaying: true };
-  assert.deepEqual(SetDiff.between(TestSets.small(), moved), []);
+test("the time a snapshot was taken is not a change", () => {
+  const later = { ...TestSets.small(), takenAt: new Date(Date.now() + 60_000).toISOString() };
+  assert.deepEqual(SetDiff.between(TestSets.small(), later), []);
 });
 
 test("applying a diff gives the later Set", () => {

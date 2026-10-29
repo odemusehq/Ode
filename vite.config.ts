@@ -2,15 +2,20 @@ import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import type { ProxyOptions } from "vite";
-import { loadConfig } from "./src/shared/config.ts";
+import { DevConfig } from "./src/shared/dev-config.ts";
 
 const EVENT_STREAM = "text/event-stream";
 
-/** Proxy for the dev server: API calls and the event stream go to the local Ode server. */
+/**
+ * Proxy for the dev server: API calls and the event stream go to Ode's server in Live, at the address it prints when
+ * it starts (ODE_DEV_SERVER in .env), with the token from that address.
+ */
 function apiProxy(): ProxyOptions {
-  const { host, port } = loadConfig();
+  const address = new URL(DevConfig.load().server);
+  const token = address.searchParams.get("token") ?? "";
   return {
-    target: `http://${host}:${port}`,
+    target: address.origin,
+    headers: { Cookie: `ode=${token}` },
     changeOrigin: true,
     timeout: 0,
     proxyTimeout: 0,

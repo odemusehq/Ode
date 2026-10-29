@@ -1,5 +1,4 @@
-import type { ExtensionOp, LiveRequest, LiveResponse } from "../../../shared/live";
-import { describeError } from "../errors";
+import type { ExtensionOp } from "../../../shared/live";
 import type { Live } from "../sdk";
 import { DirectFollowUps } from "./follow-ups";
 import { operationsByName, type AnyOperation, type FollowUps, type OperationKind, type OperationTable, type Run } from "./operation";
@@ -9,7 +8,7 @@ export interface PreparedOperation {
   readonly run: Run<unknown>;
 }
 
-/** Every operation Ode's server can ask the extension for, by name. */
+/** Every operation Ode runs on the Set, by name. */
 export class OperationRegistry {
   private readonly operations: ReadonlyMap<string, AnyOperation>;
 
@@ -33,18 +32,5 @@ export class OperationRegistry {
 
   async run(op: string, args: unknown): Promise<unknown> {
     return this.prepare(op, args, new DirectFollowUps(this.live)).run();
-  }
-
-  respond(request: LiveRequest): Promise<LiveResponse> {
-    return OperationRegistry.response(request.id, this.run(request.op, request.args));
-  }
-
-  /** The answer to a request: its result, or its error in words. */
-  static async response(id: string, result: Promise<unknown>): Promise<LiveResponse> {
-    try {
-      return { id, ok: true, result: await result };
-    } catch (error) {
-      return { id, ok: false, error: describeError(error) };
-    }
   }
 }

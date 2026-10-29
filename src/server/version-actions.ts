@@ -1,13 +1,9 @@
-import { cp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
-import { basename, dirname, join, relative } from "node:path";
-import { z } from "zod";
-import type { DeviceCommand, LiveConnections } from "../shared/live";
-import type { CopyResult } from "../shared/api";
+import type { LiveConnections } from "../shared/live";
 import { ResultKind, type UiEvent } from "../shared/events";
 import { VersionAuthor, type RestoreResult, type Version, type VersionDetail, type VersionListItem } from "../shared/versions";
 import type { LyricsStore } from "../mneme/lyrics-store";
 import type { SongStore, SongVersions } from "../mneme/song-store";
-import { SessionBusyError, type OdeSession } from "../harness/session";
+import type { OdeSession } from "../harness/session";
 import type { SessionManager } from "../harness/session-manager";
 import { RestoreRunner, type PutBack } from "./restore-runner";
 import type { SelectionState } from "./selection";
@@ -27,10 +23,6 @@ export interface VersionActionsDeps {
   selection: Pick<SelectionState, "refresh">;
   emit: (event: UiEvent) => void;
 }
-
-/** Written into a copy of the project: the version the copy goes back to when it is first opened. */
-const RESTORE_ON_OPEN = "restore-on-open.json";
-const RestoreMarkerSchema = z.object({ versionId: z.string() });
 
 /** The actions on a change by Ode; each applies only while that change is the newest version. */
 enum OdeAction {
@@ -56,18 +48,13 @@ const REFUSALS: Record<OdeAction, { editedSince: string; nothing: string }> = {
 };
 /** The change named is Ode's, but not its newest. */
 const NEWER_CHANGE = "Ode has made another change since.";
-const SAVE_FIRST = "Save the Set first";
 /** A put-back that failed part-way is saved as Ode's version, so Undo goes back to before it. */
 const STOPPED_PART_WAY = "Restore stopped part-way";
 /** What Ode is asked for Why?; the hidden context says which change and how to answer. */
 const WHY_REQUEST = "Why?";
 
-/** Characters that can't be part of a folder name on macOS or Windows. */
-const UNSAFE_IN_FOLDER_NAMES = /[/\\:*?"<>|]/g;
-
 /** What History, Undo, Again and Why? do with the versions of the whole Set. */
 export class VersionActions {
-  private openingCopy = false;
   private readonly runner: RestoreRunner;
 
   constructor(private readonly deps: VersionActionsDeps) {
@@ -122,9 +109,8 @@ export class VersionActions {
   /**
    * Back to the version before that change by Ode, without asking. The hand edits are saved first; RefusedError
    * (no result line) when the change isn't the newest version any more or Ode didn't make it.
-   * versionId null: the newest version (the Undo control on the Ode device).
    */
-  async undo(versionId: string | null): Promise<RestoreResult> {
+  async undo(versionId: string): Promise<RestoreResult> {
     const result = await this.session.exclusive(async () => {
       const recorded = await this.deps.recorder.handEdits();
       const { latest, previous } = VersionActions.changeToActOn(await this.history.list(), versionId, OdeAction.Undo);
@@ -144,9 +130,8 @@ export class VersionActions {
    * Another take of that change by Ode: puts the Set back to the version before it (keeping the history),
    * then runs the same request again. The put-back isn't saved as hand edits, so Ode's next version
    * shows the first take turning into the second. Stop pressed while the Set is put back cancels the retake.
-   * versionId null: the newest version (the Again control on the Ode device).
    */
-  async again(versionId: string | null): Promise<void> {
+  async again(versionId: string): Promise<void> {
     await this.session.exclusive(async (stopped) => {
       const recorded = await this.deps.recorder.handEdits();
       const { latest, previous } = VersionActions.changeToActOn(await this.history.list(), versionId, OdeAction.Again);
@@ -173,65 +158,6 @@ export class VersionActions {
   async why(versionId: string): Promise<void> {
     VersionActions.changeToActOn(await this.history.list(), versionId, OdeAction.Why);
     void this.session.send({ text: WHY_REQUEST, reply: { versionId } });
-  }
-
-  /** Undo or Again pressed on the Ode device (or the key or pad mapped to it in Live): on the newest change by Ode. */
-  async command(command: DeviceCommand): Promise<void> {
-    try {
-      if (command.name === "again") {
-        await this.again(null);
-        return;
-      }
-      const result = await this.undo(null);
-      if (!result.restored) this.deps.emit({ type: "error", message: result.skipped.join(" ") });
-    } catch (error) {
-      this.deps.emit({ type: "error", message: VersionActions.messageOf(error) });
-    }
-  }
-
-  /**
-   * Copies the project folder next to itself as "<folder> (<version name, or date and time>)" and marks
-   * the version, so the copy goes back to it when it is opened in Live.
-   */
-  async copy(id: string): Promise<CopyResult> {
-    if (!this.deps.song.projectDir) throw new RefusedError(SAVE_FIRST);
-    return this.copyAt(await this.history.get(id));
-  }
-
-  /** Saves the musician's hand edits, then copies the project as it is now: the copy opens at the newest version. */
-  async copyNow(): Promise<CopyResult> {
-    if (!this.deps.song.projectDir) throw new RefusedError(SAVE_FIRST);
-    return this.session.exclusive(async () => {
-      await this.deps.recorder.handEdits();
-      const newest = (await this.history.list()).at(-1);
-      if (!newest) throw new RefusedError("There is no version of the Set to copy yet.");
-      return this.copyAt(newest);
-    });
-  }
-
-  /**
-   * A copy made from History goes back to its version the first time it is open with the extension and the
-   * Ode device connected; the mark is deleted afterwards. Call it when a Set opens and when Live connects.
-   */
-  async restoreOnOpen(): Promise<void> {
-    const { extension, device } = this.deps.live;
-    if (this.openingCopy || !extension.connected() || !device.connected()) return;
-    const file = join(this.deps.song.dataDir, RESTORE_ON_OPEN);
-    const marker = await VersionActions.readMarker(file);
-    if (!marker) return;
-    this.openingCopy = true;
-    try {
-      const result = await this.restoreTo(marker.versionId, (version) => `This copy is back at the version from ${VersionActions.clock(version.time)}`);
-      await rm(file, { force: true });
-      if (!result.restored) this.deps.emit({ type: "error", message: `This copy couldn't go back to its version: ${result.skipped.join(" ")}` });
-    } catch (error) {
-      // Ode is working or Live dropped: the mark stays, and the next connection tries again.
-      if (error instanceof SessionBusyError || error instanceof SetReadError) return;
-      await rm(file, { force: true });
-      this.deps.emit({ type: "error", message: `This copy couldn't go back to its version: ${VersionActions.messageOf(error)}` });
-    } finally {
-      this.openingCopy = false;
-    }
   }
 
   private async restoreTo(id: string, resultLine: (version: Version) => string): Promise<RestoreResult> {
@@ -269,31 +195,19 @@ export class VersionActions {
     await this.refreshSuggestions();
   }
 
-  private async copyAt(version: Version): Promise<CopyResult> {
-    const project = this.deps.song.projectDir;
-    if (!project) throw new RefusedError(SAVE_FIRST);
-    const destination = await VersionActions.freeFolder(join(dirname(project), `${basename(project)} (${VersionActions.copyName(version)})`));
-    await cp(project, destination, { recursive: true, errorOnExist: true, force: false });
-    const dataDir = join(destination, relative(project, this.deps.song.dataDir));
-    await mkdir(dataDir, { recursive: true });
-    await writeFile(join(dataDir, RESTORE_ON_OPEN), `${JSON.stringify({ versionId: version.id }, null, 2)}\n`, "utf8");
-    return { path: destination };
-  }
-
   private async refreshSuggestions(): Promise<void> {
     await this.deps.selection.refresh().catch(() => undefined);
   }
 
   /**
-   * The change an action applies to: the newest version, made by Ode and named by versionId (null: whichever it is),
-   * with the version before it. Otherwise RefusedError saying why, from the history: the musician changed the Set
+   * The change an action applies to: the newest version, made by Ode and named by versionId, with the version before it. Otherwise RefusedError saying why, from the history: the musician changed the Set
    * since a change by Ode, Ode changed it again since, or there is no change by Ode.
    */
-  private static changeToActOn(versions: Version[], versionId: string | null, action: OdeAction): { latest: Version; previous: Version } {
+  private static changeToActOn(versions: Version[], versionId: string, action: OdeAction): { latest: Version; previous: Version } {
     const latest = versions.at(-1);
     const previous = versions.at(-2);
     if (latest?.author === VersionAuthor.Ode && previous) {
-      if (versionId === null || latest.id === versionId) return { latest, previous };
+      if (latest.id === versionId) return { latest, previous };
       throw new RefusedError(NEWER_CHANGE);
     }
     const editedSince = latest?.author === VersionAuthor.Musician && versions.some((version) => version.author === VersionAuthor.Ode);
@@ -310,31 +224,5 @@ export class VersionActions {
 
   private static clock(time: string): string {
     return new Date(time).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-  }
-
-  /** The version's name, or its date and time ("2026-10-28 22.38"), made safe for a folder name. */
-  private static copyName(version: Version): string {
-    const named = version.name?.replace(UNSAFE_IN_FOLDER_NAMES, "-").trim();
-    if (named) return named;
-    const time = new Date(version.time);
-    const pad = (value: number) => String(value).padStart(2, "0");
-    return `${time.getFullYear()}-${pad(time.getMonth() + 1)}-${pad(time.getDate())} ${pad(time.getHours())}.${pad(time.getMinutes())}`;
-  }
-
-  /** The folder, or the same name followed by 2, 3 … when it is taken. */
-  private static async freeFolder(path: string): Promise<string> {
-    const taken = (candidate: string) => stat(candidate).then(() => true, () => false);
-    if (!(await taken(path))) return path;
-    let number = 2;
-    while (await taken(`${path} ${number}`)) number += 1;
-    return `${path} ${number}`;
-  }
-
-  private static async readMarker(file: string): Promise<z.infer<typeof RestoreMarkerSchema> | null> {
-    try {
-      return RestoreMarkerSchema.parse(JSON.parse(await readFile(file, "utf8")));
-    } catch {
-      return null;
-    }
   }
 }

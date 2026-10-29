@@ -1,10 +1,11 @@
-import britishHyphenation from "hyphen/en-gb/index.js";
-import americanHyphenation from "hyphen/en-us/index.js";
+import createHyphenator from "hyphen/hyphen.js";
+import britishPatterns from "hyphen/patterns/en-gb.js";
+import americanPatterns from "hyphen/patterns/en-us.js";
 import type { Accent } from "../../shared/personalisation";
 import { vowelGroups } from "./grapheme-aligner";
 
-/** TeX hyphenation patterns from the hyphen package, per spelling. */
-const HYPHENATION: Readonly<Record<Accent, HyphenationPatterns>> = { us: americanHyphenation, uk: britishHyphenation };
+/** Hyphenators built from the hyphen package's TeX patterns, per spelling. */
+const HYPHENATION: Readonly<Record<Accent, Hyphenate>> = { us: createHyphenator(americanPatterns), uk: createHyphenator(britishPatterns) };
 const SOFT_HYPHEN = "\u00AD";
 const SPLIT_ANY_LENGTH = 1;
 const DIGRAPHS = new Set(["ch", "sh", "th", "ph", "wh", "ck", "gh", "ng"]);
@@ -49,7 +50,7 @@ export class SyllableSpeller {
   }
 
   private hyphenate(word: string): string[] {
-    const marked = HYPHENATION[this.accent].hyphenateSync(word, { hyphenChar: SOFT_HYPHEN, minWordLength: SPLIT_ANY_LENGTH });
+    const marked = HYPHENATION[this.accent](word, { hyphenChar: SOFT_HYPHEN, minWordLength: SPLIT_ANY_LENGTH });
     const pieces = marked.split(SOFT_HYPHEN).filter((piece) => piece.length > 0);
     return pieces.join("") === word ? pieces : [word];
   }

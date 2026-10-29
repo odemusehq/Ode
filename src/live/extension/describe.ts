@@ -29,9 +29,11 @@ import type {
   SceneInfo,
   SongInfo,
   TakeLaneInfo,
+  TimeSignature,
   TrackInfo,
   TrackSummary,
 } from "../../shared/live-ops";
+import { LIVE_DEFAULT_SIGNATURE } from "../../shared/live-ops";
 import type { LiveSet } from "./live-set";
 import { ClipPlace, clipReference, type ClipLocation } from "./locations";
 import { fromLiveNotes } from "./notes";
@@ -57,6 +59,12 @@ export class Describer {
       tracks: tracks.regular.map((track) => this.trackSummary(track, tracks)),
       returnTracks: tracks.returns.map((track) => this.trackSummary(track, tracks)),
     };
+  }
+
+  /** The Set's meter: the first scene with a time signature of its own, or Live's default. */
+  signature(): TimeSignature {
+    const scene = this.set.song.scenes.find((each) => each.signatureNumerator > 0 && each.signatureDenominator > 0);
+    return scene ? { numerator: scene.signatureNumerator, denominator: scene.signatureDenominator } : { ...LIVE_DEFAULT_SIGNATURE };
   }
 
   /** Tempo, grid, key and scale, scenes and locators. */

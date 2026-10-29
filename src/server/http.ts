@@ -1,21 +1,20 @@
+import { randomBytes } from "node:crypto";
 import { readFile, rm, writeFile } from "node:fs/promises";
-import { basename, extname, join, relative } from "node:path";
-import { serve, type ServerType } from "@hono/node-server";
-import { serveStatic } from "@hono/node-server/serve-static";
-import { createNodeWebSocket } from "@hono/node-ws";
+import { basename, extname, join } from "node:path";
+import { serve } from "@hono/node-server";
 import { Hono, type Context } from "hono";
+import { getCookie, setCookie } from "hono/cookie";
 import { streamSSE } from "hono/streaming";
-import type { WSContext } from "hono/ws";
 import { z } from "zod";
-import { API, type StatusResponse } from "../shared/api";
-import { LIVE_SOCKET_PATHS, type LivePointer, type LiveResponse } from "../shared/live";
+import { API, type SongsResponse, type StatusResponse } from "../shared/api";
+import type { LiveConnections } from "../shared/live";
 import type { UiEvent } from "../shared/events";
-import type { OdeConfig } from "../shared/config";
+import type { DialogView, OdeConfig } from "../shared/config";
 import { Mode } from "../shared/personalisation";
 import { VersionAuthor, type RestoreResult } from "../shared/versions";
 import type { LyricsStore } from "../mneme/lyrics-store";
 import { VersionNotFoundError } from "../mneme/version-history";
-import { tempFile } from "../mneme/paths";
+import type { TempFolder } from "../mneme/paths";
 import type { PreferencesStore } from "../mneme/preferences";
 import type { SettingsStore } from "../mneme/settings-store";
 import type { SongStore } from "../mneme/song-store";
@@ -27,18 +26,22 @@ import { Decision, type Approvals } from "../harness/approvals";
 import { SessionBusyError } from "../harness/session";
 import type { SessionManager } from "../harness/session-manager";
 import type { EventBus } from "./event-bus";
-import type { LiveHub, SocketLink } from "./live-hub";
 import type { Questions } from "./questions";
 import type { SelectionState } from "./selection";
 import { SetReadError } from "./snapshot-reader";
+import type { SongSwitcher } from "./song-switcher";
 import { SongTitle } from "./song-title";
 import { RefusedError, type VersionActions } from "./version-actions";
+
+/** The built UI's files by path ("index.html", "assets/index-….js"), each base64-encoded. */
+export type UiFiles = Readonly<Record<string, string>>;
 
 export interface ServerDeps {
   config: OdeConfig;
   bus: EventBus;
-  live: LiveHub;
+  live: LiveConnections;
   song: SongStore;
+  songs: SongSwitcher;
   lyrics: LyricsStore;
   prefs: PreferencesStore;
   services: Services;
@@ -49,6 +52,8 @@ export interface ServerDeps {
   sessions: SessionManager;
   versions: VersionActions;
   selection: SelectionState;
+  temp: TempFolder;
+  ui: UiFiles;
 }
 
 const TextSchema = z.object({ text: z.string().trim().min(1) });
@@ -58,6 +63,8 @@ const NameSchema = z.object({ name: z.string() });
 const ModeSchema = z.object({ mode: z.enum(Mode) });
 const LyricsWriteSchema = z.object({ text: z.string(), baseRevision: z.number().int().min(0) });
 const VersionRequestSchema = z.object({ versionId: z.string().min(1) });
+const SongOpenSchema = z.object({ id: z.string().min(1) });
+const SongCreateSchema = z.object({ title: z.string() });
 const RestoreRequestSchema = z.object({ confirmed: z.literal(true) });
 
 const SEND_VERSION_ID = "Send { versionId } with the id of the change by Ode.";
@@ -76,48 +83,90 @@ const RELEASE_CONTENT_TYPES: ReadonlyMap<string, string> = new Map([
 ]);
 const OTHER_CONTENT_TYPE = "application/octet-stream";
 
-/** The local HTTP server: the UI's API and event stream, the Live parts' sockets, and the built UI. */
+/** Content types of the built UI's files. */
+const UI_CONTENT_TYPES: ReadonlyMap<string, string> = new Map([
+  [".html", "text/html; charset=utf-8"],
+  [".js", "text/javascript; charset=utf-8"],
+  [".css", "text/css; charset=utf-8"],
+  [".svg", "image/svg+xml"],
+  [".png", "image/png"],
+  [".ico", "image/x-icon"],
+  [".woff2", "font/woff2"],
+  [".woff", "font/woff"],
+  [".json", "application/json"],
+]);
+/** The page every view of the UI starts from. */
+const UI_INDEX = "index.html";
+/** The cookie that carries the session's token once a dialog's first request has shown it. */
+const TOKEN_COOKIE = "ode";
+
+/**
+ * The local server inside the extension: the UI that Ode's dialogs load, its API and its event stream. It listens on
+ * 127.0.0.1 alone, on a port the system picks, and answers only requests that carry this session's token.
+ */
 export class OdeServer {
   private static readonly KEEPALIVE_MS = 15_000;
+  /** Only this machine reaches the server. */
+  private static readonly HOST = "127.0.0.1";
+  private static readonly TOKEN_BYTES = 24;
   private readonly app = new Hono();
-  private readonly sockets = createNodeWebSocket({ app: this.app });
+  private readonly token = randomBytes(OdeServer.TOKEN_BYTES).toString("hex");
+  private port = 0;
 
   constructor(private readonly deps: ServerDeps) {}
 
-  start(): ServerType {
+  /** Starts listening; resolves once the port is known. */
+  start(): Promise<void> {
     this.app.onError((error, c) => c.json({ error: OdeServer.messageOf(error) }, 500));
-    this.routeLiveSockets();
+    this.app.use("*", (c, next) => this.authorize(c, next));
     this.routeApi();
+    this.routeSongs();
     this.routeVersions();
     this.routeSettings();
     this.routeUi();
-    const server = serve({ fetch: this.app.fetch, hostname: this.deps.config.host, port: this.deps.config.port });
-    this.sockets.injectWebSocket(server);
-    return server;
+    return new Promise((resolve) => {
+      serve({ fetch: this.app.fetch, hostname: OdeServer.HOST, port: 0 }, (info) => {
+        this.port = info.port;
+        resolve();
+      });
+    });
   }
 
-  private routeLiveSockets(): void {
-    const { live } = this.deps;
-    this.app.get(LIVE_SOCKET_PATHS.extension, this.socketHandler(live.extension));
-    this.app.get(LIVE_SOCKET_PATHS.device, this.socketHandler(live.device));
+  /** A dialog's address: the view on this server, with the token that lets it in. Live's dialogs load http://localhost. */
+  url(view: DialogView): string {
+    return `http://localhost:${this.port}/?view=${view}&token=${this.token}`;
   }
 
-  private socketHandler(link: SocketLink) {
-    const { live } = this.deps;
-    return this.sockets.upgradeWebSocket(() => {
-      let connection: WSContext | null = null;
-      return {
-        onOpen: (_event, socket) => {
-          connection = socket;
-          link.attach(socket);
-          live.publishStatus();
-        },
-        onMessage: (event) => link.receive(String(event.data)),
-        onClose: () => {
-          if (connection) link.detach(connection);
-          live.publishStatus();
-        },
-      };
+  /** Lets in requests that carry the token, in the address (a dialog's first request) or in the cookie it then gets. */
+  private async authorize(c: Context, next: () => Promise<void>) {
+    if (c.req.query("token") === this.token) {
+      setCookie(c, TOKEN_COOKIE, this.token, { httpOnly: true, sameSite: "Strict", path: "/" });
+      return next();
+    }
+    if (getCookie(c, TOKEN_COOKIE) === this.token) return next();
+    return c.text("Open Ode from Live's right-click menu.", 403);
+  }
+
+  /** The songs the musician works on with Ode, and moving between them. */
+  private routeSongs(): void {
+    const { app } = this;
+    const { songs } = this.deps;
+
+    app.get(API.songs, async (c) => {
+      const response: SongsResponse = await songs.list();
+      return c.json(response);
+    });
+
+    app.post(API.songsOpen, async (c) => {
+      const parsed = SongOpenSchema.safeParse(await OdeServer.body(c));
+      if (!parsed.success) return c.json({ error: "Send { id } with the song to open." }, 400);
+      return this.answer(c, () => songs.open(parsed.data.id));
+    });
+
+    app.post(API.songs, async (c) => {
+      const parsed = SongCreateSchema.safeParse(await OdeServer.body(c));
+      if (!parsed.success) return c.json({ error: "Send { title } with the new song's title." }, 400);
+      return this.answer(c, () => songs.create(parsed.data.title));
     });
   }
 
@@ -145,7 +194,7 @@ export class OdeServer {
         busy: sessions.current.isBusy,
         stoppable: sessions.current.isStoppable,
         mode: await prefs.mode(),
-        title: SongTitle.of((await song.read()).title, song.setFilePath),
+        title: SongTitle.of((await song.read()).title),
         versionGroupMinutes: config.versions.groupMinutes,
       };
       return c.json(status);
@@ -190,7 +239,7 @@ export class OdeServer {
     app.post(API.speech, async (c) => {
       const audio = Buffer.from(await c.req.arrayBuffer());
       if (audio.length === 0) return c.json({ error: "Send the recording as a WAV file." }, 400);
-      const path = await tempFile("wav");
+      const path = await this.deps.temp.file("wav");
       try {
         await writeFile(path, audio);
         const text = (await services.transcribe(path)).text.trim();
@@ -202,21 +251,9 @@ export class OdeServer {
         await rm(path, { force: true });
       }
     });
-
-    app.post(API.livePointer, async (c) => {
-      const received = await c.req.json<LivePointer>();
-      void selection.point(received).catch(() => undefined);
-      return c.json({ ok: true });
-    });
-
-    app.get(API.livePending, (c) => c.json(live.extension.takeQueue()));
-    app.post(API.liveResults, async (c) => {
-      live.extension.storeResults(await c.req.json<LiveResponse[]>());
-      return c.json({ ok: true });
-    });
   }
 
-  /** History, copies, Undo, Again and Why?. */
+  /** History, Undo, Again and Why?. */
   private routeVersions(): void {
     const { app } = this;
     const { versions } = this.deps;
@@ -245,8 +282,6 @@ export class OdeServer {
       return this.answer(c, () => versions.name(c.req.param("id"), parsed.data.name));
     });
 
-    app.post("/api/versions/:id/copy", (c) => this.answer(c, () => versions.copy(c.req.param("id"))));
-    app.post(API.copyNow, (c) => this.answer(c, () => versions.copyNow()));
 
     // A refused Undo shows no result line: it answers 409 with the reason, also as a RestoreResult.
     app.post(API.undo, async (c) => {
@@ -312,10 +347,16 @@ export class OdeServer {
     });
   }
 
+  /** The built UI, bundled into the extension: a file by its path, and every view from index.html. */
   private routeUi(): void {
-    const root = relative(process.cwd(), join(this.deps.config.repoDir, "dist", "ui"));
-    this.app.use("/*", serveStatic({ root }));
-    this.app.get("*", serveStatic({ path: join(root, "index.html") }));
+    const { ui } = this.deps;
+    this.app.get("*", (c) => {
+      const asked = decodeURIComponent(c.req.path).replace(/^\/+/, "");
+      const path = asked in ui ? asked : UI_INDEX;
+      const file = ui[path];
+      if (file === undefined) return c.text("Ode's pages are missing from this build.", 404);
+      return c.body(Buffer.from(file, "base64"), 200, { "Content-Type": UI_CONTENT_TYPES.get(extname(path).toLowerCase()) ?? OTHER_CONTENT_TYPE });
+    });
   }
 
   /** Runs a version action and answers with its result, or with the reason it couldn't be done (404 unknown version, 409 not now). */

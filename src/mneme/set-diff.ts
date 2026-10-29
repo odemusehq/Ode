@@ -1,7 +1,7 @@
 import { basename } from "node:path";
 import { diffIndices } from "node-diff3";
 import { MIXER_INDEX, TAG_SEPARATOR, type Note, type TrackRef } from "../shared/live";
-import type { AudioClipInfo, ClipInfo, LocatorInfo, ParameterInfo, SceneInfo, TransportState } from "../shared/live-ops";
+import type { AudioClipInfo, ClipInfo, LocatorInfo, ParameterInfo, SceneInfo, TimeSignature } from "../shared/live-ops";
 import { NOTE_NAMES, noteName } from "../shared/notes";
 import type { ChainSnapshot, DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
 import type { LeadSheet, Section } from "../shared/song";
@@ -94,7 +94,7 @@ interface DevicePlace {
 /** Plain words for what is in the Set, shared by change labels and the project map. */
 export class SetWording {
   /** Quarter-note beats in one bar. */
-  static beatsPerBar(signature: TransportState["signature"]): number {
+  static beatsPerBar(signature: TimeSignature): number {
     return (signature.numerator * QUARTER_NOTES_PER_WHOLE_NOTE) / signature.denominator;
   }
 
@@ -125,7 +125,7 @@ export class SetWording {
   }
 
   /** "4/4". */
-  static signature(signature: TransportState["signature"]): string {
+  static signature(signature: TimeSignature): string {
     return `${signature.numerator}/${signature.denominator}`;
   }
 
@@ -579,7 +579,7 @@ class DiffBuilder {
     private readonly from: SetSnapshot,
     private readonly to: SetSnapshot,
   ) {
-    this.beatsPerBar = SetWording.beatsPerBar(to.transport.signature);
+    this.beatsPerBar = SetWording.beatsPerBar(to.signature);
     this.returns = Matcher.tracks(from.returnTracks, to.returnTracks);
   }
 
@@ -619,8 +619,8 @@ class DiffBuilder {
     if (!Values.same(keyBefore, keyAfter)) {
       this.add(ChangeKind.Changed, { scope: "song", field: "key" }, `Song · ${DiffBuilder.keyWords(keyBefore, keyAfter)}`, keyBefore, keyAfter);
     }
-    const signatureBefore = this.from.transport.signature;
-    const signatureAfter = this.to.transport.signature;
+    const signatureBefore = this.from.signature;
+    const signatureAfter = this.to.signature;
     if (signatureBefore.numerator !== signatureAfter.numerator || signatureBefore.denominator !== signatureAfter.denominator) {
       const label = `Song · time signature ${SetWording.signature(signatureBefore)} → ${SetWording.signature(signatureAfter)}`;
       this.add(ChangeKind.Changed, { scope: "song", field: "signature" }, label, signatureBefore, signatureAfter);
@@ -1341,8 +1341,8 @@ class SnapshotPatcher {
       song.scaleMode = key.scaleMode;
       song.scaleIntervals = [...key.scaleIntervals];
     } else if (target.field === "signature" && isRecord(value)) {
-      const signature = value as unknown as TransportState["signature"];
-      this.set.transport.signature = { numerator: signature.numerator, denominator: signature.denominator };
+      const signature = value as unknown as TimeSignature;
+      this.set.signature = { numerator: signature.numerator, denominator: signature.denominator };
     } else if (target.field === "locators" && Array.isArray(value)) {
       song.locators = structuredClone(value) as LocatorInfo[];
     } else if (target.field === "scenes" && Array.isArray(value)) {

@@ -19,18 +19,15 @@ export const API = {
   version: (id: string) => `/api/versions/${encodeURIComponent(id)}`, // GET → VersionDetail
   versionRestore: (id: string) => `/api/versions/${encodeURIComponent(id)}/restore`, // POST RestoreRequest → RestoreResult
   versionName: (id: string) => `/api/versions/${encodeURIComponent(id)}/name`, // POST VersionNameRequest → VersionListItem
-  versionCopy: (id: string) => `/api/versions/${encodeURIComponent(id)}/copy`, // POST → CopyResult (a copy of the project at that version)
-  copyNow: "/api/copy", // POST → CopyResult (saves the hand edits, then copies the project as it is now)
   undo: "/api/undo", // POST VersionRequest → RestoreResult (back to the version before that change by Ode)
   again: "/api/again", // POST VersionRequest → { ok: true } (another take of that change by Ode, in place)
   why: "/api/why", // POST VersionRequest → { ok: true } (the answer arrives as an "answer" event)
   mode: "/api/mode", // PUT ModeRequest → { mode: Mode }
   speech: "/api/speech", // POST a mono WAV of the musician speaking → { text } (also sent to Ode as a request)
+  songs: "/api/songs", // GET → SongsResponse; POST { title } → SongEntry (a new song, now in use)
+  songsOpen: "/api/songs/open", // POST { id } → SongEntry (that song, now in use)
   settings: "/api/settings", // GET → SettingsResponse; PUT SettingsUpdate → SettingsView
   settingsModels: "/api/settings/models", // POST ModelListRequest → ChatModelOption[] (the models a key reaches)
-  livePointer: "/api/live/pointer", // POST LivePointer (from the extension)
-  livePending: "/api/live/pending", // GET → LiveRequest[] (extension fallback when its connection was closed)
-  liveResults: "/api/live/results", // POST LiveResponse[] (extension fallback)
 } as const;
 
 /** The cover art the release uses, in the release folder. */
@@ -76,9 +73,10 @@ export interface VersionNameRequest {
   name: string;
 }
 
-export interface CopyResult {
-  /** Folder of the copied project. */
-  path: string;
+/** Every song the musician works on with Ode, and the one in use now. */
+export interface SongsResponse {
+  current: string;
+  songs: { id: string; title: string; updatedAt: string }[];
 }
 
 export interface ModeRequest {

@@ -1,4 +1,3 @@
-import type { ClipRef, TrackRef } from "../shared/live";
 import type { AudioClipInfo, ClipInfo, ParameterInfo, SceneInfo, TrackKind } from "../shared/live-ops";
 import { noteName } from "../shared/notes";
 import type { ChainSnapshot, DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
@@ -65,9 +64,6 @@ const TELLING_PARAMETER_WORDS = [
   "macro",
 ];
 
-/** How far apart, in beats, a selected clip's start and a clip's start can be and still be the same clip. */
-const BEAT_TOLERANCE = 0.001;
-
 const LEFT_OUT = "Some detail is left out to keep this short; every detail can be read with the read tools.";
 
 const KIND_WORDS: Readonly<Record<TrackKind, string>> = { midi: "MIDI", audio: "audio", group: "group", return: "return", main: "main" };
@@ -100,12 +96,12 @@ class MapWriter {
   private readonly beatsPerBar: number;
 
   constructor(private readonly set: SetSnapshot) {
-    this.beatsPerBar = SetWording.beatsPerBar(set.transport.signature);
+    this.beatsPerBar = SetWording.beatsPerBar(set.signature);
   }
 
   write(detail: Detail): string {
     const { tracks, returnTracks, main } = this.set;
-    const lines = [this.songLine(), this.selectionLine()];
+    const lines = [this.songLine()];
     lines.push(tracks.length > 0 ? "Tracks (indexes count from 0, as in the tools; bars count from 1):" : "Tracks: none");
     tracks.forEach((track, index) => lines.push(...this.trackLines(`${index} ${SetWording.name(track)}`, track, detail, true)));
     if (returnTracks.length > 0) lines.push("Return tracks:");
@@ -114,81 +110,11 @@ class MapWriter {
     return lines.filter((line) => line.length > 0).join("\n");
   }
 
-  /** Tempo, time signature, key and scale, and what the transport is doing. */
+  /** Tempo, time signature, key and scale. */
   private songLine(): string {
-    const { song, transport } = this.set;
+    const { song, signature } = this.set;
     const key = `${SetWording.key(song.rootNote, song.scaleName)}${song.scaleMode ? " (Scale Mode on)" : ""}`;
-    const bar = SetWording.bar(transport.time, this.beatsPerBar);
-    const playhead = `${transport.playing ? "playing" : "stopped"} at bar ${bar} (beat ${SetWording.beat(transport.time)})`;
-    const { on, start, length } = transport.loop;
-    const loop = `loop ${on ? "on" : "off"} over ${SetWording.bars(start, start + length, this.beatsPerBar)}`;
-    return `Song: ${SetWording.tempo(song.tempo)} BPM · ${SetWording.signature(transport.signature)} · ${key} · ${playhead} · ${loop}`;
-  }
-
-  private selectionLine(): string {
-    const { selection, song } = this.set;
-    const parts: string[] = [];
-    const track = selection.track ? this.findTrack(selection.track) : undefined;
-    if (track) parts.push(this.titleOf(track));
-    const clip = selection.clip ? this.findClip(selection.clip) : undefined;
-    if (clip) parts.push(this.clipTitle(clip));
-    if (selection.scene !== null) {
-      const name = song.scenes[selection.scene]?.name;
-      parts.push(`scene ${selection.scene}${name ? ` ${name}` : ""}`);
-    }
-    return `Selected: ${parts.length > 0 ? parts.join(" · ") : "nothing, so the whole song"}`;
-  }
-
-  private findTrack(ref: TrackRef): TrackSnapshot | undefined {
-    const { tracks, returnTracks, main } = this.set;
-    if ("main" in ref) return main;
-    if ("index" in ref) return tracks[ref.index];
-    if ("returnIndex" in ref) return returnTracks[ref.returnIndex];
-    const every = [...tracks, ...returnTracks, main];
-    if ("tag" in ref) {
-      const tag = ref.tag;
-      return every.find((track) => track.tag === tag);
-    }
-    const name = ref.name;
-    return every.find((track) => SetWording.name(track) === name);
-  }
-
-  /** "track 1 Bass", "return track 0 A-Reverb", "Main track". */
-  private titleOf(track: TrackSnapshot): string {
-    const { tracks, returnTracks } = this.set;
-    if (tracks.includes(track)) return `track ${tracks.indexOf(track)} ${SetWording.name(track)}`;
-    if (returnTracks.includes(track)) return `return track ${returnTracks.indexOf(track)} ${SetWording.name(track)}`;
-    return "Main track";
-  }
-
-  private findClip(ref: ClipRef): ClipInfo | undefined {
-    if ("tag" in ref) {
-      const tag = ref.tag;
-      return this.everyClip().find((clip) => clip.tag === tag);
-    }
-    const track = this.findTrack(ref.track);
-    if (!track) return undefined;
-    if ("slot" in ref) return track.clipSlots[ref.slot]?.clip ?? undefined;
-    const start = ref.start;
-    const clips = [...track.arrangementClips, ...track.takeLanes.flatMap((lane) => lane.clips)];
-    return clips.find((clip) => Math.abs(clip.startTime - start) <= BEAT_TOLERANCE);
-  }
-
-  private everyClip(): ClipInfo[] {
-    const { tracks, returnTracks, main } = this.set;
-    return [...tracks, ...returnTracks, main].flatMap((track) => [
-      ...track.clipSlots.flatMap((slot) => (slot.clip ? [slot.clip] : [])),
-      ...track.arrangementClips,
-      ...track.takeLanes.flatMap((lane) => lane.clips),
-    ]);
-  }
-
-  /** "clip Bass A in bars 9–16", "clip Fill in slot 2". */
-  private clipTitle(clip: ClipInfo): string {
-    const name = SetWording.name(clip);
-    const ref = clip.ref;
-    const where = "slot" in ref ? `slot ${ref.slot}` : SetWording.bars(clip.startTime, clip.endTime, this.beatsPerBar);
-    return `${name ? `clip ${name}` : "clip"} in ${where}`;
+    return `Song: ${SetWording.tempo(song.tempo)} BPM · ${SetWording.signature(signature)} · ${key}`;
   }
 
   private trackLines(title: string, track: TrackSnapshot, detail: Detail, regular: boolean): string[] {
@@ -329,12 +255,12 @@ class MapWriter {
 
   /** "2 Chorus (128 BPM, 3/4)": a tempo and time signature only when the scene sets its own. */
   private scene(scene: SceneInfo, index: number): string {
-    const { song, transport } = this.set;
+    const { song, signature } = this.set;
     const facts: string[] = [];
     if (scene.tempo > 0 && scene.tempo !== song.tempo) facts.push(`${SetWording.tempo(scene.tempo)} BPM`);
     const ownSignature =
       scene.signatureNumerator > 0 &&
-      (scene.signatureNumerator !== transport.signature.numerator || scene.signatureDenominator !== transport.signature.denominator);
+      (scene.signatureNumerator !== signature.numerator || scene.signatureDenominator !== signature.denominator);
     if (ownSignature) facts.push(`${scene.signatureNumerator}/${scene.signatureDenominator}`);
     return `${index}${scene.name ? ` ${scene.name}` : ""}${facts.length > 0 ? ` (${facts.join(", ")})` : ""}`;
   }

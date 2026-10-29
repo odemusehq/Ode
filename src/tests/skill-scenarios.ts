@@ -11,14 +11,13 @@ import { ToolLabels } from "../harness/tool-labels";
 import { ConversationStore } from "../mneme/conversations";
 import { Mneme } from "../mneme/artist";
 import { LyricsStore } from "../mneme/lyrics-store";
-import { userPaths } from "../mneme/paths";
+import { TempFolder, userPaths } from "../mneme/paths";
 import { PreferencesStore } from "../mneme/preferences";
 import { SetDiff } from "../mneme/set-diff";
 import { SettingsStore } from "../mneme/settings-store";
 import { SongStore, SongVersions } from "../mneme/song-store";
 import { ContextSummary } from "../mneme/summary";
 import { DeletionChecker } from "../server/deletion-checker";
-import { Listening } from "../server/listening";
 import { Questions } from "../server/questions";
 import { RequestContext } from "../server/request-context";
 import { SelectionState } from "../server/selection";
@@ -29,7 +28,8 @@ import { ModelServices } from "../services";
 import { ModelRoles } from "../services/model-roles";
 import { ProviderCatalog } from "../services/provider-catalog";
 import type { RoleSource } from "../services/types";
-import { ConfigError, OdeConfig } from "../shared/config";
+import { OdeConfig } from "../shared/config";
+import { ConfigError, DevConfig } from "../shared/dev-config";
 import type { UiEvent } from "../shared/events";
 import type { SetSnapshot } from "../shared/set-snapshot";
 import { LeadSheetSchema, type LeadSheet } from "../shared/song";
@@ -111,7 +111,7 @@ class ScenarioRun {
 
   async trace(): Promise<Trace> {
     const userDir = await mkdtemp(join(tmpdir(), `ode-scenario-${this.scenario.name}-`));
-    const config = OdeConfig.load({ ...process.env, ODE_USER_DIR: userDir });
+    const config = new OdeConfig(join(userDir, "storage"), join(userDir, "temp"));
     const events: UiEvent[] = [];
     const questions: Questions = new Questions((event) => this.onEvent(event, events, questions, approvals));
     const approvals: Approvals = new Approvals((event) => this.onEvent(event, events, questions, approvals));
@@ -121,8 +121,7 @@ class ScenarioRun {
     const mneme = new Mneme(paths, config.memory.halfLifeDays);
     const song = new SongStore(paths, () => undefined);
     const lyrics = new LyricsStore(song, prefs, (state) => emit({ type: "lyrics", lyrics: state }));
-    const setId = `scenario-${this.scenario.name}`;
-    await song.open({ setId, filePath: null, instance: setId });
+    await song.create(this.scenario.name);
     if (this.scenario.sheet) {
       await song.replace(this.scenario.sheet);
       await lyrics.replace(this.scenario.sheet.lyrics);
@@ -131,9 +130,10 @@ class ScenarioRun {
     const live = new FakeSetLive(this.scenario.set, TestSets.liveDevices());
     const reader = new SnapshotReader(live, song);
     const recorder = new VersionRecorder(reader, versions, emit);
-    const selection = new SelectionState({ live, reader, versions, finder: new SuggestionFinder(live, song, prefs), busy: () => false, emit });
+    const selection = new SelectionState({ reader, versions, finder: new SuggestionFinder(live, song, prefs), busy: () => false, emit });
     const services = new ModelServices(this.roles);
-    const registry = new ToolRegistry({ config, live, song, lyrics, versions, snapshots: reader, questions, mneme, prefs, services, emit });
+    const temp = new TempFolder(config.tempDir);
+    const registry = new ToolRegistry({ config, live, song, lyrics, versions, snapshots: reader, questions, mneme, prefs, services, temp, emit });
     const requests = new RequestContext({
       config,
       live,
@@ -143,10 +143,9 @@ class ScenarioRun {
       summary: new ContextSummary(mneme, song, prefs, config.memory.summaryMaxChars),
       prefs,
       selection,
-      listening: new Listening(live, reader),
       emit,
     });
-    const texts = new FolderTexts(config.repoDir);
+    const texts = new FolderTexts(DevConfig.repoDir);
     const skills = new SkillLibrary(texts);
     const agents = new OdeAgents(texts, skills);
     const labels = new ToolLabels(registry);
@@ -214,9 +213,9 @@ class ScenarioJudge {
 /** Runs the scenarios of the skills named on the command line (all when none are) and reports each statement. */
 class ScenarioSuite {
   async run(only: string[]): Promise<number> {
-    let config: OdeConfig;
+    let config: DevConfig;
     try {
-      config = OdeConfig.load();
+      config = DevConfig.load();
     } catch (error) {
       if (error instanceof ConfigError) return ScenarioSuite.skip(error.message);
       throw error;
@@ -226,7 +225,7 @@ class ScenarioSuite {
     const services = new ModelServices(roles);
     if (!(await services.available()).main) return ScenarioSuite.skip("the main model needs a provider, model and key: choose them in Ode: Settings.");
     const judge = new ScenarioJudge(services);
-    const cases = await ScenarioCase.all(join(config.repoDir, "skills"), only);
+    const cases = await ScenarioCase.all(join(DevConfig.repoDir, "skills"), only);
     const report: { skill: string; case: string; trace: Trace | null; error?: string; grades: { statement: string; passed: boolean; evidence: string }[] }[] = [];
     let failed = 0;
     for (const scenario of cases) {

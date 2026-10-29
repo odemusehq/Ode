@@ -37,8 +37,7 @@ export class TestSets {
       ],
       returnTracks: [{ ...TestSets.track(0, "A-Reverb", [TestSets.device(0, "Reverb", "Reverb", [TestSets.parameter(0, "Decay Time", 200, 60000, 2500)])], []), kind: "return" }],
       main: { ...TestSets.track(0, "Main", [TestSets.device(0, "Limiter", "Limiter", [TestSets.parameter(0, "Ceiling", -24, 0, -1)])], []), kind: "main" },
-      transport: { playing: false, time: 0, loop: { on: false, start: 0, length: 16 }, signature: { numerator: 4, denominator: 4 } },
-      selection: { track: { index: 1 }, clip: { track: { index: 1 }, start: 0 }, scene: null, time: 0, isPlaying: false },
+      signature: { numerator: 4, denominator: 4 },
     };
   }
 
@@ -62,10 +61,10 @@ export class TestSets {
     });
   }
 
-  /** What a version keeps: the Set without the time it was read, the playhead or the selection. */
-  static contents(set: SetSnapshot): SetContents & { signature: SetSnapshot["transport"]["signature"] } {
-    const { song, tracks, returnTracks, main, transport } = set;
-    return structuredClone({ song, tracks, returnTracks, main, signature: transport.signature });
+  /** What a version keeps: the Set without the time it was read. */
+  static contents(set: SetSnapshot): SetContents {
+    const { song, signature, tracks, returnTracks, main } = set;
+    return structuredClone({ song, signature, tracks, returnTracks, main });
   }
 
   /** Live's own devices as the fake Set inserts them, with values a restore has to set back. */

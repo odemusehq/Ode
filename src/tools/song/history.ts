@@ -1,7 +1,6 @@
 import { readdir } from "node:fs/promises";
 import { basename } from "node:path";
 import { z } from "zod";
-import { Mode } from "../../shared/personalisation";
 import { ProjectMap } from "../../mneme/project-map";
 import { defineTool, type AnyTool } from "../define";
 
@@ -37,9 +36,6 @@ export const historyTools: AnyTool[] = [
         if (images.length !== options.length) throw new Error("Give one image per option, in the same order as the options.");
         const missing = await missingReleaseFiles(ctx.song.releaseDir, images);
         if (missing.length > 0) throw new Error(`Not in the release folder: ${missing.join(", ")}.`);
-      }
-      if ((await ctx.prefs.mode()) === Mode.LetMeHearIt) {
-        return { choice: null, note: "Mode is Let me hear it: make your best guess and say so in your result line." };
       }
       const choice = await ctx.questions.ask(question.replace(/\s+/g, " ").trim(), options, images);
       return choice === null ? { choice: null, note: "The musician stopped Ode instead of answering." } : { choice };

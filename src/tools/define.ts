@@ -8,6 +8,7 @@ import type { SongStore, SongVersions } from "../mneme/song-store";
 import type { Mneme } from "../mneme/artist";
 import type { LyricsStore } from "../mneme/lyrics-store";
 import type { PreferencesStore } from "../mneme/preferences";
+import type { TempFolder } from "../mneme/paths";
 import type { RefNames } from "./live/ref-names";
 
 /** What a tool changes: nothing, the Live Set, or Mneme (the lyrics, the lead sheet, memory, settings, release files). */
@@ -41,6 +42,8 @@ export interface ToolContext {
   mneme: Mneme;
   prefs: PreferencesStore;
   services: Services;
+  /** Where generated and rendered files go. */
+  temp: TempFolder;
   emit: (event: UiEvent) => void;
 }
 

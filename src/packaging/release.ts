@@ -1,45 +1,36 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ExtensionBuild } from "../live/extension/build";
-import { OdeConfig } from "../shared/config";
+import { DevConfig } from "../shared/dev-config";
 
 interface PackageInfo {
   version: string;
-  engines: { node: string };
 }
 
 interface ExtensionManifest {
   version: string;
 }
 
-/** A release of Ode: its version and tag, the Node.js it needs and the names of the files it ships. */
+/** A release of Ode: its version and tag, and the extension file it ships. */
 export class Release {
-  static readonly packageFile = join(OdeConfig.repoDir, "package.json");
+  static readonly packageFile = join(DevConfig.repoDir, "package.json");
   static readonly manifestFile = join(ExtensionBuild.directory, "manifest.json");
 
-  constructor(
-    readonly version: string,
-    /** The oldest Node.js version Ode runs on. */
-    readonly node: string,
-  ) {}
+  constructor(readonly version: string) {}
 
   /** The release package.json describes. */
   static async read(): Promise<Release> {
     const info = JSON.parse(await readFile(Release.packageFile, "utf8")) as PackageInfo;
-    return new Release(info.version, info.engines.node.replace(/^\D+/, ""));
+    return new Release(info.version);
   }
 
   get tag(): string {
     return `v${this.version}`;
   }
 
-  /** The folder the archive unpacks to. */
-  get folder(): string {
-    return `Ode-${this.version}`;
-  }
-
-  get archive(): string {
-    return `${this.folder}.zip`;
+  /** The extension file musicians drop on Live's Extensions page. */
+  get extension(): string {
+    return `Ode-${this.version}.ablx`;
   }
 
   /** Checks that the Live extension's manifest has this version too. */

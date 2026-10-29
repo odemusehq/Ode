@@ -30,7 +30,7 @@ export class RefNames {
   private readonly beatsPerBar: number | null;
 
   constructor(private readonly set: SetSnapshot | null) {
-    this.beatsPerBar = set ? SetWording.beatsPerBar(set.transport.signature) : null;
+    this.beatsPerBar = set ? SetWording.beatsPerBar(set.signature) : null;
   }
 
   /** "Bass", "A-Reverb", "Main track"; otherwise "track 2", "return track 1", "the track tagged x3f". */

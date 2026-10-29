@@ -3,7 +3,7 @@ import { basename, join } from "node:path";
 import { z } from "zod";
 import { COVER_CHOICE, COVER_FILE } from "../../shared/api";
 import type { SongInfo } from "../../shared/live-ops";
-import { tempDir, tempFile, userPaths } from "../../mneme/paths";
+import { userPaths } from "../../mneme/paths";
 import { defineTool, type AnyTool, type ToolContext } from "../define";
 import { NoteSchema, TrackRefSchema } from "../live/schemas";
 
@@ -94,7 +94,7 @@ export const mediaTools: AnyTool[] = [
     input: { ...audioSource, describe: z.string().min(2) },
     run: async (input, ctx) => {
       const source = await resolveAudio(input, ctx);
-      return ctx.services.separateStem(source, input.describe, await tempDir());
+      return ctx.services.separateStem(source, input.describe, await ctx.temp.folder());
     },
   }),
   defineTool({
@@ -112,7 +112,7 @@ export const mediaTools: AnyTool[] = [
         throw new Error("No recording of the artist's voice with their consent yet. Ask them, then use voice_reference_set.");
       }
       const bpm = tempo ?? (await ctx.live.extension.call<SongInfo>("song_get", {})).tempo;
-      const path = await ctx.services.singDemoVocal({ lines, tempo: bpm, voiceModel: files.reference }, await tempFile("wav"));
+      const path = await ctx.services.singDemoVocal({ lines, tempo: bpm, voiceModel: files.reference }, await ctx.temp.file("wav"));
       return { path, tempo: bpm };
     },
   }),
@@ -126,7 +126,7 @@ export const mediaTools: AnyTool[] = [
       seconds: z.number().min(0.5).max(30),
       loop: z.boolean().optional(),
     },
-    run: async ({ prompt, seconds, loop }, ctx) => ({ path: await ctx.services.generateSound(prompt, seconds, await tempFile("mp3"), loop) }),
+    run: async ({ prompt, seconds, loop }, ctx) => ({ path: await ctx.services.generateSound(prompt, seconds, await ctx.temp.file("mp3"), loop) }),
   }),
   defineTool({
     name: "voice_reference_set",

@@ -1,15 +1,15 @@
 import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
-import { MIXER_INDEX, type ClipRef, type DeviceOp, type DeviceRef, type ExtensionOp, type LoopSettings, type Note, type TrackRef } from "../shared/live";
+import { MIXER_INDEX, type ClipRef, type DeviceRef, type ExtensionOp, type LoopSettings, type Note, type TrackRef } from "../shared/live";
 import type { AudioClipInfo, ClipInfo, LocatorInfo, MixerInfo, SceneInfo } from "../shared/live-ops";
-import { isOdeDevice, type DeviceSnapshot, type SetSnapshot, type TrackSnapshot } from "../shared/set-snapshot";
+import type { DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
 import { ChangeKind, TrackList, type ClipField, type ClipKey, type SetChange, type TrackField, type TrackKey } from "../shared/versions";
 import type { ClipAudio, ClipLoop } from "../mneme/set-diff";
 import { BEAT_TOLERANCE, SetLookup } from "./set-lookup";
 
 /** One Live operation of a restore. */
 export interface PlannedCall {
-  op: ExtensionOp | DeviceOp;
+  op: ExtensionOp;
   args: unknown;
   /** What the call puts back, in plain words, for when it fails. */
   label: string;
@@ -70,16 +70,11 @@ const EDIT_OPS: ReadonlySet<string> = new Set([
   "scene_rename",
   "drum_pad_set_note",
   "simpler_replace_sample",
-  "song_set_key",
-  "song_set_time_signature",
 ]);
 
 const SETTABLE_TRACK_FIELDS: ReadonlySet<TrackField> = new Set(["name", "mute", "solo", "arm"]);
-/** Live's mixer parameters: volume, pan, then one send per return track. */
-const MIXER_SENDS_FROM = 2;
 /** Live keeps at least two warp markers on a warped clip; more means the musician placed some. */
 const DEFAULT_WARP_MARKERS = 2;
-const TIME_SIGNATURE_DENOMINATORS: ReadonlySet<number> = new Set([1, 2, 4, 8, 16]);
 /** A short tag for a track created again without one, so later steps can find it. */
 const TAG_BYTES = 2;
 
@@ -142,8 +137,8 @@ interface Removal {
  * Turns the changes from the current Set to an earlier version (SetDiff.between(current, target)) into
  * Live operations, ordered so each runs after what it needs. Removed and changed objects are addressed
  * by their place in the current Set, added ones by their place in the version restored. What Live
- * can't put back (plug-ins and presets, group tracks, missing audio files) is listed as skipped.
- * The Ode device is never removed, added or changed, and neither is a track that holds it.
+ * can't put back (plug-ins and presets, group tracks, return tracks, missing audio files, the key and time signature)
+ * is listed as skipped.
  * Lead sheet changes need no Live calls: the restore writes the sheet back itself.
  */
 export class RestorePlanner {
@@ -154,7 +149,7 @@ export class RestorePlanner {
   private readonly removals: Removal[] = [];
   private readonly lookup: SetLookup;
   private removedTracks: TrackKey[] = [];
-  /** The removed tracks that are deleted (never a group track or one holding the Ode device), which moves the tracks after them up. */
+  /** The removed tracks that are deleted (every one but a group track), which moves the tracks after them up. */
   private deletedTracks: TrackKey[] = [];
   private addedTracks: TrackKey[] = [];
   /** Devices removed or added whole: what is inside them goes with them. */
@@ -162,7 +157,6 @@ export class RestorePlanner {
   /** Devices paired with a different device of the same class (other parameters): their values don't carry over. */
   private differentDevices: { track: TrackKey; path: number[] }[] = [];
   /** Where each return track the restore adds will be, by its place in the version restored. */
-  private newReturnPlaces = new Map<number, number>();
 
   constructor(private readonly current: SetSnapshot) {
     this.lookup = new SetLookup(current);
@@ -174,18 +168,18 @@ export class RestorePlanner {
   }
 
   /**
-   * True when a restore can add the device back as it is: one of Live's own devices (never a plug-in, a preset or the
-   * Ode device), with its sample file still there, and every device inside its chains the same.
+   * True when a restore can add the device back as it is: one of Live's own devices, with its sample file still there,
+   * and every device inside its chains the same.
    */
   static canAddBack(device: DeviceSnapshot): boolean {
-    if (isOdeDevice(device) || RestorePlanner.insertName(device) === null) return false;
+    if (RestorePlanner.insertName(device) === null) return false;
     if (device.sample && !existsSync(device.sample)) return false;
     return (device.chains ?? []).every((chain) => chain.devices.every((inner) => RestorePlanner.canAddBack(inner)));
   }
 
-  /** True when a restore can create the track again with all its devices: a MIDI, audio or return track, never a group track. */
+  /** True when a restore can create the track again with all its devices: a MIDI or audio track. */
   static canAddBackTrack(track: TrackSnapshot): boolean {
-    const creatable = track.kind === "midi" || track.kind === "audio" || track.kind === "return";
+    const creatable = track.kind === "midi" || track.kind === "audio";
     return creatable && track.devices.every((device) => RestorePlanner.canAddBack(device));
   }
 
@@ -193,7 +187,7 @@ export class RestorePlanner {
     const removed = RestorePlanner.presence(changes, "track", ChangeKind.Removed);
     this.removedTracks = removed.map((change) => RestorePlanner.trackOf(change));
     this.deletedTracks = removed
-      .filter((change) => !RestorePlanner.isGroup(change) && !RestorePlanner.holdsOdeDevice(change.before))
+      .filter((change) => !RestorePlanner.isGroup(change) && RestorePlanner.trackOf(change).list === TrackList.Tracks)
       .map((change) => RestorePlanner.trackOf(change));
     this.addedTracks = RestorePlanner.presence(changes, "track", ChangeKind.Added).map((change) => RestorePlanner.trackOf(change));
     this.wholeDevices = [
@@ -203,7 +197,6 @@ export class RestorePlanner {
     this.differentDevices = RestorePlanner.presence(changes, "device", ChangeKind.Changed)
       .filter((change) => RestorePlanner.isDifferentDevice(change))
       .map((change) => RestorePlanner.devicePlace(change));
-    this.newReturnPlaces = this.returnPlaces(RestorePlanner.presence(changes, "track", ChangeKind.Added));
 
     const additions: DeviceAddition[] = [];
     for (const change of changes) {
@@ -223,7 +216,6 @@ export class RestorePlanner {
         const path = [...target.chain, target.index];
         const inside = (devices: { track: TrackKey; path: number[] }[]) => RestorePlanner.within(devices, target.track, path, false);
         if (this.coveredTrack(target.track) || inside(this.wholeDevices) || inside(this.differentDevices)) continue;
-        if (this.touchesOdeDevice(change)) continue;
         if (target.field === "parameter") this.planParameter(change, target.track, target.chain, target.index, target.parameter);
         else if (change.kind === ChangeKind.Removed) this.planDeviceRemoval(change, target.track, target.chain, target.index);
         else if (change.kind === ChangeKind.Added) additions.push({ change, track: target.track, chain: target.chain, index: target.index });
@@ -249,19 +241,11 @@ export class RestorePlanner {
         if (typeof after === "number") this.staged.add(Stage.SongValues, { op: "song_set_tempo", args: { tempo: after }, label });
         else this.skipped.push(label);
         return;
-      case "key": {
-        const key = RestorePlanner.keyOf(after);
-        if (key) this.staged.add(Stage.SongValues, { op: "song_set_key", args: key, label });
-        else this.skipped.push(label);
+      case "key":
+      case "signature":
+        // Live's key, scale and time signature stay with the musician.
+        this.skipped.push(label);
         return;
-      }
-      case "signature": {
-        const { numerator, denominator } = (after ?? {}) as { numerator?: unknown; denominator?: unknown };
-        if (typeof numerator === "number" && typeof denominator === "number" && TIME_SIGNATURE_DENOMINATORS.has(denominator)) {
-          this.staged.add(Stage.SongValues, { op: "song_set_time_signature", args: { numerator, denominator }, label });
-        } else this.skipped.push(label);
-        return;
-      }
       case "locators":
         this.planLocators(RestorePlanner.listOf<LocatorInfo>(change.before), RestorePlanner.listOf<LocatorInfo>(change.after));
         return;
@@ -325,20 +309,16 @@ export class RestorePlanner {
   }
 
   /**
-   * Deleting a group track in Live deletes its tracks too, so a group is never removed (its tracks are, one by one).
-   * A track holding the Ode device stays, so Ode stays connected.
+   * Deleting a group track in Live deletes its tracks too, so a group stays (its tracks go, one by one). Return tracks
+   * are added and removed in Live itself.
    */
   private planTrackRemoval(change: SetChange, key: TrackKey): void {
     if (RestorePlanner.isGroup(change)) {
-      this.skipped.push(`${key.name} (a group track can't be removed on its own)`);
-      return;
-    }
-    if (RestorePlanner.holdsOdeDevice(change.before)) {
-      this.skipped.push(`${key.name} (it holds the Ode device)`);
+      this.skipped.push(`${key.name} (a group track stays; its tracks go one by one)`);
       return;
     }
     if (key.list === TrackList.Returns) {
-      this.removals.push({ call: { op: "song_delete_return_track", args: { index: key.index }, label: change.label }, depth: 0, index: key.index });
+      this.skipped.push(`${key.name} (return tracks are removed in Live)`);
     } else if (key.list === TrackList.Tracks) {
       this.removals.push({ call: { op: "song_delete_track", args: { track: RestorePlanner.currentRef(key) }, label: change.label }, depth: 0, index: key.index });
     }
@@ -350,32 +330,11 @@ export class RestorePlanner {
     for (const removal of ordered) this.staged.add(Stage.Remove, removal.call);
   }
 
-  /** Return tracks the restore adds go after the ones that stay, in the order of the version restored. */
-  private returnPlaces(added: SetChange[]): Map<number, number> {
-    const kept = this.current.returnTracks.length - this.deletedTracks.filter((key) => key.list === TrackList.Returns).length;
-    const places = added
-      .filter((change) => RestorePlanner.trackOf(change).list === TrackList.Returns && RestorePlanner.isTrack(change.after as TrackSnapshot | undefined))
-      .map((change) => RestorePlanner.trackOf(change).index)
-      .sort((a, b) => a - b);
-    return new Map(places.map((index, order) => [index, kept + order]));
-  }
-
-  /** Return tracks come first among the additions; their devices and mixer follow once they exist. */
+  /** Return tracks are added in Live itself, so a version's extra return tracks are listed as skipped. */
   private planNewReturnTracks(changes: SetChange[]): void {
-    const returns = changes
-      .filter((change) => RestorePlanner.trackOf(change).list === TrackList.Returns)
-      .sort((a, b) => RestorePlanner.trackOf(a).index - RestorePlanner.trackOf(b).index);
-    for (const change of returns) {
+    for (const change of changes.filter((entry) => RestorePlanner.trackOf(entry).list === TrackList.Returns)) {
       const track = change.after as TrackSnapshot | undefined;
-      const place = this.newReturnPlaces.get(RestorePlanner.trackOf(change).index);
-      if (!RestorePlanner.isTrack(track) || place === undefined) {
-        this.skipped.push(change.label);
-        continue;
-      }
-      const ref: TrackRef = { returnIndex: place };
-      this.staged.add(Stage.Add, { op: "song_create_return_track", args: {}, label: `return track ${track.name}` });
-      this.staged.add(Stage.Add + 1, { op: "track_set", args: { track: ref, name: track.name }, label: `return track ${track.name}` });
-      this.fillTrack(track, ref, Stage.Add + NEXT_CREATING_STEP);
+      this.skipped.push(RestorePlanner.isTrack(track) ? `return track ${track.name} (return tracks are added in Live)` : change.label);
     }
   }
 
@@ -579,7 +538,6 @@ export class RestorePlanner {
 
   /** Inserts one of Live's own devices (from the creating step `from` on), then its values, its Simpler sample, and a rack's chains with their devices. */
   private insertDevice(track: TrackRef, chain: number[], index: number, device: DeviceSnapshot, from: number, owner: string): void {
-    if (isOdeDevice(device)) return;
     const name = RestorePlanner.insertName(device);
     const label = `${owner} · ${device.name}`;
     if (!name) {
@@ -625,14 +583,8 @@ export class RestorePlanner {
       this.staged.add(Stage.Values, { op: "parameter_set", args: { parameter: { device, parameter }, value: change.after }, label: change.label });
       return;
     }
-    // A send to a return track the restore adds: it exists once that return track is back, at its new place.
-    const place = index === MIXER_INDEX && chain.length === 0 ? this.newReturnPlaces.get(parameter - MIXER_SENDS_FROM) : undefined;
-    if (place === undefined) {
-      this.skipped.push(change.label);
-      return;
-    }
-    const device: DeviceRef = { track: this.survivingRef(key), index: MIXER_INDEX };
-    this.staged.add(Stage.Add + 1, { op: "parameter_set", args: { parameter: { device, parameter: MIXER_SENDS_FROM + place }, value: change.after }, label: change.label });
+    // A parameter the version had and the Set lacks, such as a send to a return track added in Live.
+    this.skipped.push(change.label);
   }
 
   // ─── References ────────────────────────────────────────────────────────────
@@ -655,24 +607,6 @@ export class RestorePlanner {
   /** Changes on a removed or re-created track are covered by removing or creating the whole track. */
   private coveredTrack(key: TrackKey): boolean {
     return [...this.removedTracks, ...this.addedTracks].some((track) => RestorePlanner.sameTrack(track, key));
-  }
-
-  /** True for a change to the Ode device itself: the device on either side, or the device at that place in the Set now. */
-  private touchesOdeDevice(change: SetChange): boolean {
-    const { target } = change;
-    if (target.scope !== "device") return false;
-    const sides = [change.before, change.after] as (DeviceSnapshot | undefined)[];
-    if (sides.some((side) => RestorePlanner.isDevice(side) && isOdeDevice(side))) return true;
-    if (change.kind === ChangeKind.Added) return false;
-    const track = this.lookup.trackAt(target.track);
-    const device = track ? SetLookup.deviceAt(track, target.chain, target.index) : undefined;
-    return device !== undefined && isOdeDevice(device);
-  }
-
-  /** True when a track (as a change holds it) has the Ode device on it or inside one of its racks. */
-  private static holdsOdeDevice(value: unknown): boolean {
-    const track = value as TrackSnapshot | undefined;
-    return RestorePlanner.isTrack(track) && SetLookup.devicesOf(track).some((device) => isOdeDevice(device));
   }
 
   /**
@@ -743,15 +677,6 @@ export class RestorePlanner {
   }
 
   // ─── Shapes of before and after ───────────────────────────────────────────
-
-  /** A key as SetDiff reports it ({ rootNote, scaleName, scaleMode }). */
-  private static keyOf(value: unknown): { root: number; scale: string; scaleMode?: boolean } | null {
-    const key = (value ?? {}) as { rootNote?: unknown; scaleName?: unknown; scaleMode?: unknown };
-    if (typeof key.rootNote !== "number" || typeof key.scaleName !== "string") return null;
-    return typeof key.scaleMode === "boolean"
-      ? { root: key.rootNote, scale: key.scaleName, scaleMode: key.scaleMode }
-      : { root: key.rootNote, scale: key.scaleName };
-  }
 
   /** A whole list, as SetDiff keeps locators and scenes. */
   private static listOf<T>(value: unknown): T[] {

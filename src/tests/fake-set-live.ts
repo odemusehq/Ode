@@ -1,6 +1,6 @@
 import type { ArrangementClipRef, ClipRef, ClipSlotRef, DeviceRef, LiveConnections, LiveLink, LiveStatus, LocatorRef, Note, ParameterRef, SceneRef, TrackRef } from "../shared/live";
 import { MIXER_INDEX } from "../shared/live";
-import type { ClipInfo, DeviceOpArgs, ExtensionOpArgs, MixerInfo, ParameterInfo, SetInfo, TrackSummary } from "../shared/live-ops";
+import type { ClipInfo, ExtensionOpArgs, MixerInfo, ParameterInfo, TrackSummary } from "../shared/live-ops";
 import type { ChainSnapshot, DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
 
 type Handler = (args: never) => unknown;
@@ -8,45 +8,28 @@ type Handler = (args: never) => unknown;
 /** Beats within which two Arrangement positions count as the same. */
 const SAME_BEAT = 0.001;
 
-/** One Live connection of the fake: a table of operations by name. */
+/** The fake's way into Live: a table of the extension's operations by name. */
 export class FakeLink implements LiveLink {
   constructor(
-    private readonly label: string,
     private readonly handlers: Readonly<Record<string, Handler>>,
     private readonly log: { op: string; args: unknown }[],
-    private isConnected = true,
   ) {}
 
-  get fix(): string {
-    return `connect the fake ${this.label}.`;
-  }
-
-  connected(): boolean {
-    return this.isConnected;
-  }
-
-  disconnect(): void {
-    this.isConnected = false;
-  }
-
   async call<R = unknown>(op: string, args: unknown): Promise<R> {
-    if (!this.isConnected) throw new Error(`not connected: ${this.label}`);
     const handler = this.handlers[op];
-    if (!handler) throw new Error(`the fake ${this.label} has no operation "${op}"`);
+    if (!handler) throw new Error(`the fake extension has no operation "${op}"`);
     this.log.push({ op, args });
     return handler(structuredClone(args ?? {}) as never) as R;
   }
 }
 
 /**
- * A Live Set held in memory as a SetSnapshot. It answers the extension's and the Ode device's
- * operations the way Live would, so tests and skill scenarios can run Ode against a known Set.
+ * A Live Set held in memory as a SetSnapshot. It answers the extension's operations the way Live would, so tests and
+ * skill scenarios can run Ode against a known Set.
  */
 export class FakeSetLive implements LiveConnections {
   readonly calls: { op: string; args: unknown }[] = [];
   readonly extension: FakeLink;
-  readonly device: FakeLink;
-  readonly bridge: FakeLink;
   private state: SetSnapshot;
 
   constructor(
@@ -54,9 +37,7 @@ export class FakeSetLive implements LiveConnections {
     private readonly templates: Readonly<Record<string, DeviceSnapshot>> = {},
   ) {
     this.state = structuredClone(initial);
-    this.extension = new FakeLink("Ode extension", this.extensionHandlers(), this.calls);
-    this.device = new FakeLink("Ode device", this.deviceHandlers(), this.calls);
-    this.bridge = new FakeLink("Ode bridge", {}, this.calls, false);
+    this.extension = new FakeLink(this.extensionHandlers(), this.calls);
   }
 
   /** The Set as it is now. */
@@ -70,14 +51,14 @@ export class FakeSetLive implements LiveConnections {
   }
 
   status(): LiveStatus {
-    return { extension: this.extension.connected(), device: this.device.connected(), bridge: this.bridge.connected(), setFilePath: null };
+    return { extension: true };
   }
 
   private extensionHandlers(): Record<string, Handler> {
     return {
       set_snapshot: () => {
-        const { song, tracks, returnTracks, main } = this.state;
-        return structuredClone({ song, tracks, returnTracks, main });
+        const { song, signature, tracks, returnTracks, main } = this.state;
+        return structuredClone({ song, signature, tracks, returnTracks, main });
       },
       song_get: () => ({
         ...this.state.song,
@@ -225,46 +206,6 @@ export class FakeSetLive implements LiveConnections {
           return handler(structuredClone(call.args) as never);
         });
         return { results };
-      },
-    };
-  }
-
-  private deviceHandlers(): Record<string, Handler> {
-    return {
-      set_info: (): SetInfo => ({ filePath: null, setId: "unsaved-fake", instance: "fake" }),
-      transport_get: () => structuredClone(this.state.transport),
-      selection_get: () => structuredClone(this.state.selection),
-      loop_set: ({ on, start, length }: { on?: boolean; start?: number; length?: number }) => {
-        const loop = this.state.transport.loop;
-        if (on !== undefined) loop.on = on;
-        if (start !== undefined) loop.start = start;
-        if (length !== undefined) loop.length = length;
-        return { ...loop };
-      },
-      transport_play: ({ from }: { from?: number }) => {
-        this.state.transport.playing = true;
-        if (from !== undefined) this.state.transport.time = from;
-        return { playing: true };
-      },
-      transport_stop: () => {
-        this.state.transport.playing = false;
-        return { playing: false };
-      },
-      song_set_key: ({ root, scale, scaleMode }: { root: number; scale: string; scaleMode?: boolean }) => {
-        this.state.song.rootNote = root;
-        this.state.song.scaleName = scale;
-        if (scaleMode !== undefined) this.state.song.scaleMode = scaleMode;
-        return { root, scale, scaleMode: this.state.song.scaleMode };
-      },
-      track_meters_get: () => FakeSetLive.noAudio(),
-      master_measure: () => FakeSetLive.noAudio(),
-      song_set_time_signature: ({ numerator, denominator }: { numerator: number; denominator: number }) => {
-        this.state.transport.signature = { numerator, denominator };
-        return { numerator, denominator };
-      },
-      clip_slot_fire: ({ track, slot }: DeviceOpArgs["clip_slot_fire"]) => {
-        if (this.slot({ track, slot }).clip) this.state.transport.playing = true;
-        return { fired: true };
       },
     };
   }

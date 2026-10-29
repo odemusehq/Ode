@@ -126,7 +126,7 @@ export const songTools: AnyTool[] = [
     },
     describe: ({ topic, value }) => `Remember about you · ${topic}: ${value}`,
     run: ({ evidence, ...fact }, ctx) =>
-      ctx.mneme.record({ ...fact, evidence: evidence ? { note: evidence, song: ctx.song.setId ?? undefined } : undefined }),
+      ctx.mneme.record({ ...fact, evidence: evidence ? { note: evidence, song: ctx.song.songId || undefined } : undefined }),
   }),
   defineTool({
     name: "memory_forget",

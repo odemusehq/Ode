@@ -22,7 +22,7 @@ export class SetLookup {
 
   /** Beats (quarter notes) in one bar of the Set's time signature. */
   get beatsPerBar(): number {
-    const { numerator, denominator } = this.snapshot.transport.signature;
+    const { numerator, denominator } = this.snapshot.signature;
     return (numerator * QUARTER_NOTES_PER_WHOLE_NOTE) / denominator;
   }
 

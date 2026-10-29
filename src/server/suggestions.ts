@@ -71,7 +71,6 @@ export class SuggestionFinder {
 
   /** The clip's notes as they are now; the snapshot's when Live can't be asked. */
   private async notesOf(ref: ClipRef, found: FoundClip): Promise<Note[]> {
-    if (!this.live.extension.connected()) return found.clip.notes ?? [];
     try {
       return (await this.live.extension.call<{ notes: Note[] }>("midi_clip_get_notes", { clip: ref })).notes;
     } catch {

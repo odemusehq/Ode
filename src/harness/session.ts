@@ -86,13 +86,8 @@ export class OdeSession {
 
   constructor(
     private readonly deps: SessionDeps,
-    private conversation: ConversationLog,
+    private readonly conversation: ConversationLog,
   ) {}
-
-  /** Carries this conversation on under another log (the Set was saved for the first time or under a new name). */
-  continueIn(conversation: ConversationLog): void {
-    this.conversation = conversation;
-  }
 
   /** A request or other work on the Set is running. */
   get isBusy(): boolean {

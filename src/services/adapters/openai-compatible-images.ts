@@ -1,7 +1,7 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
+import { Jimp, JimpMime, ResizeStrategy } from "jimp";
 import OpenAI from "openai";
-import sharp from "sharp";
 import type { RoleConfig } from "../../shared/config";
 import type { ImageGenerator } from "../capabilities";
 
@@ -23,8 +23,10 @@ export class OpenAiCompatibleImageGenerator implements ImageGenerator {
     });
     const encoded = response.data?.[0]?.b64_json;
     if (!encoded) throw new Error("The image model returned no image.");
+    const image = await Jimp.read(Buffer.from(encoded, "base64"));
+    image.cover({ w: size, h: size, mode: ResizeStrategy.BICUBIC });
     await mkdir(dirname(outPath), { recursive: true });
-    await sharp(Buffer.from(encoded, "base64")).resize(size, size, { fit: "cover", kernel: "lanczos3" }).png().toFile(outPath);
+    await writeFile(outPath, await image.getBuffer(JimpMime.png));
     return outPath;
   }
 }

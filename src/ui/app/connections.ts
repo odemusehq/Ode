@@ -14,26 +14,20 @@ export function isServerLost(state: StreamState): boolean {
   return state === StreamState.Reconnecting || state === StreamState.Closed;
 }
 
-/** The three parts of Ode that connect to Live. */
+/** The part of Ode that connects to Live. */
 export enum LiveConnection {
   Extension = "extension",
-  Device = "device",
-  Bridge = "bridge",
 }
 
-export const LIVE_CONNECTIONS: readonly LiveConnection[] = [LiveConnection.Extension, LiveConnection.Device, LiveConnection.Bridge];
+export const LIVE_CONNECTIONS: readonly LiveConnection[] = [LiveConnection.Extension];
 
 export const CONNECTION_LABELS: Record<LiveConnection, string> = {
   [LiveConnection.Extension]: "Extension",
-  [LiveConnection.Device]: "Ode device",
-  [LiveConnection.Bridge]: "Bridge",
 };
 
 /** What the musician does to connect each part. */
 export const CONNECTION_HINTS: Record<LiveConnection, string> = {
   [LiveConnection.Extension]: "Open the Live beta with Developer Mode on",
-  [LiveConnection.Device]: "Put the Ode device on the Main track",
-  [LiveConnection.Bridge]: "Select Ode as a Control Surface in Live's settings",
 };
 
 /** Without the extension Ode can't read or change the Set; the other parts only limit what it can do. */
@@ -43,10 +37,6 @@ export function isConnected(status: LiveStatus, connection: LiveConnection): boo
   switch (connection) {
     case LiveConnection.Extension:
       return status.extension;
-    case LiveConnection.Device:
-      return status.device;
-    case LiveConnection.Bridge:
-      return status.bridge;
   }
 }
 
@@ -62,7 +52,7 @@ export interface ConnectionSummary {
   problem: boolean;
 }
 
-/** The server and the three Live parts as one status. */
+/** The server and the extension as one status. */
 export function connectionSummary(stream: StreamState, status: LiveStatus | null): ConnectionSummary {
   const serverMessage = SERVER_MESSAGES[stream];
   if (serverMessage) return { tone: isServerLost(stream) ? Tone.Danger : Tone.Neutral, label: serverMessage, problem: isServerLost(stream) };

@@ -160,48 +160,21 @@ export interface CreatedDevice {
   name: string;
 }
 
+/** What the musician right-clicked in Live: a track, a clip, a scene, or none of them for a time selection. */
 export interface SelectionInfo {
   track: TrackRef | null;
   clip: ClipRef | null;
   scene: number | null;
-  /** Playhead position in beats. */
-  time: number | null;
-  isPlaying: boolean;
 }
 
-export interface TransportState {
-  playing: boolean;
-  /** Playhead in beats. */
-  time: number;
-  loop: { on: boolean; start: number; length: number };
-  signature: { numerator: number; denominator: number };
+/** The Set's meter: the first scene's own time signature, or 4/4 when the scenes leave it to Live. */
+export interface TimeSignature {
+  numerator: number;
+  denominator: number;
 }
 
-/** Output meters as Live draws them: 0 to 1 per channel, not decibels. */
-export interface MeterReading {
-  tracks: { index: number; name: string; left: number; right: number }[];
-  master: { left: number; right: number };
-}
-
-export interface SetInfo {
-  /** Path of the .als file, or null for an unsaved Set. */
-  filePath: string | null;
-  /** The file path once saved; before that, an id made when the Set was loaded. */
-  setId: string;
-  /**
-   * Made each time the Ode device loads, so it changes when a Set is opened. The same instance with a new file
-   * path means the Set open in Live was saved under a new name or folder (Save As), not that another Set opened.
-   */
-  instance: string;
-}
-
-export interface BrowserItem {
-  name: string;
-  uri: string;
-  category: string;
-  path: string;
-  isLoadable: boolean;
-}
+/** Live's default time signature, which a new Set starts in. */
+export const LIVE_DEFAULT_SIGNATURE: TimeSignature = { numerator: 4, denominator: 4 };
 
 type Named = { name?: string; tag?: string };
 
@@ -320,70 +293,4 @@ export interface ExtensionOpResults {
   import_into_project: { path: string };
   apply_as_one_undo_step: { results: unknown[] };
   set_snapshot: SetContents;
-}
-
-export interface DeviceOpArgs {
-  set_info: Record<string, never>;
-  transport_play: { from?: number };
-  transport_stop: Record<string, never>;
-  transport_continue: Record<string, never>;
-  transport_set_position: { time: number };
-  transport_record: { on: boolean };
-  session_record: { on: boolean };
-  loop_set: { on?: boolean; start?: number; length?: number };
-  locator_jump: { locator: LocatorRef };
-  song_set_key: { root: number; scale: string; scaleMode?: boolean };
-  song_set_time_signature: { numerator: number; denominator: number };
-  song_create_return_track: Record<string, never>;
-  song_delete_return_track: { index: number };
-  song_capture_midi: Record<string, never>;
-  song_undo: Record<string, never>;
-  song_redo: Record<string, never>;
-  selection_get: Record<string, never>;
-  track_meters_get: Record<string, never>;
-  /** Records the Master output for `seconds` (playing from `from` beats if play is true) to a WAV. */
-  master_measure: { seconds: number; play?: boolean; from?: number };
-  transport_get: Record<string, never>;
-  /** Launches a Session clip, as clicking its play button does. */
-  clip_slot_fire: { track: TrackRef; slot: number };
-}
-
-export interface DeviceOpResults {
-  set_info: SetInfo;
-  transport_play: { playing: true };
-  transport_stop: { playing: false };
-  transport_continue: { playing: true };
-  transport_set_position: { time: number };
-  transport_record: { on: boolean };
-  session_record: { on: boolean };
-  loop_set: { on: boolean; start: number; length: number };
-  locator_jump: { time: number };
-  song_set_key: { root: number; scale: string; scaleMode: boolean };
-  song_set_time_signature: { numerator: number; denominator: number };
-  song_create_return_track: CreatedTrack;
-  song_delete_return_track: { deleted: true };
-  song_capture_midi: { captured: boolean };
-  song_undo: { done: boolean };
-  song_redo: { done: boolean };
-  selection_get: SelectionInfo;
-  track_meters_get: MeterReading;
-  master_measure: { path: string; seconds: number };
-  transport_get: TransportState;
-  clip_slot_fire: { fired: true };
-}
-
-export interface BridgeOpArgs {
-  browser_search: {
-    query: string;
-    category?: "instruments" | "audio_effects" | "midi_effects" | "plugins" | "drums" | "sounds" | "samples" | "user_library" | "all";
-    limit?: number;
-  };
-  browser_load: { uri: string; track: TrackRef };
-  plugin_list: { limit?: number };
-}
-
-export interface BridgeOpResults {
-  browser_search: { items: BrowserItem[] };
-  browser_load: { loaded: string };
-  plugin_list: { plugins: BrowserItem[] };
 }

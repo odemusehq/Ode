@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, stat } from "node:fs/promises";
+import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -14,13 +14,13 @@ async function tempDir(): Promise<string> {
   return mkdtemp(join(tmpdir(), "ode-song-data-"));
 }
 
-/** A song store in a fresh user folder, with its lyrics, on an unsaved Set. */
+/** A song store in a fresh user folder, with its lyrics, on a new song. */
 async function songWithLyrics(): Promise<{ root: string; song: SongStore; lyrics: LyricsStore }> {
   const root = await tempDir();
   const paths = userPaths(join(root, "Ode"));
   const song = new SongStore(paths, () => undefined);
   const lyrics = new LyricsStore(song, new PreferencesStore(join(paths.preferences, "preferences.json")), () => undefined);
-  await song.open({ setId: "unsaved-1", filePath: null, instance: "first" });
+  await song.create("Night Bus");
   return { root, song, lyrics };
 }
 
@@ -43,48 +43,14 @@ test("where the musician and Ode change the same line, the musician's line is ke
   assert.deepEqual(saved.conflicts, [2]);
 });
 
-test("two Sets in one project folder keep their own song and versions", async () => {
+test("two songs keep their own versions", async () => {
   const root = await tempDir();
   const song = new SongStore(userPaths(join(root, "Ode")), () => undefined);
   const versions = new SongVersions(song, 20);
-  const project = join(root, "Projects", "Night Bus Project");
-  const band = join(project, "Night Bus.als");
-  const acoustic = join(project, "Night Bus acoustic.als");
-
-  await song.open({ setId: band, filePath: band, instance: "first" });
-  await song.update({ title: "Night Bus" });
+  const band = await song.create("Night Bus");
   assert.ok(await versions.history.record(TestSets.small(), VersionAuthor.Musician, "Opened"));
-
-  await song.open({ setId: acoustic, filePath: acoustic, instance: "second" });
-  assert.equal(song.dataDir, join(project, "Ode", "Night Bus acoustic"));
-  assert.equal((await song.read()).title, "");
+  await song.create("Night Bus, acoustic");
   assert.deepEqual(await versions.history.list(), []);
-
-  await song.open({ setId: band, filePath: band, instance: "third" });
-  assert.equal(song.dataDir, join(project, "Ode", "Night Bus"));
-  assert.equal((await song.read()).title, "Night Bus");
+  await song.open(band.id);
   assert.equal((await versions.history.list()).length, 1);
-});
-
-test("Save As carries the song and its versions to the new name, and the Set under the old name keeps its own", async () => {
-  const { root, song, lyrics } = await songWithLyrics();
-  const versions = new SongVersions(song, 20);
-  const first = join(root, "Projects", "Night Bus Project", "Night Bus.als");
-  await song.open({ setId: first, filePath: first, instance: "first" });
-  await song.update({ title: "Night Bus" });
-  await lyrics.replace("[Verse 1]\nThe last bus leaves at midnight");
-  const opened = await versions.history.record(TestSets.small(), VersionAuthor.Musician, "Opened");
-  assert.ok(opened);
-
-  const second = join(root, "Projects", "Night Bus v2 Project", "Night Bus v2.als");
-  const savedAs = { setId: second, filePath: second, instance: "first" };
-  assert.equal(song.continues(savedAs), true);
-  await song.open(savedAs);
-  assert.equal(song.dataDir, join(root, "Projects", "Night Bus v2 Project", "Ode", "Night Bus v2"));
-  assert.equal((await song.read()).title, "Night Bus");
-  assert.equal((await lyrics.read()).text, "[Verse 1]\nThe last bus leaves at midnight");
-  assert.deepEqual((await versions.history.list()).map((version) => version.id), [opened.id]);
-  await stat(join(root, "Projects", "Night Bus Project", "Ode", "Night Bus", "song.json"));
-
-  assert.equal(song.continues({ setId: "unsaved-2", filePath: null, instance: "second" }), false);
 });

@@ -1,7 +1,7 @@
 import { execFile } from "node:child_process";
 import { relative } from "node:path";
 import { promisify } from "node:util";
-import { OdeConfig } from "../shared/config";
+import { DevConfig } from "../shared/dev-config";
 import { Release } from "./release";
 
 const run = promisify(execFile);
@@ -9,7 +9,7 @@ const run = promisify(execFile);
 /** The notes of a release on GitHub: what changed since the previous release, and how to install it. */
 export class ReleaseNotes {
   /** What npm version changes when it bumps the version (the manifest through the "version" script). */
-  private static readonly versionFiles = ["package.json", "package-lock.json", relative(OdeConfig.repoDir, Release.manifestFile)];
+  private static readonly versionFiles = ["package.json", "package-lock.json", relative(DevConfig.repoDir, Release.manifestFile)];
 
   constructor(private readonly release: Release) {}
 
@@ -26,12 +26,11 @@ export class ReleaseNotes {
       "",
       "## Install",
       "",
-      `Ode needs macOS or Windows, Node.js ${release.node} or later and Ableton Live 12 Suite. Live extensions are only in the Live beta for now.`,
+      "Ode runs inside Ableton Live 12 Suite on macOS and Windows. Live extensions are in the Live beta for now.",
       "",
-      `1. Unzip ${release.archive}, open a terminal in the ${release.folder} folder and run \`npm run setup\`. It adds the Ode device and the Ode Control Surface to your User Library and makes \`.env\`.`,
-      "2. Add your model keys to `.env` and save it; `.env.example` describes each one.",
-      "3. In Live, drop `Ode.ablx` on Settings → Extensions (leave Developer Mode off), choose Ode as a Control Surface in Settings → Link, Tempo & MIDI, and put the Ode device on the Main track.",
-      "4. Run `npm start` in the folder whenever you use Ode.",
+      `1. In Live, open Settings → Extensions and drop \`${release.extension}\` on the page. Developer Mode stays off.`,
+      "2. Right-click a track and choose **Ode: Settings**: pick the provider and the model, and paste your key.",
+      "3. Right-click a clip, a track or a time selection and choose **Ask Ode**.",
       "",
     ].join("\n");
   }
@@ -61,7 +60,7 @@ export class ReleaseNotes {
   }
 
   private async git(...args: string[]): Promise<string> {
-    const { stdout } = await run("git", args, { cwd: OdeConfig.repoDir });
+    const { stdout } = await run("git", args, { cwd: DevConfig.repoDir });
     return stdout.trim();
   }
 }

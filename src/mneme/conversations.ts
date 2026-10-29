@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import { rename } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
 import { JsonFile } from "./json-file";
@@ -37,17 +36,11 @@ export class ConversationStore {
     return new ConversationLog(ConversationStore.id(key), new JsonFile(this.path(key), z.array(ExchangeSchema), () => []), this.keep);
   }
 
-  /** Moves a song's conversation to its new key (the Set was saved for the first time or under a new name). */
-  async rename(from: string, to: string): Promise<ConversationLog> {
-    await rename(this.path(from), this.path(to)).catch(() => undefined);
-    return this.log(to);
-  }
-
   private path(key: string): string {
     return join(this.folder, `${ConversationStore.id(key)}.json`);
   }
 
-  /** A file name for any key: song keys may be file paths. */
+  /** A file name for any key. */
   private static id(key: string): string {
     return createHash("sha256").update(key).digest("hex").slice(0, 32);
   }

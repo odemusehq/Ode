@@ -1,5 +1,5 @@
 import { API } from "../../shared/api";
-import type { CopyResult, RestoreResult } from "../../shared/api";
+import type { RestoreResult } from "../../shared/api";
 import type { Suggestion, UiEvent } from "../../shared/events";
 import type { Mode } from "../../shared/personalisation";
 import { OdeApi, errorMessage } from "./api";
@@ -185,16 +185,6 @@ export class OdeClient {
   /** Throws when it fails. */
   async nameVersion(id: string, name: string): Promise<void> {
     this.store.putVersion(await this.api.nameVersion(id, { name }));
-  }
-
-  /** Copies the project folder; opening the copy in Live brings it to this version. Throws when it fails. */
-  copyVersion(id: string): Promise<CopyResult> {
-    return this.api.copyVersion(id);
-  }
-
-  /** Copies the project as it is now, hand edits included. Throws when it fails. */
-  copyNow(): Promise<CopyResult> {
-    return this.api.copyNow();
   }
 
   private opened(): void {

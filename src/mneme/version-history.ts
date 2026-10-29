@@ -137,7 +137,7 @@ export class VersionHistory {
       const version = structuredClone(entry.version);
       const song = version.changes.filter((change) => change.target.scope === "song" || change.target.scope === "sheet");
       const snapshot = index === entries.length - 1 ? await this.newestSnapshot(entries) : await this.rebuild(entries, index);
-      const beatsPerBar = SetWording.beatsPerBar(snapshot.transport.signature);
+      const beatsPerBar = SetWording.beatsPerBar(snapshot.signature);
       return { version, tracks: TouchedTracks.groups(version.changes), song, beatsPerBar };
     });
   }

@@ -1,14 +1,18 @@
 import type { ArrangementSelection, ClipSlotSelection, ContextMenuScope, Handle } from "@ableton-extensions/sdk";
-import type { LivePointer, LiveRequest, LiveResponse } from "../../shared/live";
+import { DialogView } from "../../shared/config";
+import type { LivePointer } from "../../shared/live";
 import { describeError } from "./errors";
-import { Labels } from "./labels";
 import type { Notice } from "./notice";
-import type { QueuedChanges } from "./ops/queued-changes";
 import type { PointerBuilder } from "./pointer";
 import type { Live, Version } from "./sdk";
-import { CancelledError, ServerUnavailableError, type OdeServer } from "./server";
 
 type Scope = ContextMenuScope<Version>;
+
+/** What the menu needs from Ode: to hear what the musician pointed at, and to open its dialogs. */
+export interface DialogHost {
+  point(pointer: LivePointer): Promise<void>;
+  open(view: DialogView): Promise<void>;
+}
 
 /** Scopes whose right-click hands over one object. */
 const OBJECT_SCOPES = [
@@ -26,46 +30,29 @@ const OBJECT_SCOPES = [
 /** Scopes for a time selection in Arrangement View. */
 const ARRANGEMENT_SCOPES = ["AudioTrack.ArrangementSelection", "MidiTrack.ArrangementSelection"] as const satisfies readonly Scope[];
 
-/** Where "Ode: Apply changes" appears. */
-const APPLY_SCOPES = ["MidiTrack", "AudioTrack", ...ARRANGEMENT_SCOPES] as const satisfies readonly Scope[];
+/** Where Ode's own dialogs appear: on track headers and scenes. */
+const DIALOG_SCOPES = ["MidiTrack", "AudioTrack", "Scene"] as const satisfies readonly Scope[];
 
 enum CommandId {
   AskOde = "ode.askOde",
-  ApplyChanges = "ode.applyChanges",
+  Lyrics = "ode.lyrics",
+  History = "ode.history",
+  Settings = "ode.settings",
 }
 
 enum MenuTitle {
   AskOde = "Ask Ode",
-  ApplyChanges = "Ode: Apply changes",
+  Lyrics = "Ode: Lyrics",
+  History = "Ode: History",
+  Settings = "Ode: Settings",
 }
 
-type ProgressUpdate = (text: string, progress?: number) => Promise<void>;
-
-/** What applying the queued changes came to. */
-class ApplyReport {
-  constructor(
-    readonly total: number,
-    readonly failed: number,
-  ) {}
-}
-
-/** A failure with words ready for the musician. */
-class MusicianFacingError extends Error {
-  constructor(
-    readonly title: string,
-    message: string,
-  ) {
-    super(message);
-  }
-}
-
-/** Ode's entries in Live's right-click menus. */
+/** Ode's entries in Live's right-click menus: Ask Ode on whatever the musician points at, and Ode's dialogs. */
 export class ContextMenu {
   constructor(
     private readonly live: Live,
     private readonly pointers: PointerBuilder,
-    private readonly server: OdeServer,
-    private readonly changes: QueuedChanges,
+    private readonly host: DialogHost,
     private readonly notice: Notice,
   ) {}
 
@@ -75,8 +62,9 @@ export class ContextMenu {
     for (const scope of ARRANGEMENT_SCOPES) {
       this.addAskOde(scope, (arg) => this.pointers.fromArrangement(scope, arg as ArrangementSelection));
     }
-    this.live.commands.registerCommand(CommandId.ApplyChanges, () => void this.applyChanges());
-    for (const scope of APPLY_SCOPES) this.addAction(scope, MenuTitle.ApplyChanges, CommandId.ApplyChanges);
+    this.addDialog(CommandId.Lyrics, MenuTitle.Lyrics, DialogView.Lyrics);
+    this.addDialog(CommandId.History, MenuTitle.History, DialogView.History);
+    this.addDialog(CommandId.Settings, MenuTitle.Settings, DialogView.Settings);
   }
 
   private addAskOde(scope: Scope, point: (arg: unknown) => LivePointer): void {
@@ -85,88 +73,33 @@ export class ContextMenu {
     this.addAction(scope, MenuTitle.AskOde, command);
   }
 
+  private addDialog(command: CommandId, title: MenuTitle, view: DialogView): void {
+    this.live.commands.registerCommand(command, () => void this.show(view));
+    for (const scope of DIALOG_SCOPES) this.addAction(scope, title, command);
+  }
+
   private addAction(scope: Scope, title: MenuTitle, command: string): void {
     this.live.ui
       .registerContextMenuAction(scope, title, command)
       .catch((error: unknown) => console.error(`Ode could not add "${title}" to the ${scope} menu: ${describeError(error)}`));
   }
 
-  /** Tells Ode what the musician right-clicked. */
+  /** Tells Ode what the musician right-clicked, then opens Ask Ode, where the musician can also describe it in words. */
   private async askOde(point: () => LivePointer): Promise<void> {
-    let pointer: LivePointer;
     try {
-      pointer = point();
+      await this.host.point(point());
     } catch (error) {
       console.error(`Ask Ode: ${describeError(error)}`);
-      await this.notice.show("Ode can't tell what this is", "Describe what you mean in Ode's window instead.");
-      return;
     }
+    await this.show(DialogView.Ask);
+  }
+
+  private async show(view: DialogView): Promise<void> {
     try {
-      await this.server.sendPointer(pointer);
+      await this.host.open(view);
     } catch (error) {
-      await this.showProblem(error);
+      console.error(`Ode's ${view} dialog: ${describeError(error)}`);
+      await this.notice.show("Ode's dialog stayed closed", describeError(error));
     }
-  }
-
-  /** Applies the changes Ode queued while the connection was closed, then sends Ode the results. */
-  private async applyChanges(): Promise<void> {
-    let report: unknown;
-    try {
-      report = await this.live.ui.withinProgressDialog("Getting changes from Ode…", {}, (update, signal) =>
-        this.applyPending(update, signal),
-      );
-    } catch (error) {
-      await this.showProblem(error);
-      return;
-    }
-    if (!(report instanceof ApplyReport)) return;
-    if (report.total === 0) {
-      await this.notice.show("Nothing to apply", "Ode has no changes waiting.");
-    } else if (report.failed > 0) {
-      await this.notice.show(
-        "Some changes weren't applied",
-        `${report.failed} of ${Labels.count(report.total, "change")} couldn't be applied. Ode has the details.`,
-      );
-    }
-  }
-
-  private async applyPending(update: ProgressUpdate, signal: AbortSignal): Promise<ApplyReport> {
-    const requests = await this.server.takePendingChanges(signal);
-    if (requests.length === 0) return new ApplyReport(0, 0);
-    const cancelled = signal.aborted;
-    const responses = cancelled ? ContextMenu.cancelled(requests) : await this.apply(requests, update);
-    await update("Sending the results to Ode…", 95);
-    await this.sendResults(responses);
-    if (cancelled) throw new CancelledError("cancelled");
-    return new ApplyReport(requests.length, responses.filter((response) => !response.ok).length);
-  }
-
-  private async sendResults(responses: readonly LiveResponse[]): Promise<void> {
-    try {
-      await this.server.sendResults(responses);
-    } catch {
-      throw new MusicianFacingError(
-        "Ode didn't get the results",
-        "The changes were applied in Live, but Ode didn't receive the results. Check Ode's window.",
-      );
-    }
-  }
-
-  private async apply(requests: readonly LiveRequest[], update: ProgressUpdate): Promise<LiveResponse[]> {
-    const total = requests.length;
-    await update(`Applying ${Labels.count(total, "change")}…`, 5);
-    return this.changes.apply(requests, (applied) => update(`Applied ${applied} of ${total}…`, 5 + (85 * applied) / total));
-  }
-
-  private async showProblem(error: unknown): Promise<void> {
-    if (error instanceof CancelledError) return;
-    console.error(describeError(error));
-    if (error instanceof MusicianFacingError) await this.notice.show(error.title, error.message);
-    else if (error instanceof ServerUnavailableError) await this.notice.show("Ode isn't running", "Start Ode on this computer, then try again.");
-    else await this.notice.show("Something went wrong", describeError(error));
-  }
-
-  private static cancelled(requests: readonly LiveRequest[]): LiveResponse[] {
-    return requests.map((request) => ({ id: request.id, ok: false, error: "The musician cancelled this change in Live." }));
   }
 }

@@ -37,7 +37,7 @@ export async function songDefaults(ctx: ToolContext): Promise<SongDefaults> {
     vocalRange: settings.vocalRange,
     tempo: snapshot ? snapshot.song.tempo : null,
     key: snapshot?.song.scaleMode ? { root: snapshot.song.rootNote, scale: snapshot.song.scaleName } : null,
-    timeSignature: snapshot ? { ...snapshot.transport.signature } : DEFAULT_TIME_SIGNATURE,
+    timeSignature: snapshot ? { ...snapshot.signature } : DEFAULT_TIME_SIGNATURE,
   };
 }
 

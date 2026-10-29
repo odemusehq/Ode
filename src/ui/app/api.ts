@@ -2,7 +2,6 @@ import { API } from "../../shared/api";
 import type {
   ApprovalRequest,
   ChatRequest,
-  CopyResult,
   LyricsSaved,
   LyricsState,
   LyricsWrite,
@@ -129,15 +128,6 @@ export class OdeApi {
 
   nameVersion(id: string, request: VersionNameRequest): Promise<VersionListItem> {
     return this.request(HttpMethod.Post, API.versionName(id), request);
-  }
-
-  copyVersion(id: string): Promise<CopyResult> {
-    return this.request(HttpMethod.Post, API.versionCopy(id));
-  }
-
-  /** Saves the hand edits, then copies the project as it is now. */
-  copyNow(): Promise<CopyResult> {
-    return this.request(HttpMethod.Post, API.copyNow);
   }
 
   getSettings(): Promise<SettingsResponse> {

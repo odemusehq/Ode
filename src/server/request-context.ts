@@ -2,15 +2,13 @@ import type { OdeConfig } from "../shared/config";
 import type { LiveConnections } from "../shared/live";
 import { ResultKind, type UiEvent } from "../shared/events";
 import { Mode } from "../shared/personalisation";
-import type { SetSnapshot } from "../shared/set-snapshot";
 import { VersionAuthor, type Version } from "../shared/versions";
 import { ProjectMap } from "../mneme/project-map";
 import type { PreferencesStore } from "../mneme/preferences";
 import type { SongVersions } from "../mneme/song-store";
 import type { ContextSummary } from "../mneme/summary";
 import type { OdeRequest, RequestLifecycle } from "../harness/session";
-import type { Listening } from "./listening";
-import { SelectionState } from "./selection";
+import type { SelectionState } from "./selection";
 import type { SnapshotReader } from "./snapshot-reader";
 import { VersionRecorder, type RecordedVersion } from "./version-recorder";
 
@@ -30,7 +28,6 @@ export interface RequestContextDeps {
   summary: ContextSummary;
   prefs: PreferencesStore;
   selection: SelectionState;
-  listening: Listening;
   emit: (event: UiEvent) => void;
 }
 
@@ -38,7 +35,6 @@ const MODE_NOTES: Record<Mode, string> = {
   [Mode.Auto]:
     "Mode: Auto. Change what you are sure of. Ask (ask_musician) only when you can't tell what the musician wants, and before deleting a part or rewriting a whole section.",
   [Mode.Manual]: "Mode: Manual. Every change waits for the musician to Apply or Skip it.",
-  [Mode.LetMeHearIt]: "Mode: Let me hear it. Never ask: apply your best guess straight away and say what you guessed in your result line.",
 };
 
 /**
@@ -64,9 +60,8 @@ export class RequestContext implements RequestLifecycle {
     const parts = [
       await this.deps.summary.build(),
       MODE_NOTES[await this.deps.prefs.mode()],
-      this.selectionPart(recorded.snapshot),
+      this.selectionPart(),
       request.again ? await this.againPart() : await this.handEditsPart(recorded, since),
-      this.livePart(),
       `Project map:\n${ProjectMap.encode(recorded.snapshot, this.deps.config.memory.mapMaxChars)}`,
     ].filter(Boolean);
     const handEdits = recorded.version && recorded.changes.length > 0 ? recorded.version : null;
@@ -94,7 +89,6 @@ export class RequestContext implements RequestLifecycle {
     const version = recorded?.version ?? null;
     const text = reply || version?.summary || "";
     if (text) this.deps.emit({ type: "result", text, versionId: version?.id ?? null, kind: version ? ResultKind.Change : ResultKind.Reply });
-    if (recorded && version) await this.deps.listening.playChanged(recorded.changes).catch(() => undefined);
   }
 
   private async finishStopped(request: OdeRequest): Promise<void> {
@@ -126,14 +120,12 @@ export class RequestContext implements RequestLifecycle {
     ]);
   }
 
-  private selectionPart(snapshot: SetSnapshot): string {
-    const { selection } = snapshot;
-    const lines = [
-      `Selected in Live: ${SelectionState.describe(selection, snapshot)} (${JSON.stringify({ track: selection.track, clip: selection.clip })}).`,
-    ];
+  /** What the musician right-clicked to ask, or the whole song. */
+  private selectionPart(): string {
     const pointer = this.deps.selection.pointer;
-    if (pointer) lines.push(`Pointed at with "Ode…": ${pointer.description} (${JSON.stringify(pointer.target)}).`);
-    return lines.join("\n");
+    return pointer
+      ? `Pointed at with "Ask Ode": ${pointer.description} (${JSON.stringify(pointer.target)}).`
+      : "Pointed at: the whole song.";
   }
 
   /** The hand edits saved since the previous request, each with when it was saved. */
@@ -163,11 +155,6 @@ export class RequestContext implements RequestLifecycle {
     const last = (await this.deps.versions.history.list()).filter((version) => version.author === VersionAuthor.Ode).at(-1);
     const previous = last ? ` ("${last.summary}")` : "";
     return `Again: the musician wants another take of this request. The Set is back to how it was before your last take${previous}. Make a clearly different take, in place.`;
-  }
-
-  private livePart(): string {
-    const { bridge } = this.deps.live;
-    return bridge.connected() ? "" : "Live: the Ode bridge isn't connected, so plug-ins, presets and samples can't be loaded from Live's browser.";
   }
 
   private static wrap(parts: string[]): string {

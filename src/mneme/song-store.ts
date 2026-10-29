@@ -1,77 +1,42 @@
-import { cp, mkdir, rename, rm, stat } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import type { ZodType } from "zod";
+import { randomUUID } from "node:crypto";
+import { join } from "node:path";
+import { z, type ZodType } from "zod";
 import { LeadSheetSchema, emptyLeadSheet, type LeadSheet } from "../shared/song";
 import { JsonFile } from "./json-file";
 import { LyricsText } from "./lyrics-text";
-import { projectSetDir, type UserPaths } from "./paths";
+import type { UserPaths } from "./paths";
 import { VersionHistory } from "./version-history";
 
-export interface SongLocation {
-  /** The .als file once saved; before that, an id the Ode device made when the Set was loaded. */
-  setId: string;
-  /** The .als file, or null while the Set is unsaved. */
-  filePath: string | null;
-  /** Made each time the Ode device loads: the same instance with a new file path is the same Set, saved under a new name. */
-  instance: string;
-}
+/** A song in Ode's list: its folder's id, and its title as its lead sheet has it. */
+export const SongEntrySchema = z.object({ id: z.string(), title: z.string(), updatedAt: z.string() });
+export type SongEntry = z.infer<typeof SongEntrySchema>;
 
-async function exists(path: string): Promise<boolean> {
-  try {
-    await stat(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function moveFolder(from: string, to: string): Promise<void> {
-  await mkdir(dirname(to), { recursive: true });
-  try {
-    await rename(from, to);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "EXDEV") throw error;
-    await cp(from, to, { recursive: true });
-    await rm(from, { recursive: true, force: true });
-  }
-}
-
-async function copyFolder(from: string, to: string): Promise<void> {
-  await mkdir(dirname(to), { recursive: true });
-  await cp(from, to, { recursive: true });
-}
+const SongIndexSchema = z.object({ current: z.string().nullable(), songs: z.array(SongEntrySchema) });
+type SongIndex = z.infer<typeof SongIndexSchema>;
 
 /**
- * Everything about the open song, stored in the Live project (<project>/Ode/<Set file name>/, so Sets that share a
- * project keep their own), or in the user folder while the Set is unsaved. The version history lives in its versions/
- * folder, so it goes wherever the song's data goes. The lyrics and their revision are written only through
- * `saveLyrics` (LyricsStore uses it), so edits made at the same time can be merged.
+ * Every song the musician works on with Ode, one folder each in Ode's storage (Songs/<id>/), with the one in use now.
+ * A song holds its lead sheet (title, lyrics, chords, sections), its version history in versions/ and its release
+ * files in release/. The musician picks the song in the Lyrics and History dialogs; Ode reads whichever Set is open.
+ * The lyrics and their revision are written only through `saveLyrics` (LyricsStore uses it), so edits made at the
+ * same time can be merged.
  */
 export class SongStore {
-  private static readonly NO_SET = "no-set";
-  private location: SongLocation | null = null;
-  private dir: string;
-  private sheet: JsonFile<LeadSheet>;
+  private readonly index: JsonFile<SongIndex>;
+  private id = "";
+  private dir = "";
+  private sheet: JsonFile<LeadSheet> | null = null;
 
   constructor(
     private readonly paths: UserPaths,
     private readonly onChange: (sheet: LeadSheet) => void,
   ) {
-    this.dir = join(paths.unsaved, SongStore.NO_SET);
-    this.sheet = this.sheetFile(this.dir);
+    this.index = new JsonFile(join(paths.songs, "songs.json"), SongIndexSchema, () => ({ current: null, songs: [] }));
   }
 
-  get setId(): string | null {
-    return this.location?.setId ?? null;
-  }
-
-  get setFilePath(): string | null {
-    return this.location?.filePath ?? null;
-  }
-
-  /** The Live project folder, or null while the Set is unsaved. */
-  get projectDir(): string | null {
-    return this.location?.filePath ? dirname(this.location.filePath) : null;
+  /** The song in use now. */
+  get songId(): string {
+    return this.id;
   }
 
   get dataDir(): string {
@@ -86,67 +51,66 @@ export class SongStore {
     return join(this.dir, "versions");
   }
 
-  /**
-   * Whether `location` carries on the song open now: the same Set (the same device instance, or the same saved file),
-   * or this Set saved for the first time or under a new name, so its conversation and history go on.
-   */
-  continues(location: SongLocation): boolean {
-    const current = this.location;
-    if (!current) return false;
-    if (current.instance === location.instance) return true;
-    return location.filePath !== null && location.filePath === current.filePath;
+  /** Opens the song used last, or starts the first one. */
+  async openLast(): Promise<SongEntry> {
+    const { current, songs } = await this.index.read();
+    const last = songs.find((song) => song.id === current) ?? songs[0];
+    return last ? this.open(last.id) : this.create("");
   }
 
-  /**
-   * Switches to the Set Live has open. On its first save the unsaved data moves into the project; after Save As the
-   * data is copied to the new name's folder, so the Set under its old name keeps its own. Data already in the
-   * destination is never overwritten.
-   */
-  async open(location: SongLocation): Promise<void> {
-    const current = this.location;
-    if (current && current.setId === location.setId && current.filePath === location.filePath && current.instance === location.instance) return;
-    const target = location.filePath ? projectSetDir(location.filePath) : join(this.paths.unsaved, location.setId);
-    const savedAgain = current !== null && current.instance === location.instance && location.filePath !== null && current.filePath !== location.filePath;
-    if (savedAgain && target !== this.dir && (await exists(this.dir)) && !(await exists(target))) {
-      if (current.filePath === null) await moveFolder(this.dir, target);
-      else await copyFolder(this.dir, target);
-    }
-    this.location = location;
-    this.dir = target;
-    this.sheet = this.sheetFile(target);
+  /** Every song, the most recently changed first. */
+  async list(): Promise<SongEntry[]> {
+    return [...(await this.index.read()).songs].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  }
+
+  /** Switches to another song in the list. */
+  async open(id: string): Promise<SongEntry> {
+    const entry = (await this.index.read()).songs.find((song) => song.id === id);
+    if (!entry) throw new Error("That song is gone from Ode's list.");
+    await this.index.update((index) => ({ ...index, current: id }));
+    this.use(id);
     this.onChange(await this.read());
+    return entry;
+  }
+
+  /** Starts a new song with this title and switches to it. */
+  async create(title: string): Promise<SongEntry> {
+    const entry: SongEntry = { id: randomUUID(), title: title.trim(), updatedAt: new Date().toISOString() };
+    await this.index.update((index) => ({ current: entry.id, songs: [...index.songs, entry] }));
+    this.use(entry.id);
+    if (entry.title) await this.update({ title: entry.title });
+    else this.onChange(await this.read());
+    return entry;
   }
 
   read(): Promise<LeadSheet> {
-    return this.sheet.read();
+    return this.file().read();
   }
 
   /** Stores a whole lead sheet. The lyrics and their revision stay as stored: they change only through `saveLyrics`. */
   async replace(sheet: LeadSheet): Promise<LeadSheet> {
-    const next = await this.sheet.update((current) => LeadSheetSchema.parse({ ...sheet, lyrics: current.lyrics, lyricsRevision: current.lyricsRevision }));
-    this.onChange(next);
-    return next;
+    return this.changed(
+      await this.file().update((current) => LeadSheetSchema.parse({ ...sheet, lyrics: current.lyrics, lyricsRevision: current.lyricsRevision })),
+    );
   }
 
   /** Replaces the fields given. The lyrics and their revision stay as stored: they change only through `saveLyrics`. */
   async update(patch: Partial<LeadSheet>): Promise<LeadSheet> {
-    const next = await this.sheet.update((current) =>
-      LeadSheetSchema.parse({ ...current, ...patch, lyrics: current.lyrics, lyricsRevision: current.lyricsRevision }),
+    return this.changed(
+      await this.file().update((current) =>
+        LeadSheetSchema.parse({ ...current, ...patch, lyrics: current.lyrics, lyricsRevision: current.lyricsRevision }),
+      ),
     );
-    this.onChange(next);
-    return next;
   }
 
   /**
-   * Stores new lyrics as the next revision. `edit` gets the sheet as stored and returns the text to keep; nothing else
-   * is written to the sheet between the two, so a merge made in `edit` is never overwritten.
+   * Stores new lyrics as the next revision. `edit` gets the sheet as stored and returns the text to keep; the sheet
+   * stays as it is between the two, so a merge made in `edit` is kept.
    */
   async saveLyrics(edit: (current: LeadSheet) => string): Promise<LeadSheet> {
-    const next = await this.sheet.update((current) =>
-      LeadSheetSchema.parse({ ...current, lyrics: edit(current), lyricsRevision: current.lyricsRevision + 1 }),
+    return this.changed(
+      await this.file().update((current) => LeadSheetSchema.parse({ ...current, lyrics: edit(current), lyricsRevision: current.lyricsRevision + 1 })),
     );
-    this.onChange(next);
-    return next;
   }
 
   /** The sung lines of the lyrics, without blank and label lines. */
@@ -154,8 +118,26 @@ export class SongStore {
     return LyricsText.sung((await this.read()).lyrics);
   }
 
-  private sheetFile(dir: string): JsonFile<LeadSheet> {
-    return new JsonFile(join(dir, "song.json"), LeadSheetSchema as unknown as ZodType<LeadSheet>, emptyLeadSheet);
+  private use(id: string): void {
+    this.id = id;
+    this.dir = join(this.paths.songs, id);
+    this.sheet = new JsonFile(join(this.dir, "song.json"), LeadSheetSchema as unknown as ZodType<LeadSheet>, emptyLeadSheet);
+  }
+
+  private file(): JsonFile<LeadSheet> {
+    if (!this.sheet) throw new Error("Ode opens a song before it reads one.");
+    return this.sheet;
+  }
+
+  /** Keeps the list's title and date in step with the sheet, then tells the windows. */
+  private async changed(sheet: LeadSheet): Promise<LeadSheet> {
+    const id = this.id;
+    await this.index.update((index) => ({
+      ...index,
+      songs: index.songs.map((song) => (song.id === id ? { ...song, title: sheet.title, updatedAt: new Date().toISOString() } : song)),
+    }));
+    this.onChange(sheet);
+    return sheet;
   }
 }
 

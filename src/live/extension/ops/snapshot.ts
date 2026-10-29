@@ -57,7 +57,7 @@ export class SnapshotOperations extends OperationGroup<SnapshotOp> {
         Promise.all(tracks.returns.map((track) => this.track(track, tracks))),
         this.track(tracks.main, tracks),
       ]);
-      return { song, tracks: regular, returnTracks, main };
+      return { song, signature: this.describe.signature(), tracks: regular, returnTracks, main };
     };
   }
 

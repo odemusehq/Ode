@@ -1,11 +1,10 @@
-import { EXTENSION_OPS, type LiveConnections } from "../shared/live";
+import type { LiveConnections } from "../shared/live";
 import type { SetSnapshot } from "../shared/set-snapshot";
 import type { LeadSheet } from "../shared/song";
 import type { LyricsStore } from "../mneme/lyrics-store";
 import { SetDiff } from "../mneme/set-diff";
 import type { SongStore } from "../mneme/song-store";
 import { RestorePlanner, type PlannedCall } from "./restore-planner";
-import { SetReadError } from "./snapshot-reader";
 
 export interface PutBack {
   /** False when a step failed and the rest wasn't applied. */
@@ -54,47 +53,27 @@ export class RestoreRunner {
   }
 
   /**
-   * Runs one step: its extension calls as one undo step, then its Ode device calls. Returns what failed,
-   * in words. Edits that fail as a group are tried one by one, so one refused value doesn't hold up the rest.
+   * Runs one step as one undo step. Returns what failed, in words. Edits that fail as a group are tried one by one,
+   * so one refused value leaves the rest to go ahead.
    */
   private async runStep(step: PlannedCall[]): Promise<string[]> {
-    const onExtension = step.filter((call) => RestoreRunner.isExtensionOp(call.op));
-    const onDevice = step.filter((call) => !RestoreRunner.isExtensionOp(call.op));
     const failed: string[] = [];
-    if (onExtension.length > 0) {
-      try {
-        await this.runOnExtension(onExtension);
-      } catch (error) {
-        if (!onExtension.every((call) => RestorePlanner.isEdit(call.op))) return [RestoreRunner.messageOf(error)];
-        for (const call of onExtension) {
-          await this.runOnExtension([call]).catch((single: unknown) => failed.push(`${call.label} (${RestoreRunner.messageOf(single)})`));
-        }
-      }
-    }
-    const { device } = this.live;
-    for (const call of onDevice) {
-      try {
-        if (!device.connected()) throw new SetReadError(`Ode can't reach the Set: ${device.fix}`);
-        await device.call(call.op, call.args);
-      } catch (error) {
-        failed.push(`${call.label} (${RestoreRunner.messageOf(error)})`);
-        if (!RestorePlanner.isEdit(call.op)) return failed;
+    try {
+      await this.run(step);
+    } catch (error) {
+      if (!step.every((call) => RestorePlanner.isEdit(call.op))) return [RestoreRunner.messageOf(error)];
+      for (const call of step) {
+        await this.run([call]).catch((single: unknown) => failed.push(`${call.label} (${RestoreRunner.messageOf(single)})`));
       }
     }
     return failed;
   }
 
-  private async runOnExtension(calls: PlannedCall[]): Promise<void> {
+  private async run(calls: PlannedCall[]): Promise<void> {
     const { extension } = this.live;
-    // A closed connection would queue the change for later instead of applying it now.
-    if (!extension.connected()) throw new SetReadError(`Ode can't reach the Set: ${extension.fix}`);
     const [only] = calls;
     if (calls.length === 1 && only) await extension.call(only.op, only.args);
     else await extension.call("apply_as_one_undo_step", { calls: calls.map(({ op, args }) => ({ op, args })) });
-  }
-
-  private static isExtensionOp(op: string): boolean {
-    return (EXTENSION_OPS as readonly string[]).includes(op);
   }
 
   private static messageOf(error: unknown): string {

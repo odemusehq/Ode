@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
-import { mkdtemp, stat } from "node:fs/promises";
-import { createServer, type AddressInfo } from "node:net";
+import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import type { WSContext } from "hono/ws";
 import { NotFoundError } from "../live/extension/errors";
 import { ReferenceResolver } from "../live/extension/refs";
 import { userPaths } from "../mneme/paths";
@@ -13,31 +11,10 @@ import { SongStore } from "../mneme/song-store";
 import { analyzeLine } from "../music/phonetics/line-analyzer";
 import { analyzeLyrics } from "../music/prosody/lyrics-analyzer";
 import { compareRhyme } from "../music/rhyme/rhyme-comparer";
-import { LiveHub, NotConnectedError } from "../server/live-hub";
 import { ModelServices } from "../services";
 import { ModelRoles } from "../services/model-roles";
 import { ProviderCatalog } from "../services/provider-catalog";
 import { FakeLive } from "./fake-live";
-
-const TIMEOUTS = { normal: 200, long: 400 };
-const NO_EVENTS = { onSetInfo: () => undefined, onStatus: () => undefined };
-
-/** A local port with nothing listening on it. */
-async function closedPort(): Promise<number> {
-  const server = createServer();
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-  const { port } = server.address() as AddressInfo;
-  await new Promise<void>((resolve) => server.close(() => resolve()));
-  return port;
-}
-
-async function newHub(): Promise<LiveHub> {
-  return new LiveHub("127.0.0.1", await closedPort(), TIMEOUTS, NO_EVENTS);
-}
-
-function notConnected(pattern: RegExp): (error: unknown) => boolean {
-  return (error) => error instanceof NotConnectedError && pattern.test(error.message);
-}
 
 function notFound(message: string): (error: unknown) => boolean {
   return (error) => error instanceof NotFoundError && error.message === message;
@@ -47,54 +24,23 @@ async function tempDir(): Promise<string> {
   return mkdtemp(join(tmpdir(), "ode-test-"));
 }
 
-// 1. Live closed, extension not connected, or the Ode device not on the Master.
+// 1. Songs: each keeps its own data, and the one used last opens again.
 
-test("Live parts that aren't connected answer 'not connected' with what to do", async () => {
-  const hub = await newHub();
-  await assert.rejects(hub.device.call("transport_play", {}), notConnected(/^not connected: Ode device\. Put the Ode device on the Master track\./));
-  await assert.rejects(hub.extension.call("song_get", {}), notConnected(/^not connected: Ode extension\./));
-  await assert.rejects(hub.bridge.call("browser_search", { query: "piano" }), notConnected(/^not connected: Ode bridge\./));
-});
-
-test("a change made while the extension's connection is closed is queued, with how to apply it", async () => {
-  const hub = await newHub();
-  const result = await hub.extension.call<{ queued: boolean; message: string }>("song_create_midi_track", { name: "Bass" });
-  assert.equal(result.queued, true);
-  assert.match(result.message, /Ode: Apply changes/);
-  assert.equal(hub.extension.takeQueue().length, 1);
-});
-
-test("a connected part that never answers times out instead of hanging", async () => {
-  const hub = await newHub();
-  hub.device.attach({ send: () => undefined } as unknown as WSContext);
-  const started = performance.now();
-  await assert.rejects(hub.device.call("transport_play", {}), /did not answer "transport_play"/);
-  assert.ok(performance.now() - started < 2_000);
-});
-
-// 2. Unsaved or moved Set.
-
-test("an unsaved Set keeps its song in the user folder and moves it into its folder in the project on first save", async () => {
-  const root = await tempDir();
-  const paths = userPaths(join(root, "Ode"));
-  const store = new SongStore(paths, () => undefined);
-  await store.open({ setId: "unsaved-1", filePath: null, instance: "first" });
-  await store.update({ title: "Night Bus Frequencies" });
-  const unsavedDir = join(paths.unsaved, "unsaved-1");
-  assert.equal(store.dataDir, unsavedDir);
-
-  const setFile = join(root, "Projects", "Night Bus Project", "Night Bus.als");
-  await store.open({ setId: setFile, filePath: setFile, instance: "first" });
-  assert.equal(store.dataDir, join(root, "Projects", "Night Bus Project", "Ode", "Night Bus"));
-  assert.equal((await store.read()).title, "Night Bus Frequencies");
-  await assert.rejects(stat(unsavedDir), { code: "ENOENT" });
-
+test("each song keeps its own lyrics, and the song used last opens again", async () => {
+  const paths = userPaths(join(await tempDir(), "Ode"));
+  const songs = new SongStore(paths, () => undefined);
+  const nightBus = await songs.create("Night Bus");
+  await songs.saveLyrics(() => "[Verse 1]\nThe last bus leaves at midnight");
+  await songs.create("Morning Train");
+  assert.equal((await songs.read()).lyrics, "");
+  await songs.open(nightBus.id);
+  assert.match((await songs.read()).lyrics, /last bus/);
   const reopened = new SongStore(paths, () => undefined);
-  await reopened.open({ setId: setFile, filePath: setFile, instance: "later" });
-  assert.equal((await reopened.read()).title, "Night Bus Frequencies");
+  assert.equal((await reopened.openLast()).id, nightBus.id);
+  assert.deepEqual((await reopened.list()).map((song) => song.title).sort(), ["Morning Train", "Night Bus"]);
 });
 
-// 3. The musician moves, renames or deletes things while Ode works.
+// 2. The musician moves, renames or deletes things while Ode works.
 
 test("moved or renamed objects are reported as not found; a tagged clip is found again by its tag", () => {
   const live = new FakeLive();
@@ -112,7 +58,7 @@ test("moved or renamed objects are reported as not found; a tagged clip is found
   assert.equal(refs.clip({ tag: "o3f2" }).clip, hook);
 });
 
-// 4. Words missing from the dictionaries, and UK/US differences.
+// 3. Words missing from the dictionaries, and UK/US differences.
 
 test("words missing from the dictionaries are marked not certain, and the accent changes rhymes", () => {
   for (const accent of ["us", "uk"] as const) {
@@ -123,7 +69,7 @@ test("words missing from the dictionaries are marked not certain, and the accent
   assert.notEqual(compareRhyme("bath", "math", "uk").kind, compareRhyme("bath", "math", "us").kind);
 });
 
-// 5. Providers missing or not configured.
+// 4. Optional providers left unset.
 
 test("optional providers left unset name the setting to add", async () => {
   const dir = await tempDir();

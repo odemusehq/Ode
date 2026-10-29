@@ -17,7 +17,7 @@ const FactSchema = z.object({
 });
 const HabitSchema = z.object({ name: z.string(), kept: z.number(), rejected: z.number(), updated: z.string() });
 const SongEntrySchema = z.object({
-  setId: z.string(),
+  songId: z.string(),
   title: z.string(),
   dataDir: z.string(),
   lyrics: z.array(z.string()),
@@ -132,12 +132,12 @@ export class Mneme {
 
   async rememberSong(entry: Omit<SongEntry, "updated">): Promise<void> {
     const updated = new Date().toISOString();
-    await this.songs.update((songs) => [...songs.filter((song) => song.setId !== entry.setId), { ...entry, updated }]);
+    await this.songs.update((songs) => [...songs.filter((song) => song.songId !== entry.songId), { ...entry, updated }]);
   }
 
-  async pastLyrics(excludeSetId?: string | null): Promise<string[]> {
+  async pastLyrics(excludeSongId?: string | null): Promise<string[]> {
     const songs = await this.songs.read();
-    return songs.filter((song) => song.setId !== excludeSetId).flatMap((song) => song.lyrics);
+    return songs.filter((song) => song.songId !== excludeSongId).flatMap((song) => song.lyrics);
   }
 
   private currentConfidence(fact: ArtistFact): number {

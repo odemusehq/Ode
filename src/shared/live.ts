@@ -1,5 +1,4 @@
-// Shared contract between the local server and the three Live connections
-// (extension, Max for Live device, Python bridge).
+// Shared contract between Ode and Live, which Ode reaches through its extension's operations.
 
 export type TrackRef =
   | { index: number }
@@ -129,55 +128,6 @@ export const EXTENSION_OPS = [
 ] as const;
 export type ExtensionOp = (typeof EXTENSION_OPS)[number];
 
-export const DEVICE_OPS = [
-  "set_info",
-  "transport_play",
-  "transport_stop",
-  "transport_continue",
-  "transport_set_position",
-  "transport_record",
-  "session_record",
-  "loop_set",
-  "locator_jump",
-  "song_set_key",
-  "song_set_time_signature",
-  "song_create_return_track",
-  "song_delete_return_track",
-  "song_capture_midi",
-  "song_undo",
-  "song_redo",
-  "selection_get",
-  "track_meters_get",
-  "master_measure",
-  "transport_get",
-  "clip_slot_fire",
-] as const;
-export type DeviceOp = (typeof DEVICE_OPS)[number];
-
-/** Events the Ode device sends without being asked. */
-export type DeviceEventName = "set" | "selection" | "command";
-
-/** The device's Again and Undo controls (mappable to a key or a MIDI controller in Live). */
-export interface DeviceCommand {
-  name: "undo" | "again";
-}
-
-export const BRIDGE_OPS = ["browser_search", "browser_load", "plugin_list"] as const;
-export type BridgeOp = (typeof BRIDGE_OPS)[number];
-
-export interface LiveRequest {
-  id: string;
-  op: string;
-  args: unknown;
-}
-
-export interface LiveResponse {
-  id: string;
-  ok: boolean;
-  result?: unknown;
-  error?: string;
-}
-
 /** What the musician pointed at with a right-click "Ask Ode". */
 export interface LivePointer {
   scope: string;
@@ -188,24 +138,14 @@ export interface LivePointer {
 
 export interface LiveStatus {
   extension: boolean;
-  device: boolean;
-  bridge: boolean;
-  setFilePath: string | null;
 }
 
+/** Runs one of the extension's operations on the Set open in Live. */
 export interface LiveLink {
-  /** What the musician does to connect it, in plain words. */
-  readonly fix: string;
-  connected(): boolean;
-  call<R = unknown>(op: string, args: unknown, timeoutMs?: number): Promise<R>;
+  call<R = unknown>(op: string, args: unknown): Promise<R>;
 }
 
 export interface LiveConnections {
   extension: LiveLink;
-  device: LiveLink;
-  bridge: LiveLink;
   status(): LiveStatus;
 }
-
-/** Extension and device connect to these WebSocket paths on the local server. */
-export const LIVE_SOCKET_PATHS = { extension: "/ws/extension", device: "/ws/device" } as const;

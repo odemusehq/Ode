@@ -27,7 +27,6 @@ export interface RunFold {
 enum VersionAction {
   Restore = "restore",
   Name = "name",
-  Copy = "copy",
 }
 
 enum Task {
@@ -36,13 +35,11 @@ enum Task {
   Restoring = "restoring",
   Naming = "naming",
   SavingName = "saving-name",
-  Copying = "copying",
 }
 
 const MENU_ITEMS: readonly MenuItem<VersionAction>[] = [
   { id: VersionAction.Restore, label: "Restore this version", icon: IconName.Restore },
   { id: VersionAction.Name, label: "Name this version", icon: IconName.Edit },
-  { id: VersionAction.Copy, label: "Make a copy", icon: IconName.Copy },
 ];
 
 const AUTHOR_LABELS: Record<VersionAuthor, string> = {
@@ -65,7 +62,7 @@ export interface HistoryVersionProps {
   onSelect: (id: string | null) => void;
   /** How many versions are newer than this one; restoring it deletes them. */
   newer: number;
-  /** Says how a restore or a copy went. */
+  /** Says how a restore went. */
   onOutcome: (notes: VersionNote[]) => void;
   fold?: RunFold;
   /** A row folded under the first row of its run. */
@@ -80,34 +77,17 @@ export function HistoryVersion({ version, kind, selected, onSelect, newer, onOut
   const [nameError, setNameError] = useState<string | null>(null);
   const detailId = useId();
   const moment = momentOf(version.time, kind);
-  const working = task === Task.Restoring || task === Task.SavingName || task === Task.Copying;
+  const working = task === Task.Restoring || task === Task.SavingName;
   const author = AUTHOR_LABELS[version.author];
 
-  const copy = async () => {
-    setTask(Task.Copying);
-    try {
-      const result = await client.copyVersion(version.id);
-      onOutcome([{ tone: Tone.Success, text: `A copy is in ${result.path}. Open it in Live to carry on from ${moment}.` }]);
-    } catch (error) {
-      onOutcome([{ tone: Tone.Danger, text: `The copy wasn't made: ${errorMessage(error)}` }]);
-    } finally {
-      setTask(Task.None);
-    }
-  };
-
-  const restore = async (copyFirst: boolean) => {
+  const restore = async () => {
     setTask(Task.Restoring);
     const notes: VersionNote[] = [];
     try {
-      if (copyFirst) {
-        const result = await client.copyNow();
-        notes.push({ tone: Tone.Success, text: `A copy of the project as it is now is in ${result.path}.` });
-      }
       const note = restoreNote(await client.restoreVersion(version.id), moment);
       if (note) notes.push(note);
     } catch (error) {
-      const what = copyFirst && notes.length === 0 ? "The copy wasn't made, so nothing was restored" : "The version wasn't restored";
-      notes.push({ tone: Tone.Danger, text: `${what}: ${errorMessage(error)}` });
+      notes.push({ tone: Tone.Danger, text: `The version stayed as it was: ${errorMessage(error)}` });
     }
     onOutcome(notes);
     setTask(Task.None);
@@ -122,9 +102,6 @@ export function HistoryVersion({ version, kind, selected, onSelect, newer, onOut
         setDraft(version.name ?? "");
         setNameError(null);
         setTask(Task.Naming);
-        return;
-      case VersionAction.Copy:
-        void copy();
         return;
     }
   };
@@ -205,16 +182,10 @@ export function HistoryVersion({ version, kind, selected, onSelect, newer, onOut
           message={confirmMessage(moment, newer)}
           confirmLabel="Restore"
           busy={task === Task.Restoring}
-          onConfirm={() => void restore(false)}
+          onConfirm={() => void restore()}
           onCancel={() => setTask(Task.None)}
-          extra={
-            <Button icon={IconName.Copy} onClick={() => void restore(true)} disabled={task === Task.Restoring}>
-              Make a copy first
-            </Button>
-          }
         />
       )}
-      {task === Task.Copying && <p className="muted small">Copying the project…</p>}
       {selected && <HistoryChanges versionId={version.id} id={detailId} />}
     </li>
   );
