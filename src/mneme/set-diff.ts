@@ -25,7 +25,7 @@ const QUARTER_NOTES_PER_WHOLE_NOTE = 4;
 const VOLUME_PARAMETER = 0;
 const PAN_PARAMETER = 1;
 const FIRST_SEND_PARAMETER = 2;
-/** Live's send range, from silent to full, for a new send whose details aren't known. */
+/** Live's send range, from silent to full, for a new send whose details are unknown. */
 const SEND_MIN = 0;
 const SEND_MAX = 1;
 /** Live shows pan from 50L to 50R. */
@@ -103,7 +103,7 @@ export class SetWording {
     return Math.floor(beat / beatsPerBar) + 1;
   }
 
-  /** "9–16" for the bars from `start` up to (not including) `end`, or "9" when they stay in one bar. */
+  /** "9–16" for the bars from `start` up to `end` (exclusive), or "9" when they stay in one bar. */
   static barSpan(start: number, end: number, beatsPerBar: number): string {
     const first = SetWording.bar(start, beatsPerBar);
     const last = Math.max(first, Math.ceil(end / beatsPerBar));
@@ -169,7 +169,7 @@ export class SetWording {
     return low === high ? noteName(low) : `${noteName(low)}–${noteName(high)}`;
   }
 
-  /** The file name of a path, or "" for none. */
+  /** The file name of a path, or "" for a missing path. */
   static fileName(path: string | null | undefined): string {
     return path ? basename(path) : "";
   }
@@ -221,7 +221,7 @@ export class LyricsWording {
 
   /**
    * Sung lines that replace others are named where they are in the new text, by the label they come under and their
-   * number among its sung lines; lines only added or removed are counted; blank lines and labels don't count.
+   * number among its sung lines; lines only added or removed are counted; the count skips blank lines and labels.
    */
   static words(before: string, after: string): string {
     const oldLines = LyricsWording.lines(before);
@@ -245,7 +245,7 @@ export class LyricsWording {
     return SetWording.list(parts) || "changed";
   }
 
-  /** "Verse 1 line 2", "Chorus lines 1–2", or "line 5" for lines under no label, one part per label in order. */
+  /** "Verse 1 line 2", "Chorus lines 1–2", or "line 5" for lines above the first label, one part per label in order. */
   private static places(lines: readonly string[], indexes: number[]): string[] {
     const byLabel = new Map<string, number[]>();
     for (const index of indexes) {
@@ -256,7 +256,7 @@ export class LyricsWording {
     return [...byLabel].map(([label, numbers]) => `${label ? `${label} ` : ""}${numbers.length === 1 ? "line" : "lines"} ${SetWording.spans(numbers)}`);
   }
 
-  /** An empty text has no lines. */
+  /** An empty text gives an empty list of lines. */
   private static lines(text: string): string[] {
     return text === "" ? [] : LyricsText.lines(text);
   }
@@ -276,7 +276,7 @@ export class LyricsWording {
  * When both snapshots have a lead sheet, its lyrics are one change (the text on each side), its sections match by id
  * (the Section on each side: chords, name, kind and place) and everything else in it is one details change
  * (SheetDetails); applying writes the lyrics text, keeps the sheet's settings, version and lyrics revision, and orders
- * sections by start beat. No field holds track order, groups, take lane names or the grid, so those aren't recorded.
+ * sections by start beat. Track order, groups, take lane names and the grid sit outside every field, so they go unrecorded.
  */
 export class SetDiff {
   static between(from: SetSnapshot, to: SetSnapshot): SetChange[] {
@@ -290,7 +290,7 @@ export class SetDiff {
 
   /** "12 edits on Drums and Pad", "5 edits on Bass and the lyrics", or "Song settings" when only the song changed. */
   static summary(changes: SetChange[]): string {
-    if (changes.length === 0) return "No changes";
+    if (changes.length === 0) return "Everything stayed the same";
     const tracks = TouchedTracks.names(changes);
     const lyrics = changes.some((change) => change.target.scope === "sheet" && change.target.field === "lyrics");
     const sheet = changes.some((change) => change.target.scope === "sheet" && change.target.field !== "lyrics");
@@ -359,12 +359,12 @@ class Pairing {
     return [...this.toByFrom].sort((a, b) => a[0] - b[0]);
   }
 
-  /** Positions in `from` with no partner. */
+  /** Positions in `from` without a partner. */
   freeFrom(): number[] {
     return positions(this.fromCount).filter((index) => !this.toByFrom.has(index));
   }
 
-  /** Positions in `to` with no partner: what was added. */
+  /** Positions in `to` without a partner: what was added. */
   freeTo(): number[] {
     return positions(this.toCount).filter((index) => !this.fromByTo.has(index));
   }
@@ -392,7 +392,7 @@ class Matcher {
     return pairing;
   }
 
-  /** Tracks of different kinds, or with different tags, are never the same track. */
+  /** Tracks of different kinds, or with different tags, are always different tracks. */
   private static mayBeSameTrack(a: TrackSnapshot, b: TrackSnapshot): boolean {
     return a.kind === b.kind && !(a.tag && b.tag && a.tag !== b.tag);
   }
@@ -491,7 +491,7 @@ class Values {
   }
 }
 
-/** A clip's MIDI notes, compared as a set: their order doesn't matter. */
+/** A clip's MIDI notes, compared as a set, in any order. */
 class Notes {
   static same(a: readonly Note[], b: readonly Note[]): boolean {
     if (a.length !== b.length) return false;
@@ -599,7 +599,7 @@ class DiffBuilder {
     return key;
   }
 
-  /** Values are copied, so a change never shares data with a snapshot. */
+  /** Values are copied, so each change holds its own copy of the data. */
   private add(kind: ChangeKind, target: ChangeTarget, label: string, before: unknown, after: unknown): void {
     const change: SetChange = { kind, target, label };
     if (before !== undefined) change.before = structuredClone(before);
@@ -711,7 +711,7 @@ class DiffBuilder {
     return parts.join(", ") || "scenes changed";
   }
 
-  /** "scenes Bridge and Outro added", or "2 scenes added" when they have no names. */
+  /** "scenes Bridge and Outro added", or "2 scenes added" when they are unnamed. */
   private static scenesAddedOrRemoved(count: number, names: readonly string[], verb: string): string {
     if (names.length === count) return `${count === 1 ? "scene" : "scenes"} ${SetWording.list(names)} ${verb}`;
     return `${SetWording.count(count, "scene")} ${verb}`;
@@ -791,12 +791,12 @@ class DiffBuilder {
     return parts;
   }
 
-  /** The section's name, or its kind when it has none: "Pre-chorus". */
+  /** The section's name, or its kind when it is unnamed: "Pre-chorus". */
   private static sectionName(section: Section): string {
     return section.name || `${section.kind.charAt(0).toUpperCase()}${section.kind.slice(1)}`;
   }
 
-  /** Everything in the lead sheet except its lyrics, sections, the musician's settings and the format version. */
+  /** The lead sheet's other details: everything beyond its lyrics, sections, the musician's settings and the format version. */
   private static sheetDetails(sheet: LeadSheet): SheetDetails {
     const { lyrics: _lyrics, lyricsRevision: _revision, sections: _sections, version: _version, settings: _settings, ...details } = sheet;
     return details;
@@ -877,7 +877,7 @@ class DiffBuilder {
     }
   }
 
-  /** A MIDI clip never becomes an audio clip, and clips with different tags are different clips. */
+  /** A MIDI clip and an audio clip are always different clips, and so are clips with different tags. */
   private static mayBeSameClip(a: ClipInfo, b: ClipInfo): boolean {
     return a.kind === b.kind && !(a.tag && b.tag && a.tag !== b.tag);
   }
@@ -927,7 +927,7 @@ class DiffBuilder {
     return place.lane === undefined ? `${track.name} · notes in ${bars}` : `${track.name} · take lane ${place.lane + 1} · notes in ${bars}`;
   }
 
-  /** "clip Bass A", or where the clip is when it has no name. */
+  /** "clip Bass A", or where the clip is when it is unnamed. */
   private clipId(clip: ClipInfo, place: ClipKey): string {
     const name = SetWording.name(clip);
     if ("slot" in place) return name ? `clip ${name}` : `clip in slot ${place.slot + 1}`;
@@ -978,7 +978,7 @@ class DiffBuilder {
   private static audioWords(before: ClipAudio, after: ClipAudio): string {
     const parts: string[] = [];
     if (before.filePath !== after.filePath) {
-      parts.push(`file ${SetWording.fileName(before.filePath) || "none"} → ${SetWording.fileName(after.filePath) || "none"}`);
+      parts.push(`file ${SetWording.fileName(before.filePath) || "empty"} → ${SetWording.fileName(after.filePath) || "empty"}`);
     }
     if (before.warping !== after.warping) parts.push(after.warping ? "warping on" : "warping off");
     if (before.warpMode !== after.warpMode) parts.push(`warp mode ${SetWording.warpMode(before.warpMode)} → ${SetWording.warpMode(after.warpMode)}`);
@@ -1047,7 +1047,7 @@ class DiffBuilder {
     const parts: string[] = [];
     if (before.name !== after.name) parts.push(`renamed ${after.name}`);
     if ((before.sample ?? null) !== (after.sample ?? null)) {
-      parts.push(`sample ${SetWording.fileName(before.sample) || "none"} → ${SetWording.fileName(after.sample) || "none"}`);
+      parts.push(`sample ${SetWording.fileName(before.sample) || "empty"} → ${SetWording.fileName(after.sample) || "empty"}`);
     }
     const chainsBefore = before.chains ?? [];
     const chainsAfter = after.chains ?? [];
@@ -1523,7 +1523,7 @@ class SnapshotPatcher {
     }
   }
 
-  /** Sends to added return tracks that weren't left where they start. */
+  /** Sends to added return tracks that were moved from where they start. */
   private setAddedSends(changes: readonly SetChange[]): void {
     for (const change of changes) {
       const target = change.target;
@@ -1539,7 +1539,7 @@ class SnapshotPatcher {
 /** The item at a position the caller knows is there. */
 function itemAt<T>(items: readonly T[], index: number): T {
   const item = items[index];
-  if (item === undefined) throw new RangeError(`Nothing at position ${index}`);
+  if (item === undefined) throw new RangeError(`Position ${index} is out of range`);
   return item;
 }
 

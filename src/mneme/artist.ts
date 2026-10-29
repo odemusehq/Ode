@@ -125,7 +125,7 @@ export class Mneme {
         const decay = this.decay(habit.updated);
         const kept = habit.kept * decay;
         const rejected = habit.rejected * decay;
-        // Beta(1, 1) prior: with no outcomes the preference is neutral (0.5).
+        // Beta(1, 1) prior: with zero outcomes the preference is neutral (0.5).
         return { name: habit.name, preference: (kept + 1) / (kept + rejected + 2), outcomes: kept + rejected };
       })
       .sort((a, b) => b.outcomes - a.outcomes);

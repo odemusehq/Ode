@@ -50,7 +50,7 @@ export class AdapterRegistry {
     const factory = provider ? (AdapterRegistry.TABLE[capability][provider] as Factory<C> | undefined) : undefined;
     if (!factory) {
       const supported = Object.keys(AdapterRegistry.TABLE[capability]).join(", ");
-      throw new Error(`No ${capability} adapter for provider "${role.provider}". Supported: ${supported}.`);
+      throw new Error(`Provider "${role.provider}" is missing a ${capability} adapter. Supported: ${supported}.`);
     }
     return factory(role, this.speech);
   }

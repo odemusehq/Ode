@@ -15,7 +15,7 @@ const GroupSchema = z.object({ calls: z.array(z.object({ op: z.string(), args: z
 type Deletion = (snapshot: SetSnapshot) => boolean;
 
 /**
- * Finds the deletions a restore would leave out, so they wait for Apply in every mode: a device a restore can't add
+ * Finds the deletions a restore would leave out, so they wait for Apply in every mode: a device only the musician can add
  * back (a plug-in, a preset, a rack holding one) or a track holding one, or a group track. What is deleted is looked
  * up in a fresh reading of the Set, since Ode's own earlier changes move what each index points at; when the Set
  * lacks it, the deletion waits too.

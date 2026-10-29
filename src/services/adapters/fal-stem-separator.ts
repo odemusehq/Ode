@@ -36,7 +36,7 @@ export class FalStemSeparator implements StemSeparator {
 
   private static async download(url: string, path: string): Promise<void> {
     const response = await fetch(url);
-    if (!response.ok) throw new Error(`Couldn't download the separated audio (${response.status}).`);
+    if (!response.ok) throw new Error(`Downloading the separated audio failed (${response.status}).`);
     await writeFile(path, Buffer.from(await response.arrayBuffer()));
   }
 }

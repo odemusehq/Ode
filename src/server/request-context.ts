@@ -27,7 +27,7 @@ export interface RequestContextDeps {
 
 const MODE_NOTES: Record<Mode, string> = {
   [Mode.Auto]:
-    "Mode: Auto. Change what you are sure of. Ask (ask_musician) only when you can't tell what the musician wants, and before deleting a part or rewriting a whole section.",
+    "Mode: Auto. Change what you are sure of. Ask (ask_musician) only when what the musician wants is unclear, and before deleting a part or rewriting a whole section.",
   [Mode.Manual]: "Mode: Manual. Every change waits for the musician to Apply or Skip it.",
 };
 
@@ -43,7 +43,7 @@ export class RequestContext implements RequestLifecycle {
 
   constructor(private readonly deps: RequestContextDeps) {}
 
-  /** Throws "Ode can't read the Set: …" when the Set can't be read; no version is saved then. */
+  /** Throws "Ode can't read the Set: …" when the Set is unreadable; the history then stays as it is. */
   async prepare(request: OdeRequest): Promise<{ hiddenContext: string }> {
     if (request.reply) return { hiddenContext: await this.replyContext(request.reply.versionId) };
     const song = this.deps.song.songId;
@@ -63,7 +63,7 @@ export class RequestContext implements RequestLifecycle {
   }
 
   /**
-   * After the turn. A reply (Why?) emits its answer and nothing else. Otherwise what Ode changed is saved as a
+   * After the turn. A reply (Why?) emits only its answer. Otherwise what Ode changed is saved as a
    * version and the result line says what changed; when the request was stopped, what it changed so far is saved
    * too, so Undo works, and the line is "Stopped: …".
    */
@@ -89,7 +89,7 @@ export class RequestContext implements RequestLifecycle {
     const { STOPPED } = VersionRecorder;
     const recorded = await this.record(() => this.deps.recorder.odeCutShort(STOPPED, request.text));
     const version = recorded?.version ?? null;
-    const text = version ? version.summary : recorded ? `${STOPPED}: nothing changed` : `${STOPPED}.`;
+    const text = version ? version.summary : recorded ? `${STOPPED}: the Set stayed the same` : `${STOPPED}.`;
     this.deps.emit({ type: "result", text, versionId: version?.id ?? null, kind: ResultKind.Stopped });
   }
 
@@ -115,7 +115,7 @@ export class RequestContext implements RequestLifecycle {
     return RequestContext.wrap([
       `Why?: the musician asks why you made your change "${version.summary}".${asked}`,
       `What it changed:\n${ProjectMap.describeChanges(version.changes)}`,
-      "Answer in two or three plain sentences: what you did and why it suits the song. Change nothing.",
+      "Answer in two or three plain sentences: what you did and why it suits the song. Leave the Set as it is.",
     ]);
   }
 
@@ -135,7 +135,7 @@ export class RequestContext implements RequestLifecycle {
           ? [recorded.version]
           : []
         : (await this.deps.versions.history.since(since, VersionAuthor.Musician)).filter((version) => version.changes.length > 0);
-    if (versions.length === 0) return "Hand edits since the last request: none.";
+    if (versions.length === 0) return "Hand edits since the last request: zero.";
     const text = [
       "Hand edits since the last request (saved as versions):",
       ...versions.map((version) => `Saved at ${RequestContext.clock(version.time)}:\n${ProjectMap.describeChanges(version.changes)}`),

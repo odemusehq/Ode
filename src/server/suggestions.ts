@@ -68,7 +68,7 @@ export class SuggestionFinder {
     return this.chips(fixes, SuggestionFinder.forMidiClip(part, where));
   }
 
-  /** The clip's notes as they are now; the snapshot's when Live can't be asked. */
+  /** The clip's notes as they are now; the snapshot's when Live is out of reach. */
   private async notesOf(ref: ClipRef, found: FoundClip): Promise<Note[]> {
     try {
       return (await this.live.extension.call<{ notes: Note[] }>("midi_clip_get_notes", { clip: ref })).notes;
@@ -77,7 +77,7 @@ export class SuggestionFinder {
     }
   }
 
-  /** Notes outside the song's scale (never on drums, where notes pick sounds rather than pitches). */
+  /** Notes outside the song's scale (pitched parts only: on drums, notes pick sounds). */
   private static keyFixes(part: Part, notes: Note[], where: string, snapshot: SetSnapshot): Action[] {
     if (part === Part.Drums) return [];
     const scale = SuggestionFinder.scale(snapshot);
@@ -108,7 +108,7 @@ export class SuggestionFinder {
     ];
   }
 
-  /** Live's scale when Scale Mode is on, so it follows the key the musician set in Live; none when it is off. */
+  /** Live's scale when Scale Mode is on, so it follows the key the musician set in Live; null when it is off. */
   private static scale(snapshot: SetSnapshot): Scale | null {
     const { song } = snapshot;
     if (!song.scaleMode || song.scaleIntervals.length === 0) return null;
@@ -160,14 +160,14 @@ export class SuggestionFinder {
           { label: "Catchier", request: `Make the melody in ${where} catchier.` },
           { label: "Add a harmony", request: `Add a harmony line to the melody in ${where}.` },
           { label: "Easier to sing", request: `Make the melody in ${where} easier to sing.` },
-          { label: "Vary it", request: `Vary the melody in ${where} so it doesn't repeat exactly.` },
+          { label: "Vary it", request: `Vary the melody in ${where} so each repeat brings something new.` },
         ];
       case Part.Chords:
         return [
           { label: "Richer voicings", request: `Give the chords in ${where} richer voicings.` },
           { label: "Reharmonize", request: `Reharmonize the chords in ${where}.` },
           { label: "Smoother voice leading", request: `Revoice the chords in ${where} for smoother voice leading.` },
-          { label: "Add rhythm", request: `Give the chords in ${where} a rhythm instead of held notes.` },
+          { label: "Add rhythm", request: `Turn the held chords in ${where} into a rhythm.` },
           { label: "Bassline for these", request: `Write a bassline that follows the chords in ${where}.` },
         ];
       case Part.Other:
@@ -274,7 +274,7 @@ export class SuggestionFinder {
     return sheet.sections.some((section) => section.kind === "chorus") || snapshot.song.locators.some((locator) => CHORUS_NAME.test(locator.name));
   }
 
-  /** 'clip "Bass A" on Bass', or 'the clip at bars 9–16 on Bass' when the clip has no name. */
+  /** 'clip "Bass A" on Bass', or 'the clip at bars 9–16 on Bass' when the clip is unnamed. */
   private static clipPlace({ track, clip, arranged }: FoundClip, lookup: SetLookup): string {
     if (clip.name) return `clip "${clip.name}" on ${track.name}`;
     return arranged ? `the clip at ${lookup.barsLabel(clip.startTime, clip.endTime)} on ${track.name}` : `the selected clip on ${track.name}`;

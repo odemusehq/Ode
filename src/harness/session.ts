@@ -14,13 +14,13 @@ export interface OdeRequest {
   text: string;
   /** Another take of Ode's last change: the Set has already been put back to the version before it. */
   again?: boolean;
-  /** Why?: answer about the change with this version id in two or three sentences, changing nothing. */
+  /** Why?: answer about the change with this version id in two or three sentences, leaving the Set as it is. */
   reply?: { versionId: string };
 }
 
 /** The server's work around each agent turn. */
 export interface RequestLifecycle {
-  /** Before the turn: reads the Set, saves the hand edits and builds the hidden context. Throws when the Set can't be read. */
+  /** Before the turn: reads the Set, saves the hand edits and builds the hidden context. Throws when the Set is unreadable. */
   prepare(request: OdeRequest): Promise<{ hiddenContext: string }>;
   /**
    * After the turn: saves Ode's change as a version and shows the result line. Stopped: the musician pressed Stop or
@@ -34,9 +34,9 @@ export interface OpenQuestions {
   cancelAll(): void;
 }
 
-/** Deletions a restore couldn't undo; they wait for Apply in every mode. */
+/** Deletions beyond a restore's reach; they wait for Apply in every mode. */
 export interface DeletionCheck {
-  /** True when the call deletes a device or a track that a restore can't add back, or when what it deletes can't be found. */
+  /** True when the call deletes a device or a track that only the musician can add back, or when the target of the deletion is missing. */
   cantBeUndone(tool: string, input: unknown): Promise<boolean>;
 }
 
@@ -54,7 +54,7 @@ export interface SessionDeps {
   emit: (event: UiEvent) => void;
 }
 
-/** Ode is already working, so Undo, Again and restores can't run until it has finished. */
+/** Ode is already working, so Undo, Again and restores are refused until it has finished. */
 export class SessionBusyError extends Error {}
 
 /** Why each early end of a request is shown to the musician. */
@@ -72,7 +72,7 @@ export class OdeSession {
   private readonly waiting: OdeRequest[] = [];
   /** Stops the agent loop of the request that runs now. */
   private controller: AbortController | null = null;
-  /** Tells exclusive work that the musician pressed Stop (Again then doesn't start its retake). */
+  /** Tells exclusive work that the musician pressed Stop (Again then skips its retake). */
   private exclusiveController: AbortController | null = null;
   /** The request whose agent loop runs now. */
   private running: OdeRequest | null = null;
@@ -93,7 +93,7 @@ export class OdeSession {
     return this.draining || this.working;
   }
 
-  /** Stop can interrupt what runs now: an agent request, not exclusive work such as Undo or a restore. */
+  /** Stop can interrupt what runs now: only an agent request; exclusive work such as Undo or a restore runs to the end. */
   get isStoppable(): boolean {
     return this.draining && !this.working;
   }
@@ -110,7 +110,7 @@ export class OdeSession {
   }
 
   /**
-   * Runs work on the Set while no request runs (a restore, Undo, or putting the Set back for Again).
+   * Runs work on the Set while the agent is idle (a restore, Undo, or putting the Set back for Again).
    * Requests sent meanwhile wait and run afterwards. Throws SessionBusyError while Ode is working.
    * The work runs to its end, and its signal tells it the musician pressed Stop meanwhile.
    */
@@ -243,8 +243,8 @@ export class OdeSession {
   };
 
   /**
-   * Using the singer's voice always waits for their consent; so does deleting a device or a track that a restore
-   * can't add back, in every mode. In Manual, every change waits.
+   * Using the singer's voice always waits for their consent; so does deleting a device or a track that only the
+   * musician can add back, in every mode. In Manual, every change waits.
    */
   private async needsApproval(tool: AnyTool, input: Record<string, unknown>): Promise<boolean> {
     if (tool.consent) return true;

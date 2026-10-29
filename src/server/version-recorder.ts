@@ -9,9 +9,9 @@ import type { SnapshotReader } from "./snapshot-reader";
 export interface RecordedVersion {
   /** The Set as it was read for this version. */
   snapshot: SetSnapshot;
-  /** The saved version, or null when nothing changed. */
+  /** The saved version, or null when the Set stayed the same. */
   version: Version | null;
-  /** What changed since the previous version (none for the first version). */
+  /** What changed since the previous version (empty for the first version). */
   changes: SetChange[];
 }
 

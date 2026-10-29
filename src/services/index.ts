@@ -54,7 +54,7 @@ export class ModelServices implements Services {
   }
 
   private async adapter<C extends Capability>(role: Role, capability: C): Promise<CapabilityAdapters[C]> {
-    if (ROLE_CAPABILITY[role] !== capability) throw new Error(`The ${role} role doesn't provide ${capability}.`);
+    if (ROLE_CAPABILITY[role] !== capability) throw new Error(`The ${role} role lacks ${capability}.`);
     const settings: RoleConfig = (await this.source.roles())[role];
     if (!RoleCheck.isConfigured(settings)) throw new Error(RoleCheck.setupMessage(role));
     const key = JSON.stringify(settings);

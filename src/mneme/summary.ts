@@ -30,7 +30,7 @@ export class ContextSummary {
     const habits = (await this.mneme.habitStrengths()).filter((habit) => habit.outcomes >= habitMinOutcomes).slice(0, summaryHabits);
     const lines = facts.map((fact) => `- ${fact.topic}: ${fact.value} (${fact.source === "said" ? "you said" : `noticed, ${Math.round(fact.confidence * 100)}%`})`);
     const habitLines = habits.map((habit) => `- ${habit.name}: kept ${Math.round(habit.preference * 100)}% of the time`);
-    if (lines.length === 0 && habitLines.length === 0) return "Artist: nothing known yet.";
+    if (lines.length === 0 && habitLines.length === 0) return "Artist: unknown so far.";
     return ["Artist:", ...lines, ...(habitLines.length ? ["Habits:", ...habitLines] : [])].join("\n");
   }
 
@@ -46,18 +46,18 @@ export class ContextSummary {
       header,
       intent && `Intent: ${intent}`,
       sections && `Sections: ${sections}`,
-      `Lyrics: ${sung === 0 ? "none yet" : `${sung} sung ${sung === 1 ? "line" : "lines"} (revision ${sheet.lyricsRevision})`}`,
-      sheet.locked.length > 0 && `Locked (never change): ${sheet.locked.join("; ")}`,
+      `Lyrics: ${sung === 0 ? "still empty" : `${sung} sung ${sung === 1 ? "line" : "lines"} (revision ${sheet.lyricsRevision})`}`,
+      sheet.locked.length > 0 && `Locked (keep as they are): ${sheet.locked.join("; ")}`,
     ]
       .filter(Boolean)
       .join("\n");
   }
 
   private settingsPart(settings: ResolvedPersonalisation): string {
-    const range = settings.vocalRange ? `${noteName(settings.vocalRange.low)}–${noteName(settings.vocalRange.high)}` : "not known";
+    const range = settings.vocalRange ? `${noteName(settings.vocalRange.low)}–${noteName(settings.vocalRange.high)}` : "unknown";
     return [
       "Settings:",
-      `- genre: ${settings.genre ?? "not known"}`,
+      `- genre: ${settings.genre ?? "unknown"}`,
       `- spelling: ${settings.spelling.toUpperCase()} English; pronunciation: ${settings.pronunciation.toUpperCase()} English`,
       `- vocal range: ${range}`,
       `- loudness target: ${settings.loudnessTarget.lufs} LUFS integrated, ${settings.loudnessTarget.truePeak} dBTP true peak`,

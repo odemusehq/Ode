@@ -1,8 +1,8 @@
-/** A line in square brackets, such as "[Chorus]", names a part of the song and isn't sung. */
+/** A line in square brackets, such as "[Chorus]", names a part of the song and stays unsung. */
 const LABEL = /^\[[^\]]*\]$/;
 const LINE_BREAK = /\r\n|\r|\n/;
 
-/** The shared lyrics as one text: one sung line per line, blank lines between stanzas, and [labels] that aren't sung. */
+/** The shared lyrics as one text: one sung line per line, blank lines between stanzas, and unsung [labels]. */
 export class LyricsText {
   /** Every line of the text, blank and label lines included. */
   static lines(text: string): string[] {
@@ -18,7 +18,7 @@ export class LyricsText {
     return LABEL.test(line.trim());
   }
 
-  /** A line with words on it that isn't a label. */
+  /** A line with words on it, outside square brackets. */
   static isSung(line: string): boolean {
     const trimmed = line.trim();
     return trimmed.length > 0 && !LABEL.test(trimmed);
@@ -38,7 +38,7 @@ export class LyricsText {
 
   /**
    * Where a line is, as a musician says it: the label it comes under and its number among that label's sung lines
-   * ("Verse 1", 2), or no label and its number among the sung lines from the top.
+   * ("Verse 1", 2), or, above the first label, a null label and its number among the sung lines from the top.
    */
   static place(lines: readonly string[], index: number): { label: string | null; line: number } {
     let label: string | null = null;

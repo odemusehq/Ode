@@ -87,7 +87,7 @@ export class SelfHostedSingingVoice implements SingingVoiceSynthesizer {
   }
 
   async sing(input: DemoVocalInput, outPath: string): Promise<string> {
-    if (!input.voiceModel) throw new Error("No recording of the artist's voice yet: save one with voice_reference_set first.");
+    if (!input.voiceModel) throw new Error("The artist's voice recording is still missing: save one with voice_reference_set first.");
     const request: SingRequest = {
       model: this.client.model,
       tempo: input.tempo,

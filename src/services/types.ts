@@ -20,7 +20,7 @@ export interface RoleSource {
 
 /** Model-backed services, one role per component, each set up in Settings. */
 export interface Services {
-  /** One-off text answer from the main agent's model or the subagent model (no tools). */
+  /** One-off text answer from the main agent's model or the subagent model (text only, without tools). */
   text(role: "main" | "subagent", prompt: string, options?: { system?: string; maxTokens?: number }): Promise<string>;
   /** The chat model of the main agent or of subagents, for the agent loop. */
   chat(role: "main" | "subagent"): Promise<TextGenerator>;

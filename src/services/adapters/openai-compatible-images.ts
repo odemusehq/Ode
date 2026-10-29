@@ -22,7 +22,7 @@ export class OpenAiCompatibleImageGenerator implements ImageGenerator {
       response_format: "b64_json",
     });
     const encoded = response.data?.[0]?.b64_json;
-    if (!encoded) throw new Error("The image model returned no image.");
+    if (!encoded) throw new Error("The image model's answer was missing the image.");
     const image = await Jimp.read(Buffer.from(encoded, "base64"));
     image.cover({ w: size, h: size, mode: ResizeStrategy.BICUBIC });
     await mkdir(dirname(outPath), { recursive: true });

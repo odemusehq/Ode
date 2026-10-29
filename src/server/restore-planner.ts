@@ -18,7 +18,7 @@ export interface PlannedCall {
 export interface RestorePlan {
   /** Steps in order; each runs after the ones before it, and a step's extension calls run as one undo step. */
   steps: PlannedCall[][];
-  /** What can't be restored, in plain words. */
+  /** What the restore skips, in plain words. */
   skipped: string[];
 }
 
@@ -27,7 +27,7 @@ export interface RestorePlan {
  * removals, innermost and last first; the song's fields; then additions, outermost and first first,
  * with return tracks (and the sends to them) before new regular tracks, which come last because Live
  * places a new track after the selected one and only their tags find them. From Add on, even steps
- * create things and odd steps only set values, so a value Live refuses never holds up the rest.
+ * create things and odd steps only set values, so the rest goes ahead even when Live refuses a value.
  */
 enum Stage {
   Values = 0,
@@ -137,10 +137,10 @@ interface Removal {
 /**
  * Turns the changes from the current Set to an earlier version (SetDiff.between(current, target)) into
  * Live operations, ordered so each runs after what it needs. Removed and changed objects are addressed
- * by their place in the current Set, added ones by their place in the version restored. What Live
- * can't put back (plug-ins and presets, group tracks, return tracks, missing audio files, the key and time signature)
- * is listed as skipped.
- * Lead sheet changes need no Live calls: the restore writes the sheet back itself.
+ * by their place in the current Set, added ones by their place in the version restored. What only
+ * the musician can put back (plug-ins and presets, group tracks, return tracks, missing audio files, the key and time
+ * signature) is listed as skipped.
+ * Lead sheet changes skip Live: the restore writes the sheet back itself.
  */
 export class RestorePlanner {
   private readonly staged = new StagedCalls();
@@ -346,7 +346,7 @@ export class RestorePlanner {
     for (const change of changes.filter((entry) => RestorePlanner.trackOf(entry).list === TrackList.Tracks)) {
       const track = change.after as TrackSnapshot | undefined;
       if (!RestorePlanner.isTrack(track)) this.skipped.push(change.label);
-      else if (track.kind !== "midi" && track.kind !== "audio") this.skipped.push(`${track.name} (a group track can't be created again)`);
+      else if (track.kind !== "midi" && track.kind !== "audio") this.skipped.push(`${track.name} (only the musician can create a group track again)`);
       else regular.push({ track, tag: track.tag ?? randomBytes(TAG_BYTES).toString("hex") });
     }
     if (regular.length === 0) return;
@@ -467,7 +467,7 @@ export class RestorePlanner {
         else this.setClipField(clip, field, after, label);
         return;
       case "loop": {
-        // Loop on or off can be set; where the loop, the markers and the clip's end are can't.
+        // Only loop on or off can be set; the loop, the markers and the clip's end keep their places.
         const was = (after ?? {}) as Partial<ClipLoop>;
         const now = (before ?? {}) as Partial<ClipLoop>;
         if (typeof was.looping === "boolean" && was.looping !== now.looping) this.setClipField(clip, "looping", was.looping, label);
@@ -476,7 +476,7 @@ export class RestorePlanner {
         return;
       }
       case "audio": {
-        // Warping and the warp mode can be set; the file and the warp markers can't.
+        // Only warping and the warp mode can be set; the file and the warp markers stay as they are.
         const was = (after ?? {}) as Partial<ClipAudio>;
         const now = (before ?? {}) as Partial<ClipAudio>;
         const settings = {
@@ -508,7 +508,7 @@ export class RestorePlanner {
     this.removals.push({ call: { op, args: { device }, label: change.label }, depth: 2 + chain.length, index });
   }
 
-  /** The device itself changed: a Simpler's sample is put back; its name, chains and pad notes can't be. */
+  /** The device itself changed: only a Simpler's sample is put back; its name, chains and pad notes stay as they are. */
   private planDeviceChange(change: SetChange, key: TrackKey, chain: number[], index: number): void {
     const before = change.before as DeviceSnapshot | undefined;
     const after = change.after as DeviceSnapshot | undefined;
@@ -543,7 +543,7 @@ export class RestorePlanner {
     const name = RestorePlanner.insertName(device);
     const label = `${owner} · ${device.name}`;
     if (!name) {
-      this.skipped.push(`${label} (plug-ins and presets can't be added back)`);
+      this.skipped.push(`${label} (only the musician can add plug-ins and presets back)`);
       return;
     }
     const stage = this.staged.insertionStage(JSON.stringify(track), from);
@@ -578,7 +578,7 @@ export class RestorePlanner {
       this.skipped.push(change.label);
       return;
     }
-    // A different device sits there now: the old device's values mean nothing to it (the device is listed as skipped).
+    // A different device sits there now: the old device's values belong to another device (the device is listed as skipped).
     if (RestorePlanner.within(this.differentDevices, key, [...chain, index], true)) return;
     if (change.kind !== ChangeKind.Added) {
       const device: DeviceRef = { track: RestorePlanner.currentRef(key), ...(chain.length > 0 ? { chain } : {}), index };
@@ -613,7 +613,7 @@ export class RestorePlanner {
 
   /**
    * True when the path is inside one of the devices (or is one of them, with `orItself`): changes inside a
-   * removed or added rack go with it, and nothing of a different device's carries over.
+   * removed or added rack go with it, and a different device's values stay behind.
    */
   private static within(devices: { track: TrackKey; path: number[] }[], key: TrackKey, path: number[], orItself: boolean): boolean {
     return devices.some(
@@ -648,7 +648,7 @@ export class RestorePlanner {
 
   /**
    * SetDiff pairs devices of the same class in chain order, and most of Live's devices share one class: a
-   * pair whose parameters differ is two different devices, not one that changed.
+   * pair whose parameters differ counts as two different devices.
    */
   private static isDifferentDevice(change: SetChange): boolean {
     const before = change.before as DeviceSnapshot | undefined;

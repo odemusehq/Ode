@@ -6,7 +6,7 @@ import { DEVICE_ON, SetWording } from "./set-diff";
 
 /** Which parameter values a device shows. */
 enum ParameterDetail {
-  /** Every value that isn't the parameter's default. */
+  /** Every value that differs from the parameter's default. */
   All = "all",
   /** Those of the parameters that say most about the sound. */
   Telling = "telling",
@@ -30,7 +30,7 @@ interface Detail {
   racks: boolean;
   /** Device names, sends and scene names (otherwise counts). */
   names: boolean;
-  /** Each track as one line with its name, kind, group, mute, solo and arm, and nothing else. */
+  /** Each track as one line with its name, kind, group, mute, solo and arm, and only those. */
   bare: boolean;
 }
 
@@ -102,7 +102,7 @@ class MapWriter {
   write(detail: Detail): string {
     const { tracks, returnTracks, main } = this.set;
     const lines = [this.songLine()];
-    lines.push(tracks.length > 0 ? "Tracks (indexes count from 0, as in the tools; bars count from 1):" : "Tracks: none");
+    lines.push(tracks.length > 0 ? "Tracks (indexes count from 0, as in the tools; bars count from 1):" : "Tracks: 0");
     tracks.forEach((track, index) => lines.push(...this.trackLines(`${index} ${SetWording.name(track)}`, track, detail, true)));
     if (returnTracks.length > 0) lines.push("Return tracks:");
     returnTracks.forEach((track, index) => lines.push(...this.trackLines(`${index} ${SetWording.name(track)}`, track, detail, false)));
@@ -240,10 +240,10 @@ class MapWriter {
     return `${where}${name ? ` ${name}` : ""}${facts.length > 0 ? ` (${facts.join(", ")})` : ""}`;
   }
 
-  /** "32 notes C1–G2", or "no notes". */
+  /** "32 notes C1–G2", or "empty". */
   private static notes(clip: ClipInfo): string {
     const notes = clip.notes ?? [];
-    return notes.length > 0 ? `${SetWording.count(notes.length, "note")} ${SetWording.pitchRange(notes)}` : "no notes";
+    return notes.length > 0 ? `${SetWording.count(notes.length, "note")} ${SetWording.pitchRange(notes)}` : "empty";
   }
 
   private scenesLine(detail: Detail): string {
@@ -268,7 +268,7 @@ class MapWriter {
   private locatorsLine(): string {
     const { locators } = this.set.song;
     if (locators.length === 0) return "";
-    const items = locators.map((locator) => `${locator.name || "(no name)"} at bar ${SetWording.bar(locator.time, this.beatsPerBar)}`);
+    const items = locators.map((locator) => `${locator.name || "(unnamed)"} at bar ${SetWording.bar(locator.time, this.beatsPerBar)}`);
     return `Locators: ${items.join(" · ")}`;
   }
 }

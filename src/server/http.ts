@@ -232,7 +232,7 @@ export class OdeServer {
       const parsed = DecisionSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: 'Send { decision: "allow" } or { decision: "deny" }.' }, 400);
       const known = approvals.decide(c.req.param("id"), parsed.data.decision === "allow" ? Decision.Allow : Decision.Deny);
-      return known ? c.json({ ok: true }) : c.json({ error: "No such approval" }, 404);
+      return known ? c.json({ ok: true }) : c.json({ error: "Unknown approval" }, 404);
     });
 
     app.post("/api/questions/:id", async (c) => {
@@ -257,7 +257,7 @@ export class OdeServer {
     app.get("/api/release/file/:name", async (c) => {
       const name = basename(c.req.param("name"));
       const data = await readFile(join(song.releaseDir, name)).catch(() => null);
-      if (!data) return c.json({ error: "That file isn't in the release folder." }, 404);
+      if (!data) return c.json({ error: "That file is missing from the release folder." }, 404);
       return c.body(data, 200, { "Content-Type": RELEASE_CONTENT_TYPES.get(extname(name).toLowerCase()) ?? OTHER_CONTENT_TYPE });
     });
 
@@ -302,7 +302,7 @@ export class OdeServer {
     });
 
 
-    // A refused Undo shows no result line: it answers 409 with the reason, also as a RestoreResult.
+    // A refused Undo skips the result line: it answers 409 with the reason, also as a RestoreResult.
     app.post(API.undo, async (c) => {
       const parsed = VersionRequestSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: SEND_VERSION_ID }, 400);
@@ -413,12 +413,12 @@ export class OdeServer {
     });
   }
 
-  /** The request's JSON body, or null when it has none or it isn't JSON. */
+  /** The request's JSON body, or null when the body is missing or invalid JSON. */
   private static body(c: Context): Promise<unknown> {
     return c.req.json().catch(() => null);
   }
 
-  /** Errors that mean "not now", with a message saying why: Ode is working, Live can't be read, or the history says no. */
+  /** Refusals for this moment, with a message saying why: Ode is working, Live is unreadable, or the history refuses the action. */
   private static isRefusal(error: unknown): error is Error {
     return error instanceof RefusedError || error instanceof SessionBusyError || error instanceof SetReadError;
   }

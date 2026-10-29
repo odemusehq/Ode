@@ -1,6 +1,6 @@
 import type { ToolRegistry } from "../tools";
 
-/** Verbs for the last word of a tool's name, for a plain progress line when the tool has no description of its own. */
+/** Verbs for the last word of a tool's name, for a plain progress line for a tool without a description of its own. */
 const PROGRESS_VERBS: ReadonlyMap<string, string> = new Map([
   ["get", "Reading"],
   ["read", "Reading"],

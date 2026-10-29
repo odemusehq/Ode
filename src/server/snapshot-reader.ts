@@ -3,7 +3,7 @@ import type { SetContents, SetSnapshot } from "../shared/set-snapshot";
 import type { SongStore } from "../mneme/song-store";
 import type { SetReader } from "../tools/define";
 
-/** The Set couldn't be read in full, so whatever depends on it (a version, a request) waits. */
+/** Reading the Set stopped part-way, so whatever depends on it (a version, a request) waits. */
 export class SetReadError extends Error {}
 
 /**

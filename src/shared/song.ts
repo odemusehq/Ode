@@ -65,7 +65,7 @@ export const LeadSheetSchema = z.object({
   settings: PersonalisationOverridesSchema.default({}),
   /**
    * The song's lyrics as one text that the musician and Ode both edit: one sung line per line, blank lines
-   * between stanzas; a line in square brackets, such as "[Chorus]", is a label and isn't sung.
+   * between stanzas; a line in square brackets, such as "[Chorus]", is an unsung label.
    */
   lyrics: z.string().default(""),
   /** Goes up by one with every save of the lyrics, so edits made at the same time can be merged. */
@@ -73,7 +73,7 @@ export const LeadSheetSchema = z.object({
   /** The song's form and chords; tempo, key and time signature are read from Live. */
   sections: z.array(SectionSchema).default([]),
   links: z.array(ClipLinkSchema).default([]),
-  /** Things the musician asked Ode never to change (free text or tags). */
+  /** Things the musician asked Ode to keep exactly as they are (free text or tags). */
   locked: z.array(z.string()).default([]),
   credits: z.array(CreditSchema).default([]),
   notes: z.array(z.string()).default([]),

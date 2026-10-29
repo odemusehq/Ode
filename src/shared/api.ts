@@ -50,7 +50,7 @@ export interface QuestionAnswer {
 
 export interface StatusResponse {
   busy: boolean;
-  /** False while Ode does work Stop can't interrupt (Undo, a restore). */
+  /** False while Ode does work that runs to the end once started (Undo, a restore). */
   stoppable: boolean;
   mode: Mode;
   /** The song's title as the dialogs show it ("Untitled song" until it has one). */
@@ -61,7 +61,7 @@ export interface StatusResponse {
   credit: string | null;
 }
 
-/** Undo, Again and Why? name the change by Ode they are about; a change that is no longer the newest is refused. */
+/** Undo, Again and Why? name the change by Ode they are about, and they act only on the newest change. */
 export interface VersionRequest {
   versionId: string;
 }

@@ -4,7 +4,7 @@ export type Accent = "uk" | "us";
 
 /** How Ode applies changes, like Claude Code's permission modes. */
 export enum Mode {
-  /** Ode changes what it is sure about and asks when it can't tell what the musician wants. */
+  /** Ode changes what it is sure about and asks when what the musician wants is unclear. */
   Auto = "auto",
   /** Ode asks before every change to the Set. */
   Manual = "manual",

@@ -36,14 +36,14 @@ export interface LyricsNote {
 
 export interface LyricsAnalysis {
   lines: LineAnalysis[];
-  /** Rhyme-scheme letter per line ("A", "B"…); "-" for lines with no rhyme partner. */
+  /** Rhyme-scheme letter per line ("A", "B"…); "-" for lines without a rhyme partner. */
   scheme: string[];
   notes: LyricsNote[];
 }
 
 /**
  * The shared lyrics as stored, with their analysis. analysis.lines[i] belongs to line i of the text; blank lines
- * and [label] lines have no words.
+ * and [label] lines have empty word lists.
  */
 export interface LyricsState {
   /** The song the lyrics belong to. */

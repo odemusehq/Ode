@@ -11,7 +11,7 @@ export interface SelectionDeps {
   reader: SnapshotReader;
   versions: SongVersions;
   finder: SuggestionFinder;
-  /** True while Ode works on a request; the Set isn't read for the selection then. */
+  /** True while Ode works on a request; the selection then skips reading the Set. */
   busy: () => boolean;
   emit: (event: UiEvent) => void;
 }
@@ -65,7 +65,7 @@ export class SelectionState {
     send({ type: "suggestions", items: this.items });
   }
 
-  /** In words, e.g. "Bass · clip Bass A · bars 9–16"; "Whole song" when nothing is selected. */
+  /** In words, e.g. "Bass · clip Bass A · bars 9–16"; "Whole song" for an empty selection. */
   static describe(selection: SelectionInfo, snapshot: SetSnapshot): string {
     const lookup = new SetLookup(snapshot);
     const found = selection.clip ? lookup.clip(selection.clip) : undefined;
@@ -124,7 +124,7 @@ export class SelectionState {
     return clip.looping ? clip.loopEnd - clip.loopStart : clip.endMarker - clip.startMarker;
   }
 
-  /** Words for a selection when no snapshot is at hand yet. */
+  /** Words for a selection before a snapshot is at hand. */
   private static roughLabel(selection: SelectionInfo): string {
     if (!selection.track) return SelectionState.WHOLE_SONG;
     const ref = selection.track;

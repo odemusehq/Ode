@@ -10,7 +10,7 @@ import type { SelectionState } from "./selection";
 import { SetReadError } from "./snapshot-reader";
 import { VersionRecorder } from "./version-recorder";
 
-/** What the musician asked can't be done now; the message says why and what to do. */
+/** The musician's request is refused for now; the message says why and what to do. */
 export class RefusedError extends Error {}
 
 export interface VersionActionsDeps {
@@ -31,22 +31,22 @@ enum OdeAction {
   Why = "why",
 }
 
-/** Why an action can't be done, as the history shows it: the musician changed the Set since, or Ode changed nothing. */
+/** Why an action is refused, as the history shows it: the musician changed the Set since, or Ode has yet to make a change. */
 const REFUSALS: Record<OdeAction, { editedSince: string; nothing: string }> = {
   [OdeAction.Undo]: {
     editedSince: "You have changed the Set since Ode's last change. To go back further, restore a version in History.",
-    nothing: "There is no change by Ode to undo.",
+    nothing: "Ode has yet to make a change to undo.",
   },
   [OdeAction.Again]: {
     editedSince: "You have changed the Set since Ode's last change, so trying it again would undo your edits.",
-    nothing: "There is no change by Ode to try again.",
+    nothing: "Ode has yet to make a change to try again.",
   },
   [OdeAction.Why]: {
     editedSince: "You have changed the Set since Ode's last change.",
-    nothing: "There is no change by Ode to explain.",
+    nothing: "Ode has yet to make a change to explain.",
   },
 };
-/** The change named is Ode's, but not its newest. */
+/** The change named is Ode's, and Ode has made a newer one since. */
 const NEWER_CHANGE = "Ode has made another change since.";
 /** A put-back that failed part-way is saved as Ode's version, so Undo goes back to before it. */
 const STOPPED_PART_WAY = "Restore stopped part-way";
@@ -76,7 +76,7 @@ export class VersionActions {
 
   /**
    * Saves the musician's hand edits as a version now (the window asks when it gets the focus), so History is current.
-   * Returns the new version, or null when nothing changed, Ode is working or the Set can't be read.
+   * Returns the new version, or null when the Set stayed the same, Ode is working or the Set is unreadable.
    */
   async check(): Promise<VersionListItem | null> {
     if (this.session.isBusy) return null;
@@ -89,7 +89,7 @@ export class VersionActions {
     }
   }
 
-  /** Throws VersionNotFoundError for a version that isn't in this song's history. */
+  /** Throws VersionNotFoundError for a version missing from this song's history. */
   detail(id: string): Promise<VersionDetail> {
     return this.history.detail(id);
   }
@@ -100,7 +100,7 @@ export class VersionActions {
 
   /**
    * Goes back to a version the musician confirmed: saves their hand edits, puts the Set back from how it
-   * is now, then deletes the versions after it. Throws when Ode is working or the Set can't be read.
+   * is now, then deletes the versions after it. Throws when Ode is working or the Set is unreadable.
    */
   restore(id: string): Promise<RestoreResult> {
     return this.restoreTo(id, (version) => `Restored the version from ${VersionActions.clock(version.time)}`);
@@ -108,7 +108,7 @@ export class VersionActions {
 
   /**
    * Back to the version before that change by Ode, without asking. The hand edits are saved first; RefusedError
-   * (no result line) when the change isn't the newest version any more or Ode didn't make it.
+   * (without a result line) when a newer version has come since or the change is the musician's.
    */
   async undo(versionId: string): Promise<RestoreResult> {
     const result = await this.session.exclusive(async () => {
@@ -128,14 +128,14 @@ export class VersionActions {
 
   /**
    * Another take of that change by Ode: puts the Set back to the version before it (keeping the history),
-   * then runs the same request again. The put-back isn't saved as hand edits, so Ode's next version
+   * then runs the same request again. The put-back stays out of the hand edits, so Ode's next version
    * shows the first take turning into the second. Stop pressed while the Set is put back cancels the retake.
    */
   async again(versionId: string): Promise<void> {
     await this.session.exclusive(async (stopped) => {
       const recorded = await this.deps.recorder.handEdits();
       const { latest, previous } = await this.changeToActOn(versionId, OdeAction.Again);
-      if (!latest.request) throw new RefusedError("Ode's last change doesn't say what was asked, so it can't be tried again.");
+      if (!latest.request) throw new RefusedError("Again needs the request behind Ode's last change, and this change was saved without it.");
       this.deps.emit({ type: "progress", text: "Going back to before the last take" });
       const outcome = await this.runner.putBack(recorded.snapshot, await this.history.snapshotAt(previous.id));
       if (!outcome.complete) {
@@ -146,14 +146,14 @@ export class VersionActions {
         await this.keepStoppedPutBack(latest.request);
         return;
       }
-      if (outcome.skipped.length > 0) this.deps.emit({ type: "progress", text: `Not put back: ${outcome.skipped.join(", ")}` });
+      if (outcome.skipped.length > 0) this.deps.emit({ type: "progress", text: `Skipped while putting the Set back: ${outcome.skipped.join(", ")}` });
       this.session.sendFirst({ text: latest.request, again: true });
     });
   }
 
   /**
-   * Why? about that change by Ode: Ode answers in two or three sentences and changes nothing (the answer arrives as an
-   * "answer" event). RefusedError when the change isn't the newest version any more.
+   * Why? about that change by Ode: Ode answers in two or three sentences and leaves the Set as it is (the answer arrives
+   * as an "answer" event). RefusedError when a newer version has come since.
    */
   async why(versionId: string): Promise<void> {
     await this.changeToActOn(versionId, OdeAction.Why);
@@ -178,7 +178,7 @@ export class VersionActions {
 
   /**
    * A put-back that failed part-way: the Set as it is now is saved as Ode's version "Restore stopped part-way: …",
-   * so Undo goes back to before it. Nothing is saved when the Set can't be read any more.
+   * so Undo goes back to before it. When the Set has become unreadable, the history stays as it is.
    */
   private async stoppedPartWay(outcome: PutBack): Promise<RestoreResult> {
     const recorded = await this.deps.recorder.odeCutShort(STOPPED_PART_WAY).catch(() => null);
@@ -201,7 +201,7 @@ export class VersionActions {
 
   /**
    * The change an action applies to: the newest version, made by Ode and named by versionId, with the version before it. Otherwise RefusedError saying why, from the history: the musician changed the Set
-   * since a change by Ode, Ode changed it again since, or there is no change by Ode.
+   * since a change by Ode, Ode changed it again since, or Ode has yet to make a change.
    */
   private async changeToActOn(versionId: string, action: OdeAction): Promise<{ latest: Version; previous: Version }> {
     const recent = await this.history.tail(2);
@@ -216,7 +216,7 @@ export class VersionActions {
   }
 
   private static notRestored(skipped: string[]): string {
-    return skipped.length > 0 ? ` · not restored: ${skipped.join(", ")}` : "";
+    return skipped.length > 0 ? ` · skipped: ${skipped.join(", ")}` : "";
   }
 
   private static clock(time: string): string {

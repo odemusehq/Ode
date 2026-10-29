@@ -27,7 +27,7 @@ export class SetLookup {
     return [...this.snapshot.tracks, ...this.snapshot.returnTracks, this.snapshot.main];
   }
 
-  /** True when the Set holds no clips at all. */
+  /** True when the Set holds zero clips. */
   get isEmpty(): boolean {
     return this.allTracks.every((track) => SetLookup.clipsOf(track).length === 0);
   }
@@ -98,7 +98,7 @@ export class SetLookup {
     return first === last ? `bar ${first}` : `bars ${first}–${last}`;
   }
 
-  /** "4 bars" for a length in beats, or "6 beats" when it isn't a whole number of bars. */
+  /** "4 bars" for a length of whole bars, "6 beats" for any other length. */
   lengthLabel(beats: number): string {
     const bars = beats / this.beatsPerBar;
     if (Math.abs(bars - Math.round(bars)) <= BEAT_TOLERANCE && Math.round(bars) > 0) {

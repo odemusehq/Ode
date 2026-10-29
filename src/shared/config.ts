@@ -54,7 +54,7 @@ export interface MemorySettings {
   summaryHabits: number;
   /** A habit enters the summary once the musician kept or rejected it at least this many times. */
   habitMinOutcomes: number;
-  /** The confidence (0–1) of a fact Ode noticed when the agent gives none. */
+  /** The confidence (0–1) of a fact Ode noticed when the agent leaves it out. */
   unratedConfidence: number;
 }
 
@@ -63,7 +63,7 @@ export interface VersionSettings {
   snapshotEvery: number;
   /** History groups consecutive versions by the same author made within this many minutes. */
   groupMinutes: number;
-  /** How many versions version_list gives when the agent asks for no particular number, newest first. */
+  /** How many versions version_list gives when the agent leaves the number open, newest first. */
   listLimit: number;
 }
 

@@ -7,7 +7,7 @@ import { LyricsText } from "./lyrics-text";
 import type { PreferencesStore } from "./preferences";
 import type { SongStore } from "./song-store";
 
-/** Ode saved lyrics edited from a revision whose text isn't known any more, so its change can't be merged. */
+/** Ode saved lyrics edited from a revision whose text is gone from the store, so the merge is missing its base. */
 export class StaleLyricsError extends Error {}
 
 /** Whose lines stay where both sides changed the same lines: the side being saved, or the side already stored. */
@@ -111,7 +111,7 @@ export class LyricsStore {
 
   /**
    * Saves `text`, edited from `baseRevision`. The musician's lines win where both changed the same lines: theirs when
-   * they save, the stored ones when Ode saves. When the base revision's text isn't known, a save by the musician is
+   * they save, the stored ones when Ode saves. When the base revision's text is unknown, a save by the musician is
    * stored as sent and a save by Ode is refused, so Ode reads the lyrics again first.
    */
   write(text: string, baseRevision: number, author: VersionAuthor, songId?: string): Promise<LyricsSaved> {

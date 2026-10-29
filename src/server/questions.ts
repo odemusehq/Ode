@@ -30,7 +30,7 @@ export class Questions implements MusicianQuestions {
     });
   }
 
-  /** The musician tapped an answer. False when the question is gone or the answer isn't one of its buttons. */
+  /** The musician tapped an answer. False when the question is gone or the answer is outside its buttons. */
   answer(id: string, choice: string): boolean {
     const question = this.waiting.get(id);
     if (!question || !question.view.options.includes(choice)) return false;

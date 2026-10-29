@@ -90,6 +90,6 @@ export interface VersionDetail {
 
 export interface RestoreResult {
   restored: boolean;
-  /** What couldn't be restored, in plain words (plugin state, automation, a missing file). */
+  /** What the restore skipped, in plain words (plugin state, automation, a missing file). */
   skipped: string[];
 }

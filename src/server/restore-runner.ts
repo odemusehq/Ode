@@ -7,7 +7,7 @@ import type { SongStore } from "../mneme/song-store";
 import { RestorePlanner, type PlannedCall } from "./restore-planner";
 
 export interface PutBack {
-  /** False when a step failed and the rest wasn't applied. */
+  /** False when a step failed and the rest was skipped. */
   complete: boolean;
   skipped: string[];
 }
@@ -35,7 +35,7 @@ export class RestoreRunner {
       if (failed.length === 0) continue;
       skipped.push(...failed);
       if (!step.every((call) => RestorePlanner.isEdit(call.op))) {
-        return { complete: false, skipped: [...skipped, "The rest of the restore was not applied."] };
+        return { complete: false, skipped: [...skipped, "The rest of the restore was skipped."] };
       }
     }
     if (target.sheet) await this.writeSheet(target.sheet);

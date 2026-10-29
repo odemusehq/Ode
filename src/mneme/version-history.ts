@@ -58,7 +58,7 @@ const VersionSchema = z.object({
   changes: z.array(SetChangeSchema),
 });
 const SNAPSHOT_PARTS = ["takenAt", "song", "signature", "tracks", "returnTracks", "main"];
-const SnapshotSchema = z.custom<SetSnapshot>((value) => looksLikeSnapshot(value), "not a snapshot of the Set") as z.ZodType<SetSnapshot>;
+const SnapshotSchema = z.custom<SetSnapshot>((value) => looksLikeSnapshot(value), "expected a snapshot of the Set") as z.ZodType<SetSnapshot>;
 
 /** A version as stored: the parsed version and its line in versions.jsonl. */
 interface Entry {
@@ -72,7 +72,7 @@ function looksLikeSnapshot(value: unknown): boolean {
   return SNAPSHOT_PARTS.every((part) => parts[part] !== undefined);
 }
 
-/** A version id that isn't in the history. */
+/** A version id missing from the history. */
 export class VersionNotFoundError extends Error {}
 
 /**
@@ -263,7 +263,7 @@ export class VersionHistory {
     let start = index;
     while (start >= 0 && !stored.has(entries[start]?.version.id ?? "")) start -= 1;
     const base = entries[start];
-    if (!base) throw new Error("The version history has no full snapshot to start from");
+    if (!base) throw new Error("The version history is missing a full snapshot to start from");
     let snapshot = await this.snapshotFile(base.version.id).read();
     for (const entry of entries.slice(start + 1, index + 1)) snapshot = SetDiff.apply(snapshot, entry.version.changes);
     return snapshot;
@@ -326,7 +326,7 @@ export class VersionHistory {
     this.newest = null;
   }
 
-  /** The file's modification time and size, or "" when there is no file yet. */
+  /** The file's modification time and size, or "" before the file exists. */
   private async stamp(): Promise<string> {
     try {
       const info = await stat(this.file);
@@ -367,7 +367,7 @@ export class VersionHistory {
   private static locate(entries: readonly Entry[], id: string): { entry: Entry; index: number } {
     const index = entries.findIndex((entry) => entry.version.id === id);
     const entry = entries[index];
-    if (!entry) throw new VersionNotFoundError(`No version ${id} in the history`);
+    if (!entry) throw new VersionNotFoundError(`Version ${id} is missing from the history`);
     return { entry, index };
   }
 

@@ -159,7 +159,7 @@ export interface CreatedDevice {
   name: string;
 }
 
-/** What the musician right-clicked in Live: a track, a clip, a scene, or none of them for a time selection. */
+/** What the musician right-clicked in Live: a track, a clip, a scene, or, for a time selection, all three null. */
 export interface SelectionInfo {
   track: TrackRef | null;
   clip: ClipRef | null;
