@@ -1,31 +1,48 @@
-import { copyFile, mkdir, readdir, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readdir, rm, stat } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { z } from "zod";
 import { COVER_CHOICE, COVER_FILE } from "../../shared/api";
 import type { SongInfo } from "../../shared/live-ops";
 import { userPaths } from "../../mneme/paths";
+import { VoiceReference } from "../../mneme/voice-reference";
 import { defineTool, type AnyTool, type ToolContext } from "../define";
 import { NoteSchema, TrackRefSchema } from "../live/schemas";
 
 const audioSource = {
-  path: z.string().min(1).optional().describe("An audio file; or give track, start and end to render it from the Arrangement"),
+  path: z.string().min(1).optional().describe("An audio file Ode made in its temp folder; or give track, start and end to render it from the Arrangement"),
   track: TrackRefSchema.optional(),
   start: z.number().min(0).optional().describe("Beats"),
   end: z.number().positive().optional().describe("Beats"),
 };
 
-async function resolveAudio(input: { path?: string; track?: unknown; start?: number; end?: number }, ctx: ToolContext): Promise<string> {
-  if (input.path) return ctx.temp.inside(input.path);
+interface AudioInput {
+  path?: string;
+  track?: unknown;
+  start?: number;
+  end?: number;
+}
+
+/** Runs `use` on the audio: the file given, or a render of the Arrangement, deleted once `use` is done with it. */
+async function withAudio<T>(input: AudioInput, ctx: ToolContext, use: (path: string) => Promise<T>): Promise<T> {
+  if (input.path) return use(await ctx.temp.inside(input.path));
   if (input.track === undefined || input.start === undefined || input.end === undefined) {
     throw new Error("Give either path, or track with start and end.");
   }
   const { path } = await ctx.live.extension.call<{ path: string }>("render_track_audio", { track: input.track, start: input.start, end: input.end });
-  return path;
+  try {
+    return await use(path);
+  } finally {
+    await rm(path, { force: true });
+  }
 }
 
-function voiceFiles(ctx: ToolContext): { reference: string; consent: string } {
-  const voice = userPaths(ctx.config.userDir).voice;
-  return { reference: join(voice, "reference.wav"), consent: join(voice, "consent.json") };
+/** The Set's tempo, from the latest reading of the Set when there is one. */
+async function tempoOf(ctx: ToolContext): Promise<number> {
+  return ctx.snapshots.latest?.song.tempo ?? (await ctx.live.extension.call<SongInfo>("song_get", {})).tempo;
+}
+
+function voiceReference(ctx: ToolContext): VoiceReference {
+  return new VoiceReference(userPaths(ctx.config.userDir).voice);
 }
 
 async function exists(path: string): Promise<boolean> {
@@ -42,14 +59,23 @@ export const mediaTools: AnyTool[] = [
     description:
       "Listen to a recording and answer a question about it: what instruments and sounds are in it, the mood, what the musician says or asks in it. For exact pitch or loudness use hum_to_midi or audio_analyze instead.",
     input: { ...audioSource, question: z.string().min(1) },
-    run: async (input, ctx) => ({ answer: await ctx.services.describeAudio(await resolveAudio(input, ctx), input.question) }),
+    run: (input, ctx) => withAudio(input, ctx, async (path) => ({ answer: await ctx.services.describeAudio(path, input.question) })),
   }),
   defineTool({
     name: "vocal_transcribe",
     changes: "none",
-    description: "Transcribe the words of a sung or spoken recording, with the start and end time (seconds) of each phrase.",
+    description:
+      "Transcribe the words of a sung or spoken recording, with the start and end time (seconds) of each phrase. Rendered from the Arrangement, each phrase also has startBeat and endBeat: where it sits in the Arrangement, in beats.",
     input: { ...audioSource },
-    run: async (input, ctx) => ctx.services.transcribe(await resolveAudio(input, ctx)),
+    run: (input, ctx) =>
+      withAudio(input, ctx, async (path) => {
+        const transcript = await ctx.services.transcribe(path);
+        const { start } = input;
+        if (input.path || start === undefined) return transcript;
+        const beatsPerSecond = (await tempoOf(ctx)) / 60;
+        const turns = transcript.turns.map((turn) => ({ ...turn, startBeat: start + turn.start * beatsPerSecond, endBeat: start + turn.end * beatsPerSecond }));
+        return { ...transcript, turns };
+      }),
   }),
   defineTool({
     name: "cover_art_create",
@@ -92,10 +118,7 @@ export const mediaTools: AnyTool[] = [
     description:
       'Isolate one sound from a recording by describing it (e.g. "the acoustic guitar", "the snare", "the voice") with stem separation. Returns two files: the isolated sound and the rest. Bring a file into Live with import_into_project, then load it into a Simpler or a Drum Rack pad, or place it as a clip.',
     input: { ...audioSource, describe: z.string().min(2) },
-    run: async (input, ctx) => {
-      const source = await resolveAudio(input, ctx);
-      return ctx.services.separateStem(source, input.describe, await ctx.temp.folder());
-    },
+    run: (input, ctx) => withAudio(input, ctx, async (source) => ctx.services.separateStem(source, input.describe, await ctx.temp.folder())),
   }),
   defineTool({
     name: "demo_vocal_render",
@@ -107,12 +130,12 @@ export const mediaTools: AnyTool[] = [
       tempo: z.number().min(20).max(999).optional().describe("Default: the Set's tempo"),
     },
     run: async ({ lines, tempo }, ctx) => {
-      const files = voiceFiles(ctx);
-      if (!(await exists(files.consent)) || !(await exists(files.reference))) {
-        throw new Error("No recording of the artist's voice with their consent yet. Ask them, then use voice_reference_set.");
+      const voice = voiceReference(ctx);
+      if (!(await voice.ready())) {
+        throw new Error("Demo vocals wait for a recording of the artist's voice with their consent. Ask them, then use voice_reference_set.");
       }
-      const bpm = tempo ?? (await ctx.live.extension.call<SongInfo>("song_get", {})).tempo;
-      const path = await ctx.services.singDemoVocal({ lines, tempo: bpm, voiceModel: files.reference }, await ctx.temp.file("wav"));
+      const bpm = tempo ?? (await tempoOf(ctx));
+      const path = await ctx.services.singDemoVocal({ lines, tempo: bpm, voiceModel: voice.recording }, await ctx.temp.file("wav"));
       return { path, tempo: bpm };
     },
   }),
@@ -143,12 +166,20 @@ export const mediaTools: AnyTool[] = [
     describe: ({ track, start, end }, names) =>
       `Save your singing on ${names.track(track)} (${names.span(start, end)}) as the recording Ode uses to sing demo vocals in your voice`,
     run: async ({ track, start, end }, ctx) => {
-      const files = voiceFiles(ctx);
-      const { path } = await ctx.live.extension.call<{ path: string }>("render_track_audio", { track, start, end });
-      await mkdir(userPaths(ctx.config.userDir).voice, { recursive: true });
-      await copyFile(path, files.reference);
-      await writeFile(files.consent, `${JSON.stringify({ agreed: true, time: new Date().toISOString(), source: { track, start, end } }, null, 2)}\n`, "utf8");
-      return { saved: files.reference };
+      await withAudio({ track, start, end }, ctx, (render) => voiceReference(ctx).save(render, { track, start, end }));
+      return { saved: true, note: "Demo vocals can now be sung in the artist's voice; voice_reference_clear removes the recording when they withdraw their consent." };
+    },
+  }),
+  defineTool({
+    name: "voice_reference_clear",
+    changes: "memory",
+    description:
+      "Remove the recording of the artist's voice and their consent, as soon as the artist withdraws it. Demo vocals then wait for a new recording and a new consent (voice_reference_set).",
+    input: {},
+    describe: () => "Remove the recording of your voice that Ode sings demo vocals with",
+    run: async (_input, ctx) => {
+      await voiceReference(ctx).clear();
+      return { cleared: true };
     },
   }),
 ];

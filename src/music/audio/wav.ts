@@ -28,7 +28,7 @@ class RiffWriter {
   private offset = 0;
   private readonly view: DataView;
 
-  constructor(readonly bytes: Uint8Array) {
+  constructor(readonly bytes: Uint8Array<ArrayBuffer>) {
     this.view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   }
 
@@ -76,7 +76,7 @@ function quantize(sample: number, bitDepth: WavBitDepth): number {
 }
 
 /** Encodes audio as a WAV file: 16- or 24-bit integer PCM, or 32-bit float. */
-export function encodeWav(audio: AudioData, bitDepth: WavBitDepth = WavBitDepth.Int24): Uint8Array {
+export function encodeWav(audio: AudioData, bitDepth: WavBitDepth = WavBitDepth.Int24): Uint8Array<ArrayBuffer> {
   const channelCount = audio.channels.length;
   const frames = frameCount(audio);
   const blockAlign = channelCount * (bitDepth / 8);

@@ -1,7 +1,9 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createFalClient, type FalClient } from "@fal-ai/client";
 import type { RoleConfig } from "../../shared/config";
+import { decode } from "../../music/audio/decode";
+import { encodeWav } from "../../music/audio/wav";
 import type { SeparatedStems, StemSeparator } from "../capabilities";
 
 interface FalSeparationResult {
@@ -18,7 +20,8 @@ export class FalStemSeparator implements StemSeparator {
   }
 
   async separate(audioPath: string, describe: string, outDir: string): Promise<SeparatedStems> {
-    const audioUrl = await this.fal.storage.upload(new Blob([await readFile(audioPath)], { type: "audio/wav" }));
+    // Live renders in its own record file type, WAV or AIFF; the upload is always a WAV.
+    const audioUrl = await this.fal.storage.upload(new Blob([encodeWav(await decode(audioPath))], { type: "audio/wav" }));
     const { data } = await this.fal.subscribe(this.role.model, {
       input: { audio_url: audioUrl, prompt: describe, output_format: "wav" },
     });

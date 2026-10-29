@@ -17,7 +17,7 @@ The loop is the vocals skill's (read, decide, change in place, verify, let them 
 - Nothing is recorded, saved, rendered or sung in their voice before that yes. "Sing it in my voice" is a request, not the yes.
 - On Not now, or no clear answer, make no demo; the result line says so, and that the guide melody can still be heard on its own track.
 - A request for someone else's voice or sound gets one line: demos are sung only in the artist's own voice. Qualities of delivery — breathy, belted, close and quiet — belong to the performance and the mix, not to copying a person.
-- If they withdraw consent, the recording is never used again; the result line says where it is kept so they can delete it.
+- If they withdraw consent, remove the recording and the consent at once with `voice_reference_clear`; demo vocals then wait for a new recording and a new yes. The result line says the recording is gone.
 
 ## The musician keeps the rights
 
