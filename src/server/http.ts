@@ -189,6 +189,7 @@ export class OdeServer {
         mode: await prefs.mode(),
         title: SongTitle.of((await song.read()).title),
         versionGroupMinutes: config.versions.groupMinutes,
+        credit: (await this.deps.settings.view()).credit,
       };
       return c.json(status);
     });

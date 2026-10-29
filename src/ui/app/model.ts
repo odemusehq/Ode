@@ -68,6 +68,8 @@ export interface AppState {
   title: string;
   /** History groups consecutive versions by the same author within this many minutes; null until known. */
   versionGroupMinutes: number | null;
+  /** The line the chosen model's licence asks Ode to show. */
+  credit: string | null;
   /** What the musician selected or pointed at in Live, in words; null means the whole song. */
   focus: string | null;
   /** One-tap actions for what is selected, fixes first. */
@@ -98,6 +100,7 @@ export function initialState(): AppState {
     mode: null,
     title: "",
     versionGroupMinutes: null,
+    credit: null,
     focus: null,
     suggestions: [],
     progress: null,

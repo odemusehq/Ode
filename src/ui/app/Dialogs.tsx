@@ -49,15 +49,21 @@ export function HistoryDialog() {
   );
 }
 
-/** Close returns the musician to Live; while Ode works it waits, since Live waits behind the dialog for Ode too. */
+/**
+ * The model's credit where its licence asks for one, and Close back to Live; while Ode works Close waits, since Live
+ * waits behind the dialog for Ode too.
+ */
 function DialogFooter() {
   const busy = useAppState((state) => state.busy);
-  if (!LiveDialog.hosted) return null;
+  const credit = useAppState((state) => state.credit);
   return (
     <footer className="app-footer">
-      <Button variant={ButtonVariant.Secondary} disabled={busy} onClick={() => LiveDialog.close(DialogResult.Done)}>
-        Close
-      </Button>
+      {credit && <p className="app-footer__credit">{credit}</p>}
+      {LiveDialog.hosted && (
+        <Button variant={ButtonVariant.Secondary} disabled={busy} onClick={() => LiveDialog.close(DialogResult.Done)}>
+          Close
+        </Button>
+      )}
     </footer>
   );
 }

@@ -54,6 +54,8 @@ export interface StatusResponse {
   title: string;
   /** History groups consecutive versions by the same author within this many minutes. */
   versionGroupMinutes: number;
+  /** The line the chosen model's licence asks Ode to show. */
+  credit: string | null;
 }
 
 /** Undo, Again and Why? name the change by Ode they are about; a change that is no longer the newest is refused. */

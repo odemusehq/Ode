@@ -45,6 +45,7 @@ export class Store {
       mode: status.mode,
       title: status.title,
       versionGroupMinutes: status.versionGroupMinutes,
+      credit: status.credit,
     });
   }
 
