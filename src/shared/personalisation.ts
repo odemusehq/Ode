@@ -64,12 +64,6 @@ export const DEFAULT_PREFERENCES: PreferencesFile = {
   mode: Mode.Auto,
 };
 
-export function resolveDetectable<T>(value: Detectable<T> | undefined, fallback: T): T {
-  if (!value) return fallback;
-  if (value.mode === "set") return value.value;
-  return value.detected ? value.detected.value : fallback;
-}
-
 function detectableSchema<T extends z.ZodType>(inner: T) {
   return z.union([
     z.object({
@@ -94,7 +88,6 @@ export const PersonalisationSchema = z.object({
 
 /** Song-level overrides: any subset of the artist-level settings. */
 export const PersonalisationOverridesSchema = PersonalisationSchema.partial();
-export type PersonalisationOverrides = z.infer<typeof PersonalisationOverridesSchema>;
 
 export const PreferencesFileSchema = z.object({
   personalisation: PersonalisationSchema,

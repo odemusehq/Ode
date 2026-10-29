@@ -118,7 +118,7 @@ class ScenarioRun {
     const emit = (event: UiEvent) => this.onEvent(event, events, questions, approvals);
     const paths = userPaths(config.userDir);
     const prefs = new PreferencesStore(join(paths.preferences, "preferences.json"));
-    const mneme = new Mneme(paths, config.memory.halfLifeDays);
+    const mneme = new Mneme(paths, config.memory);
     const song = new SongStore(paths, () => undefined);
     const lyrics = new LyricsStore(song, prefs, (state) => emit({ type: "lyrics", lyrics: state }));
     await song.create(this.scenario.name);
@@ -141,7 +141,7 @@ class ScenarioRun {
       reader,
       recorder,
       versions,
-      summary: new ContextSummary(mneme, song, prefs, config.memory.summaryMaxChars),
+      summary: new ContextSummary(mneme, song, prefs, config.memory),
       prefs,
       selection,
       emit,

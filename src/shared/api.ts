@@ -53,7 +53,7 @@ export interface StatusResponse {
   /** False while Ode does work Stop can't interrupt (Undo, a restore). */
   stoppable: boolean;
   mode: Mode;
-  /** The song's title, or the Set's file name when it has none. */
+  /** The song's title as the dialogs show it ("Untitled song" until it has one). */
   title: string;
   /** History groups consecutive versions by the same author within this many minutes. */
   versionGroupMinutes: number;

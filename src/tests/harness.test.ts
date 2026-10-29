@@ -76,7 +76,7 @@ async function rig(model: ScriptedModel) {
     versions: new SongVersions(song, config.versions.snapshotEvery),
     snapshots: new SnapshotReader(live, song),
     questions: { ask: async () => null },
-    mneme: new Mneme(paths, config.memory.halfLifeDays),
+    mneme: new Mneme(paths, config.memory),
     prefs,
     services: new ModelServices(new ModelRoles(new SettingsStore(config.userDir, ProviderCatalog.bundled), ProviderCatalog.bundled)),
     temp: new TempFolder(config.tempDir),

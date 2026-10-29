@@ -1,3 +1,4 @@
+import type { MemorySettings } from "../shared/config";
 import type { LeadSheet } from "../shared/song";
 import type { ResolvedPersonalisation } from "../shared/personalisation";
 import { noteName } from "../shared/notes";
@@ -12,19 +13,21 @@ export class ContextSummary {
     private readonly mneme: Mneme,
     private readonly song: SongStore,
     private readonly prefs: PreferencesStore,
-    private readonly maxChars: number,
+    private readonly settings: MemorySettings,
   ) {}
 
   async build(): Promise<string> {
     const sheet = await this.song.read();
     const settings = await this.prefs.effective(sheet);
     const text = [await this.artistPart(), this.songPart(sheet), this.settingsPart(settings)].filter(Boolean).join("\n\n");
-    return text.length <= this.maxChars ? text : `${text.slice(0, this.maxChars - 1)}…`;
+    const { summaryMaxChars } = this.settings;
+    return text.length <= summaryMaxChars ? text : `${text.slice(0, summaryMaxChars - 1)}…`;
   }
 
   private async artistPart(): Promise<string> {
-    const facts = (await this.mneme.recall()).slice(0, 12);
-    const habits = (await this.mneme.habitStrengths()).filter((habit) => habit.outcomes >= 2).slice(0, 6);
+    const { summaryFacts, summaryHabits, habitMinOutcomes } = this.settings;
+    const facts = (await this.mneme.recall()).slice(0, summaryFacts);
+    const habits = (await this.mneme.habitStrengths()).filter((habit) => habit.outcomes >= habitMinOutcomes).slice(0, summaryHabits);
     const lines = facts.map((fact) => `- ${fact.topic}: ${fact.value} (${fact.source === "said" ? "you said" : `noticed, ${Math.round(fact.confidence * 100)}%`})`);
     const habitLines = habits.map((habit) => `- ${habit.name}: kept ${Math.round(habit.preference * 100)}% of the time`);
     if (lines.length === 0 && habitLines.length === 0) return "Artist: nothing known yet.";

@@ -50,7 +50,3 @@ export class TempFolder {
   }
 }
 
-export async function ensureDir(path: string): Promise<string> {
-  await mkdir(path, { recursive: true });
-  return path;
-}

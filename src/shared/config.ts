@@ -48,6 +48,14 @@ export interface MemorySettings {
   summaryMaxChars: number;
   /** Size limit of the compact project map sent with every request. */
   mapMaxChars: number;
+  /** How many facts about the artist the summary names, strongest first. */
+  summaryFacts: number;
+  /** How many of the artist's habits the summary names, the strongest first. */
+  summaryHabits: number;
+  /** A habit enters the summary once the musician kept or rejected it at least this many times. */
+  habitMinOutcomes: number;
+  /** The confidence (0–1) of a fact Ode noticed when the agent gives none. */
+  unratedConfidence: number;
 }
 
 export interface VersionSettings {

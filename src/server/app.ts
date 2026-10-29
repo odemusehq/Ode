@@ -70,7 +70,7 @@ export class OdeApp {
     this.paths = userPaths(config.userDir);
     this.temp = new TempFolder(config.tempDir);
     this.prefs = new PreferencesStore(join(this.paths.preferences, "preferences.json"));
-    this.mneme = new Mneme(this.paths, config.memory.halfLifeDays);
+    this.mneme = new Mneme(this.paths, config.memory);
     this.song = new SongStore(this.paths, (sheet) => this.onSongChanged(sheet));
     this.lyrics = new LyricsStore(this.song, this.prefs, (lyrics) => emit({ type: "lyrics", lyrics }));
     this.versions = new SongVersions(this.song, config.versions.snapshotEvery);
@@ -111,7 +111,7 @@ export class OdeApp {
       reader: this.reader,
       recorder: this.recorder,
       versions: this.versions,
-      summary: new ContextSummary(this.mneme, this.song, this.prefs, config.memory.summaryMaxChars),
+      summary: new ContextSummary(this.mneme, this.song, this.prefs, config.memory),
       prefs: this.prefs,
       selection: this.selection,
       emit,
@@ -188,10 +188,9 @@ export class OdeApp {
     this.showTitle(sheet.title);
     const songId = this.song.songId;
     if (!songId) return;
-    const dataDir = this.song.dataDir;
     void this.song
       .lyrics()
-      .then((lyrics) => this.mneme.rememberSong({ songId, title: sheet.title, dataDir, lyrics }))
+      .then((lyrics) => this.mneme.rememberSong({ songId, title: sheet.title, lyrics }))
       .catch(() => undefined);
   }
 

@@ -144,7 +144,7 @@ export class SongStore {
   }
 }
 
-/** The open song's version history. It follows the song when another Set opens or the Set is saved under a new name. */
+/** The version history of the song in use, one per song, kept as the musician moves between songs. */
 export class SongVersions {
   /** One history per song, kept across switches, so every write to a song's history waits its turn in one queue. */
   private readonly histories = new Map<string, VersionHistory>();

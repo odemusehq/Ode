@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { ArtistFact, Evidence, Habit } from "../shared/memory";
 import { JsonFile } from "./json-file";
 import type { UserPaths } from "./paths";
+import type { MemorySettings } from "../shared/config";
 
 const EvidenceSchema = z.object({ song: z.string().optional(), note: z.string(), time: z.string() });
 const FactSchema = z.object({
@@ -16,15 +17,15 @@ const FactSchema = z.object({
   updated: z.string(),
 });
 const HabitSchema = z.object({ name: z.string(), kept: z.number(), rejected: z.number(), updated: z.string() });
-const SongEntrySchema = z.object({
+const RememberedSongSchema = z.object({
   songId: z.string(),
   title: z.string(),
-  dataDir: z.string(),
   lyrics: z.array(z.string()),
   updated: z.string(),
 });
 
-export type SongEntry = z.infer<typeof SongEntrySchema>;
+/** A song as Mneme remembers it, for comparing the artist's songs with each other. */
+export type RememberedSong = z.infer<typeof RememberedSongSchema>;
 
 export interface NewFact {
   topic: string;
@@ -46,15 +47,15 @@ export interface HabitStrength {
 export class Mneme {
   private readonly facts: JsonFile<ArtistFact[]>;
   private readonly habitsFile: JsonFile<Habit[]>;
-  private readonly songs: JsonFile<SongEntry[]>;
+  private readonly songs: JsonFile<RememberedSong[]>;
 
   constructor(
     paths: UserPaths,
-    private readonly halfLifeDays: number,
+    private readonly settings: MemorySettings,
   ) {
     this.facts = new JsonFile(join(paths.artist, "facts.json"), z.array(FactSchema), () => []);
     this.habitsFile = new JsonFile(join(paths.artist, "habits.json"), z.array(HabitSchema), () => []);
-    this.songs = new JsonFile(join(paths.artist, "songs.json"), z.array(SongEntrySchema), () => []);
+    this.songs = new JsonFile(join(paths.artist, "songs.json"), z.array(RememberedSongSchema), () => []);
   }
 
   /** Facts, strongest first; facts Ode noticed fade with age. */
@@ -69,7 +70,7 @@ export class Mneme {
   async record(input: NewFact): Promise<ArtistFact> {
     const now = new Date().toISOString();
     const evidence: Evidence[] = input.evidence ? [{ ...input.evidence, time: now }] : [];
-    const confidence = input.source === "said" ? 1 : Math.min(1, Math.max(0, input.confidence ?? 0.5));
+    const confidence = input.source === "said" ? 1 : Math.min(1, Math.max(0, input.confidence ?? this.settings.unratedConfidence));
     let saved: ArtistFact | undefined;
     await this.facts.update((facts) => {
       const match = facts.find(
@@ -130,7 +131,7 @@ export class Mneme {
       .sort((a, b) => b.outcomes - a.outcomes);
   }
 
-  async rememberSong(entry: Omit<SongEntry, "updated">): Promise<void> {
+  async rememberSong(entry: Omit<RememberedSong, "updated">): Promise<void> {
     const updated = new Date().toISOString();
     await this.songs.update((songs) => [...songs.filter((song) => song.songId !== entry.songId), { ...entry, updated }]);
   }
@@ -147,6 +148,6 @@ export class Mneme {
 
   private decay(since: string): number {
     const ageDays = (Date.now() - Date.parse(since)) / 86_400_000;
-    return ageDays <= 0 ? 1 : 0.5 ** (ageDays / this.halfLifeDays);
+    return ageDays <= 0 ? 1 : 0.5 ** (ageDays / this.settings.halfLifeDays);
   }
 }

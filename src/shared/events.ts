@@ -57,5 +57,5 @@ export type UiEvent =
   | { type: "error"; message: string }
   /** The shared lyrics changed: saved from the window, by Ode, or by a restore. */
   | { type: "lyrics"; lyrics: LyricsState }
-  /** The song's title, when it changes or another Set opens. */
+  /** The song's title, when it changes or another song opens. */
   | { type: "title"; title: string };

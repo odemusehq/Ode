@@ -13,7 +13,11 @@
   "memory": {
     "halfLifeDays": 180,
     "summaryMaxChars": 2000,
-    "mapMaxChars": 24000
+    "mapMaxChars": 24000,
+    "summaryFacts": 12,
+    "summaryHabits": 6,
+    "habitMinOutcomes": 2,
+    "unratedConfidence": 0.5
   },
   "versions": {
     "snapshotEvery": 20,
