@@ -40,8 +40,8 @@ export const mixCheck = defineTool({
         continue;
       }
       try {
-        const path = await arrangement.render(lookup.track.ref, input.start, input.end);
-        measured.push({ name: lookup.track.name, measurement: new AudioMeasurement(await decode(path)) });
+        const audio = await arrangement.withRender(lookup.track.ref, input.start, input.end, decode);
+        measured.push({ name: lookup.track.name, measurement: new AudioMeasurement(audio) });
       } catch (error) {
         skipped.push({ track: lookup.track.name, reason: error instanceof Error ? error.message : String(error) });
       }

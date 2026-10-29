@@ -1,3 +1,4 @@
+import { rm } from "node:fs/promises";
 import { TAG_SEPARATOR } from "../../shared/live";
 import type { TrackRef } from "../../shared/live";
 import type { ExtensionOpArgs, ExtensionOpResults, SongInfo, TrackKind, TrackSummary } from "../../shared/live-ops";
@@ -46,11 +47,18 @@ export class ArrangementAudio {
     return { track: { ref: { index: track.index }, name: track.name } };
   }
 
-  /** Renders a track's Arrangement audio (before its devices) for a range of beats; returns the WAV file's path. */
-  async render(track: TrackRef, start: number, end: number): Promise<string> {
+  /**
+   * Renders a track's Arrangement audio (before its devices) for a range of beats and hands the file to `use`; the
+   * render is deleted once `use` is done, so the temp folder keeps only what Ode still needs.
+   */
+  async withRender<T>(track: TrackRef, start: number, end: number, use: (path: string) => Promise<T>): Promise<T> {
     const args: ExtensionOpArgs["render_track_audio"] = { track, start, end };
-    const result = await this.ctx.live.extension.call<ExtensionOpResults["render_track_audio"]>("render_track_audio", args);
-    return result.path;
+    const { path } = await this.ctx.live.extension.call<ExtensionOpResults["render_track_audio"]>("render_track_audio", args);
+    try {
+      return await use(path);
+    } finally {
+      await rm(path, { force: true });
+    }
   }
 }
 
@@ -59,23 +67,22 @@ export function requireRange(start: number, end: number): void {
   if (!(end > start)) throw new Error(`end (${end}) must be after start (${start}), both in beats`);
 }
 
+/** Finds a track the way the extension does: return tracks included, so their reason shows; a name matches without Ode's tag, in any case. */
 function findTrack(song: SongInfo, ref: TrackRef): TrackSummary | undefined {
   if ("returnIndex" in ref) return song.returnTracks.find((track) => track.index === ref.returnIndex);
   if ("index" in ref) return song.tracks.find((track) => track.index === ref.index);
-  if ("tag" in ref) return song.tracks.find((track) => track.tag === ref.tag);
+  const all = [...song.tracks, ...song.returnTracks];
+  if ("tag" in ref) return all.find((track) => track.tag === ref.tag);
   if ("name" in ref) {
-    const wanted = ref.name.toLowerCase();
-    return (
-      song.tracks.find((track) => track.name === ref.name) ??
-      song.tracks.find((track) => baseName(track.name).toLowerCase() === wanted)
-    );
+    const wanted = baseName(ref.name);
+    return all.find((track) => track.name === wanted) ?? all.find((track) => track.name.toLowerCase() === wanted.toLowerCase());
   }
   return undefined;
 }
 
-/** A track name without Ode's tag. */
+/** A track name as the musician sees it, with Ode's tag taken off ("Vocals ·ab12" → "Vocals"). */
 function baseName(name: string): string {
-  return name.split(TAG_SEPARATOR)[0] ?? name;
+  return (name.split(TAG_SEPARATOR)[0] ?? name).trim();
 }
 
 function describeTrackRef(ref: TrackRef): string {

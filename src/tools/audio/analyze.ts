@@ -23,20 +23,18 @@ export const audioAnalyze = defineTool({
   },
   changes: "none",
   async run(input, ctx) {
-    let path = input.path ? await ctx.temp.inside(input.path) : undefined;
-    let source = input.path ?? "";
-    if (!path) {
-      if (!input.track || input.start === undefined || input.end === undefined) {
-        throw new Error("give either path, or track with start and end (beats)");
-      }
-      requireRange(input.start, input.end);
-      const arrangement = new ArrangementAudio(ctx);
-      const lookup = await arrangement.resolve(input.track);
-      if ("skipped" in lookup) throw new Error(`cannot render ${lookup.skipped.track}: ${lookup.skipped.reason}`);
-      path = await arrangement.render(lookup.track.ref, input.start, input.end);
-      source = `${lookup.track.name}, beats ${input.start}–${input.end}`;
+    if (input.path) {
+      const measurement = new AudioMeasurement(await decode(await ctx.temp.inside(input.path)));
+      return { source: input.path, ...measurementReport(measurement) };
     }
-    const measurement = new AudioMeasurement(await decode(path));
-    return { source, ...measurementReport(measurement) };
+    if (!input.track || input.start === undefined || input.end === undefined) {
+      throw new Error("give either path, or track with start and end (beats)");
+    }
+    requireRange(input.start, input.end);
+    const arrangement = new ArrangementAudio(ctx);
+    const lookup = await arrangement.resolve(input.track);
+    if ("skipped" in lookup) throw new Error(`${lookup.skipped.track} stays unrendered: ${lookup.skipped.reason}`);
+    const measurement = new AudioMeasurement(await arrangement.withRender(lookup.track.ref, input.start, input.end, decode));
+    return { source: `${lookup.track.name}, beats ${input.start}–${input.end}`, ...measurementReport(measurement) };
   },
 });

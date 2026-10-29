@@ -9,6 +9,7 @@ import type { MusicalKey } from "../../music/audio";
 import type { Transcript } from "../../services/types";
 import type { Note } from "../../shared/live";
 import type { SongInfo } from "../../shared/live-ops";
+import { NOTE_NAMES } from "../../shared/notes";
 import type { ToolContext } from "../define";
 
 const SECONDS_PER_MINUTE = 60;
@@ -16,7 +17,6 @@ const SECONDS_PER_MINUTE = 60;
 const WORD_LEAD_BEATS = 0.25;
 /** Decimal places for word timings, beats. */
 const WORD_TIME_DIGITS = 3;
-const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 /** Grid names as Live shows them. */
 const GRID_NAMES: Readonly<Record<GridDivision, string>> = {
   [GridDivision.Eighth]: "1/8",
@@ -51,18 +51,19 @@ export const humToMidiTool = defineTool({
     const lookup = await arrangement.resolve(input.track);
     if ("skipped" in lookup) throw new Error(`cannot read a recording from ${lookup.skipped.track}: ${lookup.skipped.reason}`);
     const song = await arrangement.song();
-    const path = await arrangement.render(lookup.track.ref, input.start, input.end);
     const key: MusicalKey | undefined = song.scaleMode ? { root: song.rootNote, intervals: song.scaleIntervals } : undefined;
-    const transcription = new HumTranscriber(song.tempo, key).analyze(await decode(path));
-    const result = {
-      notes: transcription.notes,
-      suggestedClip: { start: input.start, length: input.end - input.start },
-      tempo: song.tempo,
-      key: key ? keyName(song) : null,
-      grid: GRID_NAMES[transcription.grid],
-      tuningOffsetCents: rounded(transcription.tuningOffsetCents, 0),
-    };
-    return input.withWords ? { ...result, ...(await transcribeWords(ctx, path, transcription.notes, song.tempo)) } : result;
+    return arrangement.withRender(lookup.track.ref, input.start, input.end, async (path) => {
+      const transcription = new HumTranscriber(song.tempo, key).analyze(await decode(path));
+      const result = {
+        notes: transcription.notes,
+        suggestedClip: { start: input.start, length: input.end - input.start },
+        tempo: song.tempo,
+        key: key ? keyName(song) : null,
+        grid: GRID_NAMES[transcription.grid],
+        tuningOffsetCents: rounded(transcription.tuningOffsetCents, 0),
+      };
+      return input.withWords ? { ...result, ...(await transcribeWords(ctx, path, transcription.notes, song.tempo)) } : result;
+    });
   },
 });
 
