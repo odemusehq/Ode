@@ -21,8 +21,8 @@ interface FoundDevice {
 
 /**
  * What tool calls touch, named as the musician sees it in the latest snapshot of the Set: "Bass · EQ Eight", "Bass ·
- * clip Bass A", "bars 9–16". Anything the snapshot doesn't have (or every reference, before the first snapshot) is named
- * by its place instead: "track 2 · device 1", "beat 32".
+ * clip Bass A", "bars 9–16". Anything missing from the snapshot (or every reference, before the first snapshot) is named
+ * by its place: "track 2 · device 1", "beat 32".
  */
 export class RefNames {
   private readonly beatsPerBar: number | null;
@@ -99,14 +99,14 @@ export class RefNames {
     return parameter ? SetWording.value(parameter, value) : SetWording.number(value);
   }
 
-  /** "scene Chorus", or "scene 2" when it has no name. */
+  /** "scene Chorus", or "scene 2" when it is unnamed. */
   scene(ref: SceneRef): string {
     if ("name" in ref) return `scene ${ref.name}`;
     const name = this.set?.song.scenes[ref.index]?.name;
     return `scene ${name || ref.index + 1}`;
   }
 
-  /** "locator Chorus", or "the locator at bar 9" when it has no name. */
+  /** "locator Chorus", or "the locator at bar 9" when it is unnamed. */
   locator(ref: LocatorRef): string {
     if ("name" in ref) return `locator ${ref.name}`;
     const locators = this.set?.song.locators ?? [];

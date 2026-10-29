@@ -11,12 +11,12 @@ import type { PreferencesStore } from "../mneme/preferences";
 import type { TempFolder } from "../mneme/paths";
 import type { RefNames } from "./live/ref-names";
 
-/** What a tool changes: nothing, the Live Set, or Mneme (the lyrics, the lead sheet, memory, settings, release files). */
+/** What a tool changes: "none" (it only reads or computes), the Live Set, or Mneme (the lyrics, the lead sheet, memory, settings, release files). */
 export type ToolChange = "none" | "set" | "memory";
 
 /** Reads the whole Set: every track, device and clip, the song's tempo, key, scale, scenes and locators, and the lead sheet. */
 export interface SetReader {
-  /** Throws "Ode can't read the Set: …" with the fix when Live isn't reachable. */
+  /** Throws "Ode can't read the Set: …" with the fix when Live is out of reach. */
   read(): Promise<SetSnapshot>;
   /** The most recent snapshot read, or null before the first one (or after another Set opened). */
   readonly latest: SetSnapshot | null;
@@ -25,7 +25,7 @@ export interface SetReader {
 /** One-line questions to the musician, each with two to four answers. */
 export interface MusicianQuestions {
   /**
-   * The answer the musician tapped, or null when they stopped Ode instead. `images`, when given, are file names in the
+   * The answer the musician tapped, or null when they stopped Ode at the question. `images`, when given, are file names in the
    * release folder shown as the answers, one per option and in the same order.
    */
   ask(text: string, options: string[], images?: string[]): Promise<string | null>;

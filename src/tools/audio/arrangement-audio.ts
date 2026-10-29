@@ -4,13 +4,13 @@ import type { TrackRef } from "../../shared/live";
 import type { ExtensionOpArgs, ExtensionOpResults, SongInfo, TrackKind, TrackSummary } from "../../shared/live-ops";
 import type { ToolContext } from "../define";
 
-/** Why a track of each kind cannot be rendered; null when it can. */
+/** Why a track of each kind is skipped by the render; null for a kind that renders. */
 const RENDER_LIMITS: Readonly<Record<TrackKind, string | null>> = {
   audio: null,
   midi: "MIDI track: only Arrangement audio tracks can be rendered. Freeze and flatten it, or resample it onto an audio track, then check again.",
-  group: "group track: check the audio tracks inside it instead.",
+  group: "group track: check the audio tracks inside it.",
   return: "return track: only Arrangement audio tracks can be rendered.",
-  main: "Main track: check the audio tracks that feed it instead.",
+  main: "Main track: check the audio tracks that feed it.",
 };
 
 export interface RenderableTrack {
@@ -37,11 +37,11 @@ export class ArrangementAudio {
     return this.songInfo;
   }
 
-  /** The track a reference points at when it can be rendered; otherwise the reason it cannot. */
+  /** The track a reference points at when it renders; otherwise the reason it is skipped. */
   async resolve(ref: TrackRef): Promise<TrackLookup> {
     if ("main" in ref) return { skipped: { track: "Main", reason: RENDER_LIMITS.main ?? "" } };
     const track = findTrack(await this.song(), ref);
-    if (!track) return { skipped: { track: describeTrackRef(ref), reason: "not found in the Set" } };
+    if (!track) return { skipped: { track: describeTrackRef(ref), reason: "missing from the Set" } };
     const reason = RENDER_LIMITS[track.kind];
     if (reason) return { skipped: { track: track.name, reason } };
     return { track: { ref: { index: track.index }, name: track.name } };

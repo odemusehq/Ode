@@ -10,7 +10,7 @@ export const singabilityCheckTool = defineTool({
     "on very short notes are flagged; phrases longer than eight beats without a rest are flagged.",
     "Use it with prosody_check after writing or changing a topline, or new words for an existing melody, and fix what it flags before reporting.",
     "Inputs: line; notes (the melody for that line); timeSignature (optional, defaults to Live's); accent (optional).",
-    "Returns { accent, score (0–1, 1 = no problems), issues, syllables, alignment, notes }: each issue has syllable",
+    "Returns { accent, score (0–1, 1 = zero issues), issues, syllables, alignment, notes }: each issue has syllable",
     "(index into syllables), problem and fix in plain words.",
   ].join(" "),
   input: LINE_ON_NOTES_INPUT,

@@ -11,13 +11,13 @@ export const rhymeFindTool = defineTool({
   name: "rhyme_find",
   description: [
     "Finds rhymes for a word from the pronunciation dictionary of the chosen accent (UK and US differ, e.g. bath/path).",
-    "Use it to find rhymes instead of guessing; every result's kind comes from Ode's rhyme code.",
+    "Use it whenever you need rhymes; every result's kind comes from Ode's rhyme code.",
     'Inputs: word; accent (optional, defaults to the Pronunciation setting); kinds (optional filter: "perfect",',
     '"multisyllabic", "near", "assonance", "consonance", "identical"; default all but identical); limit (default 40);',
     "commonOnly (only the most frequent English words).",
     "Returns { accent, word, rhymes }: each rhyme has word, kind, score (0–1, how close the ending sounds),",
     "common (among the most frequent English words) and overused (a pair listeners hear coming, e.g. fire/desire;",
-    "labelled, not banned). Sorted strongest kind first, common words first.",
+    "labelled and still allowed). Sorted strongest kind first, common words first.",
   ].join(" "),
   input: {
     word: z.string().min(1).describe("The word to rhyme with."),

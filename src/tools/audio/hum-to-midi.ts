@@ -36,7 +36,7 @@ export const humToMidiTool = defineTool({
     "It renders the track's audio for the beat range, tracks the pitch, corrects the singer's overall tuning, starts a new note where the pitch settles on a new value or a new syllable begins, joins fragments of the same note, snaps pitches to the Set's key when Live's Scale Mode is on, fits the rhythm to the song's tempo on an eighth- or sixteenth-note grid (whichever fits the performance with less error for its complexity), and sets each note's velocity from how loud it was sung.",
     "Inputs: `track` (the audio track holding the recording), `start` and `end` (the recording's range in the Arrangement, in beats), `withWords` (true to also transcribe sung words).",
     "Returns { notes: [{ pitch, start, duration, velocity }] with times in beats from `start`, suggestedClip: { start, length } (where a MIDI clip lines up with the recording), tempo, key (the key the pitches were snapped to, or null), grid (\"1/8\" or \"1/16\", the grid the rhythm was fitted to), tuningOffsetCents (how sharp or flat the singer was overall, already corrected), words?: { text, lines: [{ text, start, end, notes }] } with line times in beats from `start` and the indexes of the notes each line covers, wordsNote? (why words are missing) }.",
-    "The notes are a draft: show them to the musician before creating a clip. Changes nothing.",
+    "The notes are a draft: show them to the musician before creating a clip. Read-only.",
   ].join(" "),
   input: {
     track: TrackRefSchema.describe("Arrangement audio track holding the hummed or sung recording."),
@@ -49,7 +49,7 @@ export const humToMidiTool = defineTool({
     requireRange(input.start, input.end);
     const arrangement = new ArrangementAudio(ctx);
     const lookup = await arrangement.resolve(input.track);
-    if ("skipped" in lookup) throw new Error(`cannot read a recording from ${lookup.skipped.track}: ${lookup.skipped.reason}`);
+    if ("skipped" in lookup) throw new Error(`the recording on ${lookup.skipped.track} is unreadable: ${lookup.skipped.reason}`);
     const song = await arrangement.song();
     const key: MusicalKey | undefined = song.scaleMode ? { root: song.rootNote, intervals: song.scaleIntervals } : undefined;
     return arrangement.withRender(lookup.track.ref, input.start, input.end, async (path) => {
@@ -85,7 +85,7 @@ async function transcribeWords(
     return { words: matchWords(await ctx.services.transcribe(path), notes, tempo) };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return { wordsNote: `Words were not transcribed (${message}); the notes are complete.` };
+    return { wordsNote: `The words stay untranscribed (${message}); the notes are complete.` };
   }
 }
 

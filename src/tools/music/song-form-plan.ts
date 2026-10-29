@@ -23,7 +23,7 @@ export const songFormPlanTool = defineTool({
     "phraseBars (optional bars per phrase, default 8 for house, techno and drum and bass, else 4); beatsPerBar",
     "(optional quarter-note beats per bar, defaults to Live's time signature).",
     "Returns { genre, tempo, sections, totalBars, seconds }: sections follow the lead sheet's Section shape",
-    "(id, kind, name, startBeat, lengthBeats and no chords yet).",
+    "(id, kind, name, startBeat and lengthBeats; chords stay empty for now).",
   ].join(" "),
   input: {
     genre: z.string().optional().describe("Genre name."),

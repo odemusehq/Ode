@@ -13,14 +13,14 @@ export const lyricsFitMelodyTool = defineTool({
     "Fits lyric lines to a melody, one phrase per line: the melody is cut at its longest rests into as many phrases as",
     "there are lines (into stretches of whole bars when it has too few rests, the last one running to the end), then",
     "each line is set to its phrase and checked for prosody.",
-    "Use it to check a section's lyrics against its melody line by line, before and after changing either, instead of",
-    "splitting the melody into phrases yourself.",
+    "Use it to check a section's lyrics against its melody line by line, before and after changing either;",
+    "it splits the melody into phrases for you.",
     "Inputs: lines (the sung lines in order; labels such as \"[Chorus]\" and blank lines are left out); notes (the melody",
     "as read from the MIDI clip, in beats from the start of the stretch; chords are reduced to their top note);",
     "lengthBeats (how long the stretch is, in beats); timeSignature (optional, defaults to Live's); accent (optional).",
     "Returns { accent, lines }: each line has line (its place among the lines given, from 1), text, phrase (the notes it",
-    "is sung on), syllables (in the pronunciation that fits best), noteCount, score (0–1, 1 = no problems) and issues",
-    "(problem and fix in plain words); a line fits when it has no issues. Place a line's syllables on its phrase with",
+    "is sung on), syllables (in the pronunciation that fits best), noteCount, score (0–1, 1 = zero issues) and issues",
+    "(problem and fix in plain words); a line fits when its issues list is empty. Place a line's syllables on its phrase with",
     "set_lyrics_to_melody.",
   ].join(" "),
   input: {
@@ -36,7 +36,7 @@ export const lyricsFitMelodyTool = defineTool({
     const accent = input.accent ?? defaults.accent;
     const signature = input.timeSignature ?? defaults.timeSignature;
     const analyzer = LineAnalyzer.for(accent);
-    // A label or a blank line has no words to sing, so it gets no phrase.
+    // A label or a blank line is analysed as empty text, so only sung lines get a phrase.
     const lines = input.lines.map((text) => ({ text, analysis: analyzer.analyze(LyricsText.isSung(text) ? text : "") }));
     const fitter = new MelodyFitter(new Meter(signature.numerator, signature.denominator));
     return {

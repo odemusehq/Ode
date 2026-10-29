@@ -12,7 +12,7 @@ export const rhymeSchemeTool = defineTool({
     "Use it to check which lines rhyme and how strongly; to check whether two words rhyme, pass them as two lines.",
     "The rhyming part runs from the last stressed vowel to the end of the line, across word boundaries.",
     "Inputs: lines (one string per line, in order); accent (optional, defaults to the Pronunciation setting).",
-    'Returns { accent, scheme, pairs, internal }. scheme has a letter per line ("A", "B"…) or "-" when a line has no',
+    'Returns { accent, scheme, pairs, internal }. scheme has a letter per line ("A", "B"…) or "-" for a line without a',
     'partner. pairs lists each rhyming line with its partner: lines (0-based indexes), kind ("perfect", "multisyllabic",',
     '"near", "assonance", "identical"), score 0–1 and the end words. internal lists rhymes inside a line',
     "(line index, the two words, kind, score).",

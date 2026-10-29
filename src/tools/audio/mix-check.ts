@@ -17,10 +17,10 @@ export const mixCheck = defineTool({
     "Checks how Arrangement audio tracks sit together over a range of beats: each track's peak, loudness and spectrum summary; pairs of tracks masking each other (both strong in the same frequency band) with plain EQ or sidechain advice; and gain-staging advice (clipping risk, headroom, very low levels, balance, summed level).",
     "Use it when the mix sounds muddy, crowded or unbalanced, to find which tracks clash and where before making EQ cuts, sidechain compression or level changes, or as a gain-staging check. It hears the clips before their devices, so a device change shows in Live itself: the musician plays the same stretch to hear it.",
     "Inputs: `tracks` (the tracks to compare), `start` and `end` (in beats; pick a stretch where the tracks play together, such as a chorus).",
-    "Each track is rendered before its devices and fader, so readings show the clips' own level and tone, not the fader, EQ or effects.",
+    "Each track is rendered before its devices and fader, so readings show the clips' own level and tone alone, before the fader, EQ and effects.",
     "Only Arrangement audio tracks can be rendered; MIDI, group, return and Main tracks, and tracks that fail to render, are listed in `skipped` with the reason.",
     "Returns { range: { start, end }, tracks: [{ name, truePeakDbtp, samplePeakDbfs, loudness: { integratedLufs, momentaryMaxLufs, shortTermMaxLufs, rangeLu }, spectrum: { tiltDbPerOctave, strongestBand, regions } }], masking: [{ tracks, band, advice }] (worst first), levels: [{ track, issue, advice }] (track is null for the tracks as a whole), skipped: [{ track, reason }] }.",
-    "Which track is the kick, bass or vocal is guessed from track names. Changes nothing.",
+    "Which track is the kick, bass or vocal is guessed from track names. Read-only.",
   ].join(" "),
   input: {
     tracks: z.array(TrackRefSchema).min(1).describe("Arrangement audio tracks to compare."),

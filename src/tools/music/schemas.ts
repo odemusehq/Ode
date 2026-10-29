@@ -28,7 +28,7 @@ export const RangeInput = z
     low: z.number().int().min(0).max(MIDI_MAX).describe("Lowest MIDI note."),
     high: z.number().int().min(0).max(MIDI_MAX).describe("Highest MIDI note."),
   })
-  .refine((range) => range.low <= range.high, "low must not be above high");
+  .refine((range) => range.low <= range.high, "low must be at or below high");
 
 export const KeyInput = z
   .object({

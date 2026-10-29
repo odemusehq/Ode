@@ -111,7 +111,7 @@ export const clipTools = [
         muted === undefined ? "" : muted ? "deactivate" : "activate",
         looping === undefined ? "" : looping ? "loop on" : "loop off",
       ].filter((change) => change.length > 0);
-      return `${names.clip(clip)} · ${SetWording.list(changes) || "no change"}`;
+      return `${names.clip(clip)} · ${SetWording.list(changes) || "unchanged"}`;
     },
   }),
   extensionTool({
@@ -146,7 +146,7 @@ export const clipTools = [
         warping === undefined ? "" : warping ? "warping on" : "warping off",
         warpMode === undefined ? "" : `warp mode ${SetWording.warpMode(warpMode)}`,
       ].filter((change) => change.length > 0);
-      return `${names.clip(clip)} · ${SetWording.list(changes) || "no change"}`;
+      return `${names.clip(clip)} · ${SetWording.list(changes) || "unchanged"}`;
     },
   }),
 ];

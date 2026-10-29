@@ -19,7 +19,7 @@ import { stressTool } from "./stress";
 import { syllablesTool } from "./syllables";
 import { voiceChordsTool } from "./voice-chords";
 
-/** Ode's music tools for words and notes; they compute and change nothing in Live or Mneme. */
+/** Ode's music tools for words and notes; they only compute, and leave Live and Mneme as they are. */
 export const musicTools: AnyTool[] = [
   lyricsAnalyzeTool,
   syllablesTool,

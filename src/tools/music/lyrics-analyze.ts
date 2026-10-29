@@ -12,7 +12,7 @@ export const lyricsAnalyzeTool = defineTool({
     "Inputs: lines (the lyric, one string per line, in order); accent (optional, defaults to the Pronunciation setting).",
     "Returns { accent, lines, scheme, notes }. lines[i].words[j].options lists every valid pronunciation as syllables",
     "({ text, phonemes in IPA, stress 1 primary / 2 secondary / 0 unstressed, after phrase stress }); certain is false when the",
-    "word's pronunciation is a best guess in this accent (never present it as checked). lines[i].counts is",
+    "word's pronunciation is a best guess in this accent (present it as uncertain). lines[i].counts is",
     "every possible syllable count of the line, ascending; a line meets a syllable target when one of its counts matches.",
     'scheme has a rhyme letter per line ("A", "B"…) or "-" for a line without a rhyme partner. notes (line = 0-based index,',
     'kind = "cliche" | "rhyme" | "prosody" | "uncertain") explain problems in plain words.',

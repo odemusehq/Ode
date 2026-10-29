@@ -12,8 +12,8 @@ import { historyTools } from "./history";
 import { SETTING_FIELDS, SettingValue } from "./settings";
 
 /**
- * The lead sheet as lead_sheet_update changes it: everything but the format version and the lyrics, with no defaults,
- * so a field left out stays as it is.
+ * The lead sheet as lead_sheet_update changes it: the format version and the lyrics stay outside it, and every field is
+ * optional, without a default, so a field left out stays as it is.
  */
 const LeadSheetPatchSchema = z
   .object({
@@ -78,7 +78,7 @@ export const songTools: AnyTool[] = [
     describe: (patch) => {
       const fields = (Object.keys(patch) as (keyof LeadSheetPatch)[]).filter((field) => patch[field] !== undefined);
       const words = fields.map((field) => (field === "title" && patch.title ? `title ${patch.title}` : SHEET_FIELD_WORDS[field]));
-      return `Lead sheet · ${SetWording.list(words) || "no change"}`;
+      return `Lead sheet · ${SetWording.list(words) || "unchanged"}`;
     },
     run: (patch, ctx) => ctx.song.update(patch),
   }),
@@ -98,7 +98,7 @@ export const songTools: AnyTool[] = [
     name: "lyrics_write",
     changes: "memory",
     description:
-      'Save the song\'s lyrics. text: the whole new text, laid out as lyrics_read gives it (without the line numbers): one sung line per line, a blank line between stanzas, labels such as "[Chorus]" on their own lines; keep the labels and the layout unless the change is about them, change a repeated chorus in every copy, and never change what the lead sheet\'s locked list names. baseRevision: the revision of the text you edited, from lyrics_read. When the musician saved in between, both changes are merged line by line; where you both changed the same lines, the musician\'s lines are kept. Returns { revision, conflicts }: conflicts are the line numbers where the musician\'s lines were kept instead of yours (say so in your result line); when the text saved differs from what you sent, lines gives it, numbered, to write your next change from. A save edited from a revision that is too old is refused: read the lyrics again and redo the change.',
+      'Save the song\'s lyrics. text: the whole new text, laid out as lyrics_read gives it (without the line numbers): one sung line per line, a blank line between stanzas, labels such as "[Chorus]" on their own lines; keep the labels and the layout, changing them only when the change is about them, change a repeated chorus in every copy, and leave what the lead sheet\'s locked list names exactly as it is. baseRevision: the revision of the text you edited, from lyrics_read. When the musician saved in between, both changes are merged line by line; where you both changed the same lines, the musician\'s lines are kept. Returns { revision, conflicts }: conflicts are the line numbers where the musician\'s lines were kept and yours set aside (say so in your result line); when the text saved differs from what you sent, lines gives it, numbered, to write your next change from. A save edited from a revision that is too old is refused: read the lyrics again and redo the change.',
     input: {
       text: z.string().describe("The whole lyrics, one line per line"),
       baseRevision: z.number().int().min(0).describe("The revision lyrics_read gave for the text you edited"),
@@ -130,7 +130,7 @@ export const songTools: AnyTool[] = [
     name: "memory_record",
     changes: "memory",
     description:
-      'Remember something about the artist. Use source "said" only when the musician told you; use "noticed" when their own material clearly shows it, with a confidence (0–1) and the evidence. Never record anything inferred from a person\'s name, gender, age or nationality. Their vocal range, accent, genre and loudness target are settings: store those with preferences_set.',
+      'Remember something about the artist. Use source "said" only when the musician told you; use "noticed" when their own material clearly shows it, with a confidence (0–1) and the evidence. Record only what the musician said or their material shows: leave a person\'s name, gender, age and nationality out of every inference. Their vocal range, accent, genre and loudness target are settings: store those with preferences_set.',
     input: {
       topic: z.string().min(1).describe('e.g. "rhyme taste", "chord vocabulary", "dislikes"'),
       value: z.string().min(1),
@@ -174,7 +174,7 @@ export const songTools: AnyTool[] = [
     name: "preferences_set",
     changes: "memory",
     description:
-      'Store one of the musician\'s settings, used for every song: genre (text), spelling or pronunciation ("uk" or "us"), vocalRange ({ low, high } MIDI notes), loudnessTarget ({ lufs, truePeak }). source "said": the musician told you (their range, their accent, their genre, a loudness target); it becomes their own setting and replaces what was there. source "detected": you worked it out from their material, with a confidence (0–1); it is used until they say otherwise and never replaces what they said.',
+      'Store one of the musician\'s settings, used for every song: genre (text), spelling or pronunciation ("uk" or "us"), vocalRange ({ low, high } MIDI notes), loudnessTarget ({ lufs, truePeak }). source "said": the musician told you (their range, their accent, their genre, a loudness target); it becomes their own setting and replaces what was there. source "detected": you worked it out from their material, with a confidence (0–1); it is used until they say otherwise, and what they said always stays.',
     input: {
       field: z.enum(SETTING_FIELDS),
       value: z.unknown(),

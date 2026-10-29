@@ -3,7 +3,7 @@ import type { AudioMeasurement } from "../../music/audio";
 /** Decimal places in readings returned to the agent. */
 const READING_DIGITS = 1;
 
-/** A reading rounded for a tool result; null when there is nothing to read (silence). */
+/** A reading rounded for a tool result; null for silence (an infinite reading). */
 export function rounded(value: number, digits: number = READING_DIGITS): number | null {
   if (!Number.isFinite(value)) return null;
   const factor = 10 ** digits;

@@ -15,7 +15,7 @@ export interface SongDefaults {
   vocalRange: PitchRange | null;
   /** Live's tempo, or null before the Set has been read. */
   tempo: number | null;
-  /** Live's key and scale when Scale Mode is on (otherwise the Set has no key to go by). */
+  /** Live's key and scale when Scale Mode is on (with Scale Mode off, the Set's key is unknown). */
   key: KeySpec | null;
   /** Live's time signature; 4/4, Live's default, before the Set has been read. */
   timeSignature: TimeSignature;

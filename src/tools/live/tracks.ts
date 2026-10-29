@@ -29,7 +29,7 @@ export const trackTools = [
         solo === undefined ? "" : solo ? "solo" : "unsolo",
         arm === undefined ? "" : arm ? "arm" : "disarm",
       ].filter((change) => change.length > 0);
-      return `${names.track(track)} · ${SetWording.list(changes) || "no change"}`;
+      return `${names.track(track)} · ${SetWording.list(changes) || "unchanged"}`;
     },
   }),
   extensionTool({
@@ -51,7 +51,7 @@ export const trackTools = [
     op: "track_create_audio_clip",
     changes: "set",
     description:
-      "Create an audio clip in the Arrangement on an audio track from a file. The file must first be copied into the project with import_into_project; use the path it returns. Length defaults to the file's length at the current tempo. loop requires warped to be set; unwarped clips can't loop.",
+      "Create an audio clip in the Arrangement on an audio track from a file. The file must first be copied into the project with import_into_project; use the path it returns. Length defaults to the file's length at the current tempo. loop requires warped to be set; only warped clips loop.",
     input: {
       track: TrackRefSchema,
       filePath: z.string().min(1).describe("Path returned by import_into_project"),

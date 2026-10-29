@@ -76,7 +76,7 @@ export const LoopSchema = z
     loopStart: z.number(),
     loopEnd: z.number(),
   })
-  .describe("Clip region and loop in beats. The loop must be at least a sixteenth note long; unwarped clips can't loop.");
+  .describe("Clip region and loop in beats. The loop must be at least a sixteenth note long; only warped clips loop.");
 
 export const nameFields = {
   name: z.string().min(1).optional().describe("Name shown in Live"),

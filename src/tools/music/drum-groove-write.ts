@@ -20,7 +20,7 @@ export const drumGrooveWriteTool = defineTool({
     "Velocities and timing are humanised and swung where the genre swings.",
     "Inputs: genre (optional, defaults to the genre setting, else pop); section (intro, verse, pre-chorus, chorus,",
     "post-chorus, bridge, breakdown, build, drop, outro, other); bars; energy (0–1, how hard the section hits); seed.",
-    "Returns { genre, recognised, section, notes, drumMap }: recognised is false when the genre name was not known and",
+    "Returns { genre, recognised, section, notes, drumMap }: recognised is false when the genre name was unknown and",
     "pop was used; notes start at beat 0.",
   ].join(" "),
   input: {

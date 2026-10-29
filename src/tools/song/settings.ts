@@ -19,13 +19,13 @@ const FIELD_SHAPES: Readonly<Record<SettingField, string>> = {
   genre: "a genre name",
   spelling: '"uk" or "us"',
   pronunciation: '"uk" or "us"',
-  vocalRange: "{ low, high } as MIDI notes, low not above high",
+  vocalRange: "{ low, high } as MIDI notes, low at or below high",
   loudnessTarget: "{ lufs, truePeak } in LUFS and dBTP, the loudness below 0 and the ceiling at or below 0",
 };
 
 /** One of the musician's settings as Ode gives it: checked against what the setting holds, and put in plain words. */
 export class SettingValue {
-  /** The value as the setting holds it; an error saying what the setting takes when it doesn't fit. */
+  /** The value as the setting holds it; an error saying what the setting takes when the value falls outside it. */
   static check(field: SettingField, value: unknown): unknown {
     const parsed = PersonalisationSchema.shape[field].safeParse({ mode: "set", value });
     const checked: unknown = parsed.success && parsed.data.mode === "set" ? parsed.data.value : undefined;
@@ -44,7 +44,7 @@ export class SettingValue {
     return `${FIELD_WORDS[field]}: ${SettingValue.valueWords(field, checked)}`;
   }
 
-  /** What the shape alone allows but no setting holds: a range upside down, a target at or above full scale. */
+  /** Whether the value is sensible beyond its shape: a range runs from low to high, and a target's loudness sits below full scale. */
   private static sensible(field: SettingField, value: unknown): boolean {
     if (field === "vocalRange") {
       const range = value as VocalRange;

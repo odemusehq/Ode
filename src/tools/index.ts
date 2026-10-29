@@ -81,7 +81,7 @@ export class ToolRegistry {
 
   /**
    * The tool's one-line description of a call, with what it touches named from the latest snapshot of the Set:
-   * "Bass · EQ Eight · 1 Frequency A to 200". Undefined for a tool without one, or for input the tool wouldn't accept.
+   * "Bass · EQ Eight · 1 Frequency A to 200". Undefined for a tool without one, or for input the tool would refuse.
    */
   describe(name: string, input: unknown): string | undefined {
     const definition = this.byName.get(name);

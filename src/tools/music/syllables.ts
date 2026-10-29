@@ -9,11 +9,11 @@ export const syllablesTool = defineTool({
   name: "syllables",
   description: [
     "Counts and splits syllables of a word or a lyric line in UK or US English, from pronunciation dictionaries.",
-    "Use it whenever a syllable count matters (fitting a line to a melody or a target length); never count syllables yourself.",
+    "Use it whenever a syllable count matters (fitting a line to a melody or a target length); syllable counts always come from this tool.",
     "Inputs: text (one word or one line); accent (optional, defaults to the Pronunciation setting).",
     "Returns { accent, counts, words }. counts is every possible syllable count of the whole text, ascending (words such as",
     '"every" or "fire" can be sung with more than one count). Each word has text, certain (false = the pronunciation is',
-    "a best guess in this accent and must be marked as not certain), counts, and options: each option is one pronunciation with count,",
+    "a best guess in this accent and must be marked as uncertain), counts, and options: each option is one pronunciation with count,",
     'syllables (the spelling split for display, e.g. ["ev", "ery"]) and ipa (IPA with stress marks, e.g. "ˈɛv.ɹi").',
   ].join(" "),
   input: {
