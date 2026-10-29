@@ -22,11 +22,12 @@ export class ExtensionLauncher {
     if (code !== 0) throw new Error(`Ableton's extensions CLI stopped with code ${code} while packaging ${file}`);
   }
 
+  /** Runs the CLI's script with this Node, which works the same on macOS and Windows (where .bin holds .cmd launchers). */
   private static cli(args: string[]): Promise<number> {
-    const program = join(DevConfig.repoDir, "node_modules", ".bin", "ableton-extensions-cli");
+    const script = join(DevConfig.repoDir, "node_modules", "@ableton-extensions", "cli", "dist", "cli.mjs");
     return new Promise((resolve, reject) => {
-      const child = spawn(program, args, { cwd: ExtensionBuild.outDir, stdio: "inherit" });
-      child.once("error", (error) => reject(new Error(`Could not start Ableton's extensions CLI at ${program}: ${error.message}`)));
+      const child = spawn(process.execPath, [script, ...args], { cwd: ExtensionBuild.outDir, stdio: "inherit" });
+      child.once("error", (error) => reject(new Error(`Ableton's extensions CLI at ${script} stayed closed: ${error.message}`)));
       child.once("exit", (code, signal) => resolve(code ?? (signal === null ? 0 : 1)));
     });
   }
