@@ -26,8 +26,9 @@ export class DeletionChecker implements DeletionCheck {
   async cantBeUndone(tool: string, input: unknown): Promise<boolean> {
     const deletions = DeletionChecker.deletions(tool, input);
     if (deletions.length === 0) return false;
-    const snapshot = await this.reader.read();
-    return deletions.some((stays) => !stays(snapshot));
+    // A Set that stays unreadable makes the deletion wait for Apply, like one whose target is missing.
+    const snapshot = await this.reader.read().catch(() => null);
+    return snapshot === null || deletions.some((stays) => !stays(snapshot));
   }
 
   /** For each deletion in the call, a check that a restore brings back what it removes. */
