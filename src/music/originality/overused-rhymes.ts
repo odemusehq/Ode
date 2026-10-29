@@ -1,4 +1,4 @@
-/** Rhyme pairs listeners have heard so often that they can predict the second word. Labelled, never banned. */
+/** Rhyme pairs listeners have heard so often that they can predict the second word. Labelled and still allowed. */
 const OVERUSED_RHYME_PAIRS: readonly [string, string][] = [
   ["fire", "desire"],
   ["heart", "apart"],

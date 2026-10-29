@@ -54,7 +54,7 @@ export class ToneProfile {
     return this.slope;
   }
 
-  /** True when no band holds any signal. */
+  /** True when every band is silent. */
   get silent(): boolean {
     return this.levels.every((level) => level <= SPECTRUM_FLOOR_DB);
   }

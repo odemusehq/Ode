@@ -64,7 +64,7 @@ function isLikelySilent(word: string, group: VowelGroup): boolean {
 
 /**
  * Matches each vowel sound of a pronunciation with the vowel letters that spell it, so spelling-based
- * accent rules (LOT, THOUGHT, BATH…) can see which letters a vowel came from. Null where no letters match.
+ * accent rules (LOT, THOUGHT, BATH…) can see which letters a vowel came from. Null for a vowel sound without matching letters.
  */
 export function alignVowels(word: string, phonemes: string[]): (VowelGroup | null)[] {
   const groups = vowelGroups(word);

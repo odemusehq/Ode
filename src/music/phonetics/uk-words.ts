@@ -25,14 +25,14 @@ export const BATH_COMPOUND_PREFIXES: readonly string[] = [
 
 /**
  * Words spelled with "rr" after an r-final base keep the NURSE vowel /ɜː/ in British English
- * ("furry", "occurring"), unlike "hurry" or "worry" which have /ʌ/.
+ * ("furry", "occurring"); "hurry" and "worry" have /ʌ/.
  */
 export const NURSE_BEFORE_R_BASES: readonly string[] = [
   "aver", "blur", "concur", "confer", "defer", "demur", "deter", "fur", "incur", "infer", "inter",
   "occur", "prefer", "purr", "recur", "refer", "slur", "spur", "stir", "transfer", "whir",
 ];
 
-/** British pronunciations that no rule derives from the American ones. */
+/** British pronunciations listed one by one, beyond what the rules derive from the American ones. */
 export const UK_EXCEPTIONS: ReadonlyMap<string, readonly string[]> = new Map([
   ["advertisement", ["ə d v ˈɜː t ɪ s m ə n t"]],
   ["again", ["ə g ˈɛ n", "ə g ˈeɪ n"]],

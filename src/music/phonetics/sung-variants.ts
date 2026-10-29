@@ -3,7 +3,7 @@ import { parseIpa } from "./ipa";
 import { isVowel } from "./phoneme";
 import { Stress, type Pronunciation, type StressLevel } from "./pronunciation";
 
-/** Sung forms the rules below do not produce, as IPA with stress marks per accent. */
+/** Sung forms beyond what the rules below produce, as IPA with stress marks per accent. */
 const EXTRA_SUNG_FORMS: ReadonlyMap<string, Readonly<Record<Accent, readonly string[]>>> = new Map([
   ["every", { us: ["ˈɛ v ɹ i", "ˈɛ v ə ɹ i"], uk: ["ˈɛ v ɹ i", "ˈɛ v ə ɹ i"] }],
   ["different", { us: ["d ˈɪ f ɹ ə n t", "d ˈɪ f ə ɹ ə n t"], uk: ["d ˈɪ f ɹ ə n t", "d ˈɪ f ə ɹ ə n t"] }],

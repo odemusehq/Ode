@@ -60,7 +60,7 @@ const STRESS_DIGITS = new Map<string, StressLevel>([
 const COMMENT_MARK = "#";
 const TOKEN = /^([A-Z]+)([012])?$/;
 
-/** Converts a CMU dictionary entry ("F AY1 ER0 # note") to IPA; null when it has an unknown symbol or no vowel. */
+/** Converts a CMU dictionary entry ("F AY1 ER0 # note") to IPA; null when it has an unknown symbol or zero vowels. */
 export function arpabetToPronunciation(code: string): Pronunciation | null {
   const body = code.split(COMMENT_MARK)[0] ?? "";
   const phonemes: string[] = [];

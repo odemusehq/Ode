@@ -23,7 +23,7 @@ export interface FittedLine {
   /** Syllables in the pronunciation that fits the phrase best. */
   syllables: number;
   noteCount: number;
-  /** 0–1 from the prosody check; 1 means no problems. */
+  /** 0–1 from the prosody check; 1 means zero issues. */
   score: number;
   issues: { problem: string; fix: string }[];
 }
@@ -39,7 +39,7 @@ export class MelodyFitter {
     this.checker = new ProsodyChecker(meter);
   }
 
-  /** `notes` are in beats from the start of a stretch `lengthBeats` long; lines without words get no phrase. */
+  /** `notes` are in beats from the start of a stretch `lengthBeats` long; only lines with words get a phrase. */
   fit(lines: LineToSet[], notes: Note[], lengthBeats: number): FittedLine[] {
     const sung = lines.flatMap((line, index) => (line.analysis.words.length > 0 ? [{ line, index }] : []));
     const phrases = this.phrases(melodyLine(notes), sung.length, lengthBeats);

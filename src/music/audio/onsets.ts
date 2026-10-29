@@ -24,7 +24,7 @@ export class OnsetDetector {
     this.options = { ...DEFAULT_ONSET_OPTIONS, ...options };
   }
 
-  /** One flag per frame; frames below gateDb never start a note. */
+  /** One flag per frame; only frames at or above gateDb start a note. */
   detect(levels: Float64Array, gateDb: number): boolean[] {
     const clamped = Array.from(levels, (level) => Math.max(LEVEL_FLOOR_DB, level));
     const rises = clamped.map((level, k) => {

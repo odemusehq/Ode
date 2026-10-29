@@ -11,7 +11,7 @@ export interface CheckIssue {
 }
 
 export interface CheckResult {
-  /** 0–1, 1 = no problems. */
+  /** 0–1, 1 = zero issues. */
   score: number;
   issues: CheckIssue[];
 }

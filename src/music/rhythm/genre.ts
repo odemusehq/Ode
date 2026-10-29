@@ -33,7 +33,7 @@ const GENRE_NAMES: readonly [RegExp, Genre][] = [
 
 export const ALL_GENRES: readonly Genre[] = Object.values(Genre);
 
-/** The genre a name refers to; pop when it is not recognised. */
+/** The genre a name refers to; pop for an unrecognised name. */
 export function parseGenre(name: string | null | undefined): Genre {
   const text = (name ?? "").trim().toLowerCase();
   const exact = ALL_GENRES.find((genre) => genre === text);
@@ -41,7 +41,7 @@ export function parseGenre(name: string | null | undefined): Genre {
   return GENRE_NAMES.find(([pattern]) => pattern.test(text))?.[1] ?? Genre.Pop;
 }
 
-/** Whether a name was recognised as a genre (rather than falling back to pop). */
+/** Whether a name was recognised as a genre; an unrecognised name falls back to pop. */
 export function isKnownGenre(name: string | null | undefined): boolean {
   const text = (name ?? "").trim().toLowerCase();
   return ALL_GENRES.some((genre) => genre === text) || GENRE_NAMES.some(([pattern]) => pattern.test(text));

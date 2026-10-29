@@ -13,7 +13,7 @@ export interface OriginalityReport {
   repeats: string[];
   /** Over-used rhyme pairs at line endings, as "fire / desire". */
   overusedRhymes: string[];
-  /** The code never detects quotations itself; the tool raises this to "possible" from a model check. */
+  /** Quotations are detected by a model alone: the tool raises this to "possible" from a model check. */
   quoteRisk: QuoteRisk;
 }
 
@@ -44,7 +44,7 @@ function linesOf(text: string): string[] {
 
 /**
  * Flags clichés, over-used rhyme pairs and repeats of the artist's own earlier lyrics. These are
- * warnings, not guarantees; quotation of other songs is checked by a model in the tool.
+ * warnings only; quotation of other songs is checked by a model in the tool.
  */
 export class OriginalityChecker {
   check(text: string, pastLyrics: string[]): OriginalityReport {

@@ -45,7 +45,7 @@ interface Candidate {
 
 /**
  * Writes harmony (backing-vocal) lines under or over a lead: thirds and sixths inside the chord,
- * no parallel octaves or fifths with the lead, no crossing, inside the singers' range.
+ * without parallel octaves or fifths against the lead, each line on its own side of the lead, inside the singers' range.
  */
 export class HarmonyVoiceWriter {
   private readonly key: MusicalKey;

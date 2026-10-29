@@ -109,7 +109,7 @@ export class MelodyVarier {
     });
   }
 
-  /** Ends on the tonic if it did not, or on the third or fifth if it did, approached by step and held longer. */
+  /** Resolves an open ending to the tonic, or moves an ending on the tonic to the third or fifth to leave it open, approached by step and held longer. */
   private newEnding(line: Note[], key: MusicalKey): Note[] {
     const notes = line.map(copy);
     const last = notes.at(-1);

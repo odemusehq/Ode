@@ -45,5 +45,5 @@ export function strongerRhyme(a: RhymeResult, b: RhymeResult): RhymeResult {
 
 /** Plain-words name of a kind, for notes. */
 export function describeKind(kind: RhymeKind): string {
-  return kind === RhymeKind.None ? "no rhyme" : `${kind} rhyme`;
+  return kind === RhymeKind.None ? "unrhymed" : `${kind} rhyme`;
 }

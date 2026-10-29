@@ -80,11 +80,11 @@ export class AudioFileDecoder {
       }
       offset = body + size + (size % 2);
     }
-    if (!format || !data) throw new Error(`${name}: not a complete WAV file`);
+    if (!format || !data) throw new Error(`${name}: the WAV file is incomplete`);
     let kind: SampleKind;
     if (format.code === WAV_FLOAT) kind = SampleKind.Float;
     else if (format.code === WAV_PCM) kind = format.bits === 8 ? SampleKind.UnsignedInt : SampleKind.SignedInt;
-    else throw new Error(`${name}: compressed WAV (format ${format.code}) isn't supported; export as PCM WAV`);
+    else throw new Error(`${name}: this WAV is compressed (format ${format.code}) and Ode reads PCM WAV; export as PCM WAV`);
     const frameBytes = (format.bits / 8) * format.channels;
     return {
       channels: format.channels,
@@ -115,7 +115,7 @@ export class AudioFileDecoder {
       }
       offset = body + size + (size % 2);
     }
-    if (!common || soundStart < 0) throw new Error(`${name}: not a complete AIFF file`);
+    if (!common || soundStart < 0) throw new Error(`${name}: the AIFF file is incomplete`);
     const encodings: Record<string, SampleEncoding> = {
       NONE: { kind: SampleKind.SignedInt, bits: common.bits, littleEndian: false },
       sowt: { kind: SampleKind.SignedInt, bits: common.bits, littleEndian: true },
@@ -125,7 +125,7 @@ export class AudioFileDecoder {
       FL64: { kind: SampleKind.Float, bits: 64, littleEndian: false },
     };
     const encoding = encodings[common.compression];
-    if (!encoding) throw new Error(`${name}: compressed AIFF ("${common.compression}") isn't supported; export as WAV`);
+    if (!encoding) throw new Error(`${name}: this AIFF is compressed ("${common.compression}") and Ode reads uncompressed audio; export as WAV`);
     return { channels: common.channels, sampleRate: common.sampleRate, encoding, start: soundStart, frames: common.frames };
   }
 
@@ -162,7 +162,7 @@ export class AudioFileDecoder {
       case 8:
         return view.getInt8(offset) / 0x80;
       default:
-        throw new Error(`${bits}-bit audio isn't supported`);
+        throw new Error(`Ode reads 8-, 16-, 24- and 32-bit audio; this file is ${bits}-bit`);
     }
   }
 
@@ -187,6 +187,6 @@ const decoder = new AudioFileDecoder();
 /** Decodes a WAV or AIFF file into floating-point samples per channel. */
 export async function decode(path: string): Promise<AudioData> {
   const audio = decoder.decode(await readFile(path), path);
-  if (audio.channels.length === 0 || !audio.sampleRate) throw new Error(`${path}: the file holds no samples`);
+  if (audio.channels.length === 0 || !audio.sampleRate) throw new Error(`${path}: the file holds zero samples`);
   return audio;
 }

@@ -9,7 +9,7 @@ const HIGH_PERCENTILE = 0.95;
 /**
  * Loudness range (LRA) in LU from short-term loudness values (3 s windows) per EBU Tech 3342:
  * absolute gate, relative gate, then the spread between the 10th and 95th percentiles.
- * Returns 0 when there are no values to measure.
+ * Returns 0 for an empty list of values.
  */
 export function loudnessRange(shortTerm: readonly number[]): number {
   const loudEnough = shortTerm.filter((value) => value >= ABSOLUTE_GATE_LUFS);

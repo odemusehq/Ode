@@ -50,7 +50,7 @@ export class FrequencyBands {
 
   band(index: number): FrequencyBand {
     const band = this.bands[index];
-    if (!band) throw new RangeError(`no frequency band ${index}`);
+    if (!band) throw new RangeError(`frequency band ${index} is out of range`);
     return band;
   }
 

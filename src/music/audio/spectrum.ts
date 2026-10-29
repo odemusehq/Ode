@@ -9,7 +9,7 @@ import type { AudioData } from "./types";
 const TARGET_BIN_SPACING_HZ = 1.5;
 /** Frames quieter than this are left out of the time average, dBFS (the level of the BS.1770 absolute gate). */
 const SILENT_FRAME_DBFS = -70;
-/** Band levels never read below this, dB (far under the noise floor of 24-bit audio). */
+/** Band levels read at or above this, dB (far under the noise floor of 24-bit audio). */
 export const SPECTRUM_FLOOR_DB = -150;
 /** Recordings shorter than this many samples are too short to analyse. */
 const MIN_FRAME_LENGTH = 256;

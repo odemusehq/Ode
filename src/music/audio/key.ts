@@ -14,7 +14,7 @@ export class KeySnapper {
     this.allowed = new Set(key.intervals.map((interval) => pitchClass(key.root + interval)));
   }
 
-  /** The in-key MIDI note nearest to a fractional pitch; plain rounding when the key has no notes. */
+  /** The in-key MIDI note nearest to a fractional pitch; plain rounding when the key's note set is empty. */
   snap(midi: number): number {
     const nearest = Math.round(midi);
     if (this.allowed.size === 0) return nearest;

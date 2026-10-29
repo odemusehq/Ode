@@ -33,7 +33,7 @@ const PERFECT_FIFTH = 7;
 const EIGHTH = 0.5;
 const SIXTEENTH = 0.25;
 const QUARTER = 1;
-/** Quarter-note beats in a bar of 4/4, the bar length when the caller gives none. */
+/** Quarter-note beats in a bar of 4/4, the bar length when the caller leaves it out. */
 const COMMON_BAR_BEATS = 4;
 /** Syncopated lines play the next chord's root a sixteenth early and add ghost notes after some kicks. */
 const ANTICIPATION_BEATS = 0.25;
@@ -245,7 +245,7 @@ export class BasslineWriter {
 
 const ALL_BASS_STYLES: readonly BassStyle[] = Object.values(BassStyle);
 
-/** The bass style a name refers to; root notes when it is not recognised. */
+/** The bass style a name refers to; root notes for an unrecognised name. */
 export function parseBassStyle(name: string): BassStyle {
   const text = name.trim().toLowerCase();
   return ALL_BASS_STYLES.find((style) => style === text) ?? BassStyle.Root;

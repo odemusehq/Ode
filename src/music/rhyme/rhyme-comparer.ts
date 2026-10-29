@@ -6,7 +6,7 @@ import { nucleiMatch, sequenceSimilarity, vowelSimilarity } from "./phoneme-simi
 import { NO_RHYME, RhymeKind, strongerRhyme, type RhymeResult } from "./rhyme-kind";
 import { lastStressedIndex, lineEndUnits, rhymeTail, type RhymeSyllable, type RhymeUnit } from "./rhyme-unit";
 
-/** Scores per kind (0–1). An identical rhyme sounds the same but adds no new sound, so it scores low. */
+/** Scores per kind (0–1). An identical rhyme repeats the same sound outright, so it scores low. */
 const PERFECT_SCORE = 1;
 const IDENTICAL_SCORE = 0.5;
 const MULTISYLLABIC_BASE = 0.9;
@@ -53,7 +53,7 @@ function result(kind: RhymeKind, score: number): RhymeResult {
  * Labels how two word or line endings rhyme. The rhyming part runs from the last stressed vowel to
  * the end, across word boundaries for line endings: identical tails are a perfect rhyme (identical
  * when the stressed syllable's onset is the same too); vowels matching over several syllables beyond
- * that tail make a multisyllabic rhyme; otherwise near rhyme, assonance, consonance or none.
+ * that tail make a multisyllabic rhyme; otherwise near rhyme, assonance or consonance, and RhymeKind.None for the rest.
  */
 export class RhymeComparer {
   compare(a: RhymeUnit, b: RhymeUnit): RhymeResult {

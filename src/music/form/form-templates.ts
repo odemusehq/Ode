@@ -7,7 +7,7 @@ export interface SectionTemplate {
   phrases: number;
   /** Can be left out when the song runs long. */
   optional?: boolean;
-  /** Name used instead of the section kind ("Hook", "A section"). */
+  /** Name that overrides the section kind ("Hook", "A section"). */
   label?: string;
 }
 

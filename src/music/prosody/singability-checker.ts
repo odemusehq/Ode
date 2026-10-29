@@ -49,7 +49,7 @@ interface SungSyllable {
 
 /**
  * Checks how easy a line is to sing on its melody: open vowels suit long or high notes, closed
- * vowels on high sustained notes are hard, consonant clusters do not fit very short notes, and long
+ * vowels on high sustained notes are hard, consonant clusters crowd very short notes, and long
  * phrases need somewhere to breathe.
  */
 export class SingabilityChecker {
@@ -144,7 +144,7 @@ export class SingabilityChecker {
       const text = setting.syllables[syllable]?.text ?? "";
       issues.add(
         syllable,
-        `There is nowhere to breathe for more than ${PHRASE_WITHOUT_BREATH_BEATS} beats.`,
+        `The line runs more than ${PHRASE_WITHOUT_BREATH_BEATS} beats without a place to breathe.`,
         `Leave a short rest (about half a beat) around "${text}", for example between two phrases of the line.`,
         BREATH_PENALTY,
       );

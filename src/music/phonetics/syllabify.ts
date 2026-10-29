@@ -1,6 +1,6 @@
 import { isVowel } from "./phoneme";
 
-/** Consonant clusters English allows at the start of a syllable (/ŋ/ never starts one). */
+/** Consonant clusters English allows at the start of a syllable (/ŋ/ belongs only in a syllable's coda). */
 const LEGAL_ONSETS: ReadonlySet<string> = new Set([
   "p", "b", "t", "d", "k", "g", "f", "v", "θ", "ð", "s", "z", "ʃ", "ʒ", "h", "tʃ", "dʒ", "m", "n", "l", "ɹ", "w", "j",
   "p l", "p ɹ", "p j", "b l", "b ɹ", "b j", "t ɹ", "t w", "t j", "d ɹ", "d w", "d j",

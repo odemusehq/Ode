@@ -22,7 +22,7 @@ export interface InternalRhyme {
 }
 
 export interface SchemeAnalysis {
-  /** A letter per line ("A", "B"…), "-" for a line with no rhyme partner. */
+  /** A letter per line ("A", "B"…), "-" for a line without a rhyme partner. */
   scheme: string[];
   /** The partner each rhyming line was matched with. */
   pairs: RhymePair[];
@@ -92,7 +92,7 @@ export class RhymeSchemeBuilder {
     return { scheme: this.letters(lines.length, groups), pairs };
   }
 
-  /** Rhymes between words of the same line (content words only, a word never rhyming with itself). */
+  /** Rhymes between words of the same line (content words only, each word rhyming only with other words). */
   internalRhymes(lines: LineAnalysis[]): InternalRhyme[] {
     const found: InternalRhyme[] = [];
     lines.forEach((line, lineIndex) => {
@@ -152,7 +152,7 @@ export function analyzeScheme(lines: string[], accent: Accent): SchemeAnalysis {
   return builder.build(lines.map((line) => analyzer.analyze(line)));
 }
 
-/** Rhyme-scheme letter per line ("A", "B"…; "-" for a line with no partner). */
+/** Rhyme-scheme letter per line ("A", "B"…; "-" for a line without a partner). */
 export function rhymeScheme(lines: string[], accent: Accent): string[] {
   return analyzeScheme(lines, accent).scheme;
 }

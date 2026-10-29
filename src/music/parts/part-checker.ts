@@ -43,14 +43,14 @@ export interface PartCheck {
   lock?: { onsets: number; together: number; apart: number[]; targetsWithoutNote: number[] };
   pads?: { missing: { pitch: string; midi: number; notes: number }[] };
   leaps?: { largest: number; over: { from: PlacedNote; to: PlacedNote; semitones: number }[] };
-  /** True when every check that ran found nothing. */
+  /** True when every check that ran came back clean. */
   passed: boolean;
 }
 
 /**
  * Checks the notes of a part (a melody, bassline, chord part or drum pattern): notes outside the key or
- * the range, notes on strong beats that aren't in the chord, onsets that don't line up with another part,
- * notes with no Drum Rack pad, and wide leaps.
+ * the range, notes on strong beats outside the chord, onsets apart from another part's onsets,
+ * notes without a Drum Rack pad, and wide leaps.
  */
 export class PartChecker {
   constructor(private readonly meter: Meter) {}

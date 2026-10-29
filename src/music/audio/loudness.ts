@@ -21,7 +21,7 @@ const MOMENTARY_STEPS = Math.round(MOMENTARY_SECONDS / STEP_SECONDS);
 const SHORT_TERM_STEPS = Math.round(SHORT_TERM_SECONDS / STEP_SECONDS);
 
 export interface LoudnessReading {
-  /** Integrated loudness, LUFS; −Infinity when no block passes the gates. */
+  /** Integrated loudness, LUFS; −Infinity when the gates remove every block. */
   integrated: number;
   /** Highest momentary loudness (400 ms window), LUFS. */
   momentaryMax: number;
@@ -37,7 +37,7 @@ function toLufs(meanSquare: number): number {
 }
 
 /**
- * BS.1770-4 channel weights by channel count: mono and stereo channels weigh 1 (mono gets no +3 dB);
+ * BS.1770-4 channel weights by channel count: mono and stereo channels weigh 1 (mono stays at 1, without a +3 dB lift);
  * four channels are L, R, Ls, Rs; five are L, R, C, Ls, Rs; six are L, R, C, LFE (left out), Ls, Rs.
  */
 function channelWeights(channelCount: number): number[] {

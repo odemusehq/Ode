@@ -19,7 +19,7 @@ export class Humanizer {
     private readonly tight: boolean,
   ) {}
 
-  /** Start time with swing on off-beat sixteenths and a little timing variation (never before 0). */
+  /** Start time with swing on off-beat sixteenths and a little timing variation (always at 0 or later). */
   time(start: number): number {
     const step = start / STEP_BEATS;
     const offBeatSixteenth = Math.abs(step - Math.round(step)) < STEP_TOLERANCE && Math.round(step) % 2 === 1;

@@ -11,7 +11,7 @@ const OVERSAMPLING = 4;
 const TAPS_PER_PHASE = 16;
 /** Kaiser window shape for the interpolation filter: about 54 dB of image rejection. */
 const KAISER_BETA = 5;
-/** Samples per block when skipping blocks that cannot raise the peak. */
+/** Samples per block when skipping blocks too quiet to raise the peak. */
 const BLOCK_LENGTH = 1024;
 /** Branch tap j multiplies the input sample LEAD − j positions after the current one. */
 const LEAD = TAPS_PER_PHASE / 2;

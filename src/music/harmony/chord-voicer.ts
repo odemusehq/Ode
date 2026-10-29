@@ -3,7 +3,7 @@ import type { ChordEvent } from "../../shared/song";
 import { ChordSymbol, ChordTone } from "./chord-symbol";
 import { fitByOctaves, pitchesOfClass, rangeCentre, type PitchRange } from "./pitch-range";
 
-/** Keyboard comping range for the upper voices (E3 to G5), used when no register is given. */
+/** Keyboard comping range for the upper voices (E3 to G5), used when the register is left out. */
 export const DEFAULT_VOICING_REGISTER: PitchRange = { low: 52, high: 79 };
 
 export interface VoicingOptions {
@@ -28,7 +28,7 @@ const RICH_CHORD_TONES = 4;
 /** Upper voices stay within an octave of each other and within two octaves overall. */
 const MAX_ADJACENT_GAP = 12;
 const MAX_SPREAD = 24;
-/** The bass sits in the octave and a half below the register, never below E1 (MIDI 28). */
+/** The bass sits in the octave and a half below the register, at E1 (MIDI 28) or above. */
 const BASS_SPAN = 17;
 const LOWEST_BASS = 28;
 /** Close intervals below C3 (MIDI 48) sound muddy. */
@@ -66,7 +66,7 @@ interface ParsedEvent {
 
 /**
  * Voices chords for keys or pads: 3–4 upper voices inside a register with smooth voice leading
- * (least total movement, no muddy low clusters, few parallel fifths and octaves), and a bass line
+ * (least total movement, wide spacing low down, few parallel fifths and octaves), and a bass line
  * that uses roots and inversions to move smoothly.
  */
 export class ChordVoicer {

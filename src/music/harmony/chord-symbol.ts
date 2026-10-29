@@ -30,7 +30,7 @@ const DIMINISHED_SEVENTH = 9;
 const MINOR_SEVENTH = 10;
 const MAJOR_SEVENTH = 11;
 
-/** Common ways of writing chord symbols that tonal does not read, rewritten to ones it does. */
+/** Common ways of writing chord symbols, rewritten to the forms tonal reads. */
 const SYMBOL_REWRITES: readonly [RegExp, string][] = [
   [/[()]/g, ""],
   [/♭/g, "b"],
@@ -116,7 +116,7 @@ export class ChordSymbol {
     return this.tones.find((tone) => tone.pitchClass === modulo(pitchClass))?.role;
   }
 
-  /** The chord's spelling of a pitch class, or a sharp name when it is not in the chord. */
+  /** The chord's spelling of a pitch class, or a sharp name when it is outside the chord. */
   nameOf(pitchClass: number): string {
     return this.tones.find((tone) => tone.pitchClass === modulo(pitchClass))?.name ?? nameOfPitchClass(modulo(pitchClass));
   }

@@ -124,7 +124,7 @@ export class HumTranscriber {
     };
   }
 
-  /** Joins a note to the previous one when they share a pitch, the gap is tiny and it has no attack of its own. */
+  /** Joins a note to the previous one when they share a pitch, the gap is tiny and it starts without an attack of its own. */
   private joinFragments(notes: readonly PitchedNote[]): PitchedNote[] {
     const joined: PitchedNote[] = [];
     for (const note of notes) {

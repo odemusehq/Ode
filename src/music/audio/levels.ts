@@ -127,7 +127,7 @@ export class LevelChecker {
         findings.push({
           track: track.name,
           issue: LevelIssue.MuchLouder,
-          advice: `${track.name} is ${difference.toFixed(0)} LU louder than the middle of the other tracks before its fader: check it isn't swamping the mix, and trim its gain rather than pulling every other fader up.`,
+          advice: `${track.name} is ${difference.toFixed(0)} LU louder than the middle of the other tracks before its fader: check that it leaves room for the rest of the mix, and trim its gain while every other fader stays where it is.`,
         });
       } else if (-difference > this.options.quieterLu) {
         findings.push({

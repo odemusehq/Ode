@@ -19,7 +19,7 @@ export interface MaskingOptions {
   strongWithinDb: number;
   /** Two tracks compete in a band when their levels there are within this many dB of each other. */
   levelMatchDb: number;
-  /** Bands quieter than this never count, dB. */
+  /** Only bands at or above this count, dB. */
   floorDb: number;
   /** Most pairs reported, worst first. */
   maxPairs: number;
@@ -32,7 +32,7 @@ export const DEFAULT_MASKING_OPTIONS: Readonly<MaskingOptions> = {
   maxPairs: 8,
 };
 
-/** Below this the low end is shared by sidechaining or EQ, never by panning, Hz. */
+/** Below this the low end is shared by sidechaining or EQ alone, Hz. */
 const LOW_END_LIMIT_HZ = 120;
 /** Where a vocal's body and intelligibility sit; other tracks make room for it here, Hz. */
 const VOCAL_RANGE = { low: 200, high: 5000 };
@@ -87,7 +87,7 @@ export class MaskingDetector {
       .map((entry) => entry.pair);
   }
 
-  /** How far a band sits below the track's loudest band, or null when the band is not strong for it. */
+  /** How far a band sits below the track's loudest band, or null when the band is weak for it. */
   private gap(profile: TrackProfile, band: number): number | null {
     const level = profile.levels[band];
     if (level === undefined || level < this.options.floorDb) return null;

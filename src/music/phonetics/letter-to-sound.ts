@@ -69,7 +69,7 @@ export class LetterToSound {
     else if (REDUCIBLE.has(first) && segment.length !== VowelLength.Long) segment.phonemes = ["ə", ...segment.phonemes.slice(1)];
   }
 
-  /** Words with no vowel letters ("hmm", "shh") are sung on a syllabic consonant, written with ə. */
+  /** Words without vowel letters ("hmm", "shh") are sung on a syllabic consonant, written with ə. */
   private syllabicConsonant(segments: Segment[]): Pronunciation {
     const consonants = segments.flatMap((segment) => segment.phonemes);
     const last = consonants.pop();

@@ -18,7 +18,7 @@ function vowelCount(text: string): number {
 /**
  * Splits a word's spelling into a given number of syllables for display under notes. Starts from
  * dictionary hyphenation (en-us or en-gb), then merges or splits pieces to match the sung syllable
- * count. Letters are never lost or reordered; a piece is empty only when the word has fewer letters
+ * count. Every letter is kept, in order; a piece is empty only when the word has fewer letters
  * than syllables.
  */
 export class SyllableSpeller {
@@ -72,7 +72,7 @@ export class SyllableSpeller {
     pieces.splice(best, 2, (pieces[best] ?? "") + (pieces[best + 1] ?? ""));
   }
 
-  /** Splits the piece with the most vowel groups at its most natural point; false if nothing can be split. */
+  /** Splits the piece with the most vowel groups at its most natural point; true when it found a piece to split. */
   private splitBest(pieces: string[]): boolean {
     let best = -1;
     let bestScore = Number.NEGATIVE_INFINITY;

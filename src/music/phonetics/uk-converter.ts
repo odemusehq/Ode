@@ -20,7 +20,7 @@ const BEFORE_FINAL_R = new Map<string, string>([
   ["ʌ", "ɜː"],
 ]);
 
-/** Consonants after a stressed /æ/ where British English often has the BATH vowel instead. */
+/** Consonants after a stressed /æ/ where British English often has the BATH vowel. */
 const BATH_FRICATIVES = new Set(["f", "θ", "s"]);
 const BATH_AFTER_N = new Set(["s", "t", "tʃ"]);
 const YOD_CONSONANTS = new Set(["t", "d", "n"]);
@@ -35,7 +35,7 @@ interface VowelContext {
   stress: StressLevel;
   group: VowelGroup | null;
   next: string | undefined;
-  /** The /r/ after this vowel ends the syllable (it is not followed by a vowel). */
+  /** The /r/ after this vowel ends the syllable (a consonant or the word's end follows it). */
   beforeFinalR: boolean;
   previous: string | undefined;
   following: string[];
@@ -93,7 +93,7 @@ export class UkConverter {
     return converted;
   }
 
-  /** An /r/ after a vowel and not before one is silent in non-rhotic accents. */
+  /** An /r/ after a vowel and before a consonant or the word's end is silent in non-rhotic accents. */
   private endsSyllable(phonemes: string[], index: number): boolean {
     const before = phonemes[index - 1];
     const after = phonemes[index + 1];

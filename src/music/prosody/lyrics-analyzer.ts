@@ -48,7 +48,7 @@ export class LyricsAnalyzer {
       return [...words].map((word) => ({
         line: index,
         kind: "uncertain" as const,
-        message: `The pronunciation of "${word}" is not certain in this accent (no dictionary entry settles it), so its syllables, stress and rhymes are a best guess.`,
+        message: `The pronunciation of "${word}" is uncertain in this accent (the dictionaries leave it open), so its syllables, stress and rhymes are a best guess.`,
       }));
     });
   }

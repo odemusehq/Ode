@@ -11,7 +11,7 @@ export interface RhymeSuggestion {
   score: number;
   /** Among the most frequent English words. */
   common: boolean;
-  /** One of the over-used rhyme pairs with the query word (labelled, not banned). */
+  /** One of the over-used rhyme pairs with the query word (labelled and still allowed). */
   overused: boolean;
 }
 
@@ -31,7 +31,7 @@ const DEFAULT_KINDS: readonly RhymeKind[] = [
 ];
 /** Candidates read from each loose bucket (same vowels, same ending), common words first. */
 const MAX_CANDIDATES_PER_BUCKET = 3000;
-/** Plain words only: no contractions, abbreviations or hyphenated forms. */
+/** Plain words only: letters a to z, without contractions, abbreviations or hyphenated forms. */
 const SUGGESTION_WORD = /^[a-z]+$/;
 
 interface UnitKeys {

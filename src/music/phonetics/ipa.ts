@@ -18,7 +18,7 @@ const SYMBOL_REPLACEMENTS = new Map<string, string>([
 
 /**
  * Parses space-separated IPA with stress marks on vowels ("ɹ ˈeɪ n b ˌəʊ").
- * Returns null when a symbol is unknown or the text has no vowel.
+ * Returns null when a symbol is unknown or the text has zero vowels.
  */
 export function parseIpa(text: string, certain = true): Pronunciation | null {
   const phonemes: string[] = [];

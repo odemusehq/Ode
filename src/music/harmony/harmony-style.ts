@@ -23,7 +23,7 @@ export enum HarmonyStyle {
 export interface StyleProfile {
   /** Cost of using a chord of each family (lower is more typical of the style). */
   familyCost: Readonly<Record<ChordFamily, number>>;
-  /** Cost of a 9th, 11th or 13th in the melody over a chord that does not contain it. */
+  /** Cost of a 9th, 11th or 13th in the melody over a chord without that tension. */
   tensionCost: number;
   /** Cost of moving from a dominant back to a predominant chord. */
   retrogressionCost: number;
