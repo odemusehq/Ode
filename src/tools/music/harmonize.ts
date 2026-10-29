@@ -42,7 +42,7 @@ export const harmonizeTool = defineTool({
       k: input.k,
       style: input.style ?? defaults.genre ?? undefined,
       harmonicRhythmBeats: input.harmonicRhythmBeats,
-      beatsPerBar: quarterBeatsPerBar(input.timeSignature ?? defaults.timeSignature),
+      signature: input.timeSignature ?? defaults.timeSignature,
       favour: input.favour,
     }).progressions(input.melody);
     return { key: { ...key.spec, name: key.label }, progressions };

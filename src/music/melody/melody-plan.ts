@@ -1,3 +1,4 @@
+import type { TimeSignature } from "../../shared/live-ops";
 import type { KeySpec } from "../harmony/musical-key";
 
 export enum Contour {
@@ -25,8 +26,8 @@ export enum MelodyVariation {
 /** What the model describes in words; the code writes the notes. */
 export interface MelodyPlan {
   bars: number;
-  /** Quarter-note beats per bar (4 in 4/4, 3 in 3/4). */
-  beatsPerBar: number;
+  /** The meter, so 6/8 keeps its two dotted-quarter beats (3/4 has three quarter-note beats). */
+  signature: TimeSignature;
   contour: Contour;
   /** Where in the singer's range the melody sits; a chorus usually sits higher than its verse. */
   register: Register;

@@ -23,7 +23,6 @@ const REGISTER_POSITION: Readonly<Record<Register, number>> = {
 const CONTOUR_SPAN_SHARE = 0.35;
 const DEFAULT_MOTIF_BARS = 2;
 /** Plans count beats in quarter notes. */
-const QUARTER_NOTE = 4;
 /** A range narrower than a perfect fourth is widened around its middle. */
 const NARROWEST_RANGE = 5;
 const BASE_VELOCITY = 80;
@@ -47,7 +46,7 @@ export class MelodyWriter {
     chords: ChordEvent[],
     range: PitchRange,
   ) {
-    this.meter = new Meter(plan.beatsPerBar, QUARTER_NOTE);
+    this.meter = new Meter(plan.signature.numerator, plan.signature.denominator);
     this.key = plan.key ? MusicalKey.from(plan.key) : new KeyFinder().find(chords);
     this.chords = new ChordTimeline(chords);
     this.random = new SeededRandom(plan.seed ?? DEFAULT_SEED);
@@ -55,7 +54,7 @@ export class MelodyWriter {
   }
 
   write(lyric?: LineAnalysis): Note[] {
-    const totalBeats = Math.max(1, this.plan.bars) * this.plan.beatsPerBar;
+    const totalBeats = Math.max(1, this.plan.bars) * this.meter.barLength;
     const density = clamp(this.plan.density, MIN_DENSITY, MAX_DENSITY);
     const onsets = this.rhythm(lyric, totalBeats, density);
     const width = this.range.high - this.range.low;
@@ -89,7 +88,7 @@ export class MelodyWriter {
     }
     const bars = Math.max(1, this.plan.bars);
     const motifBars = clamp(Math.round(this.plan.motifBars ?? Math.min(DEFAULT_MOTIF_BARS, bars)), 1, bars);
-    return rhythm.forMotif(totalBeats, motifBars * this.plan.beatsPerBar, density);
+    return rhythm.forMotif(totalBeats, motifBars * this.meter.barLength, density);
   }
 
   /** The scale steps of the motif's first statement, when the motif repeats. */

@@ -33,8 +33,8 @@ const PERFECT_FIFTH = 7;
 const EIGHTH = 0.5;
 const SIXTEENTH = 0.25;
 const QUARTER = 1;
-const HALF_BAR = 2;
-const BEATS_PER_BAR = 4;
+/** Quarter-note beats in a bar of 4/4, the bar length when the caller gives none. */
+const COMMON_BAR_BEATS = 4;
 /** Syncopated lines play the next chord's root a sixteenth early and add ghost notes after some kicks. */
 const ANTICIPATION_BEATS = 0.25;
 const GHOST_CHANCE = 0.3;
@@ -59,6 +59,8 @@ export class BasslineWriter {
   constructor(
     private readonly style: BassStyle,
     private readonly random: SeededRandom,
+    /** Quarter-note beats per bar of the song's meter. */
+    private readonly barBeats: number = COMMON_BAR_BEATS,
   ) {
     const sub = style === BassStyle.EightOhEight;
     this.range = sub ? SUB_BASS_RANGE : BASS_RANGE;
@@ -124,8 +126,9 @@ export class BasslineWriter {
     const fifth = root + PERFECT_FIFTH <= this.range.high ? root + PERFECT_FIFTH : root - (OCTAVE - PERFECT_FIFTH);
     const notes: Note[] = [];
     let index = 0;
-    for (let start = event.start; start < event.end - EPSILON; start += HALF_BAR) {
-      const length = Math.min(HALF_BAR, event.end - start);
+    const halfBar = this.barBeats / 2;
+    for (let start = event.start; start < event.end - EPSILON; start += halfBar) {
+      const length = Math.min(halfBar, event.end - start);
       notes.push({ pitch: index % 2 === 0 ? root : fifth, start, duration: length * LEGATO, velocity: index % 2 === 0 ? ON_KICK_VELOCITY : OFF_KICK_VELOCITY });
       index += 1;
     }
@@ -223,8 +226,8 @@ export class BasslineWriter {
   }
 
   private kicksInBar(kicks: number[], time: number): number {
-    const barStart = Math.floor(time / BEATS_PER_BAR) * BEATS_PER_BAR;
-    return kicks.filter((kick) => kick >= barStart && kick < barStart + BEATS_PER_BAR).length;
+    const barStart = Math.floor(time / this.barBeats) * this.barBeats;
+    return kicks.filter((kick) => kick >= barStart && kick < barStart + this.barBeats).length;
   }
 
   /** The chord's bass note (the root, or the slash bass) close to the previous bass note. */
@@ -249,6 +252,6 @@ export function parseBassStyle(name: string): BassStyle {
 }
 
 /** A bassline for chords that locks with the kick drum notes, in one of the bass styles. */
-export function bassline(chords: ChordEvent[], kick: Note[], style: BassStyle | string, seed: number = DEFAULT_SEED): Note[] {
-  return new BasslineWriter(parseBassStyle(style), new SeededRandom(seed)).write(chords, kick);
+export function bassline(chords: ChordEvent[], kick: Note[], style: BassStyle | string, seed: number = DEFAULT_SEED, barBeats: number = COMMON_BAR_BEATS): Note[] {
+  return new BasslineWriter(parseBassStyle(style), new SeededRandom(seed), barBeats).write(chords, kick);
 }

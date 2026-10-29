@@ -1,4 +1,5 @@
 import type { Note } from "../../shared/live";
+import type { TimeSignature } from "../../shared/live-ops";
 import type { ChordEvent } from "../../shared/song";
 import { melodyLine } from "../prosody/melody-line";
 import { Meter } from "../prosody/meter";
@@ -14,7 +15,8 @@ export interface HarmonizeOptions {
   style?: string;
   /** Beats per chord; defaults to one chord per bar. */
   harmonicRhythmBeats?: number;
-  beatsPerBar?: number;
+  /** The meter; 4/4 when left out. */
+  signature?: TimeSignature;
   /** Bars per phrase, for cadences. */
   phraseBars?: number;
   /** Roman numerals or chord symbols the artist likes. */
@@ -28,13 +30,11 @@ export interface Progression {
 
 const DEFAULT_K = 3;
 const MAX_K = 8;
-const DEFAULT_BEATS_PER_BAR = 4;
 const DEFAULT_PHRASE_BARS = 4;
 /** Every melody note counts at least this much, plus its metrical weight. */
 const BASE_NOTE_WEIGHT = 0.5;
 const PITCH_CLASSES = 12;
 /** Live positions are in quarter-note beats. */
-const QUARTER_NOTE = 4;
 const EPSILON = 1e-9;
 
 interface PathEntry {
@@ -53,16 +53,16 @@ export class Harmonizer {
   private readonly scorer: ProgressionScorer;
   private readonly k: number;
   private readonly slotBeats: number;
-  private readonly beatsPerBar: number;
+  private readonly meter: Meter;
   private readonly phraseBeats: number;
 
   constructor(key: MusicalKey, options: HarmonizeOptions = {}) {
     this.candidates = new ChordVocabulary(key).build();
     this.scorer = new ProgressionScorer(styleProfile(harmonyStyle(options.style)), new Set(options.favour ?? []));
     this.k = Math.min(MAX_K, Math.max(1, Math.round(options.k ?? DEFAULT_K)));
-    this.beatsPerBar = options.beatsPerBar ?? DEFAULT_BEATS_PER_BAR;
-    this.slotBeats = options.harmonicRhythmBeats && options.harmonicRhythmBeats > 0 ? options.harmonicRhythmBeats : this.beatsPerBar;
-    this.phraseBeats = (options.phraseBars ?? DEFAULT_PHRASE_BARS) * this.beatsPerBar;
+    this.meter = new Meter(options.signature?.numerator, options.signature?.denominator);
+    this.slotBeats = options.harmonicRhythmBeats && options.harmonicRhythmBeats > 0 ? options.harmonicRhythmBeats : this.meter.barLength;
+    this.phraseBeats = (options.phraseBars ?? DEFAULT_PHRASE_BARS) * this.meter.barLength;
   }
 
   progressions(melody: Note[]): Progression[] {
@@ -108,7 +108,7 @@ export class Harmonizer {
   }
 
   private slotNotes(line: Note[], slots: number): SlotNote[][] {
-    const meter = new Meter(this.beatsPerBar, QUARTER_NOTE);
+    const { meter } = this;
     const perSlot: SlotNote[][] = Array.from({ length: slots }, () => []);
     for (const note of line) {
       const noteEnd = note.start + note.duration;

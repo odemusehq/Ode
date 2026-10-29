@@ -154,6 +154,6 @@ export class HarmonyVoiceWriter {
 }
 
 /** Harmony lines for a lead melody over chords: one note list per part (1–3 parts). */
-export function harmonyLines(melody: Note[], chords: ChordEvent[], parts: number, range?: PitchRange): Note[][] {
-  return new HarmonyVoiceWriter(chords, melody).write(melody, parts, range);
+export function harmonyLines(melody: Note[], chords: ChordEvent[], parts: number, range?: PitchRange, meter: Meter = new Meter()): Note[][] {
+  return new HarmonyVoiceWriter(chords, melody, meter).write(melody, parts, range);
 }

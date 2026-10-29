@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Meter } from "../../music/prosody/meter";
 import { harmonyLines } from "../../music/vocals/harmony-lines";
 import { defineTool } from "../define";
 import { ChordsInput, NotesInput, RangeInput } from "./schemas";
@@ -26,8 +27,10 @@ export const harmonyVocalsWriteTool = defineTool({
   },
   changes: "none",
   async run({ melody, chords, parts, range }, ctx) {
-    const limits = range ?? (await songDefaults(ctx)).vocalRange ?? undefined;
-    const lines = harmonyLines(melody, chords, parts, limits);
+    const defaults = await songDefaults(ctx);
+    const limits = range ?? defaults.vocalRange ?? undefined;
+    const meter = new Meter(defaults.timeSignature.numerator, defaults.timeSignature.denominator);
+    const lines = harmonyLines(melody, chords, parts, limits, meter);
     return { parts: lines.map((notes, index) => ({ name: PART_NAMES[index] ?? `part ${index + 1}`, notes })) };
   },
 });

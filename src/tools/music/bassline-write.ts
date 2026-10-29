@@ -2,6 +2,7 @@ import { z } from "zod";
 import { bassline, BassStyle } from "../../music/rhythm/bassline-writer";
 import { defineTool } from "../define";
 import { ChordsInput, NotesInput, SeedInput } from "./schemas";
+import { quarterBeatsPerBar, songDefaults } from "./song-defaults";
 
 export const basslineWriteTool = defineTool({
   name: "bassline_write",
@@ -23,7 +24,8 @@ export const basslineWriteTool = defineTool({
     seed: SeedInput,
   },
   changes: "none",
-  async run({ chords, kick, style, seed }) {
-    return { style, notes: bassline(chords, kick ?? [], style, seed) };
+  async run({ chords, kick, style, seed }, ctx) {
+    const barBeats = quarterBeatsPerBar((await songDefaults(ctx)).timeSignature);
+    return { style, notes: bassline(chords, kick ?? [], style, seed, barBeats) };
   },
 });

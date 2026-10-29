@@ -57,13 +57,14 @@ export const melodyWriteTool = defineTool({
   changes: "none",
   async run(input, ctx) {
     const defaults = await songDefaults(ctx);
-    const beatsPerBar = quarterBeatsPerBar(input.timeSignature ?? defaults.timeSignature);
+    const signature = input.timeSignature ?? defaults.timeSignature;
+    const beatsPerBar = quarterBeatsPerBar(signature);
     const range = input.range ?? defaults.vocalRange ?? TYPICAL_VOCAL_RANGE;
     const chords = input.chords ?? [];
     const key = input.key ?? defaults.key ?? new KeyFinder().find(chords).spec;
     const plan: MelodyPlan = {
       bars: input.bars,
-      beatsPerBar,
+      signature,
       contour: input.contour,
       register: input.register,
       density: input.density,

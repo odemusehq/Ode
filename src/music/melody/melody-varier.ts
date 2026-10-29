@@ -174,6 +174,6 @@ export class MelodyVarier {
 }
 
 /** A variation of a melody: "rhythm", "contour", "ending" or "ornament". */
-export function varyMelody(notes: Note[], how: MelodyVariation, seed: number = DEFAULT_SEED): Note[] {
-  return new MelodyVarier(new SeededRandom(seed)).vary(notes, how);
+export function varyMelody(notes: Note[], how: MelodyVariation, seed: number = DEFAULT_SEED, meter: Meter = new Meter()): Note[] {
+  return new MelodyVarier(new SeededRandom(seed), meter).vary(notes, how);
 }
