@@ -21,7 +21,8 @@ export class ConversationLog {
   }
 
   async add(request: string, reply: string): Promise<void> {
-    await this.file.update((exchanges) => [...exchanges, { request, reply, at: new Date().toISOString() }].slice(-this.keep));
+    // slice(-0) would keep everything, so a limit of 0 keeps an empty list.
+    await this.file.update((exchanges) => (this.keep > 0 ? [...exchanges, { request, reply, at: new Date().toISOString() }].slice(-this.keep) : []));
   }
 }
 
