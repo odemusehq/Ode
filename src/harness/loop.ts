@@ -40,7 +40,8 @@ const QUIET: LoopEvents = {
 };
 
 export interface LoopDeps {
-  services: Services;
+  /** Where the chat model for each kind of agent comes from. */
+  services: Pick<Services, "chat">;
   registry: ToolRegistry;
   skills: SkillLibrary;
   labels: ToolLabels;
