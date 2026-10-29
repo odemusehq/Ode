@@ -46,7 +46,15 @@ export class ProviderCatalog {
 
   /** The chat providers as the Settings dialog shows them. */
   chatOptions(): ChatProviderOption[] {
-    return this.file.chat.map(({ id, name, keyHint, modelHint, listsModels, models }) => ({ id, name, keyHint, modelHint, listsModels, models: [...models] }));
+    return this.file.chat.map(({ id, name, keyHint, modelHint, listsModels, servesMetaModels, models }) => ({
+      id,
+      name,
+      keyHint,
+      modelHint,
+      listsModels,
+      servesMetaModels,
+      models: [...models],
+    }));
   }
 
   serviceOptions(): Record<OptionalRole, ServiceProviderOption[]> {

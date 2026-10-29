@@ -78,6 +78,8 @@ export interface ChatProviderOption {
   modelHint?: string;
   /** The provider lists the musician's own models once the key is in, as Modal does with its endpoints. */
   listsModels?: boolean;
+  /** The provider's key also reaches Meta's models for listening, transcription and cover art. */
+  servesMetaModels?: boolean;
   models: ChatModelOption[];
 }
 

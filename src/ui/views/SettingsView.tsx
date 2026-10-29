@@ -69,6 +69,8 @@ export function SettingsView() {
   const chosen = loaded?.providers.find((each) => each.id === provider);
   const savedKeyApplies = loaded?.settings.provider === provider && loaded.settings.keySet;
   const listsModels = chosen?.listsModels ?? false;
+  // A saved key stays with its own provider, so another provider waits for its key.
+  const needsKey = !savedKeyApplies && !key;
 
   // Modal lists the musician's own endpoints: ask for them once a key is there, typed or saved.
   useEffect(() => {
@@ -77,10 +79,12 @@ export function SettingsView() {
       return;
     }
     let active = true;
+    setListed([]);
     const timer = window.setTimeout(() => {
       api.listModels({ provider, key: key || undefined }).then(
         (found) => {
           if (!active) return;
+          setProblem(null);
           setListed(found);
           setModel((current) => (found.some((each) => each.id === current) ? current : (found[0]?.id ?? "")));
         },
@@ -94,7 +98,18 @@ export function SettingsView() {
   }, [api, provider, key, savedKeyApplies, listsModels]);
 
   if (!loaded || !services) {
-    return <div className="settings settings--reading">{problem ? <Notice tone={Tone.Danger}>{problem}</Notice> : "Reading Settings…"}</div>;
+    return (
+      <div className="settings settings--reading">
+        {problem ? <Notice tone={Tone.Danger}>{problem}</Notice> : "Reading Settings…"}
+        {LiveDialog.hosted && (
+          <div className="settings__actions">
+            <Button variant={ButtonVariant.Secondary} onClick={() => LiveDialog.close(DialogResult.Cancelled)}>
+              Cancel
+            </Button>
+          </div>
+        )}
+      </div>
+    );
   }
 
   const models = listsModels ? listed : (chosen?.models ?? []);
@@ -108,8 +123,12 @@ export function SettingsView() {
     setModel(id === loaded.settings.provider ? loaded.settings.model : (next?.models[0]?.id ?? ""));
   };
 
+  /** A saved key belongs to the service's provider and address: changing either asks for the key again. */
   const editService = (role: OptionalRole, change: Partial<ServiceDraft>) => {
-    setServices({ ...services, [role]: { ...services[role], ...change } });
+    const next = { ...services[role], ...change };
+    const saved = loaded.settings.services[role];
+    const keySet = saved !== undefined && saved.provider === next.provider && saved.baseUrl === next.baseUrl && saved.keySet;
+    setServices({ ...services, [role]: { ...next, keySet } });
   };
 
   const save = async () => {
@@ -170,13 +189,13 @@ export function SettingsView() {
           type="password"
           autoComplete="off"
           value={key}
-          placeholder={savedKeyApplies ? "Saved" : ""}
+          placeholder={savedKeyApplies ? "Saved" : "Needed for this provider"}
           onChange={(event) => setKey(event.target.value.trim())}
         />
         {chosen && <span className="settings__hint">{chosen.keyHint}</span>}
       </label>
 
-      {provider !== "meta" && (
+      {!chosen?.servesMetaModels && (
         <label className="settings__field">
           <span className="settings__label">Meta key for cover art, transcription and listening</span>
           <TextInput
@@ -208,9 +227,20 @@ export function SettingsView() {
               />
               {draft.provider && (
                 <>
-                  <TextInput placeholder="Address" value={draft.baseUrl} onChange={(event) => editService(role, { baseUrl: event.target.value.trim() })} />
-                  <TextInput placeholder="Model" value={draft.model} onChange={(event) => editService(role, { model: event.target.value.trim() })} />
                   <TextInput
+                    aria-label={`${SERVICE_LABELS[role]}: address`}
+                    placeholder="Address"
+                    value={draft.baseUrl}
+                    onChange={(event) => editService(role, { baseUrl: event.target.value.trim() })}
+                  />
+                  <TextInput
+                    aria-label={`${SERVICE_LABELS[role]}: model`}
+                    placeholder="Model"
+                    value={draft.model}
+                    onChange={(event) => editService(role, { model: event.target.value.trim() })}
+                  />
+                  <TextInput
+                    aria-label={`${SERVICE_LABELS[role]}: key`}
                     type="password"
                     autoComplete="off"
                     placeholder={draft.keySet ? "Key saved" : "Key"}
@@ -232,7 +262,7 @@ export function SettingsView() {
             Cancel
           </Button>
         )}
-        <Button type="submit" variant={ButtonVariant.Primary} disabled={saving || !provider || !model}>
+        <Button type="submit" variant={ButtonVariant.Primary} disabled={saving || !provider || !model || needsKey}>
           Save
         </Button>
       </div>

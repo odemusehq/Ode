@@ -4,6 +4,7 @@
       "id": "meta",
       "name": "Meta",
       "baseUrl": "https://api.meta.ai/v1",
+      "servesMetaModels": true,
       "keyHint": "Your API key from dev.meta.ai",
       "models": [
         { "id": "muse-wonder-1.0", "name": "Muse Wonder 1.0 (preview)" },
