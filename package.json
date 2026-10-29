@@ -11,15 +11,15 @@
   "scripts": {
     "build": "npm run build:ui && npm run build:extension",
     "build:ui": "vite build",
-    "build:extension": "tsx src/live/extension/build.ts",
-    "live:extension": "tsx src/live/extension/run.ts",
+    "build:extension": "node --import tsx src/live/extension/build.ts",
+    "live:extension": "node --import tsx src/live/extension/run.ts",
     "typecheck": "tsc --noEmit",
     "test": "node --test --import tsx \"src/tests/**/*.test.ts\"",
-    "test:skills": "tsx src/tests/skill-scenarios.ts",
-    "release:package": "tsx src/packaging/package.ts",
-    "release:notes": "tsx src/packaging/notes.ts",
+    "test:skills": "node --import tsx src/tests/skill-scenarios.ts",
+    "release:package": "node --import tsx src/packaging/package.ts",
+    "release:notes": "node --import tsx src/packaging/notes.ts",
     "preversion": "npm run typecheck && npm test",
-    "version": "tsx src/packaging/version.ts && git add src/live/extension/manifest.json",
+    "version": "node --import tsx src/packaging/version.ts && git add src/live/extension/manifest.json",
     "postversion": "git push --follow-tags"
   },
   "dependencies": {
