@@ -153,11 +153,13 @@ export class OdeApi {
     return API.releaseFile(name);
   }
 
+  /** Sends every change as JSON, the only kind the server accepts for one. */
   private async request<T>(method: HttpMethod, path: string, body?: unknown): Promise<T> {
+    const reads = method === HttpMethod.Get;
     const response = await fetch(path, {
       method,
-      headers: body === undefined ? undefined : { "Content-Type": JSON_TYPE },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      headers: reads ? undefined : { "Content-Type": JSON_TYPE },
+      body: reads ? undefined : JSON.stringify(body ?? {}),
     });
     if (!response.ok) throw new ApiError(response.status, await readError(response));
     return (await response.json()) as T;

@@ -14,6 +14,9 @@ export type SongEntry = z.infer<typeof SongEntrySchema>;
 const SongIndexSchema = z.object({ current: z.string().nullable(), songs: z.array(SongEntrySchema) });
 type SongIndex = z.infer<typeof SongIndexSchema>;
 
+/** The song asked for is missing from Ode's list of songs. */
+export class SongNotFoundError extends Error {}
+
 /**
  * Every song the musician works on with Ode, one folder each in Ode's storage (Songs/<id>/), with the one in use now.
  * A song holds its lead sheet (title, lyrics, chords, sections), its version history in versions/ and its release
@@ -63,10 +66,10 @@ export class SongStore {
     return [...(await this.index.read()).songs].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   }
 
-  /** Switches to another song in the list. */
+  /** Switches to another song in the list; throws SongNotFoundError for an id the list lacks. */
   async open(id: string): Promise<SongEntry> {
     const entry = (await this.index.read()).songs.find((song) => song.id === id);
-    if (!entry) throw new Error("That song is gone from Ode's list.");
+    if (!entry) throw new SongNotFoundError("That song is gone from Ode's list.");
     await this.index.update((index) => ({ ...index, current: id }));
     this.use(id);
     this.onChange(await this.read());

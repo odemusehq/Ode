@@ -15,7 +15,7 @@ import type { LyricsStore } from "../mneme/lyrics-store";
 import { VersionNotFoundError } from "../mneme/version-history";
 import type { PreferencesStore } from "../mneme/preferences";
 import type { SettingsStore } from "../mneme/settings-store";
-import type { SongStore } from "../mneme/song-store";
+import { SongNotFoundError, type SongStore } from "../mneme/song-store";
 import type { ModelRoles } from "../services/model-roles";
 import { ProviderCatalog } from "../services/provider-catalog";
 import { ModelListRequestSchema, SettingsUpdateSchema, type SettingsResponse } from "../shared/settings";
@@ -93,6 +93,17 @@ const UI_CONTENT_TYPES: ReadonlyMap<string, string> = new Map([
 const UI_INDEX = "index.html";
 /** The cookie that carries the session's token once a dialog's first request has shown it. */
 const TOKEN_COOKIE = "ode";
+/** The body type of every request that changes something. */
+const JSON_TYPE = "application/json";
+/** Methods that only read. */
+const READS: ReadonlySet<string> = new Set(["GET", "HEAD"]);
+/** Kept on every answer: Ode's pages open as Live's dialogs alone, unframed, and keep their address to themselves. */
+const SAFETY_HEADERS: Readonly<Record<string, string>> = {
+  "Content-Security-Policy": "frame-ancestors 'none'",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "no-referrer",
+};
+const OPEN_FROM_LIVE = "Open Ode from Live's right-click menu.";
 
 /**
  * The local server inside the extension: the UI that Ode's dialogs load, its API and its event stream. It listens on
@@ -112,6 +123,7 @@ export class OdeServer {
   /** Starts listening; resolves once the port is known. */
   start(): Promise<void> {
     this.app.onError((error, c) => c.json({ error: OdeServer.messageOf(error) }, 500));
+    this.app.use("*", (c, next) => this.guard(c, next));
     this.app.use("*", (c, next) => this.authorize(c, next));
     this.routeApi();
     this.routeSongs();
@@ -131,6 +143,28 @@ export class OdeServer {
     return `http://localhost:${this.port}/?view=${view}&token=${this.token}`;
   }
 
+  /** The port the server listens on, once it has started. */
+  get listeningPort(): number {
+    return this.port;
+  }
+
+  /**
+   * Keeps the server to Ode's own pages. The Host names this server, which turns away a page whose own name points at
+   * 127.0.0.1. A request that changes something comes from Ode's origin with a JSON body: a page on another port
+   * shares the cookie, and it can send JSON only after a preflight this server leaves unanswered.
+   */
+  private async guard(c: Context, next: () => Promise<void>) {
+    const hosts = [`localhost:${this.port}`, `${OdeServer.HOST}:${this.port}`];
+    if (!hosts.includes(c.req.header("host") ?? "")) return c.text(OPEN_FROM_LIVE, 403);
+    if (!READS.has(c.req.method)) {
+      const origin = c.req.header("origin");
+      if (origin !== undefined && !hosts.some((host) => origin === `http://${host}`)) return c.text(OPEN_FROM_LIVE, 403);
+      if (!(c.req.header("content-type") ?? "").startsWith(JSON_TYPE)) return c.json({ error: "Send the request as JSON." }, 415);
+    }
+    await next();
+    for (const [name, value] of Object.entries(SAFETY_HEADERS)) c.res.headers.set(name, value);
+  }
+
   /** Lets in requests that carry the token, in the address (a dialog's first request) or in the cookie it then gets. */
   private async authorize(c: Context, next: () => Promise<void>) {
     if (this.carriesToken(c.req.query("token"))) {
@@ -138,7 +172,7 @@ export class OdeServer {
       return next();
     }
     if (this.carriesToken(getCookie(c, TOKEN_COOKIE))) return next();
-    return c.text("Open Ode from Live's right-click menu.", 403);
+    return c.text(OPEN_FROM_LIVE, 403);
   }
 
   /** Compares in constant time, so the token's characters stay hidden from timing. */
@@ -209,8 +243,9 @@ export class OdeServer {
 
     app.post("/api/questions/:id", async (c) => {
       const parsed = ChoiceSchema.safeParse(await OdeServer.body(c));
-      const answered = parsed.success && questions.answer(c.req.param("id"), parsed.data.choice);
-      return answered ? c.json({ ok: true }) : c.json({ error: "No such question, or that isn't one of its answers" }, 404);
+      if (!parsed.success) return c.json({ error: "Send { choice } with one of the question's answers." }, 400);
+      const answered = questions.answer(c.req.param("id"), parsed.data.choice);
+      return answered ? c.json({ ok: true }) : c.json({ error: "That question is answered already, or the choice is outside its answers." }, 404);
     });
 
     app.get(API.lyrics, async (c) => c.json(await lyrics.read()));
@@ -337,19 +372,19 @@ export class OdeServer {
     const { ui } = this.deps;
     this.app.get("*", (c) => {
       const asked = decodeURIComponent(c.req.path).replace(/^\/+/, "");
-      const path = asked in ui ? asked : UI_INDEX;
+      const path = Object.hasOwn(ui, asked) ? asked : UI_INDEX;
       const file = ui[path];
       if (file === undefined) return c.text("Ode's pages are missing from this build.", 404);
       return c.body(Buffer.from(file, "base64"), 200, { "Content-Type": UI_CONTENT_TYPES.get(extname(path).toLowerCase()) ?? OTHER_CONTENT_TYPE });
     });
   }
 
-  /** Runs a version action and answers with its result, or with the reason it couldn't be done (404 unknown version, 409 not now). */
+  /** Runs an action and answers with its result, or with the reason it stayed undone (404 unknown version or song, 409 for later). */
   private async answer<T extends object>(c: Context, work: () => Promise<T>) {
     try {
       return c.json(await work());
     } catch (error) {
-      if (error instanceof VersionNotFoundError) return c.json({ error: error.message }, 404);
+      if (error instanceof VersionNotFoundError || error instanceof SongNotFoundError) return c.json({ error: error.message }, 404);
       if (OdeServer.isRefusal(error)) return c.json({ error: OdeServer.messageOf(error) }, 409);
       throw error;
     }
@@ -359,11 +394,14 @@ export class OdeServer {
   private eventStream(c: Context) {
     const { bus, sessions, approvals, questions, selection, prefs } = this.deps;
     return streamSSE(c, async (stream) => {
+      const mode = await prefs.mode();
+      // A window closed while the mode was read is done; from here on, state and events go out back to back, so each event reaches the window once.
+      if (stream.aborted) return;
       const send = (event: UiEvent) => {
         void stream.writeSSE({ data: JSON.stringify(event) });
       };
       send({ type: "busy", busy: sessions.current.isBusy, stoppable: sessions.current.isStoppable });
-      send({ type: "mode", mode: await prefs.mode() });
+      send({ type: "mode", mode });
       for (const approval of approvals.pending()) send({ type: "approval", ...approval });
       for (const question of questions.pending()) send({ type: "question", ...question });
       selection.replay(send);
