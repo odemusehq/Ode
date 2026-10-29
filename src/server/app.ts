@@ -84,7 +84,7 @@ export class OdeApp {
     this.selection = new SelectionState({
       reader: this.reader,
       versions: this.versions,
-      finder: new SuggestionFinder(live, this.song, this.prefs),
+      finder: new SuggestionFinder(live, this.song, this.prefs, config.suggestions.perSelection),
       busy: () => this.sessions.current.isBusy,
       emit,
     });

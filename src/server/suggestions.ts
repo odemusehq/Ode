@@ -40,33 +40,32 @@ const MELODY_NAMES = /\b(melody|topline|hook)\b/i;
 const CHORD_NAMES = /\b(chords?|keys|piano|pads?|rhodes|organ|strings)\b/i;
 const CHORUS_NAME = /chorus/i;
 
-/** Four to six one-tap actions for what the musician has selected; fixes for problems the quick checks find come first. */
+/** One-tap actions for what the musician has selected, up to `count`; fixes for problems the quick checks find come first. */
 export class SuggestionFinder {
-  private static readonly MAX = 6;
-
   constructor(
     private readonly live: LiveConnections,
     private readonly song: SongStore,
     private readonly prefs: PreferencesStore,
+    private readonly count: number,
   ) {}
 
   async for(selection: SelectionInfo, snapshot: SetSnapshot): Promise<Suggestion[]> {
     const lookup = new SetLookup(snapshot);
-    if (lookup.isEmpty) return SuggestionFinder.chips([], SuggestionFinder.emptySet());
+    if (lookup.isEmpty) return this.chips([], SuggestionFinder.emptySet());
     const found = selection.clip ? lookup.clip(selection.clip) : undefined;
     if (selection.clip && found) return this.forClip(selection.clip, found, lookup);
     const track = selection.track ? lookup.track(selection.track) : undefined;
-    if (track && track !== snapshot.main) return SuggestionFinder.chips([], SuggestionFinder.forTrack(track));
-    return SuggestionFinder.chips([], await this.forSong(lookup, track === snapshot.main));
+    if (track && track !== snapshot.main) return this.chips([], SuggestionFinder.forTrack(track));
+    return this.chips([], await this.forSong(lookup, track === snapshot.main));
   }
 
   private async forClip(ref: ClipRef, found: FoundClip, lookup: SetLookup): Promise<Suggestion[]> {
     const where = SuggestionFinder.clipPlace(found, lookup);
-    if (found.clip.kind === "audio") return SuggestionFinder.chips([], SuggestionFinder.forAudioClip(found.track, where));
+    if (found.clip.kind === "audio") return this.chips([], SuggestionFinder.forAudioClip(found.track, where));
     const notes = await this.notesOf(ref, found);
     const part = SuggestionFinder.partOf(found.track, notes);
     const fixes = [...SuggestionFinder.keyFixes(part, notes, where, lookup.snapshot), ...(await this.rangeFixes(part, notes, where))];
-    return SuggestionFinder.chips(fixes, SuggestionFinder.forMidiClip(part, where));
+    return this.chips(fixes, SuggestionFinder.forMidiClip(part, where));
   }
 
   /** The clip's notes as they are now; the snapshot's when Live can't be asked. */
@@ -286,11 +285,11 @@ export class SuggestionFinder {
     return `${count} ${count === 1 ? "note" : "notes"}`;
   }
 
-  /** Fixes first, then actions, four to six in all. */
-  private static chips(fixes: Action[], actions: Action[]): Suggestion[] {
+  /** Fixes first, then actions, up to `count` in all. */
+  private chips(fixes: Action[], actions: Action[]): Suggestion[] {
     const seen = new Set<string>();
     return [...fixes.map((action) => ({ ...action, fix: true })), ...actions.map((action) => ({ ...action, fix: false }))]
-      .slice(0, SuggestionFinder.MAX)
+      .slice(0, this.count)
       .map((action) => {
         let id = action.label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
         while (seen.has(id)) id = `${id}-more`;

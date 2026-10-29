@@ -22,6 +22,12 @@
   "release": {
     "coverChoices": 4
   },
+  "server": {
+    "keepaliveMs": 15000
+  },
+  "suggestions": {
+    "perSelection": 6
+  },
   "dialogs": {
     "ask": {
       "width": 760,

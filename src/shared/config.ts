@@ -62,6 +62,16 @@ export interface ReleaseSettings {
   coverChoices: number;
 }
 
+export interface ServerSettings {
+  /** How often the event stream to an open dialog sends a keepalive, in milliseconds. */
+  keepaliveMs: number;
+}
+
+export interface SuggestionSettings {
+  /** How many one-tap suggestions Ask Ode offers for what the musician pointed at. */
+  perSelection: number;
+}
+
 /** The dialogs Ode opens from Live's right-click menu, each a view of Ode's page. */
 export enum DialogView {
   Ask = "ask",
@@ -85,6 +95,8 @@ export class OdeConfig {
   readonly memory: MemorySettings = { ...defaults.memory };
   readonly versions: VersionSettings = { ...defaults.versions };
   readonly release: ReleaseSettings = { ...defaults.release };
+  readonly server: ServerSettings = { ...defaults.server };
+  readonly suggestions: SuggestionSettings = { ...defaults.suggestions };
   readonly dialogs: Record<DialogView, DialogSize> = { ...defaults.dialogs };
 
   constructor(

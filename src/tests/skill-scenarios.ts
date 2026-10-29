@@ -130,7 +130,7 @@ class ScenarioRun {
     const live = new FakeSetLive(this.scenario.set, TestSets.liveDevices());
     const reader = new SnapshotReader(live, song);
     const recorder = new VersionRecorder(reader, versions, emit);
-    const selection = new SelectionState({ reader, versions, finder: new SuggestionFinder(live, song, prefs), busy: () => false, emit });
+    const selection = new SelectionState({ reader, versions, finder: new SuggestionFinder(live, song, prefs, config.suggestions.perSelection), busy: () => false, emit });
     const services = new ModelServices(this.roles);
     const temp = new TempFolder(config.tempDir);
     const registry = new ToolRegistry({ config, live, song, lyrics, versions, snapshots: reader, questions, mneme, prefs, services, temp, emit });

@@ -110,7 +110,6 @@ const OPEN_FROM_LIVE = "Open Ode from Live's right-click menu.";
  * 127.0.0.1 alone, on a port the system picks, and answers only requests that carry this session's token.
  */
 export class OdeServer {
-  private static readonly KEEPALIVE_MS = 15_000;
   /** Only this machine reaches the server. */
   private static readonly HOST = "127.0.0.1";
   private static readonly TOKEN_BYTES = 24;
@@ -408,7 +407,7 @@ export class OdeServer {
       const unsubscribe = bus.subscribe(send);
       stream.onAbort(unsubscribe);
       while (!stream.aborted) {
-        await stream.sleep(OdeServer.KEEPALIVE_MS);
+        await stream.sleep(this.deps.config.server.keepaliveMs);
         await stream.writeSSE({ event: "keepalive", data: "" });
       }
     });
