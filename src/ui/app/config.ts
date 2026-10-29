@@ -9,4 +9,10 @@ export const UI_CONFIG = {
   lineDiffMaxCells: 1_000_000,
   /** Wait after the last keystroke in a key before asking the provider which models it reaches. */
   modelListDelayMs: 600,
+  /** Wait after the last edit of a section before Lyrics support marks it again. */
+  lyricsCheckDelayMs: 700,
+  /** How many checked lines the editor remembers, so a line typed back shows its marks at once. */
+  lyricsCheckLinesKept: 2_000,
+  /** Where the editor keeps which marks the View menu shows. */
+  lyricsViewStorageKey: "ode.lyrics.view",
 } as const;

@@ -35,12 +35,19 @@
   background: var(--color-surface-sunken);
 }
 
+.lyrics-editor__toolbar {
+  display: flex;
+  flex: none;
+  justify-content: flex-end;
+  padding: var(--space-3) var(--space-6) 0;
+}
+
 .lyrics-editor__sections {
   position: relative;
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: var(--space-5) var(--space-6) var(--space-7) var(--lyrics-gutter);
+  padding: var(--space-3) var(--space-6) var(--space-7) var(--lyrics-gutter);
 }
 
 .lyrics-editor__drop {
@@ -253,4 +260,124 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+}
+
+.line-marks {
+  position: relative;
+  height: var(--lyrics-line-height);
+  white-space: pre;
+}
+
+/* The text sits under the field's own text, letter for letter, so only the marks show. */
+.line-marks__text {
+  color: transparent;
+}
+
+.mark-syllable {
+  position: relative;
+}
+
+.mark-bar {
+  display: inline-block;
+  width: var(--border-width);
+  height: 0.95em;
+  margin: 0 calc(var(--border-width) / -2);
+  vertical-align: -0.14em;
+  background: var(--color-border-strong);
+}
+
+.mark-syllable--stressed::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 3px;
+  height: 3px;
+  margin-left: -1.5px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+}
+
+.mark-rhyme {
+  padding: 2px 0;
+  border-radius: 3px;
+  background: rgb(var(--rhyme-rgb) / var(--rhyme-perfect-alpha));
+}
+
+.mark-rhyme--near {
+  background: rgb(var(--rhyme-rgb) / var(--rhyme-near-alpha));
+}
+
+.mark-rhyme--flagged {
+  border-bottom: 1.5px dashed rgb(var(--rhyme-rgb));
+}
+
+.line-marks__meta {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  width: var(--lyrics-meta-width);
+  justify-content: flex-end;
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.line-marks__letter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: var(--lyrics-rhyme-width);
+}
+
+.line-marks__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgb(var(--rhyme-rgb) / var(--rhyme-near-alpha));
+}
+
+.line-marks__count {
+  width: var(--lyrics-count-width);
+  text-align: right;
+}
+
+.lyrics-editor--no-syllables .mark-bar,
+.lyrics-editor--no-stress .mark-syllable--stressed::after,
+.lyrics-editor--no-counts .line-marks__count {
+  visibility: hidden;
+}
+
+.lyrics-editor--no-rhymes .mark-rhyme {
+  border-bottom: 0;
+  background: none;
+}
+
+.lyrics-editor--no-rhymes .line-marks__letter {
+  visibility: hidden;
+}
+
+.lyrics-notice {
+  --icon-size: 14px;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-6);
+  border-top: var(--border-width) solid var(--color-warning);
+  background: var(--color-warning-tint);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.lyrics-notice > .ode-icon {
+  color: var(--color-warning);
+}
+
+.lyrics-notice__text {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
 }

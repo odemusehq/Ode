@@ -16,6 +16,7 @@ import type {
   VersionNameRequest,
   VersionRequest,
 } from "../../shared/api";
+import type { LyricsCheckRequest, LyricsCheckResponse } from "../../shared/lyrics";
 import type { Mode } from "../../shared/personalisation";
 import type { ChatModelOption, ModelListRequest, SettingsResponse, SettingsUpdate, SettingsView } from "../../shared/settings";
 
@@ -93,6 +94,11 @@ export class OdeApi {
   /** Saves the whole text with the revision it was edited from; the server merges it with what Ode saved since. */
   saveLyrics(write: LyricsWrite): Promise<LyricsSaved> {
     return this.request(HttpMethod.Put, API.lyrics, write);
+  }
+
+  /** Lyrics support's syllables, stress and rhymes for one section's sung lines. */
+  checkLyrics(request: LyricsCheckRequest): Promise<LyricsCheckResponse> {
+    return this.request(HttpMethod.Post, API.lyricsCheck, request);
   }
 
   getVersions(): Promise<VersionListItem[]> {

@@ -1,10 +1,27 @@
-import { useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { LyricsSections, type LyricsSection } from "../../shared/lyrics-sections";
-import { Button, ButtonVariant, Icon, IconName } from "../../ui-kit";
+import { Button, ButtonVariant, Icon, IconName, Menu, MenuAlign, cx } from "../../ui-kit";
 import { useClient, useLyrics } from "../app/hooks";
+import { LyricsMarks, SupportStatus } from "../app/lyrics-marks";
+import { LyricsViewStore, type LyricsView } from "../app/lyrics-view";
+import { LineMarks } from "./LineMarks";
 import { SectionAction, SectionCard, type SectionQuestion } from "./SectionCard";
 import { SectionLinker, SectionMover } from "./section-pointer";
 import "./LyricsPanel.css";
+
+/** The View menu: which of Lyrics support's marks the editor shows. */
+const VIEW_ITEMS: readonly { id: keyof LyricsView; label: string; description: string }[] = [
+  { id: "syllables", label: "Syllables", description: "Light bars between syllables" },
+  { id: "counts", label: "Syllable counts", description: "The count at the end of each line" },
+  { id: "stress", label: "Stress", description: "A dot under each stressed syllable" },
+  { id: "rhymes", label: "Rhymes", description: "Rhyming letters in colour, stronger on near rhymes" },
+];
+
+/** What the notice says while Lyrics support is quiet. */
+const SUPPORT_MESSAGES: Readonly<Record<SupportStatus.Setup | SupportStatus.Unreachable, string>> = {
+  [SupportStatus.Setup]: "Syllables and rhymes appear once Lyrics support has a provider and a key in Ode: Settings.",
+  [SupportStatus.Unreachable]: "Lyrics support is out of reach right now, so syllables and rhymes are paused.",
+};
 
 /** The song's lyrics as sections that the musician and Ode both edit. */
 export function LyricsPanel() {
@@ -52,6 +69,30 @@ function LyricsEditor({ text }: LyricsEditorProps) {
   const list = useRef<HTMLDivElement>(null);
   const indicator = useRef<HTMLDivElement>(null);
   const cable = useRef<SVGSVGElement>(null);
+  const marks = useMemo(() => new LyricsMarks(client.api), [client.api]);
+  const support = useSyncExternalStore(marks.subscribe, marks.getSnapshot);
+  const [view, setView] = useState<LyricsView>(() => LyricsViewStore.load());
+  const [retries, setRetries] = useState(0);
+
+  // Lyrics support checks each section after a pause in its typing.
+  useEffect(() => {
+    sections.forEach((section, index) => marks.request(String(index), section.lines.filter(LyricsSections.isSung)));
+  }, [sections, marks, retries]);
+
+  const toggleView = (mark: keyof LyricsView) => {
+    const next = { ...view, [mark]: !view[mark] };
+    setView(next);
+    LyricsViewStore.save(next);
+  };
+
+  /** The marks behind a section's text: each sung line takes its own, labels and blank lines take none. */
+  const marksBehind = (strict: boolean) => (rows: readonly string[]) => {
+    const found = marks.marksFor(rows.filter(LyricsSections.isSung));
+    let sung = 0;
+    return rows.map((row, index) => (
+      <LineMarks key={index} line={row} check={LyricsSections.isSung(row) ? (found[sung++] ?? null) : null} strict={strict} />
+    ));
+  };
 
   const save = (next: LyricsSection[]) => client.lyrics.edit(LyricsSections.join(next));
   const copiesOf = (name: string | null) => (name === null ? 1 : sections.filter((section) => section.name === name).length);
@@ -172,7 +213,24 @@ function LyricsEditor({ text }: LyricsEditorProps) {
   };
 
   return (
-    <div className="lyrics-editor">
+    <div
+      className={cx(
+        "lyrics-editor",
+        !view.syllables && "lyrics-editor--no-syllables",
+        !view.counts && "lyrics-editor--no-counts",
+        !view.stress && "lyrics-editor--no-stress",
+        !view.rhymes && "lyrics-editor--no-rhymes",
+      )}
+    >
+      <div className="lyrics-editor__toolbar">
+        <Menu
+          label="View"
+          buttonText="View"
+          items={VIEW_ITEMS.map((item) => ({ ...item, checked: view[item.id] }))}
+          onSelect={toggleView}
+          align={MenuAlign.End}
+        />
+      </div>
       <div ref={list} className="lyrics-editor__sections">
         <svg ref={cable} className="lyrics-cable" aria-hidden="true" />
         <div ref={indicator} className="lyrics-editor__drop" hidden />
@@ -207,6 +265,7 @@ function LyricsEditor({ text }: LyricsEditorProps) {
               new SectionLinker(list.current, cable.current).start(index, event.currentTarget, accepts, link);
             }}
             onPartners={(show) => setPartners(show ? section.name : null)}
+            renderMarks={marksBehind(false)}
           />
         ))}
         <Button variant={ButtonVariant.Quiet} className="lyrics-editor__add" onClick={addSection}>
@@ -214,6 +273,35 @@ function LyricsEditor({ text }: LyricsEditorProps) {
           Section
         </Button>
       </div>
+      {support.status !== SupportStatus.Ready && (
+        <SupportNotice
+          status={support.status}
+          detail={support.detail}
+          onRetry={() => {
+            marks.retry();
+            setRetries((count) => count + 1);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+interface SupportNoticeProps {
+  status: SupportStatus.Setup | SupportStatus.Unreachable;
+  detail: string;
+  onRetry: () => void;
+}
+
+/** A bar along the bottom of the editor while Lyrics support is quiet, saying why, with a way to ask again. */
+function SupportNotice({ status, detail, onRetry }: SupportNoticeProps) {
+  return (
+    <div className="lyrics-notice" role="status" title={detail || undefined}>
+      <Icon name={IconName.Alert} />
+      <p className="lyrics-notice__text">{SUPPORT_MESSAGES[status]}</p>
+      <Button variant={ButtonVariant.Quiet} onClick={onRetry}>
+        Try again
+      </Button>
     </div>
   );
 }

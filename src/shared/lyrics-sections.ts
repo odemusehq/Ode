@@ -20,6 +20,11 @@ export class LyricsSections {
     return match ? (match[1] ?? "").trim() : null;
   }
 
+  /** A line that is sung: it holds text and sits outside square brackets. */
+  static isSung(line: string): boolean {
+    return line.trim() !== "" && LyricsSections.labelName(line) === null;
+  }
+
   /** The text split at its labels; blank lines at a section's edges belong to the gaps between sections. */
   static parse(text: string): LyricsSection[] {
     const sections: LyricsSection[] = [];

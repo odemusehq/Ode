@@ -148,6 +148,16 @@
   --lyrics-count-width: 34px;
   --lyrics-rhyme-width: 26px;
 
+  /* Rhyme colours, one per rhyme letter (A to F), as RGB channels: soft pastels for perfect rhymes, stronger for near ones */
+  --rhyme-a: 237 147 177;
+  --rhyme-b: 133 183 235;
+  --rhyme-c: 175 169 236;
+  --rhyme-d: 240 153 123;
+  --rhyme-e: 159 225 203;
+  --rhyme-f: 250 199 117;
+  --rhyme-perfect-alpha: 0.26;
+  --rhyme-near-alpha: 0.58;
+
   /* Menus */
   --menu-min-width: 220px;
   --menu-max-width: 300px;
