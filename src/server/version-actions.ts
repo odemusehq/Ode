@@ -214,10 +214,6 @@ export class VersionActions {
     throw new RefusedError(editedSince ? REFUSALS[action].editedSince : REFUSALS[action].nothing);
   }
 
-  private static messageOf(error: unknown): string {
-    return error instanceof Error ? error.message : String(error);
-  }
-
   private static notRestored(skipped: string[]): string {
     return skipped.length > 0 ? ` · not restored: ${skipped.join(", ")}` : "";
   }

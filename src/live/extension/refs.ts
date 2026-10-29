@@ -29,16 +29,13 @@ import type {
   TakeLaneRef,
   TrackRef,
 } from "../../shared/live";
-import { MIXER_INDEX } from "../../shared/live";
+import { BEAT_TOLERANCE, MIXER_INDEX } from "../../shared/live";
 import { NotFoundError } from "./errors";
 import type { LiveSet } from "./live-set";
 import { ClipPlace, type ClipLocation } from "./locations";
 import type { Version } from "./sdk";
 import { TaggedName } from "./tags";
 import type { TrackDirectory } from "./track-directory";
-
-/** How far apart two positions in beats can be and still count as the same. */
-const BEAT_TOLERANCE = 0.001;
 
 const CHAIN_PATH_HELP =
   "a device's chain path lists pairs from the outer rack inwards: the rack's index, then the chain's index " +

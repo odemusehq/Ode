@@ -1,12 +1,10 @@
-import { MIXER_INDEX, type ClipRef, type DeviceRef, type LocatorRef, type ParameterRef, type SceneRef, type TakeLaneRef, type TrackRef } from "../../shared/live";
+import { BEAT_TOLERANCE, MIXER_INDEX, type ClipRef, type DeviceRef, type LocatorRef, type ParameterRef, type SceneRef, type TakeLaneRef, type TrackRef } from "../../shared/live";
 import type { ClipInfo, ParameterInfo } from "../../shared/live-ops";
 import { noteName } from "../../shared/notes";
 import type { DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../../shared/set-snapshot";
 import { LyricsText } from "../../mneme/lyrics-text";
 import { LyricsWording, SetWording } from "../../mneme/set-diff";
 
-/** How far apart, in beats, a reference's start and a clip's start can be and still be the same clip. */
-const BEAT_TOLERANCE = 0.001;
 /** The mixer's parameters, numbered as in DeviceRef: volume, pan, then one send per return track. */
 const VOLUME_PARAMETER = 0;
 const PAN_PARAMETER = 1;

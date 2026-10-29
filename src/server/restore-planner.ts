@@ -1,11 +1,11 @@
 import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
-import { MIXER_INDEX, type ClipRef, type DeviceRef, type ExtensionOp, type LoopSettings, type Note, type TrackRef } from "../shared/live";
+import { BEAT_TOLERANCE, MIXER_INDEX, type ClipRef, type DeviceRef, type ExtensionOp, type LoopSettings, type Note, type TrackRef } from "../shared/live";
 import type { AudioClipInfo, ClipInfo, LocatorInfo, MixerInfo, SceneInfo } from "../shared/live-ops";
 import type { DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
 import { ChangeKind, TrackList, type ClipField, type ClipKey, type SetChange, type TrackField, type TrackKey } from "../shared/versions";
 import type { ClipAudio, ClipLoop } from "../mneme/set-diff";
-import { BEAT_TOLERANCE, SetLookup } from "./set-lookup";
+import { SetLookup } from "./set-lookup";
 
 /** One Live operation of a restore. */
 export interface PlannedCall {

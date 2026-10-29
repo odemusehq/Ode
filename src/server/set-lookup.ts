@@ -1,13 +1,9 @@
-import type { ClipRef, TrackRef } from "../shared/live";
+import { BEAT_TOLERANCE, type ClipRef, type TrackRef } from "../shared/live";
 import type { ClipInfo } from "../shared/live-ops";
 import type { DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
-import { TrackList, type ClipKey, type TrackKey } from "../shared/versions";
 
 /** Live counts beats in quarter notes; a whole note is four of them. */
 export const QUARTER_NOTES_PER_WHOLE_NOTE = 4;
-
-/** How far apart two positions in beats can be and still count as the same (as the extension compares them). */
-export const BEAT_TOLERANCE = 0.001;
 
 export interface FoundClip {
   track: TrackSnapshot;
@@ -16,7 +12,7 @@ export interface FoundClip {
   arranged: boolean;
 }
 
-/** Finds tracks and clips in a snapshot by the references the tools and the device use. */
+/** Finds tracks and clips in a snapshot by the references the tools use. */
 export class SetLookup {
   constructor(readonly snapshot: SetSnapshot) {}
 
@@ -45,17 +41,6 @@ export class SetLookup {
     return this.allTracks.find((track) => track.name === ref.name) ?? this.allTracks.find((track) => track.name.toLowerCase() === lower);
   }
 
-  /** A track from a version's change: by its tag, then by its place when the name still matches, then by name. */
-  trackByKey(key: TrackKey): TrackSnapshot | undefined {
-    if (key.tag) {
-      const tagged = this.allTracks.find((track) => track.tag === key.tag);
-      if (tagged) return tagged;
-    }
-    const list = key.list === TrackList.Main ? [this.snapshot.main] : key.list === TrackList.Returns ? this.snapshot.returnTracks : this.snapshot.tracks;
-    const placed = key.list === TrackList.Main ? this.snapshot.main : list[key.index];
-    if (placed && placed.name === key.name) return placed;
-    return list.find((track) => track.name === key.name);
-  }
 
   clip(ref: ClipRef): FoundClip | undefined {
     if ("tag" in ref) {
@@ -78,11 +63,6 @@ export class SetLookup {
     return clip ? { track, clip, arranged: true } : undefined;
   }
 
-  /** A track by its place in this snapshot, as a version's change addresses what was removed or changed. */
-  trackAt(key: TrackKey): TrackSnapshot | undefined {
-    if (key.list === TrackList.Main) return this.snapshot.main;
-    return key.list === TrackList.Returns ? this.snapshot.returnTracks[key.index] : this.snapshot.tracks[key.index];
-  }
 
   /** A device on a track, or inside racks along `chain` (pairs of rack device index and chain index, from the track inwards). */
   static deviceAt(track: TrackSnapshot, chain: readonly number[], index: number): DeviceSnapshot | undefined {
@@ -97,21 +77,8 @@ export class SetLookup {
     return devices[index];
   }
 
-  /** Every device on a track, with the devices inside its racks. */
-  static devicesOf(track: TrackSnapshot): DeviceSnapshot[] {
-    return SetLookup.withInnerDevices(track.devices);
-  }
 
-  private static withInnerDevices(devices: DeviceSnapshot[]): DeviceSnapshot[] {
-    return devices.flatMap((device) => [device, ...(device.chains ?? []).flatMap((chain) => SetLookup.withInnerDevices(chain.devices))]);
-  }
 
-  /** The clip a version's change points at on a track. */
-  static clipAt(track: TrackSnapshot, key: ClipKey): ClipInfo | undefined {
-    if ("slot" in key) return track.clipSlots[key.slot]?.clip ?? undefined;
-    const clips = key.lane === undefined ? track.arrangementClips : track.takeLanes[key.lane]?.clips ?? [];
-    return clips.find((clip) => Math.abs(clip.startTime - key.start) <= BEAT_TOLERANCE);
-  }
 
   /** Clips on the Arrangement's main lane, then on the take lanes. */
   static arrangedClips(track: TrackSnapshot): ClipInfo[] {

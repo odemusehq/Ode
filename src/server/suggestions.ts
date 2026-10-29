@@ -1,4 +1,4 @@
-import type { ClipRef, LiveConnections, Note } from "../shared/live";
+import { BEAT_TOLERANCE, type ClipRef, type LiveConnections, type Note } from "../shared/live";
 import type { SelectionInfo } from "../shared/live-ops";
 import type { SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
 import type { Suggestion } from "../shared/events";
@@ -8,7 +8,7 @@ import { TrackRole, roleFromName } from "../music/audio/track-role";
 import { LyricsText } from "../mneme/lyrics-text";
 import type { PreferencesStore } from "../mneme/preferences";
 import type { SongStore } from "../mneme/song-store";
-import { BEAT_TOLERANCE, SetLookup, type FoundClip } from "./set-lookup";
+import { SetLookup, type FoundClip } from "./set-lookup";
 
 /** What a selected part plays, which decides the actions that make sense for it. */
 enum Part {
