@@ -17,26 +17,46 @@ export class SpeechAudio {
     return Buffer.from(await this.wav(path)).toString("base64");
   }
 
-  private resample(input: Float32Array, from: number): Float32Array {
+  /**
+   * Lanczos resampling. Output sample i sits at input position c = i · from / to; the fraction of c repeats every
+   * to / gcd(from, to) samples, so the weights of each repeating position are worked out once and reused.
+   */
+  private resample(input: Float32Array, sourceRate: number): Float32Array {
+    const from = Math.round(sourceRate);
     const to = this.sampleRate;
     if (from === to) return input;
-    const ratio = to / from;
-    const cutoff = Math.min(1, ratio);
+    const cutoff = Math.min(1, to / from);
     const reach = SpeechAudio.KERNEL_LOBES / cutoff;
-    const output = new Float32Array(Math.floor(input.length * ratio));
+    const tables = Array.from({ length: to / SpeechAudio.gcd(from, to) }, (_, phase) => SpeechAudio.weights(((phase * from) % to) / to, reach, cutoff));
+    const output = new Float32Array(Math.floor((input.length * to) / from));
     for (let i = 0; i < output.length; i++) {
-      const centre = i / ratio;
+      const table = tables[i % tables.length]!;
+      const start = Math.floor((i * from) / to) + table.first;
+      const inside = start >= 0 && start + table.weights.length <= input.length;
       let sum = 0;
-      let weight = 0;
-      for (let j = Math.ceil(centre - reach); j <= Math.floor(centre + reach); j++) {
-        if (j < 0 || j >= input.length) continue;
-        const w = SpeechAudio.lanczos((j - centre) * cutoff);
-        sum += input[j]! * w;
-        weight += w;
+      let weight = inside ? table.total : 0;
+      for (let k = 0; k < table.weights.length; k++) {
+        const j = start + k;
+        if (!inside && (j < 0 || j >= input.length)) continue;
+        sum += input[j]! * table.weights[k]!;
+        if (!inside) weight += table.weights[k]!;
       }
       output[i] = weight === 0 ? 0 : sum / weight;
     }
     return output;
+  }
+
+  /** The weights of the input samples around a position whose fraction is `fraction`, from the first sample's offset on. */
+  private static weights(fraction: number, reach: number, cutoff: number): { first: number; weights: Float64Array; total: number } {
+    const first = Math.ceil(fraction - reach);
+    const last = Math.floor(fraction + reach);
+    const weights = new Float64Array(last - first + 1);
+    for (let k = first; k <= last; k++) weights[k - first] = SpeechAudio.lanczos((k - fraction) * cutoff);
+    return { first, weights, total: weights.reduce((sum, value) => sum + value, 0) };
+  }
+
+  private static gcd(a: number, b: number): number {
+    return b === 0 ? a : SpeechAudio.gcd(b, a % b);
   }
 
   private static lanczos(x: number): number {
