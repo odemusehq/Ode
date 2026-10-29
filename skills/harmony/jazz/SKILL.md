@@ -34,7 +34,7 @@ The basic unit is the seventh chord: maj7, m7, 7, m7♭5 and dim7, with 6 and m6
 
 ## Extensions and alterations
 
-Let the melody choose. If the melody has A♭ over G7, the chord is G7♭9; if it has A, the chord is G9 or G13. Never fight the melody with an alteration.
+Let the melody choose. If the melody has A♭ over G7, the chord is G7♭9; if it has A, the chord is G9 or G13. Choose only alterations that agree with the melody.
 
 | Chord | Usual tensions | Handle with care |
 |---|---|---|
@@ -42,7 +42,7 @@ Let the melody choose. If the melody has A♭ over G7, the chord is G7♭9; if i
 | m7 as ii (Dorian) | 9, 11, 13 | — |
 | m7 as vi (Aeolian) | 9, 11 | ♭13, a half step above the 5th |
 | m7 as iii (Phrygian) | 11 | ♭9 and ♭13 |
-| 7, unaltered | 9, 13, ♯11 | natural 11 against the 3rd (write a sus4 chord instead) |
+| 7, unaltered | 9, 13, ♯11 | natural 11 against the 3rd (write it as a sus4 chord) |
 | 7, altered | ♭9, ♯9, ♯11 (♭5), ♭13 (♯5) | natural 9 or 13 mixed with altered tensions in one voicing |
 | m7♭5 | 11, ♭13; natural 9 if the melody has it | ♭9 |
 | dim7 | the notes a whole step above each chord tone | — |
@@ -53,7 +53,7 @@ Let the melody choose. If the melody has A♭ over G7, the chord is G7♭9; if i
 ## Voicings
 
 - **Shell**: root, 3rd and 7th (or root, 7th, 3rd). Clear, light, and leaves room for the melody; the standard left-hand and guitar voicing.
-- **Rootless** (when a bass instrument plays the roots): A form 3–5–7–9, B form 7–9–3–5 (on dominant chords the 13th usually replaces the 5th). Alternating forms keeps the hand in one place through a ii–V–I: Dm9 `F3 A3 C4 E4` → G13 `F3 A3 B3 E4` → Cmaj9 `E3 G3 B3 D4`. Keep rootless voicings roughly between D3 and C5: clear, not muddy.
+- **Rootless** (when a bass instrument plays the roots): A form 3–5–7–9, B form 7–9–3–5 (on dominant chords the 13th usually replaces the 5th). Alternating forms keeps the hand in one place through a ii–V–I: Dm9 `F3 A3 C4 E4` → G13 `F3 A3 B3 E4` → Cmaj9 `E3 G3 B3 D4`. Keep rootless voicings roughly between D3 and C5, where they sound clear.
 - **Drop 2**: take a close four-note voicing and drop the second voice from the top by an octave. Cmaj7 `C4 E4 G4 B4` becomes `G3 C4 E4 B4`. A staple on guitar and piano.
 - **Quartal**: stacked fourths, open and modal. Dm11 as `D3 G3 C4 F4` (root, 11, 7, 3).
 - **Upper-structure triads** over a dominant: D/C7 (D, F♯, A over C, E, B♭) gives C13♯11; A♭/C7 (A♭, C, E♭) gives C7♯9♭13.
@@ -93,7 +93,7 @@ In 32-bar AABA tunes the bridge (B) often moves to IV or to a key a third away a
 
 The musician selects the keys under a melody in C major — E4 held through bar 1; F4 for two beats then D4 for two in bar 2; E4 then G4, two beats each, in bar 3; C4 held through bar 4 — over `| C | G7 | C | C |`, and types "jazzier".
 
-Ode rewrites the keys in place as `| Cmaj7 | Dm7 G7 | Em7 A7 | Dm7 G7sus4 |` in rootless voicings between D3 and C5, moves the bass notes on each change to the new roots, and updates the chart. Checks: E is the 3rd of Cmaj7; F the 3rd of Dm7, D the 5th of G7; E the root of Em7, G the 7th of A7; C the 7th of Dm7 and the 4th of G7sus4; guide tones move by step. Bar 4 becomes a turnaround back to the top; if this is the end of the song, keep Cmaj7 or C6 there instead.
+Ode rewrites the keys in place as `| Cmaj7 | Dm7 G7 | Em7 A7 | Dm7 G7sus4 |` in rootless voicings between D3 and C5, moves the bass notes on each change to the new roots, and updates the chart. Checks: E is the 3rd of Cmaj7; F the 3rd of Dm7, D the 5th of G7; E the root of Em7, G the 7th of A7; C the 7th of Dm7 and the 4th of G7sus4; guide tones move by step. Bar 4 becomes a turnaround back to the top; if this is the end of the song, bar 4 holds Cmaj7 or C6.
 
 Result line: "Keys now Cmaj7 – Dm7 G7 – Em7 A7 – Dm7 G7sus4 in rootless voicings, bass following · every melody note fits, guide tones move by step."
 
@@ -106,12 +106,12 @@ Run these with the harmony skill's checks.
 | Check | Correct when |
 |---|---|
 | Guide tones | the 3rds and 7ths move by a half or whole step (or hold) from chord to chord |
-| Tensions | every extension or alteration agrees with the melody note above it; no natural 9 or 13 mixed with altered tensions in one voicing |
-| Substitutions | tritone substitutions and diminished chords make the bass line smoother, not jumpier |
+| Tensions | every extension or alteration agrees with the melody note above it; each voicing keeps natural 9 and 13 apart from altered tensions |
+| Substitutions | tritone substitutions and diminished chords make the bass line smoother |
 | Register | rootless and shell voicings sit roughly between D3 and C5, out of the melody's way |
 
 ## Result lines
 
 - "ii–V into bar 5 now Gm7 C7♭9 · melody's D♭ fits as the ♭9, guide tones move by step."
-- "Comping changed to Charleston hits on 1 and the 'and' of 2, drop-2 voicings · melody fits, nothing below D3 but the bass."
+- "Comping changed to Charleston hits on 1 and the 'and' of 2, drop-2 voicings · melody fits, only the bass below D3."
 - "Last bar now D♭7 into C · tritone substitution, the melody's B sounds as its 7th, bass falls by half step."

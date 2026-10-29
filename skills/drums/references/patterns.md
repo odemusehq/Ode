@@ -16,7 +16,7 @@ Grids as in the drums skill: one bar of sixteenths in 4/4, `X` accent, `x` hit, 
 
 ## 1. Pop-rock: verse and chorus
 
-Verse — cross-stick (side stick, note 37) instead of the snare, closed eighth hats, a simple kick:
+Verse — cross-stick (side stick, note 37) for the backbeat, closed eighth hats, a simple kick:
 
 ```
         1 e + a 2 e + a 3 e + a 4 e + a

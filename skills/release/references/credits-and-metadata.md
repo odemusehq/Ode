@@ -1,6 +1,6 @@
 # Credits, splits, codes and clearance
 
-What to gather for credits and splits, what the industry codes are and who issues them, and the full clearance check before upload. Record what the musician and their collaborators tell you; never fill a gap with a guess, and mark missing items clearly.
+What to gather for credits and splits, what the industry codes are and who issues them, and the full clearance check before upload. Record only what the musician and their collaborators tell you, and mark every gap clearly as missing until they fill it.
 
 ## Contents
 - Credits to gather
@@ -16,7 +16,7 @@ What to gather for credits and splits, what the industry codes are and who issue
 | Who | What to collect | Notes |
 |---|---|---|
 | Songwriters | Legal name, artist name if different, what they wrote (lyrics, music, both) | Anyone who contributed to melody, lyrics or harmony as agreed among the writers |
-| Composition split | Each writer's share, totalling 100% | Agreed between the writers; Ode records it, never proposes who deserves what |
+| Composition split | Each writer's share, totalling 100% | Agreed between the writers; Ode only records it, and who deserves what is the writers' call |
 | Publishers | Each writer's publisher, or self-published | Needed for collecting songwriting royalties |
 | Collecting society | Each writer's performing rights organisation or collecting society, and IPI number | Lets royalties reach the right person |
 | Master owner | Who owns the recording (the artist, a label, shared) | Decides the ℗ line and who receives recording income |
@@ -58,13 +58,13 @@ Every writer signing before release matters: disagreements are far easier to set
 **ISRC rules of thumb**
 - Each distinct recording needs its own ISRC: the main version, the clean version, an instrumental, a remix, a radio edit, a live version.
 - The same recording keeps the same ISRC when it appears on later releases (for example, a single that later appears on an album).
-- Never reuse an ISRC for a different recording, and never make one up.
+- Keep each ISRC to one recording, and take every code from its issuer.
 
 ## Metadata style
 
-- **Titles:** consistent capitalisation in the distributor's style; version information in parentheses or after a dash as the distributor asks ("(Acoustic)", "(Radio Edit)", "(Remix)"); nothing else in the title (no "Official Audio", "Prod. by", emojis or hashtags).
+- **Titles:** consistent capitalisation in the distributor's style; version information in parentheses or after a dash as the distributor asks ("(Acoustic)", "(Radio Edit)", "(Remix)"); the title field holds only these (leave out "Official Audio", "Prod. by", emojis and hashtags).
 - **Artist names:** spelled exactly as on existing releases so the song lands on the right profile; featured artists in the field the distributor uses.
-- **Genre:** chosen by the musician to describe the song, not inferred from who they are.
+- **Genre:** chosen by the musician to describe the song; who they are stays out of it.
 - **Explicit flag:** accurate. Explicit if any line needs it; a separately edited clean version marked clean.
 - **Language:** the language of the lyrics, or instrumental.
 - **℗ and © lines:** year and owner. ℗ covers the sound recording; © covers the composition or the artwork, depending on the distributor's definition.
@@ -72,7 +72,7 @@ Every writer signing before release matters: disagreements are far easier to set
 
 ## Clearance list
 
-The clearance list lives in the lead sheet's notes, so it travels with the song. Keep one entry for every element that wasn't played or programmed from scratch by the musician and their collaborators, with an element whose source is unknown marked "to clear":
+The clearance list lives in the lead sheet's notes, so it travels with the song. Keep one entry for every element from outside the musician's and their collaborators' own playing and programming, with an element whose source is unknown marked "to clear":
 
 ```
 Element:        <e.g. vocal chop in chorus, crackle texture, kick one-shot, cover art>
@@ -84,7 +84,7 @@ Credit needed:  <yes, and how / no>
 
 ## Full clearance check
 
-Ode checks each condition below from the Set, the lead sheet and what the musician has said. A condition that fails, or that nobody has confirmed, is a risk to the release: the result line names it plainly with what would resolve it, worst first.
+Ode checks each condition below from the Set, the lead sheet and what the musician has said. A condition that fails, or that is still unconfirmed, is a risk to the release: the result line names it plainly with what would resolve it, worst first.
 
 - Every sample from someone else's recording is cleared for both the recording and the composition, or has been replaced.
 - Every sound isolated from a recording comes from a recording the musician owns or has cleared.

@@ -9,15 +9,15 @@ Pop lyrics aim for instant clarity: a listener understands the chorus on first h
 
 ## Get to the hook quickly
 
-- Intros are short, and the first chorus usually arrives within about the first minute. Keep verse 1 lean so the song doesn't make the listener wait.
+- Intros are short, and the first chorus usually arrives within about the first minute. Keep verse 1 lean so the listener reaches the hook fast.
 - Verse 2 is often shorter than verse 1 in modern pop (for example half the length, straight into the pre-chorus). Shortening a section removes bars the musician wrote, so do it only when asked; when verse 2 is struggling for new material, write a lean verse 2 on the melody that is there.
 - Every verse line earns its place: one clear detail per line is plenty.
 
 ## The chorus and its title
 
-- The title usually sits in the first line of the chorus, the last line, or both, and is often repeated several times. In pop, repeating the title is the hook working, not a lack of ideas.
+- The title usually sits in the first line of the chorus, the last line, or both, and is often repeated several times. In pop, repeating the title is the hook working.
 - The title is the most singable phrase in the song: short, rhythmic, with an open vowel on the word that is held.
-- The chorus is simpler and more general than the verses: everyday words, short lines, no sentences running across several lines.
+- The chorus is simpler and more general than the verses: everyday words, short lines, each sentence kept within one line.
 - Common chorus shapes, described by what the lines do:
   - title, answer line, title, answer line;
   - three setup lines and the title last, the title line unrhymed so it stands out;
@@ -51,14 +51,14 @@ The lines that start the same way build momentum; the rhyme check (US) calls "aw
 
 - Everyday, short words; contractions; normal word order. Avoid obscure references and words most listeners would have to look up.
 - Universal and specific at once: a situation any listener can step into, with one or two details that make it unmistakably this song.
-- "You" addressed directly is common because it lets listeners put themselves in the song. Don't give "you" a gender unless the musician has.
+- "You" addressed directly is common because it lets listeners put themselves in the song. Give "you" a gender only when the musician has.
 - Present tense is common in pop because it feels immediate.
 - A twist on an everyday phrase makes a strong pop title.
 
 ## Singing at tempo
 
 - At dance tempos, fast syllables need simple consonants; save consonant clusters for slower moments.
-- Leave rests. A chorus packed wall to wall with syllables has no room for the hook to breathe.
+- Leave rests. A chorus packed wall to wall with syllables leaves the hook without room to breathe.
 - Put long notes on open vowels, above all the title's key word.
 
 ## Writing to a track or topline
@@ -75,7 +75,7 @@ Pop toplines often come before the words, sung with placeholder syllables or hal
 - The chorus can be understood on first listen, and the title sits in its first or last line and repeats.
 - A post-chorus hook is one to four words and passes the singability check.
 - Every chorus line passes the singability check at the song's tempo, with rests where the singer needs to breathe.
-- Verse 2 brings something new rather than restating verse 1.
+- Verse 2 brings something new beyond verse 1.
 
 Example result lines:
 - "Chorus rebuilt around the title: 'Out of Office' closes it after three 'Tell them' lines · 5–7 syllables a line on the notes, 'away' / 'today' / 'May' perfect (US)."

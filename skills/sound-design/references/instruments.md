@@ -1,6 +1,6 @@
 # Live instruments for sound design
 
-Strengths, key controls and starting ranges for Live's instruments. Ranges are starting points to move from while listening in the track, not answers. The reasons matter more than the numbers: once you know why a value is in that range, you know which way to move it.
+Strengths, key controls and starting ranges for Live's instruments. Ranges are only starting points, to move from while listening in the track. The reasons matter more than the numbers: once you know why a value is in that range, you know which way to move it.
 
 ## Contents
 - Drift
@@ -60,14 +60,14 @@ A four-oscillator FM synth with a filter, LFO and pitch envelope. FM gives preci
 **Key controls**
 - Oscillators A–D arranged by one of 11 algorithms. A carrier is heard; a modulator changes the carrier's tone. The modulator's level sets brightness; its ratio (Coarse and Fine) sets which harmonics appear.
 - Integer ratios (1, 2, 3…) give harmonic, musical tones; non-integer ratios (such as 1.41 or 3.5) give inharmonic, bell-like or metallic tones.
-- Waveforms per oscillator (sine plus additive saw and square shapes, noise, user-drawn); Fixed mode for drum-like tones that don't follow the keyboard.
+- Waveforms per oscillator (sine plus additive saw and square shapes, noise, user-drawn); Fixed mode for drum-like tones that hold one pitch across the keyboard.
 - An envelope per oscillator, a filter with its own envelope, an LFO, a pitch envelope and glide.
 
 **Starting points**
 | Sound | Settings to start from | Why |
 |---|---|---|
 | FM electric piano | Carrier sine, modulator at ratio 1 with a fast-decaying envelope (decay 0.5–1.5 s, sustain low); optionally a quiet high-ratio modulator (around 14) with a very short envelope for the tine attack; velocity to modulator level | Brightness that fades as the note decays, and harder playing sounding brighter, is what makes it feel like a played instrument |
-| Bell | Carrier sine, modulator at a non-integer ratio (e.g. 3.5), modulator level moderate; long amp decay (2–6 s), no sustain | Inharmonic partials and a long decay read as struck metal |
+| Bell | Carrier sine, modulator at a non-integer ratio (e.g. 3.5), modulator level moderate; long amp decay (2–6 s), sustain 0 | Inharmonic partials and a long decay read as struck metal |
 | FM bass | Carrier sine, modulator at ratio 1 or 2, level 30–60%, short modulator decay (80–300 ms); Mono with short release | The modulator envelope gives a bright, plucky start over a clean sine body |
 | Synthetic kick | One sine in Fixed or low pitch with a pitch envelope falling quickly to the fundamental (see the drums sub-skill) | A fast pitch drop is the sound of most electronic kicks |
 
@@ -76,7 +76,7 @@ A four-oscillator FM synth with a filter, LFO and pitch envelope. FM gives preci
 A two-engine synth (engines A and B) built for textures, layering and expressive playing. Each engine has a characterful oscillator with two macro controls, a filter and its own modulation; the engines can be layered or balanced against each other. It supports MPE, and its oscillators and filters can follow the Set's scale.
 
 **Where it shines**
-- Textures and unusual tones that don't sound like standard subtractive synths.
+- Textures and unusual tones, far from the sound of standard subtractive synths.
 - Layered sounds in one instrument: a tonal engine plus a noisy or granular-sounding engine for air.
 - Expressive parts where pressure or slide should change the tone.
 
@@ -102,7 +102,7 @@ Use Warp when the sample should follow the tempo; turn it off when it should pla
 
 ## Sampler
 
-A full multisampler. Use it when one sample isn't enough: realistic instruments, velocity layers, alternating samples so repeated notes don't sound robotic.
+A full multisampler. Use it when a sound needs more than one sample: realistic instruments, velocity layers, alternating samples so repeated notes sound natural.
 
 - **Zones:** key zones spread samples across the keyboard; velocity zones switch layers by playing strength; sample select zones (including round robin) choose between alternatives.
 - **Modulation:** a modulation oscillator for FM or AM, LFOs, auxiliary envelopes, and a filter.

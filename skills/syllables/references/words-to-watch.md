@@ -1,6 +1,6 @@
 # Words to watch
 
-These lists help you anticipate where a count or stress might surprise you, so you choose words well the first time. They are not a way to count: the syllable check is always the authority, and it knows the accent in the settings. If the check disagrees with anything here, trust the check, and use the count it gives in the result line.
+These lists help you anticipate where a count or stress might surprise you, so you choose words well the first time. They guide your choices; counting stays with the syllable check, which is always the authority and knows the accent in the settings. If the check disagrees with anything here, trust the check, and use the count it gives in the result line.
 
 ## Contents
 1. Words with more than one sung count
@@ -59,8 +59,8 @@ For all of these the check decides. If the musician has told you they sing a wor
 | we will | we'll | 2 → 1 |
 | let us | let's | 2 → 1 |
 | going to | gonna | 3 → 2 |
-| should have, could have, would have | should've, could've, would've | 2 → 2 (no saving) |
-| is not, could not | isn't, couldn't | 2 → 2 (no saving) |
+| should have, could have, would have | should've, could've, would've | 2 → 2 (same count) |
+| is not, could not | isn't, couldn't | 2 → 2 (same count) |
 | did not | didn't | usually sung as 2; the check also allows 1 |
 | it will, that will | it'll, that'll | it'll 1 or 2; that'll 2 |
 | want to, got to, kind of | wanna, gotta, kinda | 2 → 2 |
@@ -94,9 +94,9 @@ They become stressed when the meaning demands it ("I said THE song, not a song",
 | laboratory | LAB-ra-to-ry (4) | la-BOR-a-to-ry (5) |
 | controversy | CON-tro-ver-sy | CON-tro-ver-sy or con-TROV-er-sy |
 
-**Vowels that change rhyme and sound but not count:**
+**Vowels that change rhyme and sound and keep the count:**
 - "a" in bath, path, dance, can't, laugh, glass: a long "ah" in Southern British English, a short "a" in US English and in Northern English accents.
-- "o" in hot, lot, bother: a rounded short "o" in UK English, closer to "ah" in US English, so "bother" rhymes with "father" in US English but not in UK English.
+- "o" in hot, lot, bother: a rounded short "o" in UK English, closer to "ah" in US English, so "bother" rhymes with "father" in US English only.
 - Final "r" in car, more, fear: silent in UK English, pronounced in US English.
 
 **Different words or forms:** maths (UK) and math (US); aluminium (UK, 4 or 5 syllables) and aluminum (US, 4). Use the musician's word.

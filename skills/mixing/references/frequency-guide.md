@@ -6,7 +6,7 @@ Where sounds live and what common problem words usually point to. These ranges t
 
 | Band | Range | Gives | Too much sounds |
 |---|---|---|---|
-| Sub | 20–60 Hz | Weight you feel more than hear; many small speakers can't reproduce it | Rumbling, eats headroom |
+| Sub | 20–60 Hz | Weight you feel more than hear; many small speakers lose it | Rumbling, eats headroom |
 | Bass | 60–250 Hz | Fullness, warmth, punch | Boomy, heavy |
 | Low mids | 250–500 Hz | Body | Muddy, cloudy |
 | Mids | 500 Hz–2 kHz | Character, tone | Boxy (around 400–800 Hz), honky or nasal (around 800 Hz–1.5 kHz) |
@@ -23,11 +23,11 @@ Where sounds live and what common problem words usually point to. These ranges t
 | Thin | Missing 100–300 Hz | Too much high-passing; a gentle low-mid lift; a fuller sound choice |
 | Boxy | 400–800 Hz | Broad cut of 2–4 dB |
 | Nasal, honky | 800 Hz–1.5 kHz | Broad or medium cut of 2–3 dB |
-| Harsh, piercing | 2–5 kHz, often from several bright parts or saturation | Cut on the competing parts rather than the lead; less saturation; dynamic EQ for peaks |
+| Harsh, piercing | 2–5 kHz, often from several bright parts or saturation | Cut on the competing parts, leaving the lead as it is; less saturation; dynamic EQ for peaks |
 | Sibilant | 5–9 kHz on vocals and cymbals | De-essing (see the vocals sub-skill) |
 | Dull, dark | Missing 3–10 kHz | Gentle presence or high shelf lift; a brighter sound choice |
 | Brittle, hissy | 8–16 kHz | Gentle high shelf cut; less saturation on bright parts |
-| No punch | Attack lost around 2–5 kHz on drums, or transients squashed | Slower compressor attack; transient shaping; less limiting |
+| Lacks punch | Attack lost around 2–5 kHz on drums, or transients squashed | Slower compressor attack; transient shaping; less limiting |
 
 ## Instruments
 
@@ -46,7 +46,7 @@ Where sounds live and what common problem words usually point to. These ranges t
 | Strings | Depends on the section | 200–500 Hz | 300–600 Hz | 2–6 kHz bow attack | 8–12 kHz |
 | Brass | — | 200–800 Hz | 500 Hz–1 kHz | 2–5 kHz bite | — |
 
-For vocals, judge the fundamental from the notes actually sung, not from assumptions about the singer.
+For vocals, judge the fundamental from the notes actually sung, and from those alone.
 
 ## Note frequencies for orientation
 

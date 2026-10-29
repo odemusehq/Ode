@@ -12,11 +12,11 @@ Only what is specific to pop. The loop (read, decide, change in place, verify, l
 Pop listeners decide quickly. The voice usually enters within the first few bars, and the first chorus commonly arrives within about the first 45 to 60 seconds. Ways to get there:
 
 - a short intro: 2–4 bars, or the hook itself;
-- 8-bar verses rather than 16;
+- 8-bar verses, half the usual 16;
 - a 2- or 4-bar pre-chorus;
 - opening with the chorus or the post-chorus hook.
 
-For "get to the chorus sooner", shorten what carries no lyric first (the intro, an instrumental gap); shortening a verse whose lines are in the lyrics removes part of the song, which is the song-form skill's one question.
+For "get to the chorus sooner", shorten the parts without lyrics first (the intro, an instrumental gap); shortening a verse whose lines are in the lyrics removes part of the song, which is the song-form skill's one question.
 
 ## The usual shapes
 
@@ -34,7 +34,7 @@ Same melody, new lyric — and something new in the arrangement: a different dru
 
 ## Bridge or middle 8
 
-- A new angle in the lyric, and music the song hasn't used yet: chords starting somewhere new (often IV or vi), a half-time feel, or a stripped arrangement.
+- A new angle in the lyric, and music new to the song: chords starting somewhere new (often IV or vi), a half-time feel, or a stripped arrangement.
 - It can dip (energy down before the last chorus) or build (energy rising into it).
 - Alternatives to a bridge: a stripped-down chorus, or a post-chorus variation over a breakdown.
 
@@ -95,7 +95,7 @@ Example at 72 BPM (one bar ≈ 3.33 s):
 
 ## Trying something outside the usual style
 
-On Again, or when the artist's habit is what makes the song drag, try a shape they don't usually write: verse and chorus only with a post-chorus hook for someone who always writes pre-choruses; the chorus first for someone who always opens with a verse; a bridge that builds for someone whose bridges are always quiet. The result line then says "outside your usual style".
+On Again, or when the artist's habit is what makes the song drag, try a shape they rarely write: verse and chorus only with a post-chorus hook for someone who always writes pre-choruses; the chorus first for someone who always opens with a verse; a bridge that builds for someone whose bridges are always quiet. The result line then says "outside your usual style".
 
 ## Checks for pop
 

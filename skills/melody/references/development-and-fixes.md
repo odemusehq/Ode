@@ -36,19 +36,19 @@ An eight-bar phrase pair over `| G | C | Em7 | D | G | C | D | G |`:
 - Bars 5–6: the statement again.
 - Bars 7–8: fragmentation over D climbing to the peak, then a long G4 over G — the answer, closed on 1.
 
-The listener hears the same idea six times in different forms and never feels it is a copy.
+The listener hears the same idea six times in different forms, and it feels fresh each time.
 
 ## 3. Common problems and fixes
 
 | Problem | Likely cause | Try |
 |---|---|---|
-| The chorus doesn't lift | chorus tessitura no higher than the verse's; same rhythm as the verse | raise the chorus tessitura by a third to a fifth, or lower the verse; change the rhythm (longer notes, start on the downbeat); put the hook on the high point |
-| Forgettable | no motif that repeats; too many ideas | keep the best one-bar idea and repeat it; repeat, repeat, contrast |
-| Boring | exact repetition with no change; every phrase ends the same way | change one ending; use a sequence; vary one phrase's rhythm or length |
-| Hard to sing | unrecovered leaps; awkward intervals; high for too long; no breaths | replace leaps with steps or chord-tone thirds; lower the tessitura; add rests; open vowels on high notes |
+| The chorus lacks lift | chorus tessitura at or below the verse's; same rhythm as the verse | raise the chorus tessitura by a third to a fifth, or lower the verse; change the rhythm (longer notes, start on the downbeat); put the hook on the high point |
+| Forgettable | one-off motifs; too many ideas | keep the best one-bar idea and repeat it; repeat, repeat, contrast |
+| Boring | exact, unvaried repetition; every phrase ends the same way | change one ending; use a sequence; vary one phrase's rhythm or length |
+| Hard to sing | unrecovered leaps; awkward intervals; high for too long; missing breaths | replace leaps with steps or chord-tone thirds; lower the tessitura; add rests; open vowels on high notes |
 | Wordy or rushed | too many syllables per bar at this tempo | cut syllables, or spread the line over more bars with longer notes on key words |
 | Sounds wrong against the chords | unresolved non-chord tones on strong beats; a note a half step above a chord tone | move the strong-beat note to a chord tone, resolve by step, or change the chord (harmony skill) |
-| Wanders | no clear high point, no clear cadences | choose one peak per section; pair phrases as question and answer |
+| Wanders | unclear high point, unclear cadences | choose one peak per section; pair phrases as question and answer |
 | Static | repeated notes without rhythmic interest | add syncopation, or one leap to a key word |
 | Busy against the groove | the melody copies the hi-hat subdivision | fewer, longer notes; leave space around the snare |
 | Ends too early | every phrase lands on the tonic | end earlier phrases on 2, 5 or 7; save the tonic for the end |
@@ -59,12 +59,12 @@ The listener hears the same idea six times in different forms and never feels it
 Repeated sections should stay recognisable and still feel like progress:
 
 - keep the hook's rhythm and first notes untouched;
-- vary in small ways: a pickup, a passing note, a held note instead of two short ones, the last phrase lifted to a higher ending;
-- in the final chorus, add a higher alternative line or ad-libs above the hook rather than rewriting the hook (the vocals skill covers this);
+- vary in small ways: a pickup, a passing note, two short notes merged into one held note, the last phrase lifted to a higher ending;
+- in the final chorus, keep the hook as it is and add a higher alternative line or ad-libs above it (the vocals skill covers this);
 - edit the repeated section's own clip in place, and name the bars that differ in the result line.
 
 ## 5. Countermelodies and riffs
 
 - A countermelody moves while the main melody holds or rests, fills the gaps, and sits in a different register. Contrary motion against the main line keeps the two distinct. Keep its rhythm simpler than the topline so the vocal stays in front.
 - A riff is a one- or two-bar instrumental hook that repeats. Give it a strong rhythm, few pitches (pentatonic notes work over most chords of a loop) and its own register, away from the vocal.
-- Check both against the chords on strong beats and against the vocal, so they don't double it at a clashing interval.
+- Check both against the chords on strong beats and against the vocal, so they keep clear of clashing intervals with it.

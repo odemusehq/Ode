@@ -1,13 +1,13 @@
 ---
 name: mastering
-description: Master the song in place in Ableton Live — build or tune the mastering chain on the Main track (Utility, EQ Eight, Glue Compressor, Multiband Dynamics when needed, saturation or a clipper, Limiter) with Live's devices or the mastering plug-ins the musician already added, aimed at the loudness target (around −14 LUFS integrated and −1 dBTP for streaming, or the loudness target in the musician's settings for club, CD or other uses) — then check the chain's order and settings against the target, measure a bounce of the master when the musician drops one onto an audio track, check that the song keeps its dynamics, and report in one line. Use this whenever the musician clicks "Master for streaming", asks for a master, says the song is too quiet, too loud or squashed next to other songs, mentions LUFS, true peak, a limiter, streaming, club or CD versions, or is getting ready to export for release, even if they never say "mastering".
+description: Master the song in place in Ableton Live — build or tune the mastering chain on the Main track (Utility, EQ Eight, Glue Compressor, Multiband Dynamics when needed, saturation or a clipper, Limiter) with Live's devices or the mastering plug-ins the musician already added, aimed at the loudness target (around −14 LUFS integrated and −1 dBTP for streaming, or the loudness target in the musician's settings for club, CD or other uses) — then check the chain's order and settings against the target, measure a bounce of the master when the musician drops one onto an audio track, check that the song keeps its dynamics, and report in one line. Use this whenever the musician clicks "Master for streaming", asks for a master, says the song is too quiet, too loud or squashed next to other songs, mentions LUFS, true peak, a limiter, streaming, club or CD versions, or is getting ready to export for release, even when the request leaves out the word "mastering".
 ---
 
 # Mastering
 
-Mastering is the last stage before release: a consistent, flattering tonal balance, controlled dynamics, a loudness that suits the music and where it will be played, and peaks that survive encoding. Good mastering is mostly small moves made with care. Big problems (a buried vocal, a boomy bass, a harsh synth) are mix problems: fix them in the mix, which in Live is one step away, rather than bending the whole master around them.
+Mastering is the last stage before release: a consistent, flattering tonal balance, controlled dynamics, a loudness that suits the music and where it will be played, and peaks that survive encoding. Good mastering is mostly small moves made with care. Big problems (a buried vocal, a boomy bass, a harsh synth) are mix problems: fix them in the mix, which in Live is one step away, so the master serves the whole song.
 
-Ode masters in place on the Main track: it builds the chain once and tunes its values on later requests, rather than stacking another chain on top.
+Ode masters in place on the Main track: it builds the chain once and tunes its values on later requests, keeping a single chain.
 
 ## The loop
 
@@ -15,7 +15,7 @@ Ode masters in place on the Main track: it builds the chain once and tunes its v
 2. **Decide** what the master needs, in plain words ("a little dull above 8 kHz, the low end booms on two notes, about 5 dB below the target"), and which stages of the chain solve it. When a small mix fix is clearly better (one boomy bass note), make it with the mixing skill and say so in the result line.
 3. **Change it in place**, as one undo step:
    - Build the chain on the Main track with the Limiter last, so its ceiling holds for everything before it.
-   - Use only the stages the song needs, in the order below. On later requests, tune the chain that is there; when the musician has their own chain, tune it rather than adding another.
+   - Use only the stages the song needs, in the order below. On later requests, tune the chain that is there; when the musician has their own chain, tune that one.
    - Raise the Limiter's gain toward the target, as far as the music allows; a bounce of the master on an audio track, when the musician adds one, shows how close it came.
 4. **Verify** with the checks below, fixing until they pass (up to three rounds); otherwise the result line says what still fails. Ode's measurements hear the tracks before their devices, so loudness and peak figures for the master come only from a bounce the musician drops onto an audio track, rendered and measured there; give only figures that were measured.
 5. **Let them hear it.** When your turn ends, the musician presses play in Live: name the loudest section in the result line, so they hear the master where it works hardest.
@@ -24,7 +24,7 @@ Ode masters in place on the Main track: it builds the chain once and tunes its v
    - "Limiter eased 2 dB after your bounce measured −0.4 dBTP, Saturator clipping shaves the kick peaks · ceiling −1 dB, aimed at −9 LUFS for club."
    - "Low end steadier: Multiband low band at 1.5:1 on the booming notes · low end mono below 120 Hz, ceiling −1 dB."
 
-**Again** is another take: the Set is back as it was, so make a clearly different master on the same target (more glue and less limiting, a darker or brighter balance), not the same chain nudged.
+**Again** is another take: the Set is back as it was, so make a clearly different master on the same target, with a new approach to the chain (more glue and less limiting, a darker or brighter balance).
 
 **Outside the usual style.** When a master goes beyond the artist's usual releases (much denser, much brighter), the result line says so.
 
@@ -40,12 +40,12 @@ Ode masters in place on the Main track: it builds the chain once and tunes its v
 
 ## Questions
 
-The target comes from the request or from the musician's settings, so don't ask how loud. When the musician says how loud they want their masters (a LUFS figure, "club loud"), store it as their loudness target setting. Mastering changes are edits in place that Undo reverses, and the mode decides whether a change waits for Apply. Ask one line with buttons only when the answer changes what you would do: the fix would mean removing Master processing the musician put there themselves, rather than tuning it.
+The target comes from the request or from the musician's settings, so take it from there without asking how loud. When the musician says how loud they want their masters (a LUFS figure, "club loud"), store it as their loudness target setting. Mastering changes are edits in place that Undo reverses, and the mode decides whether a change waits for Apply. Ask one line with buttons only when the answer changes what you would do: the fix would mean removing Master processing the musician put there themselves; tuning it goes ahead without a question.
 
 ## Preparing the mix
 
-- **Headroom:** the mix peaks around −6 to −3 dBFS with nothing clipping. When it doesn't, bring the mix levels down first (mixing skill) rather than trimming the problem away at the master.
-- **No limiter doing the work on the mix.** Master-bus processing the musician's sound depends on (a clipper or glue compressor they love) stays; the chain goes after it, knowing it is there.
+- **Headroom:** the mix peaks around −6 to −3 dBFS with every part below clipping. When it peaks higher, bring the mix levels down first (mixing skill), so the problem is fixed at its source.
+- **Limiting belongs to the master.** Master-bus processing the musician's sound depends on (a clipper or glue compressor they love) stays; the chain goes after it, knowing it is there.
 
 ## The chain
 
@@ -69,7 +69,7 @@ Third-party mastering plug-ins the musician already added are welcome; the same 
 - Streaming in general: around **−14 LUFS integrated** with a **−1 dBTP** true-peak ceiling is a common, safe target.
 - Apple Music normalises to around −16 LUFS; a −14 LUFS master is simply turned down a little.
 - Masters louder than about −14 LUFS are safer with a −2 dBTP ceiling, because lossy encoding adds peaks.
-- Club play, DJ use, CD and downloads have no normalisation: loudness is an artistic choice, but true peaks still need a margin below 0 dBTP.
+- Club play, DJ use, CD and downloads play each file at its own level: loudness is an artistic choice, and true peaks still need a margin below 0 dBTP.
 
 **The music decides.** The target is the default, but a dense club track may sound right at −9 to −7 LUFS, while an acoustic ballad may sound best at −14 to −16 LUFS or lower. Stop where the song still breathes. Per-platform details are in `references/loudness-targets.md`.
 
@@ -77,20 +77,20 @@ Third-party mastering plug-ins the musician already added are welcome; the same 
 
 - **Watch the limiter.** Regularly taking off more than about 3–4 dB, it costs punch and clarity. Get loudness earlier (gentle compression, saturation, a clipper, or a mix fix) or accept a lower target.
 - **The drums still hit.** If the kick and snare soften or crackle, back off.
-- **The song keeps its shape.** The chorus still feels bigger than the verse; mastering narrows the gap between peak and average level a little, not a lot.
+- **The song keeps its shape.** The chorus still feels bigger than the verse; mastering narrows the gap between peak and average level only a little.
 
 ## Translation
 
-- Mono and small speakers: summed to mono nothing important vanishes; on small speakers the bass is carried by its harmonics (low-end mixing sub-skill).
-- The very start and end: fade-ins and tails complete, no clicks, a sensible amount of silence.
+- Mono and small speakers: summed to mono every important part stays; on small speakers the bass is carried by its harmonics (low-end mixing sub-skill).
+- The very start and end: fade-ins and tails complete, free of clicks, a sensible amount of silence.
 - Lossy encoding (as streaming uses) adds peaks; −1 dBTP, or −2 dBTP for loud masters, leaves room for it.
 
 ## Exporting
 
 Settings for the final files, which the release skill checks:
 - **Main master:** WAV or AIFF, 24-bit at the project's sample rate (44.1 or 48 kHz) unless the distributor asks otherwise; the full song including tails; normalisation off.
-- **Dither** only when reducing bit depth, once, as the very last step (16-bit for CD); never on 32-bit float files.
-- **No MP3s to distributors;** they encode from the WAV.
+- **Dither** only when reducing bit depth, once, as the very last step (16-bit for CD); 32-bit float files stay undithered.
+- **Only lossless files go to distributors;** they encode from the WAV.
 - **Alternate versions** (instrumental, clean or radio edit, a cappella) go through the same chain with the same settings so they match; a club master gets its own limiter settings.
 - **File names** carry the title, version and format, for example "Title - Main Master - 24bit 44k1.wav".
 
@@ -98,7 +98,7 @@ When a master is done, the result line can end with these settings in a few word
 
 ## Albums and EPs
 
-Master the songs as a set: similar perceived loudness and tonal character from track to track (not identical LUFS numbers; a quiet ballad should still feel quieter than the single), consistent ceilings, and gaps and transitions that suit the sequence.
+Master the songs as a set: similar perceived loudness and tonal character from track to track (each song keeps its own LUFS number; a quiet ballad should still feel quieter than the single), consistent ceilings, and gaps and transitions that suit the sequence.
 
 ## Reference files
 

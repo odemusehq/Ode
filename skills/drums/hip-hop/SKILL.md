@@ -9,7 +9,7 @@ Only what is specific to hip-hop. The loop (read, decide, change in place, verif
 
 ## Leave room for the voice
 
-Rap is rhythmically dense, so the drums give the pocket rather than competing with the words. Keep the mid-range clear, keep patterns steady enough for the rapper to lock to, and save the busiest moments for the gaps between lines — read the vocal's notes or the recorded vocal's clips to find them.
+Rap is rhythmically dense, so the drums give the pocket and leave the words room. Keep the mid-range clear, keep patterns steady enough for the rapper to lock to, and save the busiest moments for the gaps between lines — read the vocal's notes or the recorded vocal's clips to find them.
 
 ## Boom bap
 
@@ -47,7 +47,7 @@ On beat 4, replace the hats with a roll: six sixteenth-note triplets, or eight t
 
 ## The 808
 
-In trap and drill the 808 is both kick and bass; its notes are written with the bass skill (tuning, note length, slides). If a separate kick plays too, tune it to the 808 and place the two so they hit together or alternate, never smearing into each other.
+In trap and drill the 808 is both kick and bass; its notes are written with the bass skill (tuning, note length, slides). If a separate kick plays too, tune it to the 808 and place the two so they hit together or alternate and stay distinct.
 
 ## Stops, switches, hooks and verses
 
@@ -66,14 +66,14 @@ Run these with the drums skill's checks.
 
 | Check | Correct when |
 |---|---|
-| Room for the voice | no fill, roll or extra hit lands on the start of a key word in the vocal; the busiest moments fall in the gaps between lines |
+| Room for the voice | fills, rolls and extra hits land clear of the start of each key word in the vocal; the busiest moments fall in the gaps between lines |
 | Snare placement | 2 and 4 for boom bap; beat 3 for half-time trap and drill feels |
 | Variation | the pattern changes slightly at least every four bars |
-| 808 and kick | a separate kick and the 808 start together or alternate; neither rings across the other |
-| Rolls | rolls sit on weak beats or the end of a bar, and their velocities rise or fall rather than staying flat |
+| 808 and kick | a separate kick and the 808 start together or alternate; each one's tail stays clear of the other |
+| Rolls | rolls sit on weak beats or the end of a bar, and their velocities rise or fall |
 
 ## Result lines
 
 - "Hat rolls on beat 4 of bars 2 and 4, rising in velocity · clap still on 3, rolls clear of the rapper's lines."
-- "Stop under the punchline in bar 8: drums out for beat 4, back on the downbeat · lands on 1, nothing else changed."
+- "Stop under the punchline in bar 8: drums out for beat 4, back on the downbeat · lands on 1, the rest as it was."
 - "Boom bap swing to 58% on hats and ghost snares, snare a touch late · kick still with the bass, loop ends clean."

@@ -39,8 +39,8 @@ How to spread a chord's notes for a given instrument and register. Note names us
 ## Doubling
 
 - In triads, double the root first, then the fifth.
-- In a dominant chord that resolves, don't double the leading tone: both copies want to rise to the tonic and the line becomes awkward.
-- Sus and add chords: keep the 2nd, 4th or 9th near the top, not crowded against the root in the low register.
+- In a dominant chord that resolves, give the leading tone to a single voice: two copies would both want to rise to the tonic and the line becomes awkward.
+- Sus and add chords: keep the 2nd, 4th or 9th near the top, well clear of the root in the low register.
 
 ## Voice-leading examples
 

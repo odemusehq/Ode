@@ -9,7 +9,7 @@ Only what is specific to pop. The loop (read, decide, change in place, verify, l
 
 ## Loops are normal
 
-Many pop songs run two to four chords through the whole song. The craft is in what changes around the loop, not in adding chords for their own sake. Common loops (common property):
+Many pop songs run two to four chords through the whole song. The craft lies in what changes around the loop. Common loops (common property):
 
 | Loop (C major) | Numerals | Character |
 |---|---|---|
@@ -35,7 +35,7 @@ When "every section sounds the same", change one or two of these per section bou
 
 ## Pre-chorus
 
-- Move to subdominant chords (IV, ii) and end on V, IV or a sus chord, not on I, so the chorus downbeat is the release.
+- Move to subdominant chords (IV, ii) and end open, on V, IV or a sus chord, so the chorus downbeat is the release.
 - Rising bass lines add push: `| Dm7 | Em7 | Fmaj7 | Gsus4 G |` climbs by step and ends on the dominant.
 - A bar of IV/V (F/G) right before the chorus is a soft dominant that pop uses constantly.
 
@@ -61,7 +61,7 @@ When "every section sounds the same", change one or two of these per section bou
 
 ## Bridge
 
-- Go where the song has not been: start on a chord not used yet (often IV, vi or ♭VI), slow down or speed up the harmonic rhythm, or move to the relative minor or major.
+- Take the song somewhere new: start on a chord still unused (often IV, vi or ♭VI), slow down or speed up the harmonic rhythm, or move to the relative minor or major.
 - Return through V, or a held IV/V, into the last chorus so the chorus downbeat feels like coming home.
 
 ## Final-chorus key change
@@ -84,7 +84,7 @@ The musician selects the verse keys and types "every section sounds the same": t
 
 Result line: "Verse now over a C pedal with low, close voicings, chorus unchanged · melody fits every chord, verse and chorus differ in bass and register."
 
-Other takes for Again: start the chorus on IV (`| F | C/E | Dm7 | Gsus4 G |`) so it lifts and keeps moving; or a Dorian-coloured verse in A minor, `| Am7 | D9 | Am7 | D9 |` — the D chord's F♯ needs a verse melody with no F natural, and for an artist who never leaves the major key it is outside the usual style, so the result line says so.
+Other takes for Again: start the chorus on IV (`| F | C/E | Dm7 | Gsus4 G |`) so it lifts and keeps moving; or a Dorian-coloured verse in A minor, `| Am7 | D9 | Am7 | D9 |` — the D chord's F♯ needs a verse melody free of F natural, and for an artist who always stays in major keys it is outside the usual style, so the result line says so.
 
 ## Checks for pop
 
@@ -92,13 +92,13 @@ Run these with the harmony skill's checks.
 
 | Check | Correct when |
 |---|---|
-| Contrast | neighbouring sections differ in something besides the lyric: start chord, bass, harmonic rhythm, voicing or density |
-| Pre-chorus | its last chord is not I, so the chorus downbeat is the release |
+| Contrast | neighbouring sections differ beyond the lyric, in start chord, bass, harmonic rhythm, voicing or density |
+| Pre-chorus | it ends open, away from I, so the chorus downbeat is the release |
 | Turnaround | a repeating chorus ends its first pass on V or IV |
 | Key change | after one, the melody passes the range check in the new key |
 
 ## Result lines
 
 - "Pre-chorus now climbs Dm7 – Em7 – Fmaj7 – Gsus4 G under a rising bass · melody fits, ends on V into the chorus."
-- "Last chorus line borrows Fm before the final C · no A natural in the melody there, bass on F, chart updated."
-- "Chorus loop now starts on F instead of C · same chords, melody fits, verse and chorus now differ in where the loop lands."
+- "Last chorus line borrows Fm before the final C · melody there clear of A natural, bass on F, chart updated."
+- "Chorus loop start moved from C to F · same chords, melody fits, verse and chorus now differ in where the loop lands."

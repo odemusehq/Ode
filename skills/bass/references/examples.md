@@ -49,7 +49,7 @@ E7, 105 BPM, a one-bar figure in sixteenths. The kick plays on 1 and 3, the snar
 
 ## 4. House off-beat bass
 
-A minor, 124 BPM, kick on every beat. The bass plays the off-beats between the kicks, so the two never mask each other.
+A minor, 124 BPM, kick on every beat. The bass plays the off-beats between the kicks, so the two always stay clear of each other.
 
 ```
 | Am | r(½) A1(½) r(½) A1(½) r(½) A1(½) r(½) A2(½) |
@@ -68,7 +68,7 @@ The first four bars of a jazz blues in F, quarter notes, swung feel.
 | Cm7  F7  | C2(1)  G1(1)  F1(1)  A1(1)  |
 ```
 
-Chord tones fall on beats 1 and 3. In bars 1, 2 and 4, beat 4 approaches the next root from a half step away (B1 into B♭1, E2 into F2, A1 into the B♭ of bar 5); bar 3 walks down the F7 chord instead, to vary the direction.
+Chord tones fall on beats 1 and 3. In bars 1, 2 and 4, beat 4 approaches the next root from a half step away (B1 into B♭1, E2 into F2, A1 into the B♭ of bar 5); bar 3 walks down the F7 chord to vary the direction.
 
 ## 6. A longer 808 line
 
@@ -83,5 +83,5 @@ G minor, 150 BPM, half-time feel with the clap on beat 3, `| Gm | Gm | E♭ | D 
 
 - Every bar leaves beat 3 free for the clap.
 - Three slides in four bars: up a fifth, down a half step into the D chord, and down into the loop. More would blur the line.
-- The E♭ sits up at E♭2 (about 78 Hz) rather than E♭1 (about 39 Hz), where small speakers would lose it.
+- The E♭ sits up at E♭2 (about 78 Hz), where small speakers still carry it; at E♭1 (about 39 Hz) they would lose it.
 - Note lengths set the tails: the long notes ring, the short ones stop before the next hit.

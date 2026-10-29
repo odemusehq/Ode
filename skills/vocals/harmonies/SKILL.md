@@ -12,13 +12,13 @@ Only what is specific to harmony lines. The loop (read, decide, change in place,
 - **A third above** the lead is the most common harmony: sweet and close.
 - **A third below**, or **a sixth below** (the third above, dropped an octave): warm, and the choice when the lead is already high or a third above would leave the singer's range.
 - **Fourths and fifths**: open, hollow, sometimes folk-like or ancient-sounding; use them for a few notes or on purpose.
-- **Octaves**: strength rather than harmony (covered under doubles in the vocals skill).
+- **Octaves**: strength alone (covered under doubles in the vocals skill).
 
 Stay in the key: a diatonic third above is sometimes a major third, sometimes a minor third, depending on the scale step.
 
-Decide the interval from the range first: find the lead's highest note in the passage and check the harmony's note against it. If a third above the peak is out of range, write the line below the lead for the whole phrase rather than jumping from above to below, which would cross the lead.
+Decide the interval from the range first: find the lead's highest note in the passage and check the harmony's note against it. If a third above the peak is out of range, write the line below the lead for the whole phrase, so it stays on one side; a jump from above to below would cross the lead.
 
-## Fit the chord, not just the scale
+## Fit the chord as well as the scale
 
 A harmony that runs exactly parallel to the lead in diatonic thirds sometimes lands on a note that clashes with the chord. On strong beats and long notes, harmony notes should be chord tones (or colour tones the chord part plays). When the parallel note fails:
 
@@ -32,7 +32,7 @@ A harmony that runs exactly parallel to the lead in diatonic thirds sometimes la
 - **Oblique** motion (one line holds, the other moves) is the easiest way around a clash and makes the harmony simple to sing.
 - **Contrary** motion (opposite directions) adds independence; use it at phrase ends and in counter-lines.
 - Long runs of parallel fifths or octaves with the lead sound hollow; keep them for deliberate effects.
-- Don't cross the lead (an upper harmony dipping below it, or a lower one rising above it) unless that is the idea; it confuses which line is the melody.
+- Keep each harmony on its own side of the lead (an upper harmony above it, a lower one below it), and cross only when that is the idea; crossing confuses which line is the melody.
 
 ## Words and rhythm
 
@@ -45,7 +45,7 @@ A harmony that runs exactly parallel to the lead in diatonic thirds sometimes la
 A harmony line has to work on its own, because someone has to sing it in tune.
 
 - Prefer steps and held notes; smooth out awkward leaps the parallel line inherits (a held note is often better than a sixth up and back).
-- No tritone or major-seventh leaps.
+- Leave out tritone and major-seventh leaps.
 - Keep the whole line inside its singer's range.
 
 ## Three-part stacks
@@ -81,9 +81,9 @@ Harmony:            | E4(1) F♯4(1) A4(1) E4(1) | C♯4(1) D4(1) F♯4(2) | F�
 - Bar 3: the parallel line's G♯4 is the ♯11 of D on beats 2 and 4. Holding A4 (oblique motion) keeps every note a chord tone and is easier to sing; the F♯4 at the start of the bar carries over from bar 2.
 - Bar 4: G♯4, the 3rd of E, works as it is.
 
-Checks: chord tones on every strong beat and long note; the line moves mostly by step inside C♯4–A4, within the singer's range; never a second against the lead; never crosses it.
+Checks: chord tones on every strong beat and long note; the line moves mostly by step inside C♯4–A4, within the singer's range; every note a third or more from the lead, and always above it.
 
-Result line: "Harmony above the lead on the chorus, moved to chord tones in bars 1–3 · inside your range, no clash with the lead, easy to sing."
+Result line: "Harmony above the lead on the chorus, moved to chord tones in bars 1–3 · inside your range, clear of the lead, easy to sing."
 
 ## Checks for harmonies
 
@@ -93,11 +93,11 @@ Run these with the vocals skill's checks.
 |---|---|
 | Interval | the line keeps one side of the lead for each phrase (above or below), and a third above the lead's peak was used only if it is inside the range |
 | Chord fit | strong-beat and long harmony notes are chord tones, or colours the chord part plays |
-| Motion | no crossing of the lead, and no long stretches of parallel fifths or octaves |
-| Alone | the harmony line is singable by itself: mostly steps and held notes, no tritone or major-seventh leaps |
+| Motion | the line stays on its side of the lead, and any stretch of parallel fifths or octaves stays short |
+| Alone | the harmony line is singable by itself: mostly steps and held notes, without tritone or major-seventh leaps |
 
 ## Result lines
 
-- "Harmony a third below on the chorus, held through bar 6 to avoid a clash · inside your range, chord tones on strong beats, never crosses the lead."
+- "Harmony a third below on the chorus, held through bar 6 to avoid a clash · inside your range, chord tones on strong beats, stays below the lead."
 - "Harmony only on the title, a sixth below · chord tones, lead stays on top."
 - "Stack on the last chorus's final line: third below and sixth below the lead · every note a chord tone, both parts inside the range."

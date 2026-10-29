@@ -1,6 +1,6 @@
 # Forms by genre
 
-Typical structures, as habits rather than rules. Always check the artist's own songs and what this song's lyric needs. For which parts play in each section, see the arrangement skill.
+Typical structures, as loose habits. Always check the artist's own songs and what this song's lyric needs. For which parts play in each section, see the arrangement skill.
 
 ## Contents
 
@@ -68,9 +68,9 @@ Verse–pre-chorus–chorus with a bridge, often with a post-chorus. Reaches the
 ## 9. House, techno and other club music
 
 - Built in 8-, 16- and 32-bar phrases. Elements enter and leave on phrase boundaries (bars 17, 33, 49…).
-- Typical shape: Intro (16–32 bars, drums and few elements, for mixing) – Groove (16–32) – Breakdown (8–32, no kick) – Build (4–16) – Drop (16–32) – second Breakdown and Build – second Drop – Outro (16–32, stripping back for mixing).
+- Typical shape: Intro (16–32 bars, drums and few elements, for mixing) – Groove (16–32) – Breakdown (8–32, without the kick) – Build (4–16) – Drop (16–32) – second Breakdown and Build – second Drop – Outro (16–32, stripping back for mixing).
 - At 124 BPM, 32 bars last about 62 seconds; extended club versions commonly run 5–8 minutes, shorter edits for streaming.
-- Vocals, when present, often appear in the groove and the breakdown rather than throughout.
+- Vocals, when present, often appear only in the groove and the breakdown.
 
 ## 10. Ballads in any genre
 

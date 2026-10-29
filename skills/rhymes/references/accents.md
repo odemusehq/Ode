@@ -1,6 +1,6 @@
 # Rhymes across accents
 
-A rhyme depends on the stressed vowel and everything after it, and accents differ in exactly those sounds. This file explains the main differences between UK and US English that change rhymes, plus regional accents worth knowing. The rhyme check always has the final word for the accent in the settings; the labels in these tables are the ones it gives. Use this to anticipate problems and to say in a few words why a pair rhymes in one accent and not the other.
+A rhyme depends on the stressed vowel and everything after it, and accents differ in exactly those sounds. This file explains the main differences between UK and US English that change rhymes, plus regional accents worth knowing. The rhyme check always has the final word for the accent in the settings; the labels in these tables are the ones it gives. Use this to anticipate problems and to say in a few words why a pair rhymes in one accent only.
 
 ## Contents
 1. The "r" after a vowel
@@ -12,7 +12,7 @@ A rhyme depends on the stressed vowel and everything after it, and accents diffe
 
 ## 1. The "r" after a vowel
 
-US English pronounces an "r" after a vowel (car, more, near, farmer); standard Southern British English doesn't. Without the "r", many more words rhyme in UK English:
+US English pronounces an "r" after a vowel (car, more, near, farmer); standard Southern British English leaves it silent. Without the "r", many more words rhyme in UK English:
 
 | Pair | UK | US |
 |---|---|---|
@@ -74,12 +74,12 @@ In much of the US the vowels in "caught" and "cot", or "talk" and "rock", have a
 
 The settings offer two standards, but singers bring their own voices:
 
-- **Northern English:** the short "a" in bath words (section 2); in many Northern accents "luck" and "look", or "putt" and "put", share a vowel, which creates rhymes the standard accents don't have.
+- **Northern English:** the short "a" in bath words (section 2); in many Northern accents "luck" and "look", or "putt" and "put", share a vowel, which creates rhymes found only in those accents.
 - **Scottish and Irish English:** the "r" after a vowel is usually pronounced, so "-r" words rhyme more like US English in that respect.
 - **Southern US:** in some accents "pin" and "pen" sound the same, so they rhyme.
 - **Many US accents:** the "caught" and "cot" vowels are the same (section 3).
 
-These are tendencies, not rules about any individual. Never assume an accent from where someone lives or comes from; go by what the musician tells you, what Ode remembers them saying, and how they sing.
+These are tendencies across speakers; each individual sings their own way. Base a musician's accent only on what they tell you, what Ode remembers them saying, and how they sing, and leave where they live or come from out of it.
 
 ## 6. What to do
 

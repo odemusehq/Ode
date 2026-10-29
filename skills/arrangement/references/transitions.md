@@ -13,7 +13,7 @@ How to build and place common transitions in Live. A transition signals that a c
 - Tape stops
 - Impacts and crashes
 - Vocal pickups
-- When you can't write automation
+- When automation is the musician's to draw
 
 ## Placement at a glance
 
@@ -35,21 +35,21 @@ How to build and place common transitions in Live. A transition signals that a c
 ## Risers and downlifters
 
 - **Noise riser.** Noise (from Drift, Wavetable, Operator or a sample) through a high-pass or band-pass filter that rises over the build, level rising, a reverb whose wet signal grows. Add a tonal layer rising in pitch (a saw or a sine on the song's root) to make it musical.
-- **High-pass the riser** at 200–500 Hz so it adds tension without adding low end; the low end should be clearing out before the arrival, not filling up.
+- **High-pass the riser** at 200–500 Hz so it adds tension without adding low end; the low end should be clearing out before the arrival.
 - **End it with intent.** Ending exactly on the downbeat makes a smooth arrival; ending a beat early and leaving silence makes a harder one.
 - **Downlifter.** The reverse movement (falling pitch and filter, level fading) after a peak, leading into a calmer section. Often follows an impact.
 - Pre-made risers the musician places from their library are fine; trim them to the build length and keep them in key if they are tonal.
 
 ## Reverse cymbals and reverse reverbs
 
-- **Reverse cymbal.** Take a crash or cymbal sample, reverse it (the audio clip's reverse function or in a resampled copy), and place it so the end, now the loudest point, lands exactly on the downbeat. Fade its start so it swells in from nothing.
+- **Reverse cymbal.** Take a crash or cymbal sample, reverse it (the audio clip's reverse function or in a resampled copy), and place it so the end, now the loudest point, lands exactly on the downbeat. Fade its start so it swells in from silence.
 - **Reverse reverb (a swell into a word or hit).**
   1. Copy the audio of the first word or hit of the new section to a separate track.
   2. Reverse it.
   3. Add a long reverb (decay 2–5 s) at 100% wet; the musician records or resamples the result to audio in Live.
   4. Reverse that recording, so the reverb tail now comes before the sound.
   5. Place it so the swell ends exactly where the original dry word or hit begins; trim and fade its start.
-- High-pass the swell (200–400 Hz) so it doesn't muddy the end of the previous section.
+- High-pass the swell (200–400 Hz) so it keeps the end of the previous section clear.
 
 ## Drum fills and snare builds
 
@@ -58,13 +58,13 @@ How to build and place common transitions in Live. A transition signals that a c
 
 ## Filter sweeps and width changes
 
-- **High-pass sweep in a build.** An Auto Filter on the music (a group track, or each part except the riser) with a high-pass rising from about 30 Hz to 300–1000 Hz over the build, then back to fully open exactly on the downbeat. The low end returning is the impact.
+- **High-pass sweep in a build.** An Auto Filter on the music (a group track, or each part, with the riser left unfiltered) with a high-pass rising from about 30 Hz to 300–1000 Hz over the build, then back to fully open exactly on the downbeat. The low end returning is the impact.
 - **Low-pass opening** for intros or the start of a section: from about 300–800 Hz to fully open over 8–16 bars.
 - **Width change.** Narrow the music towards mono during the last bars of a build (Utility width from 100% down to around 0–50%), then back to full width on the downbeat. The sudden width makes the arrival feel bigger.
 
 ## Silence and drop-outs
 
-- Cutting everything (or everything but the vocal) for a beat to a bar before the downbeat creates suspense and makes the return land hard.
+- Cutting everything (or every part around the vocal) for a beat to a bar before the downbeat creates suspense and makes the return land hard.
 - Make the silence real: reverb and delay tails ringing through it weaken the effect, so shorten or cut them at that moment.
 - Drop-outs inside a section (removing the drums for one bar, or the bass for two beats) are small transitions that mark lyrics or phrase ends.
 
@@ -76,7 +76,7 @@ How to build and place common transitions in Live. A transition signals that a c
 
 ## Tape stops
 
-- The sound slows down and drops in pitch to nothing, like a tape machine stopping. Usually over a quarter beat to one beat at the end of a section, into silence or a new section.
+- The sound slows down and drops in pitch to silence, like a tape machine stopping. Usually over a quarter beat to one beat at the end of a section, into silence or a new section.
 - Resample the last beat to audio and make the pitch and speed fall (for example a fast downward pitch envelope in Simpler, or by re-pitching the warped clip), or set up a tape-stop plug-in the musician already has on the track.
 - Use it rarely; it is a strong, recognisable effect.
 
@@ -90,8 +90,8 @@ How to build and place common transitions in Live. A transition signals that a c
 
 A vocal line that begins before the downbeat (a pickup) pulls the listener into the next section, often more naturally than any effect. When the melody allows, starting a chorus line on the last beat or two of the pre-chorus is a strong transition by itself. While the topline is still MIDI, the melody and lyrics skills can add the pickup in place and check it like any melodic change; a recorded vocal stays as it was sung.
 
-## When you can't write automation
+## When automation is the musician's to draw
 
-Most transitions don't need automation: a fill, a drop-out, a clip that stops a beat early, a riser or reverse cymbal cut to length, a crash on the downbeat. A sound can carry the movement too: a riser sample trimmed to the build, a synth note whose envelopes rise over the whole build, an Auto Filter whose synced LFO does the sweep.
+Most transitions work without automation: a fill, a drop-out, a clip that stops a beat early, a riser or reverse cymbal cut to length, a crash on the downbeat. A sound can carry the movement too: a riser sample trimmed to the build, a synth note whose envelopes rise over the whole build, an Auto Filter whose synced LFO does the sweep.
 
-When a move really needs automation you can't write, make the rest of the change and end the result line with the one move to draw, in a few words: the track and parameter, the bars, the start and end values. For example: "draw Auto Filter 30 Hz → 800 Hz on the Music group over bars 57–64, back to 30 Hz on bar 65".
+When a move really needs automation, which only the musician can draw, make the rest of the change and end the result line with the one move to draw, in a few words: the track and parameter, the bars, the start and end values. For example: "draw Auto Filter 30 Hz → 800 Hz on the Music group over bars 57–64, back to 30 Hz on bar 65".

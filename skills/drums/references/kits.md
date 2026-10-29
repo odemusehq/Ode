@@ -36,7 +36,7 @@ Drum Racks follow this map, so a pattern written to these notes plays the expect
 | 70 | A♯3 | maracas (shaker) |
 | 75 | D♯4 | claves |
 
-If the musician's kit uses a different layout, read its pads and follow it instead.
+If the musician's kit uses a different layout, read its pads and follow that layout.
 
 ## Choosing sounds
 
@@ -45,7 +45,7 @@ If the musician's kit uses a different layout, read its pads and follow it inste
 - **Snare and clap**: their tone sets the era and the mood; bright and short for energy, darker and longer for weight. Layer a snare with a clap for width, and nudge one by a few milliseconds if the two flam.
 - **Hats**: closed and open from the same family. Shorter decays at fast tempos so the sixteenths stay clear.
 - **Percussion**: one or two colours at most per section, panned apart.
-- Sound sources: the musician's own samples, a sound taken from one of their recordings, or a newly generated one-shot. Don't lift recognisable drum sounds or loops from existing records.
+- Sound sources: only the musician's own samples, a sound taken from one of their recordings, or a newly generated one-shot, so every drum sound and loop is original.
 
 ## Building the kit
 

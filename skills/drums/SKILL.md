@@ -1,6 +1,6 @@
 ---
 name: drums
-description: Program and fix drum parts directly in the Set. Ode edits the notes of the drum clip the musician points at — grooves, fills, swing, ghost notes, velocity and timing, section energy — writes only to pads the kit actually has, and checks the backbeat, the kick against the bass, the velocity shape, fills that land on the downbeat clear of the vocal, and a loop that ends cleanly, then reports in one line which bars changed, so the musician can play them. Use this skill whenever a drum clip or Drum Rack is selected, or the musician clicks a suggestion or types anything about a beat, groove, fill, swing, feel, hats, kick, snare or kit — "fill into the chorus", "more human", "chorus hits harder", "half-time bridge", "give me a beat at 90" — even if they never say drums.
+description: Program and fix drum parts directly in the Set. Ode edits the notes of the drum clip the musician points at — grooves, fills, swing, ghost notes, velocity and timing, section energy — writes only to pads the kit actually has, and checks the backbeat, the kick against the bass, the velocity shape, fills that land on the downbeat clear of the vocal, and a loop that ends cleanly, then reports in one line which bars changed, so the musician can play them. Use this skill whenever a drum clip or Drum Rack is selected, or the musician clicks a suggestion or types anything about a beat, groove, fill, swing, feel, hats, kick, snare or kit — "fill into the chorus", "more human", "chorus hits harder", "half-time bridge", "give me a beat at 90" — whatever words they use.
 ---
 
 # Drums
@@ -25,7 +25,7 @@ Drums set the time feel, the energy of each section, and the pocket that bass, c
 
 ### 2. Decide
 
-Choose the feel, the pattern and what varies, using the craft below: roles kept distinct, the backbeat where the style expects it, fills only at phrase ends, and a section's energy shown by pattern changes, not only by level.
+Choose the feel, the pattern and what varies, using the craft below: roles kept distinct, the backbeat where the style expects it, fills only at phrase ends, and a section's energy shown by pattern changes as well as level.
 
 ### 3. Change it in place
 
@@ -33,8 +33,8 @@ Choose the feel, the pattern and what varies, using the craft below: roles kept 
 - A fill goes into the last beats of the clip it leads out of. Its landing — the kick and, at a section change, a crash on the next downbeat — goes into the first beat of the next clip, edited there.
 - Write only to pads the kit has. If the fill you had in mind needs a sound the kit lacks (toms in a kit without toms), use the pads that exist.
 - A beat for an empty section is new material: a clip on the drum track at that section's bars, with the same kit.
-- Never put alternatives in new clips, tracks or takes. Again asks for another take with the Set back as it was: make it clearly different (another feel, fill type or kick pattern); the history keeps the old one.
-- Change only the bars that need it: a fill touches the end of one phrase and the next downbeat, not the whole song.
+- New clips, tracks and takes hold only new material; alternatives come from Again, which asks for another take with the Set back as it was: make it clearly different (another feel, fill type or kick pattern); the history keeps the old one.
+- Change only the bars that need it: a fill touches only the end of one phrase and the next downbeat.
 
 ### 4. Verify
 
@@ -45,11 +45,11 @@ Run every check that applies, fix what fails and check again, up to three rounds
 | Pads | every note is on a pad the Drum Rack has |
 | Backbeat | snare or clap on 2 and 4 (beat 3 in half-time), unless moved on purpose |
 | Kick and bass | where the bass locks to the kick, each of those bass notes starts with a kick hit, within a 32nd note |
-| Velocity | accents, normal hits and ghost notes are clearly different, and no part sits at one flat value |
+| Velocity | accents, normal hits and ghost notes are clearly different, and every part's velocities vary |
 | Density | the hat subdivision suits the tempo (straight sixteenths blur above about 150 BPM unless the style wants them) |
 | Fill | it sits at the end of a phrase, starts after the vocal line ends, and lands on the next downbeat with a kick (and a crash at a section change); a build's velocities rise |
 | Sections | a chorus differs from its verse in more than velocity: subdivision, kick pattern, open hats, a layered snare |
-| Loop | no note runs past the clip's end, and the last bar leads cleanly back into the first |
+| Loop | every note ends by the clip's end, and the last bar leads cleanly back into the first |
 
 Bars outside the change, and locked parts, must be exactly as they were.
 
@@ -71,8 +71,8 @@ When a groove is outside the artist's usual style (half-time for someone who alw
 
 Act without asking. The one question, a single line with buttons, comes only when the answer changes what Ode does:
 
-- deleting a drum part, or replacing a performance the musician played in by hand with a programmed pattern they didn't ask for;
-- a muted drum track or a muted second kick that the hand edits and version history don't explain, when the groove or the bass depends on it. Muted long ago and untouched means parked; muted a moment ago while soloing something else means it is still in the song.
+- deleting a drum part, or replacing a performance the musician played in by hand with an unrequested programmed pattern;
+- a muted drum track or a muted second kick that the hand edits and version history leave unexplained, when the groove or the bass depends on it. Muted long ago and untouched means parked; muted a moment ago while soloing something else means it is still in the song.
 
 The mode decides the rest: in Manual, Ode shows each change for Apply or Skip.
 
@@ -82,15 +82,15 @@ The mode decides the rest: in Manual, Ode shows each change for Apply or Skip.
 - **Snare or clap** — the backbeat, usually beats 2 and 4 in 4/4; beat 3 in a half-time feel. Its timing and tone decide whether the groove feels tight or laid back.
 - **Hi-hats, shakers, ride** — the subdivision and drive (eighths, sixteenths, triplets). Accents and open hats shape the motion; the ride lifts intensity or marks a new section.
 - **Toms** — fills and rolling patterns.
-- **Crash** — marks the downbeat of a new section. Use it for arrivals, not every four bars.
+- **Crash** — marks the downbeat of a new section. Save it for arrivals.
 - **Percussion** — colour and counter-rhythms: tambourine on 2 and 4 in a chorus, shaker sixteenths, congas.
 
-Keep the roles distinct. If everything plays sixteenths, nothing drives.
+Keep the roles distinct. If everything plays sixteenths, the drive disappears.
 
 ## Time feel and swing
 
 - **Straight**: sixteenths evenly spaced.
-- **Swing and shuffle**: the second note of each pair arrives late. As a percentage, 50% is straight and about 66% is a full triplet feel; 54–58% is a subtle push, 58–64% a clear swing. Swing the notes by moving them: the late note of each pair starts at the swing percentage of the pair's length, so in a sixteenth pair (half a beat) 56% puts it at 0.28 beats instead of 0.25. Swing hats and ghost notes more than the kick and backbeat for a loose feel.
+- **Swing and shuffle**: the second note of each pair arrives late. As a percentage, 50% is straight and about 66% is a full triplet feel; 54–58% is a subtle push, 58–64% a clear swing. Swing the notes by moving them: the late note of each pair starts at the swing percentage of the pair's length, so in a sixteenth pair (half a beat) 56% moves it from 0.25 to 0.28 beats. Swing hats and ghost notes more than the kick and backbeat for a loose feel.
 - **Half-time**: snare on beat 3; the song feels half as fast at the same tempo. **Double-time**: snare on every beat, or hats at twice the density.
 - **Triplet feels**: 12/8, or triplet hats over a straight kick.
 - **Pocket**: a consistent timing relationship between the parts. Laid back means the snare slightly late (around 5–20 ms); pushed means hats slightly early. In electronic styles keep the kick on the grid as the anchor.
@@ -121,10 +121,10 @@ Too many ghost notes make the groove busy and muddy; leave space around each bac
 
 ## Velocity and timing variation
 
-- No drummer hits two notes the same. Give each pattern an accent shape, then add small variation (±5 to 10) to hats and ghost notes.
+- A drummer hits every note a little differently. Give each pattern an accent shape, then add small variation (±5 to 10) to hats and ghost notes.
 - In electronic styles keep the kick and backbeat steady for punch; in acoustic styles let them vary slightly too.
 - Timing: small offsets (a few milliseconds) on hats and percussion, plus deliberate ones such as a late snare for a laid-back feel. Leave the kick on the grid when the bass is locked to it.
-- Change the pattern a little every four or eight bars — an extra kick, an open hat, a dropped hat — so the loop doesn't sound copied and pasted.
+- Change the pattern a little every four or eight bars — an extra kick, an open hat, a dropped hat — so the loop sounds performed.
 
 ## Fills and transitions
 
@@ -153,11 +153,11 @@ Next bar: crash and kick together on beat 1.
 | Verse | the groove at moderate density, closed hats, a simpler kick; room for the lyric |
 | Pre-chorus | a build: denser hats, more kick, a snare or tom build, or the kick dropped out for tension |
 | Chorus | fullest: open hats or ride, extra kicks, a layered snare and clap, a crash on the downbeat |
-| Bridge or breakdown | strip back: no kick, half-time, or percussion only |
+| Bridge or breakdown | strip back: the kick dropped, half-time, or percussion only |
 | Final chorus | the chorus plus one more element (tambourine, extra percussion, bigger fills) |
 | Outro | thin out, or the chorus groove into a hard stop |
 
-Change the pattern between sections, not just the level. The same beat played louder does not make a chorus.
+Change the pattern between sections, as well as the level: the same beat played louder still sounds like the verse.
 
 ## Kits
 
@@ -172,7 +172,7 @@ Change the pattern between sections, not just the level. The same beat played lo
 
 Pop-rock at 118 BPM. The musician selects the chorus drum clip, which plays the verse groove a little louder, and clicks "Chorus hits harder". The verse (unchanged) plays cross-stick on 2 and 4, closed eighth hats and a kick on 1 and 3; the bass locks to the kick on 1 and 3.
 
-Ode rewrites the chorus clip's notes: full snare instead of cross-stick, sixteenth hats with accents on the beats, an open hat on the last "and" of each bar, an extra kick on the "a" of 1 and the "and" of 3, a crash with the kick on the chorus downbeat, and a small variation in bar 4 of each phrase.
+Ode rewrites the chorus clip's notes: full snare where the cross-stick was, sixteenth hats with accents on the beats, an open hat on the last "and" of each bar, an extra kick on the "a" of 1 and the "and" of 3, a crash with the kick on the chorus downbeat, and a small variation in bar 4 of each phrase.
 
 ```
         1 e + a 2 e + a 3 e + a 4 e + a
@@ -183,7 +183,7 @@ Kick    X . . x . . . . X . x . . . . .
 
 Checks: every note on a pad the kit has; backbeat on 2 and 4; the bass's notes on 1 and 3 still start with kicks; hat accents 108–118, in-between hats 70–88; the open hat ends before the next downbeat, so the loop ends clean; the chorus now differs from the verse in snare sound, subdivision, kick pattern and the open hat.
 
-Result line: "Chorus groove opened up: snare instead of cross-stick, accented sixteenth hats, open hat into each bar, two extra kicks · backbeat kept, still locked with the bass on 1 and 3."
+Result line: "Chorus groove opened up: snare replaces cross-stick, accented sixteenth hats, open hat into each bar, two extra kicks · backbeat kept, still locked with the bass on 1 and 3."
 
 ## Reference files
 
@@ -194,7 +194,7 @@ Result line: "Chorus groove opened up: snare instead of cross-stick, accented si
 
 ## Sub-skills
 
-Paths are relative to this skill's folder. Read a sub-skill when it applies; it adds genre detail and does not repeat this file.
+Paths are relative to this skill's folder. Read a sub-skill when it applies; it adds only the genre detail beyond this file.
 
 | Path | Read when |
 |---|---|

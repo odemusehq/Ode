@@ -1,8 +1,8 @@
-# Clichés: what's underneath and where to go instead
+# Clichés: what's underneath and where to find something fresh
 
-Use these lists to recognise stock language quickly and to find the real feeling it is standing in for. The originality check has its own list of stock phrases and over-used pairs; this one is for your own read too, and covers forms the check can miss (it looks for "broken heart", not "my heart is broken").
+Use these lists to recognise stock language quickly and to find the real feeling it is standing in for. The originality check has its own list of stock phrases and over-used pairs; this one is for your own read too, and covers forms the check can miss (it looks for "broken heart", so "my heart is broken" can slip past).
 
-None of these phrases is banned: a musician may keep one on purpose, and an everyday phrase given a twist can make a great title. When one turns up in a line you are writing or fixing, replace it in place with a detail from the song's world; when it stays (the musician's title, a locked line, a deliberate choice), the result line names it.
+Every phrase here is allowed: a musician may keep one on purpose, and an everyday phrase given a twist can make a great title. When one turns up in a line you are writing or fixing, replace it in place with a detail from the song's world; when it stays (the musician's title, a locked line, a deliberate choice), the result line names it.
 
 ## Contents
 1. Stock phrases
@@ -13,13 +13,13 @@ None of these phrases is banned: a musician may keep one on purpose, and an ever
 
 ## 1. Stock phrases
 
-| Stock phrase | The feeling underneath | Where to look instead |
+| Stock phrase | The feeling underneath | Where to look |
 |---|---|---|
 | heart of stone, cold heart | numbness, refusing to feel | a specific act of refusal: an unanswered call, a gift left wrapped |
-| broken heart, heart in pieces | grief after a loss | what the singer can no longer do, or does differently now |
+| broken heart, heart in pieces | grief after a loss | what the singer has stopped doing, or does differently now |
 | tears like rain, tears falling down | crying | where, when, and who might see; what the singer does to hide it |
 | set me free, break these chains | wanting release | the specific thing they're stuck in, and the first step out |
-| lost without you | dependence | an everyday task they can't manage alone |
+| lost without you | dependence | an everyday task they need the other person for |
 | end of the road | the end of a relationship | the last ordinary moment before it ended |
 | light in the darkness, you're my light | someone who helps | what that person actually does, on an actual day |
 | burning bridges | ruining a relationship | the thing that was said or done |
@@ -35,7 +35,7 @@ None of these phrases is banned: a musician may keep one on purpose, and an ever
 
 ## 2. Stock images
 
-When the image is the first one anyone would think of, it carries no surprise:
+When the image is the first one anyone would think of, it has lost its surprise:
 
 - rain or storms for sadness and trouble;
 - sunshine for happiness;
@@ -49,7 +49,7 @@ Use one only with a twist (see the wipers example in SKILL.md), or replace it wi
 
 ## 3. Familiar situations told in familiar words
 
-The rainy breakup, the small-town escape, the one that got away, eyes meeting across a crowded room, the late-night drive, the last dance. These situations aren't the problem; plenty of great songs live in them. The problem is telling them with the stock phrases and images above. Keep the situation, and find the details only this song could have.
+The rainy breakup, the small-town escape, the one that got away, eyes meeting across a crowded room, the late-night drive, the last dance. These situations are fine; plenty of great songs live in them. The problem is telling them with the stock phrases and images above. Keep the situation, and find the details only this song could have.
 
 ## 4. Words that make lyrics sound generic
 

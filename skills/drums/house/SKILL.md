@@ -38,7 +38,7 @@ Shaker  x g x g x g x g x g x g x g x g
 - Drop the kick for the last beat or bar of a phrase, so the next downbeat lands harder.
 - An extra kick on the "a" of 4, or a clap on the "a" of 4, at phrase ends.
 - A ride on the off-beats or in quarters for peak sections.
-- A longer open-hat decay lifts a peak section and a shorter one tightens a groove: set it on the hat's pad itself, in place. A gradual sweep across a phrase needs automation, which Ode can't write; when a request needs one, the result line says so.
+- A longer open-hat decay lifts a peak section and a shorter one tightens a groove: set it on the hat's pad itself, in place. A gradual sweep across a phrase needs automation, which only the musician can draw; when a request needs one, the result line says so.
 
 ## Arrangement for the dance floor
 
@@ -69,11 +69,11 @@ Run these with the drums skill's checks.
 
 | Check | Correct when |
 |---|---|
-| Four on the floor | a kick on every beat, except where it drops out on purpose at a phrase end or in a breakdown |
+| Four on the floor | a kick on every beat, or a deliberate drop-out at a phrase end or in a breakdown |
 | Phrases | every change of pattern starts on an 8- or 16-bar boundary (bar 1, 9, 17, 25…) |
 | Swing | hats, shakers and percussion swung around 54–58%; kick and clap on the grid |
 | DJ intro and outro | for club tracks, the first and last 16–32 bars hold only drums and a few elements |
-| Kick and bass | no bass note starts on a kick or holds across one where the bass plays the off-beats |
+| Kick and bass | where the bass plays the off-beats, every bass note sits between the kicks |
 
 ## Result lines
 

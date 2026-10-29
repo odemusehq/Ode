@@ -5,7 +5,7 @@ description: Mix the low end in place in Live — decide whether the kick, the b
 
 # Mixing the low end
 
-The low end holds the song up and moves the body, and it is the hardest part of a mix to judge: most rooms and headphones misrepresent bass, low frequencies use most of the mix's energy and headroom, and small speakers can't reproduce the sub at all. That is why the low end is judged on measurements as much as on listening. The loop, the checks and the one-line result are in the parent mixing skill; this file holds what is specific to the low end.
+The low end holds the song up and moves the body, and it is the hardest part of a mix to judge: most rooms and headphones misrepresent bass, low frequencies use most of the mix's energy and headroom, and small speakers lose the sub entirely. That is why the low end is judged on measurements as much as on listening. The loop, the checks and the one-line result are in the parent mixing skill; this file holds what is specific to the low end.
 
 ## Decide who owns what
 
@@ -27,8 +27,8 @@ The arrangement often settles it for free: short bass notes that leave room for 
 
 ## EQ
 
-- **Complementary EQ:** where the kick has its punch, cut the bass 1–3 dB, and the other way round where the bass has its definition. Don't boost both in the same area.
-- **Remove what nobody uses:** a gentle high-pass below the lowest musical note (often 25–35 Hz) on bass and kick clears rumble that only eats headroom, as long as the weight stays.
+- **Complementary EQ:** where the kick has its punch, cut the bass 1–3 dB, and the other way round where the bass has its definition. Boost at most one of them in any one area.
+- **Remove the unused lows:** a gentle high-pass below the lowest musical note (often 25–35 Hz) on bass and kick clears rumble that only eats headroom, as long as the weight stays.
 - **Leave the low end to the low parts:** high-pass pads, keys, guitars, vocals and especially reverb and delay returns (often 200–500 Hz on returns). Each adds only a little low end, but together they cloud the kick and bass.
 - **Boomy notes:** a single note that booms gets a narrow cut at its frequency, or compression on the low band so it drops only when that note plays.
 
@@ -36,9 +36,9 @@ The arrangement often settles it for free: short bass notes that leave room for 
 
 - **Bass under the kick:** a Compressor on the bass keyed by the kick, attack 0.1–1 ms, release 50–150 ms timed so the bass is back before the next kick, ratio 4:1 or higher, 3–6 dB of gain reduction for space without obvious pumping.
 - **Only the lows:** Multiband Dynamics on the bass keyed by the kick, compressing only the low band (crossover around 100–150 Hz); the upper harmonics that carry the line stay steady.
-- **Shorter notes can replace ducking:** a bass with a gap at each kick needs none.
+- **Shorter notes can replace ducking:** a bass with a gap at each kick already leaves that room.
 - **The 808 under the kick** the same way, when both carry sub at the same moment.
-- Ducking needs the kick routed as the compressor's sidechain source. When it isn't routed and you can't route it, choose a fix you can make (shorter notes, complementary EQ, kick tuning), or set up the compressor and end the result line with the routing step left.
+- Ducking needs the kick routed as the compressor's sidechain source. When it is still unrouted and routing it is beyond your reach, choose a fix you can make (shorter notes, complementary EQ, kick tuning), or set up the compressor and end the result line with the routing step left.
 
 ## Phase and polarity
 
@@ -54,12 +54,12 @@ The arrangement often settles it for free: short bass notes that leave room for 
 ## Even, controlled bass
 
 - **Every note at a similar level:** compression on the bass (3:1–6:1, attack 5–30 ms, release 50–150 ms, 3–6 dB) or velocity fixes in MIDI parts.
-- **Long and short notes:** long 808 or sub notes carry much more energy than short ones; sustained notes mustn't swamp the mix.
-- **Don't over-compress the kick:** its attack is what lets it be heard over the bass.
+- **Long and short notes:** long 808 or sub notes carry much more energy than short ones; sustained notes must stay in balance with the rest of the mix.
+- **Compress the kick lightly:** its attack is what lets it be heard over the bass.
 
 ## Bass on small speakers
 
-Phones, laptops and small speakers can't reproduce the sub, so a bass made only of sub disappears on them.
+Phones, laptops and small speakers lose the sub, so a bass made only of sub disappears on them.
 - Add harmonics: Saturator (Bass Shaper or Soft Sine, parallel at 20–40% wet) or Roar with Multiband routing, saturating only the upper band so the sub stays clean.
 - Or a mid layer playing the same notes, high-passed around 100–150 Hz (sound-design synths sub-skill).
 
@@ -75,7 +75,7 @@ These add to the parent skill's checks.
 
 | Check | Correct when |
 |---|---|
-| One owner | Kick and bass (or 808) aren't both strong below about 100 Hz at the same moment: masking measured where both are audio; for MIDI parts, the bass notes compared against the kick hits |
+| One owner | At any moment, only one of kick and bass (or 808) is strong below about 100 Hz: masking measured where both are audio; for MIDI parts, the bass notes compared against the kick hits |
 | Tuning | The kick's fundamental and the bass notes agree with the key |
 | Polarity | The result line names the polarity setting you kept, so the musician can compare it with the flipped one in Live |
 | Mono | Mono below 100–150 Hz: Utility's Bass Mono, or a mono source, on every wide low part, with a bass's stereo effects above that range |
@@ -83,4 +83,4 @@ These add to the parent skill's checks.
 
 ## Example
 
-The musician selects the 808 at 140 BPM and types "kick and 808 are mush". The kick's fundamental is near 55 Hz and the 808 mostly plays F1 (about 44 Hz) and G1 (about 49 Hz) at full length under every kick, with the kick already routed to a compressor's sidechain on the 808. In place: that compressor set to attack 0.5 ms, release 100 ms, 5 dB of gain reduction, and the kick re-tuned up to about 65 Hz (C2, the fifth of F) with a shorter tail. Result: "808 ducks 5 dB under the kick, kick tuned to C and shortened · one owner of the sub on each hit, mono below 120 Hz." Again takes a different route: shorter 808 notes that leave a gap at each kick, so no ducking is needed.
+The musician selects the 808 at 140 BPM and types "kick and 808 are mush". The kick's fundamental is near 55 Hz and the 808 mostly plays F1 (about 44 Hz) and G1 (about 49 Hz) at full length under every kick, with the kick already routed to a compressor's sidechain on the 808. In place: that compressor set to attack 0.5 ms, release 100 ms, 5 dB of gain reduction, and the kick re-tuned up to about 65 Hz (C2, the fifth of F) with a shorter tail. Result: "808 ducks 5 dB under the kick, kick tuned to C and shortened · one owner of the sub on each hit, mono below 120 Hz." Again takes a different route: shorter 808 notes that leave a gap at each kick, so the gaps do the ducking's job.

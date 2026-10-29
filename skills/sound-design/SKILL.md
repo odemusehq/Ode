@@ -1,52 +1,52 @@
 ---
 name: sound-design
-description: Change how a part sounds, in place, in Ableton Live — reshape the instrument and effects already on the track, plug-ins included (oscillators, filter, envelopes, modulation, saturation, width, space), insert a better Live instrument or effect on that track and set its parameters (a preset is saved knob positions), load a sample into Simpler or a Drum Rack pad, layer in a rack, tune and trim samples, isolate a sound from a recording or generate one — then check the part's level, its register against the parts around it and mono, and report in one line. Use this whenever the musician clicks a suggestion or types anything about how a part sounds ("warmer", "darker", "brighter", "punchier", "wider", "softer", "less harsh", "dusty", "glassy", "fatter"), selects an instrument or effect and wants it changed, needs a new sound, patch, preset or sample for a part, or wants a sound pulled from a recording or generated, even if they never say "sound design".
+description: Change how a part sounds, in place, in Ableton Live — reshape the instrument and effects already on the track, plug-ins included (oscillators, filter, envelopes, modulation, saturation, width, space), insert a better Live instrument or effect on that track and set its parameters (a preset is saved knob positions), load a sample into Simpler or a Drum Rack pad, layer in a rack, tune and trim samples, isolate a sound from a recording or generate one — then check the part's level, its register against the parts around it and mono, and report in one line. Use this whenever the musician clicks a suggestion or types anything about how a part sounds ("warmer", "darker", "brighter", "punchier", "wider", "softer", "less harsh", "dusty", "glassy", "fatter"), selects an instrument or effect and wants it changed, needs a new sound, patch, preset or sample for a part, or wants a sound pulled from a recording or generated, even when the request leaves out the words "sound design".
 ---
 
 # Sound design
 
 Choose and shape sounds so every part does its job in this song: the bass holds the floor, the lead speaks over everything, the pad fills without crowding, the texture adds life without asking for attention. A sound that is great in solo can be wrong in the track, so judge every change in the section where the part plays.
 
-Ode changes the sound where it lives — the instrument and effects already on the track, or a new instrument or effect on that same track — and the musician plays it in Live straight away. Undo and the version history are the way back, so nothing needs copying.
+Ode changes the sound where it lives — the instrument and effects already on the track, or a new instrument or effect on that same track — and the musician plays it in Live straight away. Undo and the version history are the way back, so every change happens on the original, without copies.
 
 ## The loop
 
 1. **Read.** The project map gives the selected track's instrument and effects with their main values, the clips it plays, what else plays in the same bars, the key, the tempo and the hand edits since the last request. Read the device's full parameters and the part's notes: the lowest and highest notes set its register, the note lengths set its envelope times. Note the output levels of the instrument and effects you will change, so the level check has something to compare with. Hand edits are the musician's own moves, so build on them. Check the lead sheet's locked parts, and recall the sounds and plug-ins the artist likes.
 2. **Decide** the part's role (foundation, rhythm, harmony bed, lead, counter-melody, texture) and register, turn the musician's words into parameter moves (table below), and choose the stage to change: source, filter, envelopes, modulation, then effects. Reshape what is on the track before replacing it; a sound built in an instrument the musician knows is easier for them to keep shaping.
 3. **Change it in place**, as one undo step:
-   - Set the parameters of the instrument and effects already there. Add an effect after the instrument, on the same track, when the instrument can't get there alone.
+   - Set the parameters of the instrument and effects already there. Add an effect after the instrument, on the same track, when the instrument alone falls short.
    - Replace the instrument on the same track only when the sound needs another engine (FM for a bell): insert the Live instrument by name and set its parameters; the notes stay as they are. A real piano or another multisampled instrument comes from the musician's library, so name it in the result line for them to load.
-   - Never duplicate the track or the device to compare, and never put the new sound on a new track: Again gives another take and the history keeps the old one.
-   - Keep the part's level. When a move changes it (resonance, unison, saturation, a lower cutoff), set the instrument's or effect's output so the musician hears a new tone, not a louder or quieter part.
+   - Work on the part's one track and device, without duplicates to compare, and keep the new sound on that same track: Again gives another take and the history keeps the old one.
+   - Keep the part's level. When a move changes it (resonance, unison, saturation, a lower cutoff), set the instrument's or effect's output so the musician hears a new tone at the same level.
    - Leave locked parts alone; if one is the problem, change what is around it and say so.
-4. **Verify** with the checks below, fixing until they pass (up to three rounds); otherwise the result line says what still fails. Never present as checked what no check measured.
+4. **Verify** with the checks below, fixing until they pass (up to three rounds); otherwise the result line says what still fails. Present as checked only what a check measured.
 5. **Let them hear it.** When your turn ends, the musician presses play in Live: name the section where the part sounds in the result line, so they know where to listen.
 6. **Report in one line:** what changed, with the values that matter, then " · " and what was checked. For example:
    - "Pad warmer: filter 18 kHz → 2.6 kHz, resonance down, osc 2 to triangle, volume +2 dB · level matched, register below the vocal in the chorus."
    - "Kick tuned to D and shortened to 260 ms · ends before the next bass note, on the song's root."
    - "Lead gritty: saw through Roar, band-pass at 1.8 kHz · level matched at Roar's output, mono-compatible; rougher than your usual leads."
 
-**Again** is another take of the same request. The Set is back as it was, so take a clearly different route (another waveform, filter type or instrument), not the same move made smaller.
+**Again** is another take of the same request. The Set is back as it was, so take a clearly different route (another waveform, filter type or instrument).
 
-**Outside the usual style.** When a take goes beyond the artist's usual sounds — judged only from their own songs and what they have said, never from their name, gender, age, nationality or genre clichés — the result line says so.
+**Outside the usual style.** When a take goes beyond the artist's usual sounds — judged only from their own songs and what they have said, with their name, gender, age, nationality and genre clichés left out of it — the result line says so.
 
-**"Like [artist]"** becomes general qualities you can name and build: bright or dark, short or sustained, clean or distorted, dry or roomy, centred or very wide, simple or evolving. Never recreate another artist's signature sound or a specific record's patch.
+**"Like [artist]"** becomes general qualities you can name and build: bright or dark, short or sustained, clean or distorted, dry or roomy, centred or very wide, simple or evolving. Build only original sounds: another artist's signature sound and a specific record's patch stay theirs.
 
 ## Checks
 
 | Check | When | Correct when |
 |---|---|---|
 | Level | Every change | The output of each changed device is set so the part's level is about what it was before, unless louder or quieter was asked: every gain a move adds (resonance, unison, saturation, a hotter sample) is taken back at the output |
-| Register | Every change | The part's main energy doesn't sit on the vocal or lead in the same bars: their note ranges barely overlap, or the overlap is thinned by the filter, the voicing or an octave move |
-| Masking | The part and its neighbour are audio tracks | Measured in the section, with no strong band left shared with the vocal or lead. MIDI parts can't be measured this way: compare note ranges and filter settings, and don't call masking measured |
+| Register | Every change | The part's main energy sits clear of the vocal or lead in the same bars: their note ranges barely overlap, or the overlap is thinned by the filter, the voicing or an octave move |
+| Masking | The part and its neighbour are audio tracks | Measured in the section, with every strong band clear of the vocal or lead. For MIDI parts, compare note ranges and filter settings, and call masking measured only on audio |
 | Mono | After widening (unison spread, chorus, stereo delay, detuned layers) | Mono below about 100–150 Hz (Utility's Bass Mono where needed), and the width comes from moderate unison spread, chorus or stereo delay; very short left–right delays cancel when summed to mono |
 | Key | A new sample, a transposed oscillator, a tuned drum | Tonal samples, kicks and 808s sit on the song's key: the root, the fifth or another chord tone for drums |
-| Clean edges | A new or trimmed sample | Starts on the transient, with short fades at the start, the end and loop points; no clicks |
-| Source | A sound isolated from a recording or generated | Its source is written in the lead sheet's notes, and a source the musician doesn't own and hasn't cleared is named in the result line |
+| Clean edges | A new or trimmed sample | Starts on the transient, with short fades at the start, the end and loop points; free of clicks |
+| Source | A sound isolated from a recording or generated | Its source is written in the lead sheet's notes, and a source owned by someone else and still uncleared is named in the result line |
 
 ## Questions
 
-Don't ask before changing a sound: it is an edit in place that Undo reverses, and the mode decides whether a change waits for Apply. Ask one line with buttons only when the answer changes what you would do — for example, the part to reshape is on a muted track and neither the hand edits nor the version history explain why. Muted long ago and untouched since usually means parked; muted moments ago while another track was soloed usually means muted to hear the others.
+Change a sound without asking first: it is an edit in place that Undo reverses, and the mode decides whether a change waits for Apply. Ask one line with buttons only when the answer changes what you would do — for example, the part to reshape is on a muted track and the hand edits and the version history both leave the reason unexplained. Muted long ago and untouched since usually means parked; muted moments ago while another track was soloed usually means muted to hear the others.
 
 ## Words into parameters
 
@@ -58,7 +58,7 @@ Musicians describe sounds with adjectives. These are the usual moves; combine th
 | Brighter, more cut | Open the filter; a richer waveform (saw, FM, sync); saturation; a broad 2–5 kHz lift; a faster attack |
 | Darker | Lower cutoff, less resonance, a high shelf cut; fewer upper harmonics at the source |
 | Thinner, less boomy | High-pass; cut 150–400 Hz; drop the sub oscillator or the low layer |
-| Fatter, thicker | Unison and detune; a sub oscillator or low layer (only if the bass isn't already there); saturation; layering |
+| Fatter, thicker | Unison and detune; a sub oscillator or low layer (only when the bass leaves that range free); saturation; layering |
 | Punchier | Faster attack, shorter decay, lower sustain; transient emphasis; less reverb on the attack |
 | Softer, rounder | Slower attack (5–50 ms); less velocity-to-brightness; less resonance; a sine or triangle source |
 | Wider | Unison spread, chorus, stereo delay or reverb; keep the low end mono |
@@ -92,7 +92,7 @@ Live Suite's modelled instruments (Electric for electric pianos, Tension for str
 
 Oscillators make the raw tone, a filter removes harmonics, an amplifier shapes the level, and envelopes and LFOs move parameters over time.
 
-- **Waveform sets the harmonics.** Sine: the fundamental only (sub bass, soft leads). Triangle: a few odd harmonics, soft. Square or pulse: odd harmonics, hollow; the pulse width changes the colour. Saw: every harmonic, bright and full, the usual start for pads, leads and basses. Noise: no pitch, for breath, air, hats and risers.
+- **Waveform sets the harmonics.** Sine: the fundamental only (sub bass, soft leads). Triangle: a few odd harmonics, soft. Square or pulse: odd harmonics, hollow; the pulse width changes the colour. Saw: every harmonic, bright and full, the usual start for pads, leads and basses. Noise: unpitched, for breath, air, hats and risers.
 - **Filter.** The low-pass cutoff sets where the highs go; resonance emphasises the cutoff region. 12 dB/octave is gentler and more open, 24 dB/octave darker and more focused. Key tracking keeps the tone even across the keyboard.
 - **The amp envelope shapes the rhythm of the sound.** Attack 0–5 ms for plucks and basses, 50 ms to 2 s for swells; long releases blur fast parts and smear the groove.
 - **The filter envelope shapes the tone over time.** A fast decay gives a pluck; a slow attack gives a swell.
@@ -103,13 +103,13 @@ Recipes for specific synth sounds are in the synths sub-skill.
 
 ## Layering
 
-Layer when one sound can't do every job: one layer for the attack, one for the body, one for the air or tail.
+Layer when the jobs need more than one sound: one layer for the attack, one for the body, one for the air or tail.
 
-- **One job and one range per layer.** High-pass the upper layers so a single layer owns the low end; two layers fighting for the same octave make mud, not size.
+- **One job and one range per layer.** High-pass the upper layers so a single layer owns the low end; two layers fighting for the same octave make mud.
 - **Split by time as well as frequency.** A short transient layer (click, noise burst, plucked attack) in front of a soft body sounds tighter than two sustained layers.
 - **Layers live in an Instrument Rack on the part's track**, playing as one instrument, with macros for the shared controls named in plain words (Brightness, Movement, Width, Dirt).
 - **Phase and tuning.** Layered lows can cancel: flip the polarity of one and keep the setting with more low end. Detuned layers sound wide in stereo and can thin out in mono.
-- **Fewer is better.** A layer that makes no obvious difference in the full section comes out.
+- **Fewer is better.** A layer whose difference is hard to hear in the full section comes out.
 
 ## Samples
 
@@ -150,10 +150,10 @@ Effects are part of the sound, and their order changes it: distortion before a f
 
 Sound design is the first mix decision; a sound chosen to fit needs less EQ later.
 
-- **Space in frequency.** Choose sounds whose main energy isn't where the vocal or lead sits; where they must overlap, thin one of them at the source.
+- **Space in frequency.** Choose sounds whose main energy sits away from the vocal or lead; where they must overlap, thin one of them at the source.
 - **Space in time.** Short decays and releases keep a groove clear; long ones suit slower, sparser sections.
 - **Low end mono and owned by one part**, usually kick and bass. Sub oscillators and wide unison on chords and pads add rumble and mono problems.
-- **Headroom.** Turn the instrument or sample down rather than letting it hit the track hard; resonant filters and unison jump in level.
+- **Headroom.** Turn the instrument or sample down so it feeds the track gently; resonant filters and unison jump in level.
 
 ## Reference files
 

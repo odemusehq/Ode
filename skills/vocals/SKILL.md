@@ -1,15 +1,15 @@
 ---
 name: vocals
-description: Write backing-vocal parts — harmonies, stacks, answers, echoes, ad-libs, vocal pads — as MIDI guides the singer can follow, directly in the Set, and make a demo vocal in the artist's own voice only after their clear consent. Ode puts each new part where it belongs (the backing-vocal track the musician made, or a new track named for the part) at the bars it is sung, edits existing parts in place, never touches the lead, and checks every part against its singer's range, the chords on strong beats, the lead's words and rhythm and singability, then reports in one line which bars changed, for the musician to play. Use this skill whenever a vocal or backing-vocal track is selected, or the musician clicks a suggestion or types anything about backing vocals, BVs, harmonies, stacks, doubles, answers, ad-libs, a vocal arrangement, which key suits their voice, or hearing the song sung in their own voice — "add a harmony", "bigger chorus vocals", "answer the lead", "demo in my voice" — even if they never say vocals.
+description: Write backing-vocal parts — harmonies, stacks, answers, echoes, ad-libs, vocal pads — as MIDI guides the singer can follow, directly in the Set, and make a demo vocal in the artist's own voice only after their clear consent. Ode puts each new part where it belongs (the backing-vocal track the musician made, or a new track named for the part) at the bars it is sung, edits existing parts in place, leaves the lead exactly as it is, and checks every part against its singer's range, the chords on strong beats, the lead's words and rhythm and singability, then reports in one line which bars changed, for the musician to play. Use this skill whenever a vocal or backing-vocal track is selected, or the musician clicks a suggestion or types anything about backing vocals, BVs, harmonies, stacks, doubles, answers, ad-libs, a vocal arrangement, which key suits their voice, or hearing the song sung in their own voice — "add a harmony", "bigger chorus vocals", "answer the lead", "demo in my voice" — even when they leave out the word vocals.
 ---
 
 # Vocals
 
-The lead vocal carries the song. Everything else in the vocal arrangement — harmonies, doubles, answers, ad-libs, pads — exists to make the lead land harder, never to bury it. Ode writes parts the singer can actually sing, in their range, as MIDI guides placed where they belong in the Set, so the musician can play them with the song straight away.
+The lead vocal carries the song. Everything else in the vocal arrangement — harmonies, doubles, answers, ad-libs, pads — exists to make the lead land harder and to keep it in front. Ode writes parts the singer can actually sing, in their range, as MIDI guides placed where they belong in the Set, so the musician can play them with the song straight away.
 
 ## Conventions
 
-- Note names are scientific pitch: middle C is C4, MIDI 60; Live's piano roll shows it as C3, so its octave numbers are one lower. In a result line, use Live's names or none.
+- Note names are scientific pitch: middle C is C4, MIDI 60; Live's piano roll shows it as C3, so its octave numbers are one lower. In a result line, use Live's names or leave note names out.
 - Lengths are beats of 4/4: 1 = quarter, ½ = eighth, 2 = half note; `r` is a rest and `|` a barline.
 - Chords are chord symbols. "BVs" means backing vocals.
 
@@ -19,7 +19,7 @@ The lead vocal carries the song. Everything else in the vocal arrangement — ha
 
 - From the project map: key, tempo, chords, the sections, the selected clip and its bars, and the vocal tracks — the lead's guide melody, recorded vocals, and any backing-vocal track the musician has set up.
 - The lead's notes and the lines sung on them (the lyrics).
-- Who sings each part and their comfortable range: the song's settings, then the musician's settings, then what memory knows from their own sung parts. When the musician tells you their range, store it as their setting. Unless the lead sheet names another singer, backing parts are for the artist. Never infer a range, or who sings what, from anything about the person. With nothing known, keep to about A3–D5 and say so in the result line.
+- Who sings each part and their comfortable range: the song's settings, then the musician's settings, then what memory knows from their own sung parts. When the musician tells you their range, store it as their setting. Unless the lead sheet names another singer, backing parts are for the artist. Take a range, and who sings what, only from the settings, the lead sheet, memory and what the musician says; anything about the person stays out of it. With the range unknown, keep to about A3–D5 and say so in the result line.
 - The arrangement around the voice: which instruments sit in the vocal's register, and where the gaps in the lead are.
 - What is locked, and what the artist has kept or undone in vocal arrangements before (memory).
 
@@ -31,9 +31,9 @@ Choose the part that answers the request in that section — a harmony on the ho
 
 - **New parts are new material, placed where they belong**: in the backing-vocal track the musician made, or else on a new MIDI track named for the part ("BV Harmony", "BV Answers") with the same instrument as the lead's guide so it can be heard. One clip per part at the bars it is sung, named for the part.
 - **Existing backing parts are edited in place**, in their own clips.
-- **The lead never changes**: its notes, its recorded audio and its words in the lyrics stay as they are. A harmony is its own line, written from the chords and the lead — not the lead clip copied and moved up a third, which lands on clashes and out of range.
-- **Doubles are performances**: write which lines to double into the lead sheet's notes; never copy the lead's MIDI and call it a double.
-- Never put alternatives in new clips, tracks or takes. Again asks for another take with the Set back as it was: make it clearly different (another interval, another part, other words to answer with); the history keeps the old one.
+- **The lead stays untouched**: its notes, its recorded audio and its words in the lyrics stay as they are. A harmony is its own line, written from the chords and the lead; a copy of the lead clip moved up a third lands on clashes and out of range.
+- **Doubles are performances**: write which lines to double into the lead sheet's notes; only a sung performance counts as a double, and a copy of the lead's MIDI is only a copy.
+- Keep alternatives out of new clips, tracks and takes. Again asks for another take with the Set back as it was: make it clearly different (another interval, another part, other words to answer with); the history keeps the old one.
 
 ### 4. Verify
 
@@ -43,10 +43,10 @@ Run every check that applies, fix what fails and check again, up to three rounds
 |---|---|
 | Range | every note of every part sits inside its singer's range |
 | Chord tones | every harmony note that starts on beat 1 or 3, or is held longer than a beat, is a chord tone of the chord sounding then, or a colour tone the chord part plays |
-| Against the lead | no harmony note is a half or whole step from the lead note sounding at the same time, and no part crosses the lead |
+| Against the lead | every harmony note avoids a half or whole step against the lead note sounding at the same time, and every part stays on its own side of the lead |
 | Words and rhythm | a harmony starts and ends its notes with the lead's, on the same syllables, or only on the key words chosen; answers and echoes sit in the lead's rests |
-| Singable | each part moves mostly by step or third, with no tritone or major-seventh leaps, and breathes where the lead breathes |
-| Parallels | no long run of parallel fifths or octaves with the lead |
+| Singable | each part moves mostly by step or third, without tritone or major-seventh leaps, and breathes where the lead breathes |
+| Parallels | any run of parallel fifths or octaves with the lead stays short |
 | Lead | the lead's notes, recorded vocals and words in the lyrics are exactly as they were |
 
 Locked parts must be exactly as they were.
@@ -59,11 +59,11 @@ When your turn ends, the musician presses play in Live: say in the result line w
 
 What changed, then " · ", then what was checked:
 
-- "Harmony a third below the lead on the chorus, on the BVs track · inside your range, chord tones on strong beats, never crosses the lead."
+- "Harmony a third below the lead on the chorus, on the BVs track · inside your range, chord tones on strong beats, stays below the lead."
 - "Answers on 'stay' in the gaps of verse 2 · chord tones of Bm, clear of the lead's words."
 - "Title stacked a third and a sixth below the lead in the last chorus · inside your range, chord tones on every note, lead stays on top."
 
-When a part is outside the artist's usual style (a gang chant for someone who never uses them), the line says "outside your usual style".
+When a part is outside the artist's usual style (a gang chant for someone who has yet to use one), the line says "outside your usual style".
 
 ## When to ask
 
@@ -71,7 +71,7 @@ Act without asking. The one question, a single line with buttons, comes only whe
 
 - **the singer's voice**: a demo vocal in their voice needs their clear yes, in every mode (the demo-vocal sub-skill);
 - the lead itself sits outside the singer's range and only a key change fixes it, which moves every part: "The chorus peaks above your range — move the song down a tone? · Move it · Keep the key"; after a move, the result line names the new key so the musician can set it in Live;
-- a muted vocal track decides what to harmonize, and the hand edits and version history don't explain it (muted long ago and untouched means parked).
+- a muted vocal track decides what to harmonize, and the hand edits and version history leave the reason unclear (muted long ago and untouched means parked).
 
 The mode decides the rest: in Manual, Ode shows each change for Apply or Skip. The consent question is asked in every mode.
 
@@ -81,7 +81,7 @@ The mode decides the rest: in Manual, Ode shows each change for Apply or Skip. T
 - The chorus peak should sit a little below the top of their range, and the verse comfortably in the lower middle.
 - Check every backing part against its singer too: a harmony a third above the lead's peak is often the first note out of range.
 
-Example: the artist's comfortable range is A2–E4. The chorus peak is D4, two semitones below the top, so the key works. A harmony a third above that peak would be F♯4, above the range; the harmony goes a third or a sixth below the lead instead (F♯3 is a sixth below D4), or to another singer whose range fits.
+Example: the artist's comfortable range is A2–E4. The chorus peak is D4, two semitones below the top, so the key works. A harmony a third above that peak would be F♯4, above the range; the harmony goes a third or a sixth below the lead (F♯3 is a sixth below D4), or to another singer whose range fits.
 
 ## The parts
 
@@ -103,13 +103,13 @@ The harmonies sub-skill covers writing harmony lines and stacks in detail.
 
 - Backing parts use fewer words than the lead, or only its key words.
 - Keep them out of the way of the lead's important words, and in a different register where possible.
-- End words together. Final consonants ("s", "t", "k") belong to the lead; backing parts cut them sharply, so the endings don't smear.
+- End words together. Final consonants ("s", "t", "k") belong to the lead; backing parts cut them sharply, so the endings stay clean.
 - Matching vowels and phrasing between the lead and its backing parts is what makes them blend.
 
 ## Doubles
 
 - Double the lines that need strength: the chorus, the hook, the last line of a verse. Doubling everything makes the vocal sound smaller and blurred.
-- A double is a separate performance; a copy of the lead shifted in time doesn't sound like one.
+- A double is a separate performance; a copy of the lead shifted in time still sounds like a copy.
 - An octave-below double adds weight to a hook; an octave-above double brightens it if it sits comfortably in range. A whispered double adds intimacy and texture.
 
 ## Call and response
@@ -118,7 +118,7 @@ Write answers into the rests of the lead melody. Keep them short, start them aft
 
 ## Ad-libs
 
-- Place them in the gaps, at phrase ends, over the final chorus and the outro — not on top of the lead's key words.
+- Place them in the gaps, at phrase ends, over the final chorus and the outro, clear of the lead's key words.
 - Build them from words in the lyric, from vowels, and from short melodic fills on the key's pentatonic notes (in D major: D, E, F♯, A, B), which fit most chords.
 - A few written ad-libs show the singer where they belong and how busy they should be, even though the singer will improvise their own.
 
@@ -151,13 +151,13 @@ The musician has a BVs track ready, so Ode writes an answer on the title word in
 Answer:   | Bm | r(2) B4(½) A4(½) F♯4(1) |
 ```
 
-Checks: the answer starts after the lead's phrase ends and sits above the lead's last note; B4 on beat 3 is the root of Bm and F♯4 on beat 4 its 5th; every note inside the singer's range of A3–E5; nothing clashes with the lead, which is silent there.
+Checks: the answer starts after the lead's phrase ends and sits above the lead's last note; B4 on beat 3 is the root of Bm and F♯4 on beat 4 its 5th; every note inside the singer's range of A3–E5; every note sits clear of the lead, which is silent there.
 
 Result line: "Answers on the title in every gap of verse 2, on the BVs track · chord tones of Bm, inside your range, clear of the lead."
 
 ## Sub-skills
 
-Paths are relative to this skill's folder. Read a sub-skill when it applies; it adds technique detail and does not repeat this file.
+Paths are relative to this skill's folder. Read a sub-skill when it applies; it adds only the technique detail beyond this file.
 
 | Path | Read when |
 |---|---|

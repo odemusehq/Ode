@@ -31,7 +31,7 @@ Controls and starting values for Live's built-in devices in a mix. Values are st
 
 Use Scale to try a whole EQ curve at half or double strength in one move. If a boost needs more than about 6 dB, reconsider the sound or the arrangement.
 
-**Channel EQ:** a simple three-band EQ with an 80 Hz high-pass switch; quick, broad tone shaping when precision isn't needed.
+**Channel EQ:** a simple three-band EQ with an 80 Hz high-pass switch; quick, broad tone shaping when rough strokes are enough.
 
 ## Compressor
 
@@ -67,14 +67,14 @@ Three bands with adjustable crossovers. Each band can compress or expand above i
 | Ducking only the lows | Sidechain from the kick; compress the low band so the bass's sub dips while its upper band is untouched |
 | Making room for a vocal | Sidechain from the vocal; compress the mid band (set crossovers around 1 kHz and 5 kHz) on pads or guitars by 1–3 dB |
 
-Heavy upward and downward compression on all three bands (the familiar OTT-style setting) is a sound-design effect, not a mix fix.
+Heavy upward and downward compression on all three bands (the familiar OTT-style setting) belongs to sound design as an effect.
 
 ## Gate
 
 Controls: Threshold, Return (the gap between opening and closing thresholds, which stops chattering), Attack, Hold, Release, Floor (how far it turns down when closed), Lookahead, Flip, and a sidechain.
 
 - Drums with bleed: attack 0.02–1 ms, hold 10–50 ms, release 50–200 ms, floor −20 to −40 dB for a natural result (−inf only for an obvious gated effect).
-- Set Return a few dB so the gate doesn't flutter on decaying notes.
+- Set Return a few dB so the gate stays steady on decaying notes.
 
 ## Saturator, Roar, Drum Buss
 
@@ -97,7 +97,7 @@ Controls: input low and high cut, pre-delay, size, decay time, diffusion and ear
 Convolution and algorithmic engines in serial or parallel, blended; algorithms include Dark Hall, Quartz, Shimmer, Tides and Prism; an EQ section, a Vintage control and a Bass Mono option.
 
 - Convolution with a real room or hall impulse response for natural spaces; the algorithm for smooth, controllable tails.
-- Turn on Bass Mono so the reverb's low end doesn't widen the mix's low end.
+- Turn on Bass Mono so the reverb's low end stays mono and the mix's low end stays narrow.
 - Use its EQ to high-pass and low-pass the tail as with any return.
 
 ## Delay and Echo

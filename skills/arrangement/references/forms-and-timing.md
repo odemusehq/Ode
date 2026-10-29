@@ -1,6 +1,6 @@
 # Forms and timing
 
-Example forms with typical section lengths, what often plays in each section, and an energy rating from 1 to 10. They are common starting points, not templates: the song's own story, hook and the artist's habits decide. A form that breaks these patterns on purpose is often the most memorable.
+Example forms with typical section lengths, what often plays in each section, and an energy rating from 1 to 10. They are common starting points to adapt: the song's own story, hook and the artist's habits decide. A form that breaks these patterns on purpose is often the most memorable.
 
 ## Contents
 - Verse–chorus song

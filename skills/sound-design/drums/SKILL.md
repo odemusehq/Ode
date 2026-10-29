@@ -7,7 +7,7 @@ description: Shape drum sounds in place in Live — choose, swap, layer, tune, t
 
 This file covers how the drums sound: punch, weight, tone, length and tuning. How they play (grooves, fills, velocity patterns) belongs to the drums skill, and their final balance to mixing. The loop, the checks and the one-line result are in the parent sound-design skill.
 
-Work on the kit that is already there: change a pad's sample, its Simpler settings and the devices in its chain; swap a sample in its pad rather than adding a second kit or a copy of the drum track.
+Work on the kit that is already there: change a pad's sample, its Simpler settings and the devices in its chain; swap a sample in its pad, keeping one kit on one drum track.
 
 ## Choosing drum sounds
 
@@ -35,7 +35,7 @@ These are typical regions; find the real ones on the sound itself.
 - **Tune it.** A kick with a clear pitch sits on the song's root or fifth (or another chord tone); an out-of-key kick fights the bass. Find its fundamental (the strongest low band in its spectrum) and transpose it in its Simpler.
 - **Set its length to the tempo and the bass.** Shorten the decay or fade the tail in its Simpler until the kick ends before the next bass note or kick.
 - **Layer by job, inside its pad's chain.** A top layer for the click (high-passed around 100–200 Hz) over a body or sub layer (low-passed if its top is messy). Align the transients so they hit together, then check polarity: flip one layer and keep the setting with more low end.
-- **Synthesise one when nothing fits.** In Operator: one sine; a pitch envelope sweeping from about 150–250 Hz down to the fundamental (40–60 Hz) over roughly 30–80 ms; amp decay 200–600 ms; a click from a very short noise burst (5–15 ms) or a short high sine. Drum Buss's Boom adds a tuned low tail that can be set to a note.
+- **Synthesise one when every sample falls short.** In Operator: one sine; a pitch envelope sweeping from about 150–250 Hz down to the fundamental (40–60 Hz) over roughly 30–80 ms; amp decay 200–600 ms; a click from a very short noise burst (5–15 ms) or a short high sine. Drum Buss's Boom adds a tuned low tail that can be set to a note.
 
 ## Snare and clap
 
@@ -59,7 +59,7 @@ These are typical regions; find the real ones on the sound itself.
 - **An 808 is a bass part.** Tune it to the notes it plays: find its fundamental and transpose the sample so its root matches.
 - **Glide.** In Simpler, Classic mode with one voice and glide on, overlapping notes slide; glide time often 50–150 ms.
 - **Length.** Each 808 ends before the next; long tails on fast patterns turn into a drone.
-- **Small speakers.** Saturation (Saturator, Roar, Drum Buss) adds harmonics so the line is heard where the sub isn't reproduced; parallel saturation keeps the clean sub intact.
+- **Small speakers.** Saturation (Saturator, Roar, Drum Buss) adds harmonics so the line is heard on speakers that lose the sub; parallel saturation keeps the clean sub intact.
 - **Kick and 808 together.** If both carry sub at the same moment they cancel or pile up: choose a kick with little sub, shorten the kick, or duck the 808 under the kick (low-end mixing sub-skill).
 
 ## Building a Drum Rack kit
@@ -75,7 +75,7 @@ On the drum track's own Drum Rack:
 ## Processing drums
 
 - **Transient shaping.** Drum Buss's Transients sharpens or softens attacks. A Compressor with a slower attack (10–30 ms) lets the hit through and then turns down the body, which reads as more punch; a fast attack softens the hit.
-- **Saturation.** Drum Buss Drive and Crunch, Saturator or Roar add density and help drums cut at lower levels; saturate the kit lightly rather than every pad heavily.
+- **Saturation.** Drum Buss Drive and Crunch, Saturator or Roar add density and help drums cut at lower levels; light saturation on the whole kit beats heavy saturation on every pad.
 - **Damp harshness.** Drum Buss's Damp or a low-pass on bright hits takes the edge off without dulling the whole kit.
 - **Gate long tails** when a room or a long sample blurs a fast pattern.
 - Parallel and bus compression are mixing moves (mixing skill).
@@ -94,7 +94,7 @@ On the drum track's own Drum Rack:
 
 ## Generated one-shots
 
-Describe the hit precisely: drum type, length, pitch, attack, character and space — for example "short dry kick, around 300 ms, tuned near F, tight click, no reverb". Trim, tune and level-match the result like any sample, keep it on its pad, and write its description in the lead sheet's notes. Use generated sounds only from services whose terms allow commercial use and leave the musician the rights.
+Describe the hit precisely: drum type, length, pitch, attack, character and space — for example "short dry kick, around 300 ms, tuned near F, tight click, fully dry". Trim, tune and level-match the result like any sample, keep it on its pad, and write its description in the lead sheet's notes. Use generated sounds only from services whose terms allow commercial use and leave the musician the rights.
 
 ## Drum checks
 
@@ -102,12 +102,12 @@ These add to the parent skill's checks.
 
 | Check | Correct when |
 |---|---|
-| Kit balance | At the same velocity no hit jumps out or disappears, and the pad chains' volumes leave headroom on the drum track |
-| Kick and bass | They don't both carry sub at the same moment: the kick ends before the next bass note, or one of them gives way |
+| Kit balance | At the same velocity every hit sits level with the others, and the pad chains' volumes leave headroom on the drum track |
+| Kick and bass | Only one of them carries sub at any moment: the kick ends before the next bass note, or one of them gives way |
 | Tuning | A pitched kick, tom or 808 sits on the key (root, fifth or another chord tone); an 808 follows the notes it plays |
-| Clean starts | Every sample starts on its transient, and tails don't blur the groove |
-| Mono | Kick, snare and 808 centred; stereo percussion doesn't vanish when summed |
+| Clean starts | Every sample starts on its transient, and tails leave the groove clear |
+| Mono | Kick, snare and 808 centred; stereo percussion stays audible when summed |
 
 ## Example
 
-The musician selects the Drums track and types "kick has no punch on my laptop". The kick's energy sits almost entirely near 45 Hz, which laptop speakers can't play. In the kick's pad chain: Drum Buss after its Simpler with a little Crunch and Transients, and a 2 dB lift around 3.5 kHz for the beater. Check the level, the kick against the bass and the gain staging. Result: "Kick punchier on small speakers: Drum Buss Transients up, +2 dB at 3.5 kHz · sub unchanged, ends before the bass notes, Drum Buss output matched." Again takes another route: a top layer from a clickier kick, high-passed at 150 Hz, aligned and polarity-checked.
+The musician selects the Drums track and types "kick needs more punch on my laptop". The kick's energy sits almost entirely near 45 Hz, too low for laptop speakers. In the kick's pad chain: Drum Buss after its Simpler with a little Crunch and Transients, and a 2 dB lift around 3.5 kHz for the beater. Check the level, the kick against the bass and the gain staging. Result: "Kick punchier on small speakers: Drum Buss Transients up, +2 dB at 3.5 kHz · sub unchanged, ends before the bass notes, Drum Buss output matched." Again takes another route: a top layer from a clickier kick, high-passed at 150 Hz, aligned and polarity-checked.

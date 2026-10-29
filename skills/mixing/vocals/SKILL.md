@@ -5,14 +5,14 @@ description: Mix lead vocals, doubles, harmonies, backing vocals, ad-libs and ra
 
 # Mixing vocals
 
-The vocal usually carries the song: the words must be clear, the level steady, the tone natural, and the voice in front of the music without sounding pasted on top. The loop, the checks and the one-line result are in the parent mixing skill; this file holds what is specific to vocals. Change the vocal's own chain, its sends and the parts around it in place, and tune a chain that is already there rather than building a second one.
+The vocal usually carries the song: the words must be clear, the level steady, the tone natural, and the voice in front of the music without sounding pasted on top. The loop, the checks and the one-line result are in the parent mixing skill; this file holds what is specific to vocals. Change the vocal's own chain, its sends and the parts around it in place, and tune the chain that is already there, keeping one chain per vocal.
 
-Judge every setting from the recording itself. A voice's fundamental, its problem frequencies and its sibilance depend on the singer and the melody, never on assumptions about the singer's gender, age or background.
+Judge every setting from the recording itself. A voice's fundamental, its problem frequencies and its sibilance depend on the singer and the melody alone; leave the singer's gender, age and background out of every judgement.
 
 ## Before processing
 
-- **The performance comes first.** A mix can't fix a take: when a line is clearly flawed (off pitch, clipped, distorted), say so in the result line.
-- **Noise and plosives:** a gentle gate or downward expansion lowers noise between phrases (a Floor of −20 to −40 dB stays natural); a high-pass and a dynamic low band soften pops. Breaths are part of a natural vocal: turn them down, don't remove them.
+- **The performance comes first.** Only a new take fixes a flawed performance: when a line is clearly flawed (off pitch, clipped, distorted), say so in the result line.
+- **Noise and plosives:** a gentle gate or downward expansion lowers noise between phrases (a Floor of −20 to −40 dB stays natural); a high-pass and a dynamic low band soften pops. Breaths are part of a natural vocal: turn them down and keep them.
 - **Uneven phrases:** two gentle compression stages even them out more naturally than one heavy stage.
 
 ## A typical chain
@@ -55,29 +55,29 @@ Sibilance ("s", "sh", "t") usually sits somewhere around 5–9 kHz; find where i
 - **Multiband Dynamics:** the high band with its crossover around 5–6 kHz, compressing above threshold (ratio 3:1–6:1, fast attack, release 50–100 ms) so sibilant moments drop by 3–6 dB and the rest of the top end is untouched.
 - **Compressor with sidechain EQ:** a band-pass on the sibilance in the sidechain EQ turns the whole signal down on each "s". Good for light de-essing; heavier settings dull the voice.
 - **The musician's de-esser plug-in**, when it is on the vocal track, is usually the most transparent option.
-- Too much de-essing makes the singer lisp; judge whole phrases, not just the "s".
+- Too much de-essing makes the singer lisp; judge whole phrases, the sounds around each "s" included.
 - Sibilance gets worse in reverb and when vocals are stacked: send to the reverb from after the de-esser, or de-ess the reverb return, and de-ess backing vocals more than the lead.
 
 ## Tone, saturation and level
 
 - **Presence:** a broad lift of 1–3 dB somewhere in 2–5 kHz helps a vocal cut; carving the competing instruments in that range often works better than boosting the vocal.
-- **Air:** a high shelf of 1–3 dB from 10–12 kHz adds openness; check that sibilance doesn't come back.
+- **Air:** a high shelf of 1–3 dB from 10–12 kHz adds openness; check that sibilance stays tamed.
 - **Warmth for a thin voice:** a small, broad lift around 150–300 Hz.
 - **Saturation:** Saturator (Soft Sine or Analog Clip, drive 1–4 dB, output matched) or Roar (Tube Preamp, low amount) adds harmonics that help the vocal be heard at a lower level. Watch harshness and sibilance.
-- **Level:** the vocal should feel steady against the music. Choruses often need it slightly louder because the music is denser; when one phrase drops out and you can't write the ride, name the bars in the result line.
+- **Level:** the vocal should feel steady against the music. Choruses often need it slightly louder because the music is denser; when one phrase drops out and the ride is beyond what you can write, name the bars in the result line.
 
 ## Space: reverb and delay
 
 - **Plate-like reverb** on a return: decay 1.2–2.5 s, pre-delay 20–80 ms (or a short note value), high-pass 300–500 Hz and low-pass 6–9 kHz on the tail. Pre-delay keeps the words clear of the reverb.
 - **Short room** (0.4–1 s) at a low level puts the voice in the same space as the band without sounding obviously wet.
 - **Delay:** quarter or dotted eighth, feedback 15–35%, repeats filtered to roughly 300 Hz–5 kHz. A slapback (one repeat at 80–140 ms) gives a close, vintage feel.
-- **Duck the returns** with the dry vocal as the key (or Echo's ducking), so tails bloom between phrases instead of under the words.
+- **Duck the returns** with the dry vocal as the key (or Echo's ducking), so tails bloom between phrases and stay out of the words.
 - **Throws:** extra delay or reverb on the last word of a line, for emphasis and to carry into the next section.
 - **Match the amount to the song:** sparse songs can carry more reverb; dense songs need less, with more pre-delay. Verses can be drier and choruses wetter to add size.
 
 ## Doubles, harmonies and backing vocals
 
-- **Tuck them under the lead,** often 6–12 dB lower, so they support rather than compete.
+- **Tuck them under the lead,** often 6–12 dB lower, so they support it.
 - **Thin them:** high-pass higher than the lead (150–300 Hz in dense mixes) and cut a little low-mid body; the lead keeps the weight.
 - **Pan for width:** doubles left and right (or one centred double to thicken the lead), harmonies spread, ad-libs off-centre.
 - **Compress and de-ess more** than the lead; stacked parts multiply sibilance and level jumps.
@@ -86,12 +86,12 @@ Sibilance ("s", "sh", "t") usually sits somewhere around 5–9 kHz; find where i
 
 ## Dense, rhythmic vocals (rap and spoken parts)
 
-- Usually drier and closer: a short room or slapback rather than a long reverb, with delay throws for emphasis.
+- Usually drier and closer: a short room or slapback carries the space, with delay throws for emphasis.
 - A more consistent level: a little more compression, so every syllable is heard.
 - Clear consonants: presence around 2–5 kHz, carved out of the beat where needed.
 - Doubles or stacks on key words, tucked under and panned, add weight to line endings.
 
-These follow from word density, not from a genre label; apply them to any vocal that is dense and rhythmic.
+These follow from word density alone; apply them to any vocal that is dense and rhythmic, whatever its genre.
 
 ## Pitch correction
 
@@ -99,7 +99,7 @@ Pitch correction is a creative and taste decision. Apply it only when the musici
 
 ## Demo vocals
 
-A demo vocal sung by a voice model in the artist's own voice is mixed like any vocal but stays clearly named as a demo. Listen for artefacts typical of generated voices (metallic or smeared consonants, odd breaths) and keep the processing light, so the musician hears the melody and the lyric, not the mix.
+A demo vocal sung by a voice model in the artist's own voice is mixed like any vocal but stays clearly named as a demo. Listen for artefacts typical of generated voices (metallic or smeared consonants, odd breaths) and keep the processing light, so what the musician hears is the melody and the lyric.
 
 ## Making room for the vocal
 
@@ -113,7 +113,7 @@ These add to the parent skill's checks.
 
 | Check | Correct when |
 |---|---|
-| Words clear | No part around the vocal stays strong in 2–5 kHz where the vocal sings: masking measured on audio parts, register and filter compared for MIDI parts |
+| Words clear | The parts around the vocal stay quiet in 2–5 kHz wherever the vocal sings: masking measured on audio parts, register and filter compared for MIDI parts |
 | Steady level | The mix check, section by section, shows where the vocal's own audio rises and falls against the other audio parts, and the compression and fader settings even out every section you touched |
 | Sibilance | The de-esser's band sits where the audio analysis of the vocal's own audio finds the sibilance (around 5–9 kHz), set to take 3–6 dB off the "s" sounds and leave the rest of the top end |
 | Mono | The lead vocal stays panned centre, with its width coming from doubles, harmonies and the returns around it |

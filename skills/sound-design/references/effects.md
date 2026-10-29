@@ -45,9 +45,9 @@ The same devices in a different order make a different sound.
 - **Mid/Side routing** keeps the centre clean and roughs up the sides, or the reverse.
 - **Feedback routing** turns Roar into a resonant, pitched effect; tune the feedback to the song's key or sync it to the tempo.
 - **Modulation** on shaper amount or filter frequency makes the colour move with the groove.
-- Start with low amounts and add stages only when one stage can't get there.
+- Start with low amounts and add stages only when one stage falls short.
 
-**Pedal.** Guitar-pedal style Overdrive, Distortion and Fuzz with a simple tone stack. Quick character on synths, drums and vocals, not just guitars.
+**Pedal.** Guitar-pedal style Overdrive, Distortion and Fuzz with a simple tone stack. Quick character on synths, drums and vocals as well as guitars.
 
 **Drum Buss.** Drive and Crunch for saturation, Damp to roll off harshness, Transients to sharpen or soften attacks, and Boom for a tuned low resonance. Built for drums but useful on any percussive sound (see the drums sub-skill).
 
@@ -68,7 +68,7 @@ The same devices in a different order make a different sound.
 | Sweep in a build | High-pass moved from about 30 Hz up to 300–1000 Hz over the build, or a low-pass opening from 300 Hz to fully open | Removing or revealing the lows and highs signals that something is coming |
 | Telephone or radio sound | Band-pass around 1–2 kHz, fairly narrow | Strips lows and highs so the sound feels small and distant |
 
-Sweeps over several bars usually need automation. When you can't write it, get the movement from the device itself (a slow synced LFO, the envelope follower) or from a sound cut to the length of the build, or end the result line with the one move to draw: the parameter, the bars, and the start and end values.
+Sweeps over several bars usually need automation. When writing it is beyond your reach, get the movement from the device itself (a slow synced LFO, the envelope follower) or from a sound cut to the length of the build, or end the result line with the one move to draw: the parameter, the bars, and the start and end values.
 
 ## Delays
 
@@ -87,7 +87,7 @@ Sweeps over several bars usually need automation. When you can't write it, get t
 
 **Grain Delay.** Short delays with pitch shift and randomisation: shimmering, scattered textures from any source.
 
-**Beat Repeat.** Repeats slices of the input in time: stutters, glitches and fills. Keep its chance and length controls modest for occasional variation rather than constant chopping.
+**Beat Repeat.** Repeats slices of the input in time: stutters, glitches and fills. Keep its chance and length controls modest, for occasional variation.
 
 ## Reverbs
 
@@ -101,7 +101,7 @@ Sweeps over several bars usually need automation. When you can't write it, get t
 
 - Shimmer for tails that rise in pitch: ambient pads and transitions.
 - Tides for moving, modulated tails.
-- Convolution with texture-type impulse responses for spaces that don't exist: metallic, grainy or rhythmic tails.
+- Convolution with texture-type impulse responses for imaginary spaces: metallic, grainy or rhythmic tails.
 
 ## Modulation
 

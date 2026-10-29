@@ -1,6 +1,6 @@
 # Mastering chain settings
 
-Starting values and reasons for each device on a master. Mastering moves are small; if a stage needs large settings, the mix probably needs a fix instead. Keep each stage's output level close to its input so bypassing a stage compares like with like.
+Starting values and reasons for each device on a master. Mastering moves are small; if a stage needs large settings, the fix probably belongs in the mix. Keep each stage's output level close to its input so bypassing a stage compares like with like.
 
 ## Contents
 - Utility
@@ -16,7 +16,7 @@ Starting values and reasons for each device on a master. Mastering moves are sma
 ## Utility
 
 - **First in the chain:** trim the input so the following stages see a sensible level (peaks around −6 to −3 dBFS).
-- **Bass Mono:** only if the mix has wide low end that shouldn't be there; set it low (around 80–120 Hz) and check that intentionally wide low parts aren't harmed. Better fixed in the mix.
+- **Bass Mono:** only if the mix has unwanted wide low end; set it low (around 80–120 Hz) and check that intentionally wide low parts stay intact. Better fixed in the mix.
 - **Width:** small changes only (around 90–110%); check mono after any change.
 - **After the limiter, while comparing:** lower the gain to match the unprocessed loudness for a fair comparison, then remove it.
 
@@ -24,7 +24,7 @@ Starting values and reasons for each device on a master. Mastering moves are sma
 
 | Job | Settings | Why |
 |---|---|---|
-| Rumble below the music | Low cut 12 dB/oct around 20–30 Hz | Removes energy nobody hears that still uses headroom; only if the mix has it |
+| Rumble below the music | Low cut 12 dB/oct around 20–30 Hz | Removes inaudible energy that still uses headroom; only if the mix has it |
 | Resonance or a harsh spot | Bell, Q 2–6, cut 0.5–2 dB | Small cuts change a whole mix noticeably |
 | Air | High shelf around 10–12 kHz, +0.5–1.5 dB | Openness without harshness |
 | Weight | Low shelf around 60–100 Hz, ±0.5–1.5 dB | Sets the low-end balance against references |
@@ -33,7 +33,7 @@ Starting values and reasons for each device on a master. Mastering moves are sma
 
 - Turn on oversampling for high-frequency boosts so the curve stays accurate near the top of the range.
 - Scale is a quick way to try a whole curve at half or double strength.
-- Corrective EQ usually goes before compression; tonal EQ often after it, so tonal boosts don't drive the compressor.
+- Corrective EQ usually goes before compression; tonal EQ often after it, so the compressor only hears the corrected mix.
 
 ## Glue Compressor (and Compressor as an alternative)
 
@@ -42,13 +42,13 @@ Starting values and reasons for each device on a master. Mastering moves are sma
 | Ratio | 2 | Gentle enough to be transparent on a full mix |
 | Attack | 10 or 30 ms (Compressor: 10–30 ms) | Lets transients through, so the master keeps its punch |
 | Release | Auto, or 0.2–0.4 s | Auto adapts to the material; a fixed release can be timed to the groove |
-| Threshold | 1–2 dB of gain reduction on the loud parts | Glue, not squash |
+| Threshold | 1–2 dB of gain reduction on the loud parts | Just enough to glue |
 | Sidechain EQ | High-pass around 80–150 Hz | The kick and bass stop pumping the whole mix |
 | Range | Limit the maximum gain reduction to a few dB | A safety net against overdoing it |
 | Soft Clip | Off, unless its sound is wanted | It changes how peaks sound |
 | Dry/Wet | 100%, or 50–70% for parallel glue | Parallel keeps more of the original dynamics |
 
-**Compressor instead:** RMS mode, ratio 1.5:1–2:1, a soft knee (6–12 dB), attack 10–30 ms, release 100–300 ms or Auto, 1–2 dB of gain reduction.
+**Compressor as the alternative:** RMS mode, ratio 1.5:1–2:1, a soft knee (6–12 dB), attack 10–30 ms, release 100–300 ms or Auto, 1–2 dB of gain reduction.
 
 ## Multiband Dynamics
 
@@ -58,7 +58,7 @@ Use only when one frequency range misbehaves on its own: a low end that booms on
 - Compress above threshold with gentle ratios (1.5:1–3:1); 1–2 dB of gain reduction on the problem band only; other bands left at 1:1.
 - Slower attack and release on the low band (low frequencies need time: attack 10–30 ms, release 100–300 ms); faster on the high band.
 - Use the global Amount control to dial the whole effect back.
-- Avoid upward compression on a master: it raises noise, reverb tails and hiss, and flattens the mix. Heavy multiband presets made for sound design don't belong here.
+- Avoid upward compression on a master: it raises noise, reverb tails and hiss, and flattens the mix. Heavy multiband presets made for sound design stay in sound design.
 
 ## Saturator and Roar
 
@@ -82,7 +82,7 @@ Shaving the sharpest peaks before the limiter lets the limiter work less, which 
 | Gain | Raise toward the loudness target, as far as the sound allows | Loudness comes from here, but only as far as the music allows |
 | Release | Auto, or 50–300 ms | Shorter is louder but can distort; longer is cleaner but can pump |
 | Lookahead | Longer for cleaner limiting | Gives the limiter time to react smoothly |
-| Stereo linking | Both channels limited together (stereo or fully linked, not left/right or mid/side) | Prevents the stereo image from shifting when one side is limited harder |
+| Stereo linking | Both channels limited together (stereo or fully linked mode only) | Prevents the stereo image from shifting when one side is limited harder |
 
 - For dynamic masters, keep the limiter's gain reduction around 1–3 dB on the loudest peaks. Dense club masters may take more if the kick and snare stay clean.
 - Only one limiter at the end of the chain. Stacking limiters adds distortion without adding loudness.
@@ -93,7 +93,7 @@ Typical order: Utility (trim) → EQ Eight (corrective) → Glue Compressor → 
 
 - The Limiter stays last on the Main track, so its ceiling holds for every device before it.
 - Swap the compressor and the corrective EQ if a problem frequency is driving the compressor.
-- After each stage, match its output to its input so bypassing it only changes the tone, not the level.
+- After each stage, match its output to its input so bypassing it changes only the tone and keeps the level.
 
 ## Things to keep off the master
 

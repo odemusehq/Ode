@@ -1,6 +1,6 @@
 ---
 name: song-form
-description: Plan and fix song structure directly in the Set and the lead sheet. Ode marks each section with a locator on its first downbeat, keeps the lead sheet's sections in step with the Arrangement, decides section lengths and order, and checks that sections run back to back in whole phrases, that names follow the usual section names, that the first chorus arrives in time for the genre and that the energy rises to a final peak, then reports in one line. Use this skill whenever the whole song or the Arrangement is selected, or the musician clicks a suggestion or types anything about structure, sections or locators — "mark the sections", "it drags", "get to the chorus sooner", "add a bridge", "what comes next", "too short", "turn this loop into a song" — even if they never say form.
+description: Plan and fix song structure directly in the Set and the lead sheet. Ode marks each section with a locator on its first downbeat, keeps the lead sheet's sections in step with the Arrangement, decides section lengths and order, and checks that sections run back to back in whole phrases, that names follow the usual section names, that the first chorus arrives in time for the genre and that the energy rises to a final peak, then reports in one line. Use this skill whenever the whole song or the Arrangement is selected, or the musician clicks a suggestion or types anything about structure, sections or locators — "mark the sections", "it drags", "get to the chorus sooner", "add a bridge", "what comes next", "too short", "turn this loop into a song" — whatever words they use.
 ---
 
 # Song form
@@ -26,11 +26,11 @@ Song form decides when the listener hears what: when the story starts, when the 
 ### 3. Change it in place
 
 - **Locators.** One on the first downbeat of every section, named with the established section name and a number where it repeats: "Intro", "Verse 1", "Pre-Chorus 1", "Chorus 1", "Post-Chorus 1", "Bridge", "Breakdown", "Build", "Drop 1", "Outro". A pickup belongs to its section musically, but the locator goes on the downbeat so loops and jumps start cleanly. Add a key or tempo change to the name when it helps: "Chorus 3 (up a step)".
-- **The musician's locators.** They stay where they are. Where one already marks a section start, rename it in place to that section's name instead of adding a second locator; leave the others untouched.
-- **The lead sheet's sections.** Update the existing sections in place to match the Arrangement — kind, name, start beat, length — each keeping its chords. Sections the Arrangement has and the lead sheet lacks are added, with no lyrics written for them; nothing is duplicated.
+- **The musician's locators.** They stay where they are. Where one already marks a section start, rename it in place to that section's name, so the start keeps a single locator; leave the others untouched.
+- **The lead sheet's sections.** Update the existing sections in place to match the Arrangement — kind, name, start beat, length — each keeping its chords. Sections the Arrangement has and the lead sheet lacks are added, and their lyrics stay unwritten; each section appears once.
 - **The lyrics.** Every sung line stays as it is. When a section is renamed, rename its label in the lyrics to match ("[Verse]" → "[Verse 1]"), so the lyrics and the Arrangement name the same sections.
-- Marking sections changes no clip, note or device. A plan that changes lengths or order is carried out with the arrangement skill, and the locators and lead sheet follow.
-- Never keep a second, alternative plan in the Set or the lead sheet; Again gives another take, and the history keeps the old one.
+- Marking sections leaves every clip, note and device as it is. A plan that changes lengths or order is carried out with the arrangement skill, and the locators and lead sheet follow.
+- Keep a single plan in the Set and the lead sheet; Again gives another take, and the history keeps the old one.
 
 ### 4. Verify
 
@@ -38,14 +38,14 @@ Run every check that applies to the change.
 
 | Check | Correct when |
 |---|---|
-| Lengths | sections run back to back from the song's first bar to its last, with no gap or overlap, each a whole number of bars (usually a multiple of 2 or 4) |
+| Lengths | sections run back to back from the song's first bar to its last, each starting where the one before ends, each a whole number of bars (usually a multiple of 2 or 4) |
 | Downbeats | every locator sits on the first beat of a bar: a whole multiple of the bar length in beats (4 in 4/4, 3 in 3/4) from the song's start |
-| Names | established names, numbered in order where they repeat; one locator per section start and never two at the same time |
+| Names | established names, numbered in order where they repeat; exactly one locator per section start, each at a time of its own |
 | Agreement | the locators, the lead sheet's sections and the Arrangement's parts agree on where each section starts, and every label in the lyrics is the name of a section |
 | Timing | start times follow from the tempo (seconds = bars × beats per bar × 60 ÷ BPM), and the first chorus and the total length suit the genre or the musician's target |
 | Contrast | neighbouring sections differ in at least two ways (melody register, rhythm, chords or harmonic rhythm, density, drum pattern, lyric density); repeats stay recognisable |
 | Energy | rises overall, with a dip before the last peak |
-| Kept | the musician's locators are all still there, renamed at most; locked sections are untouched; no sung line in the lyrics changed |
+| Kept | the musician's locators are all still there, renamed at most; locked sections are untouched; every sung line in the lyrics is as it was |
 
 Fix and check again until they pass; if something still fails, the result line says what.
 
@@ -69,7 +69,7 @@ Act without asking. The one question, a single line with buttons, comes only whe
 
 - removing a section, or shortening one whose lines are in the lyrics, because that deletes part of the song: "Cut verse 2's last four lines to reach the chorus sooner? · Cut them · Keep them";
 - rewriting the whole form of a song that already has one, or moving or deleting the musician's own locators;
-- a muted track decides where a section starts, and the hand edits and version history don't explain it (muted long ago and untouched means parked).
+- a muted track decides where a section starts, and the hand edits and version history leave it unexplained (muted long ago and untouched means parked).
 
 The mode decides the rest: in Manual, Ode shows each change for Apply or Skip.
 
@@ -90,7 +90,7 @@ The mode decides the rest: in Manual, Ode shows each change for Apply or Skip.
 | Instrumental or solo | variation, and a rest for the singer | 4–16 bars | — |
 | Outro | ends the song | 2–16 bars (16–32 for DJ tracks) | fade, hard ending, return to the intro, tag |
 
-These are habits, not rules. Most sections come in multiples of 2 or 4 bars because listeners feel phrases in groups of four.
+These are habits, and songs bend them. Most sections come in multiples of 2 or 4 bars because listeners feel phrases in groups of four.
 
 ## Bars and time
 
@@ -110,7 +110,7 @@ Seconds = bars × beats per bar × 60 ÷ BPM. At 120 BPM in 4/4 a bar lasts 2 se
 | Dance track | intro, groove, breakdown, build, drop, breakdown, build, drop, outro | house, techno and other club music, in 8-, 16- and 32-bar phrases |
 | Through-composed | new music for each section | film, art song, some progressive music |
 
-Check the song's genre and the artist's own songs, and let the song suggest its form rather than forcing a template. More detail per genre is in `references/forms-by-genre.md`.
+Check the song's genre and the artist's own songs, and let the song itself suggest its form. More detail per genre is in `references/forms-by-genre.md`.
 
 ## The energy curve
 
@@ -122,7 +122,7 @@ Energy is how full, loud, high, dense and busy the music feels. Plan it per sect
 
 ## Contrast between sections
 
-Neighbouring sections should differ in at least two ways: melody register, melodic rhythm, chords or harmonic rhythm, arrangement density, drum pattern, lyric density. A chorus that differs from its verse only in the lyric won't feel like a chorus. Repeated sections should stay recognisable — same melody and chords — with small arrangement changes each time.
+Neighbouring sections should differ in at least two ways: melody register, melodic rhythm, chords or harmonic rhythm, arrangement density, drum pattern, lyric density. A chorus that differs from its verse only in the lyric feels like another verse. Repeated sections should stay recognisable — same melody and chords — with small arrangement changes each time.
 
 ## Intros and outros
 
@@ -139,7 +139,7 @@ Break expectations on purpose, and rarely enough that it registers:
 - open with the chorus;
 - a bar of silence or a drum stop before the final chorus;
 - a false ending: the song stops, then one more chorus;
-- end on the bridge or on a new section instead of the chorus.
+- end on the bridge or on a new section, where a chorus would usually close the song.
 
 The result line gives the reason in musical terms: "at 120 BPM, dropping the second 8-bar pre-chorus reaches chorus 2 sixteen seconds sooner".
 
@@ -179,7 +179,7 @@ Other takes for Again: open with the post-chorus hook as the intro (chorus at 0:
 
 ## Sub-skills
 
-Paths are relative to this skill's folder. Read a sub-skill when it applies; it adds genre detail and does not repeat this file.
+Paths are relative to this skill's folder. Read a sub-skill when it applies; it adds only the genre detail beyond this file.
 
 | Path | Read when |
 |---|---|

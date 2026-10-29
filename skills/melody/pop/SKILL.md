@@ -56,7 +56,7 @@ The verse spans A3–E4 and ends open on D4. The chorus spans E4–C5; its rhyth
 
 - Put the title on the first line of the chorus, on the first strong beat or on the held note, and repeat it at the end of the chorus.
 - Common chorus layouts by line (letters are melodic ideas): A A B A, A B A B, or A A A B (the hook three times, then a closing line).
-- Give the hook a rhythm the verse never uses, so it stands out the moment it arrives.
+- Give the hook a rhythm absent from the verse, so it stands out the moment it arrives.
 
 ## Post-chorus and instrumental hooks
 
@@ -73,7 +73,7 @@ The verse spans A3–E4 and ends open on D4. The chorus spans E4–C5; its rhyth
 
 ## Sub-style tendencies
 
-Qualities, not rules: use them to choose a take, never to assume what the artist wants.
+Loose tendencies: use them only to choose a take; what the artist wants comes from the artist.
 
 | Sub-style | Melody tendencies |
 |---|---|
@@ -85,7 +85,7 @@ Qualities, not rules: use them to choose a take, never to assume what the artist
 
 ## Trying something outside the usual style
 
-On Again, or when the artist's habit is the thing that isn't working, try the opposite of the habit: a low, rhythmic, chant-like chorus for an artist who belts high; a sparse verse of long notes for one whose verses are always wordy; a hook that starts off the beat for one whose hooks always start on the downbeat. The result line then says "outside your usual style".
+On Again, or when the artist's habit is the thing holding the song back, try the opposite of the habit: a low, rhythmic, chant-like chorus for an artist who belts high; a sparse verse of long notes for one whose verses are always wordy; a hook that starts off the beat for one whose hooks always start on the downbeat. The result line then says "outside your usual style".
 
 ## Checks for pop
 
@@ -94,7 +94,7 @@ Run these with the melody skill's checks.
 | Check | Correct when |
 |---|---|
 | Hook | the chorus states its hook within its first two bars, and the title lands on a strong beat, a long note or the high point |
-| Contrast | verse and chorus differ in at least two of register, rhythm, phrase length, density and contour, not only in the lyric |
+| Contrast | verse and chorus differ in at least two of register, rhythm, phrase length, density and contour, beyond any change in the lyric |
 | Pre-chorus | ends open (on 2, 4, 5 or 7, or over a non-tonic chord) and its peak stays below the chorus peak |
 | Post-chorus | stays within a fifth, and its idea repeats at least twice |
 

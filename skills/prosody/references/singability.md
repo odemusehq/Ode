@@ -1,6 +1,6 @@
 # Singability: vowels and consonants
 
-Detail behind the singability section of the prosody skill. The singability check reports problems on the actual melody (closed vowels on long or high notes, consonant clusters on very short notes, phrases with no rest to breathe); use this to understand them and to choose the word or note that fixes them. When a problem remains, the result line names it in plain words.
+Detail behind the singability section of the prosody skill. The singability check reports problems on the actual melody (closed vowels on long or high notes, consonant clusters on very short notes, phrases without a rest to breathe); use this to understand them and to choose the word or note that fixes them. When a problem remains, the result line names it in plain words.
 
 ## Contents
 1. Vowels on long and high notes
@@ -51,7 +51,7 @@ So the first sound decides how the note feels. "Down" holds on an open "ah" and 
 ## 4. "R" after a vowel, UK and US
 
 - **US English:** the "r" in "heart", "fire", "more" is pronounced. On a held note, singers usually sustain the vowel and add the "r" at the end. A word like "bird" or "hurt", whose vowel is coloured by "r" throughout, sounds tight on long high notes.
-- **UK English (standard Southern British):** there's no "r" after a vowel, so "heart" holds as a pure "ah" and "more" as a pure "aw". This makes many held notes more open in a UK accent.
+- **UK English (standard Southern British):** the "r" after a vowel is silent, so "heart" holds as a pure "ah" and "more" as a pure "aw". This makes many held notes more open in a UK accent.
 - Follow the musician's setting and how they actually sing; this affects which word suits a held note as well as which words rhyme.
 
 ## 5. Melisma

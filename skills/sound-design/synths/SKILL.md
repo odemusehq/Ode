@@ -11,13 +11,13 @@ The loop, the checks and the one-line result are in the parent sound-design skil
 
 - **Register.** Find the lowest and highest notes. A bass whose notes sit around E1–E2 (41–82 Hz) needs a different patch from one an octave higher.
 - **Rhythm.** Note lengths and tempo set the envelope times: a sixteenth note lasts 15 000 ÷ BPM milliseconds (about 117 ms at 128 BPM), so a 400 ms decay smears a sixteenth-note pluck.
-- **Who else plays.** If a separate sub bass exists, a synth bass adds no more sub; if the vocal sings in the lead's octave, the lead moves an octave, thins out or answers the vocal in its gaps.
+- **Who else plays.** If a separate sub bass exists, a synth bass leaves the sub to it; if the vocal sings in the lead's octave, the lead moves an octave, thins out or answers the vocal in its gaps.
 
 ## Basses
 
 **Sub bass.** Pure low end, felt more than heard.
-- Sine (or triangle for a touch of upper harmonics) in Operator or Drift; Mono; no filter needed.
-- Amp attack 1–5 ms (a 0 ms attack can click), sustain full, release 20–80 ms so notes don't overlap.
+- Sine (or triangle for a touch of upper harmonics) in Operator or Drift; Mono; the bare oscillator is enough.
+- Amp attack 1–5 ms (a 0 ms attack can click), sustain full, release 20–80 ms so each note ends before the next.
 - Keep the fundamentals mostly between about 30 and 80 Hz; below 30 Hz few systems reproduce it and it eats headroom.
 - For small speakers, add harmonics without touching the low end: parallel saturation, or a mid layer (below).
 
@@ -37,19 +37,19 @@ The loop, the checks and the one-line result are in the parent sound-design skil
 
 ## Plucks, keys and mallets
 
-**Pluck.** Amp attack 0 ms, decay 150–400 ms, sustain 0, release close to the decay; a filter envelope with a slightly shorter decay opening a low cutoff. A synced delay (dotted eighth or sixteenth) turns a simple pluck into a rhythm part. In fast parts, shorten the decay rather than turning the pluck down.
+**Pluck.** Amp attack 0 ms, decay 150–400 ms, sustain 0, release close to the decay; a filter envelope with a slightly shorter decay opening a low cutoff. A synced delay (dotted eighth or sixteenth) turns a simple pluck into a rhythm part. In fast parts, shorten the decay and keep the pluck's level.
 
 **FM electric piano.** In Operator: a sine carrier and a modulator at ratio 1 with a decaying envelope (decay 0.5–1.5 s, low sustain) and velocity to modulator level; for the bell-like attack, a quiet modulator at a high ratio (around 14) with a very short envelope. Light Chorus-Ensemble or Phaser-Flanger adds the familiar movement. Electric is the modelled alternative.
 
 **Organ.** Operator with all four oscillators as carriers (the additive algorithm), sines at ratios matching organ drawbars: 0.5 (sub-octave), 1 (fundamental), 2 (octave), 3 (octave and a fifth), 4 (two octaves). Mix their levels like drawbars; fast or slow chorus or vibrato gives a rotating-speaker feel.
 
-**Bells and mallets.** Operator with a non-integer modulator ratio (3.5 or 1.41, for example) for inharmonic partials, a fast attack, a long decay (2–6 s) and no sustain; or Collision for modelled mallets. Bells are bright and long, so they need space in time: few notes, and a high-pass around 200–400 Hz in dense mixes.
+**Bells and mallets.** Operator with a non-integer modulator ratio (3.5 or 1.41, for example) for inharmonic partials, a fast attack, a long decay (2–6 s) and sustain at 0; or Collision for modelled mallets. Bells are bright and long, so they need space in time: few notes, and a high-pass around 200–400 Hz in dense mixes.
 
 ## Pads and chords
 
 **Warm pad.** Drift or Wavetable; saws detuned a few cents, or a softer waveform; low-pass at 1–4 kHz with low resonance; attack 200 ms to 1 s, release 1–3 s; a slow LFO on cutoff or position (0.05–0.3 Hz) for gentle movement; Chorus-Ensemble for width.
 
-**Pads in a busy mix.** High-pass at 150–300 Hz, keep the patch above the bass and away from the vocal's main octave, and set it lower than feels natural in solo. A pad usually fills gaps rather than being heard as a part.
+**Pads in a busy mix.** High-pass at 150–300 Hz, keep the patch above the bass and away from the vocal's main octave, and set it lower than feels natural in solo. A pad usually fills gaps in the background.
 
 **Supersaw chords.** Wavetable with Classic unison (6–8 voices, amount 25–50%), cutoff 4–10 kHz, a short attack, release 200–600 ms. Very wide unison can thin out or flange in mono; a less detuned centre layer, or a lower unison amount, keeps it solid. In dance music, ducking from the kick gives it room (mixing skill).
 
@@ -61,7 +61,7 @@ The loop, the checks and the one-line result are in the parent sound-design skil
 
 - Mono with glide (20–60 ms) for singing lines; Poly for chordal leads.
 - Vibrato from an LFO on pitch (4–6 Hz, small depth), delayed or on the mod wheel so it appears on held notes only.
-- A lead cuts through with energy around 1–5 kHz — a brighter waveform, saturation or resonance — rather than more level.
+- A lead cuts through with energy around 1–5 kHz — a brighter waveform, saturation or resonance — while its level stays put.
 - If it plays in the vocal's octave at the same time, move the patch an octave with the oscillators' octave controls or thin it; trading phrases with the vocal is an arrangement move.
 
 ## Risers, impacts and transitions
@@ -70,13 +70,13 @@ The loop, the checks and the one-line result are in the parent sound-design skil
 - **Downlifter.** The reverse movement: noise or a tone falling in pitch and filter after a section's peak, often after an impact.
 - **Impact.** A low sine with a fast pitch drop (as for a kick, but longer), a noise burst and a long dark reverb, placed on the downbeat of the new section.
 - **Reverse sweeps.** A reversed cymbal or reverb tail that ends exactly on the downbeat.
-- **Build the movement into the sound**, so it needs no automation: a riser sample generated or trimmed to the build's length, or one long note on a synth whose amp and filter envelopes rise over the whole build. Where it goes in the song belongs to the arrangement skill.
+- **Build the movement into the sound**, so it runs without automation: a riser sample generated or trimmed to the build's length, or one long note on a synth whose amp and filter envelopes rise over the whole build. Where it goes in the song belongs to the arrangement skill.
 
 ## Drones and textures
 
 - Meld, or Wavetable with slow modulation on position and filter; long envelopes; layered noise for air.
 - Keep drones in key: a root or fifth drone supports most chords; a drone on a note outside the chords creates tension, which can be the point.
-- Generated or sampled textures can be stretched, reversed or re-pitched in Simpler into sounds nothing else in the song makes.
+- Generated or sampled textures can be stretched, reversed or re-pitched in Simpler into sounds unique in the song.
 
 ## Synth checks
 
@@ -87,11 +87,11 @@ These add to the parent skill's checks.
 | Level jumps | After resonance, unison or envelope changes, the part's level is matched to before; these moves can shift it by several dB |
 | Mono | Unison, detune, chorus and stereo voice modes sum to mono without collapsing or turning hollow; basses stay centred |
 | Tuning | Detuned layers drift from concert pitch on average: basses and drones still sit on the key |
-| Harshness | Very bright waveforms and heavy FM on high notes don't turn brittle; use the instrument's high-quality mode or soften the source |
+| Harshness | Very bright waveforms and heavy FM on high notes stay smooth; use the instrument's high-quality mode or soften the source |
 | Expression | Velocity, the mod wheel or macros named in plain words (Brightness, Movement, Width, Dirt) still let the musician play and ride the sound |
 
 Many unison voices and long releases add up on the CPU: use as few voices as give the size.
 
 ## Example
 
-The musician selects the Lead track — an instrumental hook at 110 BPM in G minor with no instrument yet; their songs mostly use soft, clean synths — and clicks "Make a lead". Insert Drift on the track: triangle oscillator, filter around 2.5 kHz, Mono with 40 ms glide, delayed vibrato, then Echo after it at a dotted eighth with low feedback. Check the level, the register against the vocal (the hook plays where the vocal rests) and mono. Result: "Lead on Drift: triangle, filter 2.5 kHz, 40 ms glide, dotted-eighth echo · level set, clear of the vocal's phrases, mono-compatible." Again tries a clearly different take — a Wavetable saw with light unison and a ping-pong delay — and a third take might put a square wave through Roar into a moving band-pass, with "rougher than your usual leads" in its result line.
+The musician selects the Lead track — an instrumental hook at 110 BPM in G minor, still without an instrument; their songs mostly use soft, clean synths — and clicks "Make a lead". Insert Drift on the track: triangle oscillator, filter around 2.5 kHz, Mono with 40 ms glide, delayed vibrato, then Echo after it at a dotted eighth with low feedback. Check the level, the register against the vocal (the hook plays where the vocal rests) and mono. Result: "Lead on Drift: triangle, filter 2.5 kHz, 40 ms glide, dotted-eighth echo · level set, clear of the vocal's phrases, mono-compatible." Again tries a clearly different take — a Wavetable saw with light unison and a ping-pong delay — and a third take might put a square wave through Roar into a moving band-pass, with "rougher than your usual leads" in its result line.

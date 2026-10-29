@@ -1,6 +1,6 @@
 # Loudness and true peak targets
 
-What the numbers mean, how normalisation works, and typical targets per platform and format. Platforms publish and occasionally change their figures, so treat the values below as typical, check the platform's current documentation when precision matters, and remember that the song decides: a target is a ceiling for usefulness, not a goal to hit at any cost.
+What the numbers mean, how normalisation works, and typical targets per platform and format. Platforms publish and occasionally change their figures, so treat the values below as typical, check the platform's current documentation when precision matters, and remember that the song decides: a target is a ceiling for usefulness, to approach only as far as the music allows.
 
 ## Contents
 - What the measurements mean
@@ -38,7 +38,7 @@ Typical values as commonly published or reported:
 | Amazon Music | Around −14 LUFS | Around −1 to −2 dBTP |
 | Tidal | Around −14 LUFS | Around −1 dBTP |
 | Deezer | Around −15 LUFS | Around −1 dBTP |
-| Services that don't normalise (often reported for SoundCloud and Bandcamp) | The file plays as it is | Around −1 dBTP if the service encodes to a lossy format |
+| Services without normalisation (often reported for SoundCloud and Bandcamp) | The file plays as it is | Around −1 dBTP if the service encodes to a lossy format |
 
 **One master usually serves every streaming platform.** A master around −14 LUFS with a −1 dBTP ceiling plays at close to its natural level almost everywhere, and is turned down slightly where the reference is lower. There is rarely a reason to make a separate master per streaming service.
 
@@ -48,7 +48,7 @@ Typical values as commonly published or reported:
 
 | Format | What matters |
 |---|---|
-| Club and DJ use | No normalisation; DJs set levels by ear and by gain. Dense dance masters often land around −9 to −6 LUFS integrated, but only when they still sound clean. Big systems expose distortion: a slightly quieter, cleaner master often sounds bigger. Keep true peak below 0 dBTP with a margin. |
+| Club and DJ use | Files play at their own level; DJs set levels by ear and by gain. Dense dance masters often land around −9 to −6 LUFS integrated, but only when they still sound clean. Big systems expose distortion: a slightly quieter, cleaner master often sounds bigger. Keep true peak below 0 dBTP with a margin. |
 | CD | 16-bit, 44.1 kHz, dithered. Loudness is an artistic choice; keep the true peak below 0 dBTP with a small margin (around −0.3 to −1 dBTP). |
 | Downloads and lossless stores | Usually the same master as streaming. |
 | Vinyl | The cutting engineer's specification decides. Usually a separate master with less limiting, controlled sibilance and harsh highs, and mono low end. |
@@ -59,12 +59,12 @@ Typical values as commonly published or reported:
 
 1. Start from the loudness target in the musician's settings.
 2. Consider where the song will be played most (streaming, club, CD, vinyl).
-3. Measure the musician's own reference tracks for context, as information rather than a rule.
-4. Raise loudness until either the target is reached or the music starts to suffer (punch lost, distortion, the chorus no longer bigger than the verse). Stop at whichever comes first.
+3. Measure the musician's own reference tracks for context, as information to weigh.
+4. Raise loudness until either the target is reached or the music starts to suffer (punch lost, distortion, the chorus losing its lift over the verse). Stop at whichever comes first.
 5. Make a separate master only when there is a real reason: a club version, a vinyl cut, a CD with a different loudness.
 
 Present a loudness figure as checked only when the audio analysis measured it on a bounce of the master that the musician dropped onto an audio track, rendered from there; otherwise give the target and the settings.
 
 ## If the musician asks why
 
-Answer in two or three sentences, for example: "Streaming services play every song at about the same loudness, so a master pushed far past −14 LUFS just gets turned down, with its punch lost for nothing. To sound louder next to other songs, a clearer low end and a more forward vocal in the mix do more. A club version can go louder as long as the kick stays clean."
+Answer in two or three sentences, for example: "Streaming services play every song at about the same loudness, so a master pushed far past −14 LUFS just gets turned down: it plays at the same loudness, with less punch. To sound louder next to other songs, a clearer low end and a more forward vocal in the mix do more. A club version can go louder as long as the kick stays clean."

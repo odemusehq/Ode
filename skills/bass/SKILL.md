@@ -1,6 +1,6 @@
 ---
 name: bass
-description: Write and fix basslines directly in the Set. Ode edits the notes of the bass clip the musician points at so the line follows the chords and locks with the kick, checks roots on chord changes, key, starts against the real kick notes, space around the snare, register and clashes with other low parts, then reports in one line which bars changed, so the musician can play them. Use this skill whenever a bass, sub or 808 clip is selected, or the musician clicks a suggestion or types anything about the bassline, an 808, sub-bass, walking bass, or low end that sounds muddy, empty or clashing — "lock to the kick", "follow the chords", "more movement", "simpler", "add a bass" — even if they never say bass.
+description: Write and fix basslines directly in the Set. Ode edits the notes of the bass clip the musician points at so the line follows the chords and locks with the kick, checks roots on chord changes, key, starts against the real kick notes, space around the snare, register and clashes with other low parts, then reports in one line which bars changed, so the musician can play them. Use this skill whenever a bass, sub or 808 clip is selected, or the musician clicks a suggestion or types anything about the bassline, an 808, sub-bass, walking bass, or low end that sounds muddy, empty or clashing — "lock to the kick", "follow the chords", "more movement", "simpler", "add a bass" — whatever words they use.
 ---
 
 # Bass
@@ -9,7 +9,7 @@ The bass does three jobs at once: it defines the harmony (the bass note decides 
 
 ## Conventions
 
-- Note names are scientific pitch: middle C is C4, MIDI 60; Live's piano roll shows it as C3, so its octave numbers are one lower. In a result line, use Live's names or none. Low notes for reference: E1 (MIDI 28) ≈ 41 Hz, A1 = 55 Hz, E2 ≈ 82 Hz, A2 = 110 Hz, C3 = MIDI 48.
+- Note names are scientific pitch: middle C is C4, MIDI 60; Live's piano roll shows it as C3, so its octave numbers are one lower. In a result line, use Live's names or skip note names. Low notes for reference: E1 (MIDI 28) ≈ 41 Hz, A1 = 55 Hz, E2 ≈ 82 Hz, A2 = 110 Hz, C3 = MIDI 48.
 - Lengths are beats of 4/4: 1 = quarter, ½ = eighth, ¼ = sixteenth, 1½ = dotted quarter, 2 = half; `r` is a rest and `|` a barline.
 - In 808 lines, `~` joins two overlapping notes so the sound glides from the first to the second.
 - Chords are chord symbols.
@@ -20,7 +20,7 @@ The bass does three jobs at once: it defines the harmony (the bass note decides 
 
 - From the project map: key, tempo, meter, genre, the selected clip and its bars, the section and its energy.
 - The chords and how long each lasts: the chord part's notes or the lead sheet's chord chart.
-- The kick — the actual notes in the drum clip at these bars, on the Drum Rack's kick pad (usually 36; read the pads) — and the snare. Never assume a kick pattern.
+- The kick — the actual notes in the drum clip at these bars, on the Drum Rack's kick pad (usually 36; read the pads) — and the snare. Always read the kick pattern from those notes.
 - The bass clip's notes, and the bass instrument: whether it glides (mono, glide or portamento on) and how long its notes ring.
 - What else sounds in the low and low-mid register at the same time: the keys' left hand, guitar, pads; and the vocal's rhythm.
 - What is locked, and the artist's habits from memory: bass sounds and styles they have kept or undone.
@@ -33,8 +33,8 @@ Choose the approach the request asks for — roots locked to the kick for weight
 
 - Edit the notes of the clip the musician pointed at; keep its position, length and loop.
 - If the line needs glide (808 slides), turn the instrument's glide on in place; if a separate kick plays, set note lengths so the tails end before the next kick.
-- A bassline for a section that has none is new material: a clip on the bass track at that section's bars.
-- Never put alternatives in new clips, tracks or takes. Again asks for another take with the Set back as it was: make it clearly different (another rhythm, register or approach); the history keeps the old one.
+- A bassline for a section without one is new material: a clip on the bass track at that section's bars.
+- New clips, tracks and takes hold only new material; alternatives come from Again, which asks for another take with the Set back as it was: make it clearly different (another rhythm, register or approach); the history keeps the old one.
 - Change only the bars that need it. Drums and chords stay as they are; if the kick itself is the problem, say so in the result line.
 
 ### 4. Verify
@@ -45,13 +45,13 @@ Run every check that applies, fix what fails and check again, up to three rounds
 |---|---|
 | Roots | the note at each chord change is the chord's root, or a deliberate inversion or slash bass you can name |
 | Key | every note is in the song's scale, or is a chromatic approach note on a weak position that resolves by a half step into the next note |
-| Kick | when the line locks to the kick: every bar's first note starts with the kick on beat 1 (within a 32nd note), and its other notes start with kick hits too, except passing or approach notes in the last beat before a chord change; when it plays between the kicks (house off-beats): no note starts on a kick |
-| Smear | no long bass note runs across a kick it would mask, unless that is the style (a held sub under a sparse kick) |
+| Kick | when the line locks to the kick: every bar's first note starts with the kick on beat 1 (within a 32nd note), and its other notes start with kick hits too, while passing or approach notes in the last beat before a chord change may fall between kicks; when it plays between the kicks (house off-beats): every note starts between kicks |
+| Smear | long bass notes end before any kick they would mask, or hold across it only where the style asks (a held sub under a sparse kick) |
 | Snare | the snare beats carry fewer bass notes than the kick beats, and those that fall there are passing or approach notes |
-| Register | notes between about E1 and C3 (MIDI 28–48); main 808 notes about E1–E2; nothing important below E1 without harmonics above it |
-| Low clashes | no other part plays in the bass's octave at the same time (the keys' left hand around C2–C3), and no chord intervals smaller than a fifth below C3 |
+| Register | notes between about E1 and C3 (MIDI 28–48); main 808 notes about E1–E2; anything important below E1 has harmonics above it |
+| Low clashes | the bass has its octave to itself at every moment (watch the keys' left hand around C2–C3), and every chord interval below C3 is a fifth or wider |
 | 808 | tuned to the key, tails ending before the next hit when a separate kick plays, slides a few per phrase, glide on |
-| Loop | no note runs past the clip's end |
+| Loop | every note ends by the clip's end |
 
 Locked parts must be exactly as they were.
 
@@ -73,7 +73,7 @@ When a line is outside the artist's usual style (octaves for someone who always 
 
 Act without asking. The one question, a single line with buttons, comes only when the answer changes what Ode does:
 
-- the kick that decides the bass rhythm is on a muted track, or there are two kick parts and one is muted, and the hand edits and version history don't explain it. Muted long ago and untouched means parked; muted a moment ago while soloing something else means it is still in the song;
+- the kick that decides the bass rhythm is on a muted track, or there are two kick parts and one is muted, and the hand edits and version history leave it unexplained. Muted long ago and untouched means parked; muted a moment ago while soloing something else means it is still in the song;
 - deleting a bass part, or replacing a line the musician played in by hand with a different one when they asked for something smaller.
 
 The mode decides the rest: in Manual, Ode shows each change for Apply or Skip.
@@ -104,7 +104,7 @@ Do this deliberately, keep the lead sheet's chord chart in agreement (the harmon
 
 ## Rhythm and space
 
-- Rests are part of the groove. A bassline with no space has no bounce.
+- Rests are part of the groove. A bassline needs space to bounce.
 - Short notes punch and leave room; long notes give weight and warmth. Note length shapes the groove as much as note choice.
 - Syncopation — anticipating a chord change on the "and" of 4, or accenting off-beats — adds drive. Keep beat 1 strong so the listener keeps the downbeat.
 - A repeated one- or two-bar figure (an ostinato or riff) is often stronger than a line that changes every bar.
@@ -135,7 +135,7 @@ Do this deliberately, keep the lead sheet's chord chart in agreement (the harmon
 
 - An 808 is a long, sine-like bass drum that works as both kick and bass in trap, drill and much modern hip-hop and pop. Its notes must match the key: the long tail is a pitch, and a wrong one clashes with every chord.
 - **Note length is the tail**: the length of each MIDI note sets how long the 808 rings. Shorten notes in busy passages, end them before the next hit if a separate kick plays, and let the note before a rest ring out.
-- **Slides (glide)**: with the 808 in mono and glide (portamento) on, overlapping two notes makes the pitch slide from the first to the second. Slide up an octave, or to the fifth, for movement; slide back down to land on the root. Slides are accents, a few per phrase, not on every note.
+- **Slides (glide)**: with the 808 in mono and glide (portamento) on, overlapping two notes makes the pitch slide from the first to the second. Slide up an octave, or to the fifth, for movement; slide back down to land on the root. Slides are accents: a few per phrase.
 - **Simple lines win**: 808s often follow only the strongest chord roots, or stay on the key's root while the chords move. If the 808 stays on E under a D chord, it makes D/E, a tense, suspended sound; choose that deliberately.
 - **Range**: the most useful 808 notes sit roughly between E1 and E2 (41–82 Hz). Much lower and small speakers lose them; much higher and they stop sounding like low end.
 - **Small speakers**: saturation adds harmonics so the 808 is heard on phones and laptops; that is a sound-design and mixing choice.
@@ -176,7 +176,7 @@ The musician clicks "More movement". Ode keeps the roots on the first two kicks 
 | G     | G1(1) r(½) G1(½) B1(1) G♯1(1) |
 ```
 
-Checks: roots on every chord change; every note in A minor except G♯1, which leads by a half step back to A1; each beat-3 note starts with the kick and is a chord tone (E of Am7, A of Fmaj7, G of C, B of G); the beat-4 notes step into the next root (G1 down to F1, B1 up to C2, A1 down to G1, G♯1 up to A1); everything between E1 and C2, below the keys' left hand.
+Checks: roots on every chord change; every note in A minor, with G♯1 the one chromatic note, leading by a half step back to A1; each beat-3 note starts with the kick and is a chord tone (E of Am7, A of Fmaj7, G of C, B of G); the beat-4 notes step into the next root (G1 down to F1, B1 up to C2, A1 down to G1, G♯1 up to A1); everything between E1 and C2, below the keys' left hand.
 
 Result line: "More movement: chord tones on beat 3 and a step into each new chord on beat 4 · roots still with the kick, in key, lowest note E1."
 
@@ -190,4 +190,4 @@ On Again, try octaves in eighths with the low notes on the kicks and the snare b
 
 ## Sub-skills
 
-None yet. For the kick patterns a bassline locks to in specific genres, read the drums skill's sub-skills (`house/SKILL.md` and `hip-hop/SKILL.md` in the drums skill's folder).
+Bass sub-skills are still to be written. For the kick patterns a bassline locks to in specific genres, read the drums skill's sub-skills (`house/SKILL.md` and `hip-hop/SKILL.md` in the drums skill's folder).
