@@ -1,9 +1,9 @@
 # Publishes a GitHub release when a version tag is pushed. `npm version 0.2.0` makes the tag: it runs the typecheck
 # and the tests, writes the version, commits "Release 0.2.0", tags v0.2.0 and pushes both.
 #
-# The job runs on a self-hosted runner, GitHub's runner program on the Mac that holds the Ableton Extensions SDK:
-# the Live extension is built with the SDK, which stays on that Mac. The runner's .env sets ODE_SDK_DIR to the SDK
-# folder.
+# The Live extension is built with the Ableton Extensions SDK, kept in a private Cloudflare R2 bucket. The job
+# downloads it into vendor/ with a read-only key for that bucket, set in the repository's Actions settings: the
+# secrets R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY, and the variables R2_ACCOUNT_ID and R2_BUCKET.
 name: Release
 
 on:
@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   release:
-    runs-on: [self-hosted, macOS]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -27,14 +27,19 @@ jobs:
         with:
           node-version: 24
 
-      - name: Copy the Extensions SDK packages into vendor/, where package.json expects them
+      - name: Download the Extensions SDK packages into vendor/, where package.json expects them
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
         run: |
-          if [ ! -d "$ODE_SDK_DIR" ]; then
-            echo "::error::Set ODE_SDK_DIR in the runner's .env to the Ableton Extensions SDK folder"
+          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] || [ -z "$R2_ACCOUNT_ID" ] || [ -z "$R2_BUCKET" ]; then
+            echo "::error::Add R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY as secrets, and R2_ACCOUNT_ID and R2_BUCKET as variables, in the repository's Actions settings"
             exit 1
           fi
-          mkdir -p vendor
-          cp "$ODE_SDK_DIR"/*.tgz vendor/
+          aws s3 sync "s3://$R2_BUCKET" vendor --endpoint-url "https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com" --no-progress
 
       - run: npm ci
       - run: npm run typecheck
