@@ -112,7 +112,7 @@ async function rig(model: ScriptedModel) {
     signal: new AbortController().signal,
     ...overrides,
   });
-  return { loop, seen, run, limits: config.limits };
+  return { loop, seen, run, registry, limits: config.limits };
 }
 
 test("the loop runs the tools the model calls, shows its note and steps, and returns its reply", async () => {
@@ -141,6 +141,17 @@ test("a stopped request ends at once, and the deepest agents keep subagents out 
   const offered = model.turns[0]?.tools.map((tool) => (tool.type === "function" ? tool.function.name : "")) ?? [];
   assert.ok(offered.includes(LoopTool.SkillRead));
   assert.ok(!offered.includes(LoopTool.Subagent));
+});
+
+test("every tool's input becomes a function definition the model can read", async () => {
+  const { registry } = await rig(new ScriptedModel([]));
+  const names = registry.available("main").map((tool) => tool.name);
+  const functions = registry.functions(names);
+  assert.equal(functions.length, names.length);
+  for (const definition of functions) {
+    assert.equal(definition.type, "function");
+    if (definition.type === "function") assert.equal(definition.function.parameters?.type, "object", definition.function.name);
+  }
 });
 
 test("skills are read by name and sub-skills by path; their test cases stay with the repo", async () => {
