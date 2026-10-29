@@ -53,7 +53,7 @@ export interface PartCheck {
  * notes without a Drum Rack pad, and wide leaps.
  */
 export class PartChecker {
-  constructor(private readonly meter: Meter) {}
+  constructor(private readonly meter?: Meter) {}
 
   check(notes: Note[], options: PartCheckOptions): PartCheck {
     const sounding = notes.filter((note) => !note.muted).sort((a, b) => a.start - b.start || a.pitch - b.pitch);
@@ -96,7 +96,9 @@ export class PartChecker {
 
   /** Notes on strong beats (beats 1 and 3 in 4/4, beat 1 in 3/4 and 6/8) checked against the chord sounding there. */
   private chordTones(notes: Note[], chords: ChordTimeline): NonNullable<PartCheck["chordTones"]> {
-    const strong = notes.filter((note) => this.meter.weightAt(note.start) >= METRICAL_WEIGHT.middleBeat);
+    const meter = this.meter;
+    if (!meter) throw new Error("Checking chord tones on strong beats needs an explicit or observed time signature.");
+    const strong = notes.filter((note) => meter.weightAt(note.start) >= METRICAL_WEIGHT.middleBeat);
     const offChord = strong.flatMap((note) => {
       const chord = chords.at(note.start);
       return chord && !chord.contains(note.pitch) ? [{ ...PartChecker.placed(note), chord: chord.symbol, checkedAt: note.start }] : [];

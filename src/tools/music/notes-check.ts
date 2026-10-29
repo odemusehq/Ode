@@ -38,10 +38,12 @@ export const notesCheckTool = defineTool({
   changes: "none",
   async run(input, ctx) {
     const defaults = await songDefaults(ctx);
-    const signature = requireTimeSignature(input.timeSignature ?? defaults.timeSignature);
+    const signature = input.chords?.length
+      ? requireTimeSignature(input.timeSignature ?? defaults.timeSignature)
+      : input.timeSignature ?? defaults.timeSignature;
     const key = input.key ?? defaults.key;
     const lockTo = input.lockTo?.filter((note) => input.lockPitch === undefined || note.pitch === input.lockPitch);
-    const check = new PartChecker(new Meter(signature.numerator, signature.denominator)).check(input.notes, {
+    const check = new PartChecker(signature ? new Meter(signature.numerator, signature.denominator) : undefined).check(input.notes, {
       key,
       range: input.range ?? (input.vocal ? defaults.vocalRange : null),
       chords: input.chords,

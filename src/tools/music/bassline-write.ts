@@ -26,7 +26,9 @@ export const basslineWriteTool = defineTool({
   },
   changes: "none",
   async run({ chords, kick, style, seed, timeSignature }, ctx) {
-    const barBeats = quarterBeatsPerBar(timeSignature ?? (await songDefaults(ctx)).timeSignature);
+    const barBeats = style === BassStyle.RootFifth || style === BassStyle.EightOhEight
+      ? quarterBeatsPerBar(timeSignature ?? (await songDefaults(ctx)).timeSignature)
+      : undefined;
     return { style, notes: bassline(chords, kick ?? [], style, seed, barBeats) };
   },
 });

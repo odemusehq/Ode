@@ -27,8 +27,10 @@ export const melodyVaryTool = defineTool({
   changes: "none",
   async run({ notes, how, seed, timeSignature }, ctx) {
     const defaults = await songDefaults(ctx);
-    const { numerator, denominator } = requireTimeSignature(timeSignature ?? defaults.timeSignature);
+    const signature = how === MelodyVariation.Rhythm
+      ? requireTimeSignature(timeSignature ?? defaults.timeSignature)
+      : timeSignature ?? defaults.timeSignature;
     const key = defaults.key ? MusicalKey.from(defaults.key) : undefined;
-    return { notes: varyMelody(notes, how, seed, new Meter(numerator, denominator), key) };
+    return { notes: varyMelody(notes, how, seed, signature ? new Meter(signature.numerator, signature.denominator) : undefined, key) };
   },
 });

@@ -47,7 +47,7 @@ export const drumGrooveWriteTool = defineTool({
       recognised: isKnownGenre(name),
       section,
       notes: notes.map((note) => ({ ...note, pitch: mapping.get(note.pitch) ?? note.pitch })),
-      drumMap: drumMap(),
+      drumMap: Object.fromEntries(Object.entries(drumMap()).filter(([, pitch]) => !padMap || mapping.has(pitch)).map(([name, pitch]) => [name, mapping.get(pitch) ?? pitch])),
       note: "A 4/4 template draft with humanized timing/velocity, not a new groove concept per seed. GM pads are assumptions unless mapped; check the actual kit and vocal gaps before placement.",
     };
   },

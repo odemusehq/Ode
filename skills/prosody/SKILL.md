@@ -12,7 +12,7 @@ Prosody is the fit between what is said and how it is set. When it works, the wo
 1. **Read.**
    - The line in the lyrics ("[Chorus] line 1") and the notes it is sung on: the lyrics-to-melody check splits the vocal melody in the section's bars into one phrase per line and reports each line's stress problems against its phrase (the syllables skill explains how to find the melody).
    - What is locked: everything the lead sheet's locked list names (a lyric line, a melody the musician loves, a recorded vocal).
-   - The time signature (a scene's own, or 4/4 until the musician says otherwise), the tempo, the song's key, and the vocal range from the settings (or a typical range when it is unset).
+   - The time signature established by the musician, the tempo, the song's key, and the vocal range from the settings (or a typical range when it is unset). The installed SDK cannot read the current Arrangement meter; a scene's launch meter does not establish it. Keep the meter unknown until established, and obtain it before running checks that use metrical stress.
    - The hand edits since the last request: if the musician just moved notes or retyped the line, start from what they did.
 2. **Decide** the smallest change that puts the stress right, in this order:
    1. **Rhythm only:** shift a note, shorten or lengthen it, add or drop a pickup. Words and pitches stay as they are.
@@ -24,7 +24,7 @@ Prosody is the fit between what is said and how it is set. When it works, the wo
 4. **Verify** every line whose words or notes you changed:
    - **Prosody check** against the new notes: it comes back clean. That means every stressed syllable sits on a note at least as strong as its unstressed neighbours, the line's longest note carries a stressed syllable, and the melodic peak carries a content word.
    - **Syllable check:** one note per syllable, or a melisma only where you meant one, on an open, stressed vowel.
-   - **Singability check:** open vowels on long and high notes, simple consonants on very short notes, and a rest to breathe at least every eight beats or so.
+   - **Singability check:** treat vowel, consonant and breath findings as English-language heuristics. When tempo is known, the tool flags phrases longer than four seconds without a rest of at least 0.25 seconds; the singer's delivery decides whether a breath is needed.
    - **Key and range:** every moved note is in the key and inside the singer's range.
    Fix and check again, up to three rounds; if a problem remains, the result line says which.
 5. **Let them hear it.** The result line says where the change is, so the musician can play it: moved notes by their bars, from a bar earlier when the change is at the start of a section; changed words by the line's label, which names the locator to play from.
