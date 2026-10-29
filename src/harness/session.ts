@@ -23,10 +23,10 @@ export interface RequestLifecycle {
   /** Before the turn: reads the Set, saves the hand edits and builds the hidden context. Throws when the Set can't be read. */
   prepare(request: OdeRequest): Promise<{ hiddenContext: string }>;
   /**
-   * After the turn: saves Ode's change as a version, shows the result line and plays the change (aborted: the musician
-   * pressed Stop, so the change is saved but not played). A reply only shows its answer.
+   * After the turn: saves Ode's change as a version and shows the result line. Stopped: the musician pressed Stop or
+   * the request reached a limit, so the change is saved as cut short. A Why? reply shows only its answer.
    */
-  finish(request: OdeRequest, reply: string, aborted: boolean): Promise<void>;
+  finish(request: OdeRequest, reply: string, stopped: boolean): Promise<void>;
 }
 
 /** Questions waiting for the musician; they end without an answer when the musician presses Stop. */
@@ -57,14 +57,15 @@ export interface SessionDeps {
 /** Ode is already working, so Undo, Again and restores can't run until it has finished. */
 export class SessionBusyError extends Error {}
 
-/** Tools that always wait for the musician, in every mode: using the singer's voice needs their consent. */
-const CONSENT_TOOLS: ReadonlySet<string> = new Set(["voice_reference_set"]);
-
 /** Why each early end of a request is shown to the musician. */
 const LIMIT_MESSAGES: Partial<Record<LoopEnd, string>> = {
   [LoopEnd.TurnLimit]: "Ode stopped: this request reached its limit of model calls. What it changed so far is saved.",
   [LoopEnd.TokenLimit]: "Ode stopped: this request reached its limit of tokens. What it changed so far is saved.",
+  [LoopEnd.EmptyReply]: "Ode ended this request with an empty reply. What it changed is saved in History.",
 };
+
+/** Ends that cut the work short, so the request is saved the way a Stop saves it. */
+const CUT_SHORT: ReadonlySet<LoopEnd> = new Set([LoopEnd.TurnLimit, LoopEnd.TokenLimit]);
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -173,6 +174,7 @@ export class OdeSession {
       }
       let reply = "";
       let tokens = 0;
+      let cutShort = false;
       if (!controller.signal.aborted) {
         try {
           const result = await this.deps.loop.run({
@@ -188,6 +190,7 @@ export class OdeSession {
           });
           reply = result.reply;
           tokens = result.tokens;
+          cutShort = CUT_SHORT.has(result.end);
           const limit = LIMIT_MESSAGES[result.end];
           if (limit) this.deps.emit({ type: "error", message: limit });
           if (result.end === LoopEnd.Reply) await this.conversation.add(request.text, reply);
@@ -196,7 +199,7 @@ export class OdeSession {
         }
       }
       try {
-        await this.deps.requests.finish(request, reply, controller.signal.aborted);
+        await this.deps.requests.finish(request, reply, controller.signal.aborted || cutShort);
       } catch (error) {
         this.deps.emit({ type: "error", message: errorText(error) });
       }
@@ -248,7 +251,7 @@ export class OdeSession {
    * can't add back, in every mode. In Manual, every change waits.
    */
   private async needsApproval(tool: AnyTool, input: Record<string, unknown>): Promise<boolean> {
-    if (CONSENT_TOOLS.has(tool.name)) return true;
+    if (tool.consent) return true;
     if (tool.changes === "none") return false;
     if (await this.deps.deletions.cantBeUndone(tool.name, input)) return true;
     return (await this.deps.prefs.mode()) === Mode.Manual;

@@ -25,9 +25,11 @@ export interface AgentLimits {
   /** How deep subagents can start their own subagents. */
   subagentDepth: number;
   subagentsAtOnce: number;
-  /** Model calls one request may make before Ode stops it. */
+  /** Subagents one request may start in all, at every depth. */
+  subagentsPerRequest: number;
+  /** Model calls one request may make before Ode stops it, subagents' calls included. */
   turnsPerRequest: number;
-  /** Tokens, sent and received, one request may use before Ode stops it. */
+  /** Tokens, sent and received, one request may use before Ode stops it, subagents' tokens included. */
   tokensPerRequest: number;
   /** The longest answer a single model call may give, in tokens. */
   tokensPerTurn: number;
@@ -35,6 +37,8 @@ export interface AgentLimits {
   historyExchanges: number;
   /** How many tools one tool search offers. */
   toolSearchResults: number;
+  /** The longest tool result the model reads, in characters; a longer one is cut with a note to ask for less. */
+  toolResultMaxChars: number;
 }
 
 export interface MemorySettings {

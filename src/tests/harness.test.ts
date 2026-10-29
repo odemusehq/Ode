@@ -17,8 +17,7 @@ import { SettingsStore } from "../mneme/settings-store";
 import { SongStore, SongVersions } from "../mneme/song-store";
 import { SnapshotReader } from "../server/snapshot-reader";
 import { ModelServices } from "../services";
-import type { ChatReply, ChatTurn } from "../services/adapters/openai-compatible-text";
-import type { TextGenerator } from "../services/capabilities";
+import type { ChatReply, ChatTurn, TextGenerator } from "../services/capabilities";
 import { ModelRoles } from "../services/model-roles";
 import { ProviderCatalog } from "../services/provider-catalog";
 import { OdeConfig } from "../shared/config";
@@ -49,7 +48,7 @@ class ScriptedModel implements TextGenerator {
     this.turns.push({ ...turn, messages: [...turn.messages] });
     const message = this.script.shift();
     if (!message) throw new Error("The script has no more answers.");
-    return { message, tokens: 10 };
+    return { message, tokens: 10, finishReason: "stop" };
   }
 }
 

@@ -1,4 +1,5 @@
 import type { ChatCompletionMessageParam, ChatCompletionMessageToolCall, ChatCompletionTool } from "openai/resources/chat/completions";
+import type { ChatReply } from "../services/capabilities";
 import type { Services } from "../services/types";
 import type { AgentLimits } from "../shared/config";
 import type { AgentKind, ToolRegistry } from "../tools";
@@ -63,15 +64,56 @@ export interface LoopRun {
   gate: ToolGate;
   events: LoopEvents;
   signal: AbortSignal;
+  /** What the request may still spend; subagents share their parent's, and a top-level run starts a fresh one. */
+  budget?: RequestBudget;
 }
 
 /** How a run ended. */
 export enum LoopEnd {
   Reply = "reply",
+  /** The model answered with an empty message. */
+  EmptyReply = "empty reply",
   Cancelled = "cancelled",
   TurnLimit = "turn limit",
   TokenLimit = "token limit",
 }
+
+/** What one request may still spend, shared by the main agent and every subagent it starts. */
+export class RequestBudget {
+  private turns = 0;
+  private spent = 0;
+  private subagents = 0;
+
+  constructor(private readonly limits: AgentLimits) {}
+
+  /** Tokens spent so far, by every run of the request. */
+  get tokens(): number {
+    return this.spent;
+  }
+
+  /** The limit the request has reached, or null while it has room. */
+  get reached(): LoopEnd.TurnLimit | LoopEnd.TokenLimit | null {
+    if (this.turns >= this.limits.turnsPerRequest) return LoopEnd.TurnLimit;
+    if (this.spent >= this.limits.tokensPerRequest) return LoopEnd.TokenLimit;
+    return null;
+  }
+
+  spend(tokens: number): void {
+    this.turns += 1;
+    this.spent += tokens;
+  }
+
+  /** True when the request may start one more subagent, which it then counts. */
+  startSubagent(): boolean {
+    if (this.subagents >= this.limits.subagentsPerRequest) return false;
+    this.subagents += 1;
+    return true;
+  }
+}
+
+/** What the model reads after an answer that stopped at the turn's length limit. */
+const CUT_OFF =
+  "Your last answer reached the length limit and stopped part-way, so it was set aside. Take a smaller step: fewer notes or lines in each call, and a shorter note.";
 
 export interface LoopResult {
   /** The model's last words: its reply, or what it had said when the run ended early. */
@@ -91,41 +133,82 @@ export class AgentLoop {
 
   constructor(private readonly deps: LoopDeps) {}
 
-  async run(run: LoopRun): Promise<LoopResult> {
+  async run(start: LoopRun): Promise<LoopResult> {
     const { limits, registry } = this.deps;
+    const run: LoopRun & { budget: RequestBudget } = { ...start, budget: start.budget ?? new RequestBudget(limits) };
     const model = await this.deps.services.chat(run.agent);
     const messages: ChatCompletionMessageParam[] = [{ role: "system", content: run.system }, ...run.history, { role: "user", content: run.prompt }];
     const loaded = new Set(registry.alwaysLoaded(run.agent));
-    let tokens = 0;
+    const spentBefore = run.budget.tokens;
+    const result = (reply: string, end: LoopEnd): LoopResult => ({ reply, tokens: run.budget.tokens - spentBefore, end });
     let said = "";
-    for (let turn = 0; turn < limits.turnsPerRequest; turn++) {
-      if (run.signal.aborted) return { reply: said, tokens, end: LoopEnd.Cancelled };
-      let message;
+    for (;;) {
+      if (run.signal.aborted) return result(said, LoopEnd.Cancelled);
+      const limit = run.budget.reached;
+      if (limit) return result(said, limit);
+      let answer: ChatReply;
       try {
-        const answer = await model.complete({
+        answer = await model.complete({
           messages,
           tools: [...this.builtIns(run), ...registry.functions(loaded)],
           maxTokens: limits.tokensPerTurn,
           conversation: run.conversation,
           signal: run.signal,
         });
-        tokens += answer.tokens;
-        message = answer.message;
       } catch (error) {
-        if (run.signal.aborted) return { reply: said, tokens, end: LoopEnd.Cancelled };
+        if (run.signal.aborted) return result(said, LoopEnd.Cancelled);
         throw error;
       }
+      run.budget.spend(answer.tokens);
+      if (answer.finishReason === "length") {
+        messages.push({ role: "user", content: CUT_OFF });
+        continue;
+      }
+      const { message } = answer;
       const text = message.content?.trim() ?? "";
       const calls = message.tool_calls ?? [];
       messages.push({ role: "assistant", content: message.content ?? null, ...(calls.length > 0 ? { tool_calls: calls } : {}) });
       if (text) said = text;
-      if (calls.length === 0) return { reply: text, tokens, end: LoopEnd.Reply };
+      if (calls.length === 0) return result(text, text ? LoopEnd.Reply : LoopEnd.EmptyReply);
       if (text) run.events.thought(text);
-      const answers = await Promise.all(calls.map((call) => this.answer(call, run, loaded)));
+      const answers = await this.answerAll(calls, run, loaded);
       calls.forEach((call, index) => messages.push({ role: "tool", tool_call_id: call.id, content: answers[index] ?? "" }));
-      if (tokens >= limits.tokensPerRequest) return { reply: said, tokens, end: LoopEnd.TokenLimit };
     }
-    return { reply: said, tokens, end: LoopEnd.TurnLimit };
+  }
+
+  /**
+   * Answers a turn's calls: read-only calls run together, and a call that changes something waits for the calls
+   * before it and runs alone, so changes land in the order the model gave them. A call that throws answers with why.
+   */
+  private async answerAll(calls: ChatCompletionMessageToolCall[], run: LoopRun & { budget: RequestBudget }, loaded: Set<string>): Promise<string[]> {
+    const answers: string[] = [];
+    const running: Promise<void>[] = [];
+    for (const [index, call] of calls.entries()) {
+      const work = () =>
+        this.answer(call, run, loaded).then(
+          (text) => {
+            answers[index] = text;
+          },
+          (error: unknown) => {
+            answers[index] = `${call.type === "function" ? call.function.name : "The call"} stopped: ${error instanceof Error ? error.message : String(error)}`;
+          },
+        );
+      if (this.changesSomething(call)) {
+        await Promise.all(running.splice(0));
+        await work();
+      } else {
+        running.push(work());
+      }
+    }
+    await Promise.all(running);
+    return answers;
+  }
+
+  /** True for a call to a tool that changes the Set or Ode's memory. */
+  private changesSomething(call: ChatCompletionMessageToolCall): boolean {
+    if (call.type !== "function") return false;
+    const tool = this.deps.registry.find(call.function.name);
+    return tool !== undefined && tool.changes !== "none";
   }
 
   private builtIns(run: LoopRun): ChatCompletionTool[] {
@@ -167,15 +250,18 @@ export class AgentLoop {
     return tools;
   }
 
-  private async answer(call: ChatCompletionMessageToolCall, run: LoopRun, loaded: Set<string>): Promise<string> {
+  private async answer(call: ChatCompletionMessageToolCall, run: LoopRun & { budget: RequestBudget }, loaded: Set<string>): Promise<string> {
     if (call.type !== "function") return "Ode's tools are functions; call one by name with JSON arguments.";
     const name = call.function.name;
-    let input: Record<string, unknown>;
+    if (run.signal.aborted) return `${name} stays undone: the musician pressed Stop.`;
+    let parsed: unknown;
     try {
-      input = JSON.parse(call.function.arguments || "{}") as Record<string, unknown>;
+      parsed = JSON.parse(call.function.arguments || "{}");
     } catch {
-      return `The arguments for ${name} need to be one JSON object.`;
+      parsed = undefined;
     }
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return `The arguments for ${name} need to be one JSON object.`;
+    const input = parsed as Record<string, unknown>;
     switch (name) {
       case LoopTool.ToolSearch:
         return this.search(input, run, loaded);
@@ -192,10 +278,17 @@ export class AgentLoop {
     run.events.toolStarted(call.id, name, this.deps.labels.for(name, input));
     const outcome = await this.deps.registry.run(name, input);
     run.events.toolFinished(call.id, outcome.ok);
-    return outcome.ok ? outcome.text : `${name} stopped: ${outcome.text}`;
+    return this.capped(outcome.ok ? outcome.text : `${name} stopped: ${outcome.text}`);
   }
 
-  private search(input: Record<string, unknown>, run: LoopRun, loaded: Set<string>): string {
+  /** A result within the size the model reads; a longer one is cut, with a note to ask for less. */
+  private capped(text: string): string {
+    const limit = this.deps.limits.toolResultMaxChars;
+    if (text.length <= limit) return text;
+    return `${text.slice(0, limit)}\n… cut at ${limit} characters: ask for less, such as a bar range, one track or a limit.`;
+  }
+
+  private search(input: Record<string, unknown>, run: LoopRun & { budget: RequestBudget }, loaded: Set<string>): string {
     const query = typeof input.query === "string" ? input.query : "";
     const found = this.deps.registry.search(query, run.agent, this.deps.limits.toolSearchResults);
     if (found.length === 0) return "Try other words: the ones Live uses for the thing (track, clip, notes, device, parameter, scene, locator).";
@@ -203,7 +296,7 @@ export class AgentLoop {
     return `${found.map((tool) => `${tool.name}: ${AgentLoop.firstSentence(tool.description)}`).join("\n")}\nThese tools are yours from the next step on.`;
   }
 
-  private async readSkill(id: string, input: Record<string, unknown>, run: LoopRun): Promise<string> {
+  private async readSkill(id: string, input: Record<string, unknown>, run: LoopRun & { budget: RequestBudget }): Promise<string> {
     const name = typeof input.name === "string" ? input.name : "";
     const file = typeof input.file === "string" ? input.file : undefined;
     run.events.toolStarted(id, LoopTool.SkillRead, `Reading the ${name} skill`);
@@ -217,10 +310,11 @@ export class AgentLoop {
     }
   }
 
-  private async subagent(id: string, input: Record<string, unknown>, run: LoopRun): Promise<string> {
+  private async subagent(id: string, input: Record<string, unknown>, run: LoopRun & { budget: RequestBudget }): Promise<string> {
     const task = typeof input.task === "string" ? input.task.trim() : "";
     if (!task) return "Give the subagent its brief: the task, the material, the constraints, the skills to load and what to return.";
     if (run.depth >= this.deps.limits.subagentDepth) return "Subagents at this depth do the task themselves.";
+    if (!run.budget.startSubagent()) return "This request has started all the subagents it may: finish the task here.";
     const depth = run.depth + 1;
     let slots = this.slots.get(depth);
     if (!slots) {
@@ -240,9 +334,11 @@ export class AgentLoop {
           gate: run.gate,
           events: QUIET,
           signal: run.signal,
+          budget: run.budget,
         }),
       );
-      return result.reply || "The subagent finished with an empty answer.";
+      if (result.end !== LoopEnd.Reply) return `The subagent stopped at its ${result.end} before finishing.${result.reply ? ` Its last words: ${result.reply}` : ""}`;
+      return result.reply;
     } catch (error) {
       return `The subagent stopped: ${error instanceof Error ? error.message : String(error)}`;
     } finally {

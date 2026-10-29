@@ -2,11 +2,13 @@
   "agent": {
     "subagentDepth": 2,
     "subagentsAtOnce": 6,
+    "subagentsPerRequest": 12,
     "turnsPerRequest": 60,
     "tokensPerRequest": 2500000,
     "tokensPerTurn": 8000,
     "historyExchanges": 12,
-    "toolSearchResults": 8
+    "toolSearchResults": 8,
+    "toolResultMaxChars": 60000
   },
   "memory": {
     "halfLifeDays": 180,

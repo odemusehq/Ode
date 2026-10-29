@@ -1,6 +1,24 @@
+import type { ChatCompletionMessage, ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/chat/completions";
 import type { Role } from "../shared/config";
-import type { ChatReply, ChatTurn } from "./adapters/openai-compatible-text";
 import type { DemoVocalInput, Transcript } from "./types";
+
+/** One model call in a conversation: the messages so far, the tools on offer, and who it belongs to. */
+export interface ChatTurn {
+  messages: ChatCompletionMessageParam[];
+  tools: ChatCompletionTool[];
+  maxTokens: number;
+  /** Keeps one conversation's requests on the same server where the provider asks for it. */
+  conversation: string;
+  signal?: AbortSignal;
+}
+
+/** The model's answer to one turn: its message, what it cost in tokens, and why it stopped. */
+export interface ChatReply {
+  message: ChatCompletionMessage;
+  tokens: number;
+  /** "length" when the answer reached the turn's token limit and stopped part-way. */
+  finishReason: string;
+}
 
 /** What Ode needs from models, independent of who provides them. */
 export enum Capability {

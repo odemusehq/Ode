@@ -1,27 +1,13 @@
 import { randomUUID } from "node:crypto";
 import OpenAI from "openai";
-import type { ChatCompletionMessage, ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/chat/completions";
+import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import type { RoleConfig } from "../../shared/config";
-import type { TextGenerator, TextOptions } from "../capabilities";
-
-/** One model call in a conversation: the messages so far, the tools on offer, and who it belongs to. */
-export interface ChatTurn {
-  messages: ChatCompletionMessageParam[];
-  tools: ChatCompletionTool[];
-  maxTokens: number;
-  /** Keeps one conversation's requests on the same server where the provider asks for it. */
-  conversation: string;
-  signal?: AbortSignal;
-}
-
-/** The model's answer to one turn, with what it cost in tokens. */
-export interface ChatReply {
-  message: ChatCompletionMessage;
-  tokens: number;
-}
+import type { ChatReply, ChatTurn, TextGenerator, TextOptions } from "../capabilities";
 
 /** Chat Completions from any OpenAI-compatible endpoint: Meta, Baseten and Modal each serve one. */
 export class OpenAiCompatibleText implements TextGenerator {
+  /** Text runs about four characters to a token, for a provider whose answer leaves its usage out. */
+  private static readonly CHARACTERS_PER_TOKEN = 4;
   private readonly client: OpenAI;
 
   constructor(private readonly role: RoleConfig) {
@@ -49,9 +35,10 @@ export class OpenAiCompatibleText implements TextGenerator {
       },
       { signal: turn.signal, headers: this.headers(turn.conversation) },
     );
-    const message = response.choices[0]?.message;
-    if (!message) throw new Error(`${this.role.model} sent an empty answer.`);
-    return { message, tokens: response.usage?.total_tokens ?? 0 };
+    const choice = response.choices[0];
+    if (!choice?.message) throw new Error(`${this.role.model} sent an empty answer.`);
+    const tokens = response.usage?.total_tokens ?? OpenAiCompatibleText.estimate(turn, choice.message.content ?? "");
+    return { message: choice.message, tokens, finishReason: choice.finish_reason ?? "stop" };
   }
 
   /** The model names the key reaches, from the provider's model list. */
@@ -59,6 +46,11 @@ export class OpenAiCompatibleText implements TextGenerator {
     const names: string[] = [];
     for await (const model of this.client.models.list()) names.push(model.id);
     return names;
+  }
+
+  /** Tokens of a turn, worked out from its length. */
+  private static estimate(turn: ChatTurn, answer: string): number {
+    return Math.ceil((JSON.stringify(turn.messages).length + answer.length) / OpenAiCompatibleText.CHARACTERS_PER_TOKEN);
   }
 
   private headers(conversation: string): Record<string, string> {

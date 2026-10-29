@@ -131,6 +131,7 @@ export const mediaTools: AnyTool[] = [
   defineTool({
     name: "voice_reference_set",
     changes: "memory",
+    consent: true,
     description:
       "Save a recording of the artist's own voice (rendered from an Arrangement audio track, 10–30 seconds of clean singing works best) so demo vocals can be sung in their voice. Only call this after the artist has clearly agreed in this conversation; set consent to true to confirm they did.",
     input: {
