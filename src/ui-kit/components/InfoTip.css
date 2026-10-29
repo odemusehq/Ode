@@ -1,0 +1,46 @@
+.ode-info {
+  --icon-size: 13px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: var(--space-2);
+  border-radius: 50%;
+  color: var(--color-text-muted);
+  vertical-align: -2px;
+  cursor: help;
+}
+
+.ode-info:hover,
+.ode-info:focus-visible {
+  color: var(--color-text);
+}
+
+.ode-info:focus-visible {
+  outline: var(--border-width-strong) solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.ode-info__bubble {
+  position: absolute;
+  top: calc(100% + var(--space-3));
+  left: 0;
+  z-index: var(--z-popover);
+  width: max-content;
+  max-width: 260px;
+  padding: var(--space-4) var(--space-5);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: normal;
+  line-height: 1.45;
+  white-space: normal;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.ode-info:hover .ode-info__bubble,
+.ode-info:focus-visible .ode-info__bubble {
+  visibility: visible;
+}

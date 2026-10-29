@@ -6,7 +6,7 @@ import {
   type SettingsResponse,
   type SettingsUpdate,
 } from "../../shared/settings";
-import { Button, ButtonVariant, Notice, Select, TextInput, Tone } from "../../ui-kit";
+import { Button, ButtonVariant, InfoTip, Notice, Select, TextInput, Tone } from "../../ui-kit";
 import { errorMessage } from "../app/api";
 import { UI_CONFIG } from "../app/config";
 import { DialogResult, LiveDialog } from "../app/dialog";
@@ -17,6 +17,18 @@ const SERVICE_LABELS: Record<OptionalRole, string> = {
   stem_separation: "Stem separation",
   singing_voice: "Singing voice for demo vocals",
   sound_generation: "Sound generation",
+};
+
+/** Where Ode uses each model, shown by its (i). */
+const MODEL_INFO =
+  "Ode's main model. It does the work you ask for: writing and editing lyrics, chords, melodies, drums and sounds, arranging, mixing and answering your questions.";
+const LYRICS_INFO =
+  "The model that highlights syllables and rhymes in the Lyrics editor as you type. It marks the lyrics you write; the main model above writes and suggests them.";
+const META_INFO = "Meta's own models use this key: cover art, transcribing recordings and listening to audio.";
+const SERVICE_INFO: Record<OptionalRole, string> = {
+  stem_separation: "Splits a recording into the sound you describe and everything else, for samples and remixes.",
+  singing_voice: "Sings demo vocals in your own voice, once you agree to it.",
+  sound_generation: "Makes new one-shots and textures from a description.",
 };
 
 /** One optional service as the form edits it; a key typed here replaces the saved one. */
@@ -47,6 +59,9 @@ export function SettingsView() {
   const [model, setModel] = useState("");
   const [key, setKey] = useState("");
   const [metaKey, setMetaKey] = useState("");
+  const [lyricsProvider, setLyricsProvider] = useState("");
+  const [lyricsModel, setLyricsModel] = useState("");
+  const [lyricsKey, setLyricsKey] = useState("");
   const [listed, setListed] = useState<ChatModelOption[]>([]);
   const [services, setServices] = useState<ServiceDrafts | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -60,6 +75,8 @@ export function SettingsView() {
         setLoaded(response);
         setProvider(response.settings.provider);
         setModel(response.settings.model);
+        setLyricsProvider(response.settings.lyrics.provider);
+        setLyricsModel(response.settings.lyrics.model);
         setServices(draftsFrom(response));
       },
       (error: unknown) => setProblem(errorMessage(error)),
@@ -115,12 +132,33 @@ export function SettingsView() {
   const models = listsModels ? listed : (chosen?.models ?? []);
   const credit = models.find((each) => each.id === model)?.credit ?? null;
 
+  // Lyrics support takes its own key, or the key above when it runs on the same provider (or on Meta, with the Meta key).
+  const lyricsChosen = loaded.lyricsProviders.find((each) => each.id === lyricsProvider);
+  const metaProvider = loaded.providers.find((each) => each.servesMetaModels)?.id;
+  const lyricsUsesMainKey = lyricsProvider === provider && (key !== "" || savedKeyApplies);
+  const lyricsUsesMetaKey = lyricsProvider === metaProvider && !chosen?.servesMetaModels && (metaKey !== "" || loaded.settings.metaKeySet);
+  const lyricsKeySaved = loaded.settings.lyrics.provider === lyricsProvider && loaded.settings.lyrics.keySet;
+  const lyricsKeyPlaceholder = lyricsUsesMainKey
+    ? "Uses the key above"
+    : lyricsUsesMetaKey
+      ? "Uses the Meta key above"
+      : lyricsKeySaved
+        ? "Saved"
+        : "Needed for this provider";
+
   const chooseProvider = (id: string) => {
     setProvider(id);
     setKey("");
     setProblem(null);
     const next = loaded.providers.find((each) => each.id === id);
     setModel(id === loaded.settings.provider ? loaded.settings.model : (next?.models[0]?.id ?? ""));
+  };
+
+  const chooseLyricsProvider = (id: string) => {
+    setLyricsProvider(id);
+    setLyricsKey("");
+    const next = loaded.lyricsProviders.find((each) => each.id === id);
+    setLyricsModel(id === loaded.settings.lyrics.provider ? loaded.settings.lyrics.model : (next?.models[0]?.id ?? ""));
   };
 
   /** A saved key belongs to the service's provider and address: changing either asks for the key again. */
@@ -139,6 +177,7 @@ export function SettingsView() {
       model,
       key: key || undefined,
       metaKey: metaKey || undefined,
+      lyrics: { provider: lyricsProvider, model: lyricsModel, key: lyricsKey || undefined },
       services: Object.fromEntries(
         OPTIONAL_ROLES.filter((role) => services[role].provider).map((role) => {
           const draft = services[role];
@@ -173,7 +212,10 @@ export function SettingsView() {
       </label>
 
       <label className="settings__field">
-        <span className="settings__label">Model</span>
+        <span className="settings__label">
+          Model
+          <InfoTip text={MODEL_INFO} />
+        </span>
         <Select
           value={model}
           disabled={models.length === 0}
@@ -197,7 +239,10 @@ export function SettingsView() {
 
       {!chosen?.servesMetaModels && (
         <label className="settings__field">
-          <span className="settings__label">Meta key for cover art, transcription and listening</span>
+          <span className="settings__label">
+            Meta key for cover art, transcription and listening
+            <InfoTip text={META_INFO} />
+          </span>
           <TextInput
             type="password"
             autoComplete="off"
@@ -210,6 +255,40 @@ export function SettingsView() {
 
       {credit && <p className="settings__credit">{credit}</p>}
 
+      <fieldset className="settings__service">
+        <legend className="settings__label">
+          Lyrics support
+          <InfoTip text={LYRICS_INFO} />
+        </legend>
+        <label className="settings__field">
+          <span className="settings__label">Provider</span>
+          <Select
+            value={lyricsProvider}
+            options={loaded.lyricsProviders.map((each) => ({ value: each.id, label: each.name }))}
+            onChange={chooseLyricsProvider}
+          />
+        </label>
+        <label className="settings__field">
+          <span className="settings__label">Model</span>
+          <Select
+            value={lyricsModel}
+            options={(lyricsChosen?.models ?? []).map((each) => ({ value: each.id, label: each.name }))}
+            onChange={setLyricsModel}
+          />
+        </label>
+        <label className="settings__field">
+          <span className="settings__label">Key</span>
+          <TextInput
+            type="password"
+            autoComplete="off"
+            value={lyricsKey}
+            placeholder={lyricsKeyPlaceholder}
+            onChange={(event) => setLyricsKey(event.target.value.trim())}
+          />
+          {lyricsChosen && <span className="settings__hint">{lyricsChosen.keyHint}</span>}
+        </label>
+      </fieldset>
+
       <Button variant={ButtonVariant.Quiet} aria-expanded={moreOpen} onClick={() => setMoreOpen(!moreOpen)}>
         More services
       </Button>
@@ -219,7 +298,10 @@ export function SettingsView() {
           const offered = loaded.services[role];
           return (
             <fieldset key={role} className="settings__service">
-              <legend className="settings__label">{SERVICE_LABELS[role]}</legend>
+              <legend className="settings__label">
+                {SERVICE_LABELS[role]}
+                <InfoTip text={SERVICE_INFO[role]} />
+              </legend>
               <Select
                 value={draft.provider}
                 options={[{ value: "", label: "Off" }, ...offered.map((each) => ({ value: each.id, label: each.name }))]}

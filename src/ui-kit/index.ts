@@ -20,6 +20,8 @@ export { Icon, IconName } from "./components/Icon";
 export type { IconProps } from "./components/Icon";
 export { IconButton } from "./components/IconButton";
 export type { IconButtonProps } from "./components/IconButton";
+export { InfoTip } from "./components/InfoTip";
+export type { InfoTipProps } from "./components/InfoTip";
 export { Menu, MenuAlign } from "./components/Menu";
 export type { MenuItem, MenuProps } from "./components/Menu";
 export { Notice } from "./components/Notice";
