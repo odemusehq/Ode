@@ -49,6 +49,10 @@ class ScriptedModel implements TextGenerator {
     return [];
   }
 
+  async json<T>(): Promise<T> {
+    throw new Error("The scripted model answers in text.");
+  }
+
   async complete(turn: ChatTurn): Promise<ChatReply> {
     this.turns.push({ ...turn, messages: [...turn.messages] });
     const next = this.script.shift();

@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
+import type { ReasoningEffort } from "openai/resources/shared";
 import type { RoleConfig } from "../../shared/config";
-import type { ChatReply, ChatTurn, TextGenerator, TextOptions } from "../capabilities";
+import type { ChatReply, ChatTurn, JsonRequest, TextGenerator, TextOptions } from "../capabilities";
 
 /** Chat Completions from any OpenAI-compatible endpoint: Meta, Baseten and Modal each serve one. */
 export class OpenAiCompatibleText implements TextGenerator {
@@ -39,6 +40,26 @@ export class OpenAiCompatibleText implements TextGenerator {
     if (!choice?.message) throw new Error(`${this.role.model} sent an empty answer.`);
     const tokens = response.usage?.total_tokens ?? OpenAiCompatibleText.estimate(turn, choice.message.content ?? "");
     return { message: choice.message, tokens, finishReason: choice.finish_reason ?? "stop" };
+  }
+
+  /** The provider holds the answer to the strict schema; the role's effort, where set, keeps the reasoning short. */
+  async json<T>(request: JsonRequest<T>): Promise<T> {
+    const response = await this.client.chat.completions.create(
+      {
+        model: this.role.model,
+        messages: [
+          { role: "system", content: request.system },
+          { role: "user", content: request.user },
+        ],
+        response_format: { type: "json_schema", json_schema: { name: request.name, schema: request.schema, strict: true } },
+        reasoning_effort: this.role.effort as ReasoningEffort | undefined,
+        max_tokens: request.maxTokens,
+      },
+      { signal: request.signal },
+    );
+    const content = response.choices[0]?.message?.content;
+    if (!content) throw new Error(`${this.role.model} sent an empty answer.`);
+    return request.parse(JSON.parse(content));
   }
 
   /** The model names the key reaches, from the provider's model list. */

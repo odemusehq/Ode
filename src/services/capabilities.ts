@@ -48,10 +48,24 @@ export interface TextOptions {
   maxTokens: number;
 }
 
+/** A request for an answer in a fixed JSON shape: the strict schema the provider enforces, and a parser that checks it. */
+export interface JsonRequest<T> {
+  /** The schema's name, as the provider asks for one. */
+  name: string;
+  schema: Record<string, unknown>;
+  system: string;
+  user: string;
+  maxTokens: number;
+  parse(value: unknown): T;
+  signal?: AbortSignal;
+}
+
 export interface TextGenerator {
   ask(prompt: string, options: TextOptions): Promise<string>;
   /** One turn of a conversation with tools, for the agent loop. */
   complete(turn: ChatTurn): Promise<ChatReply>;
+  /** One answer in a fixed JSON shape, at the role's reasoning effort. */
+  json<T>(request: JsonRequest<T>): Promise<T>;
   /** The model names the key reaches. */
   models(): Promise<string[]>;
 }
