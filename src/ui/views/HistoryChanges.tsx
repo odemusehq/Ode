@@ -26,7 +26,7 @@ export function HistoryChanges({ versionId, id }: HistoryChangesProps) {
   if (detail.error) {
     return (
       <div id={id} className="history-detail">
-        <Notice tone={Tone.Danger}>This version's changes couldn't be read: {detail.error}</Notice>
+        <Notice tone={Tone.Danger}>Reading this version's changes stopped: {detail.error}</Notice>
       </div>
     );
   }
@@ -52,7 +52,7 @@ export function HistoryChanges({ versionId, id }: HistoryChangesProps) {
       {tracks.map((track, index) => (
         <ChangePart key={`${index}-${track.track}`} title={track.track} changes={track.changes} beatsPerBar={beatsPerBar} track />
       ))}
-      {song.length === 0 && tracks.length === 0 && <p className="muted small">Nothing changed.</p>}
+      {song.length === 0 && tracks.length === 0 && <p className="muted small">The Set stayed the same.</p>}
     </div>
   );
 }

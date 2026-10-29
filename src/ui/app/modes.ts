@@ -9,6 +9,6 @@ export const MODE_LABELS: Record<Mode, string> = {
 
 /** One line each, under the mode's name in the menu. */
 export const MODE_DESCRIPTIONS: Record<Mode, string> = {
-  [Mode.Auto]: "Changes what it's sure of, asks when it can't tell",
+  [Mode.Auto]: "Changes what it's sure of, asks when it's unsure",
   [Mode.Manual]: "Asks before every change",
 };

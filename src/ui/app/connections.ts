@@ -4,8 +4,8 @@ import { StreamState } from "./model";
 export const SERVER_MESSAGES: Record<StreamState, string | null> = {
   [StreamState.Connecting]: "Connecting to Ode…",
   [StreamState.Open]: null,
-  [StreamState.Reconnecting]: "Can't reach Ode. Reconnecting…",
-  [StreamState.Closed]: "Can't reach Ode. Reconnecting…",
+  [StreamState.Reconnecting]: "Reconnecting to Ode…",
+  [StreamState.Closed]: "Reconnecting to Ode…",
 };
 
 export function isServerLost(state: StreamState): boolean {

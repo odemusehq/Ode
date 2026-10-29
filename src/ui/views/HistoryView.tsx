@@ -67,7 +67,7 @@ export function HistoryView() {
         )}
         {error && <Notice tone={Tone.Danger}>{error}</Notice>}
         {!versions && !error && <p className="muted">Reading the history…</p>}
-        {versions && shown.length === 0 && <EmptyState title={onlyNamed ? "No named versions" : "No versions yet"} />}
+        {versions && shown.length === 0 && <EmptyState title={onlyNamed ? "Named versions show here" : "Versions show here as you and Ode work"} />}
         {groups.map((group) => (
           <HistoryGroup
             key={group.key}

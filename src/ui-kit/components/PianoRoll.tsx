@@ -114,7 +114,7 @@ function velocityStyle(note: Note): CSSVariables {
 }
 
 function describeNotes(notes: readonly Note[], bars: number): string {
-  if (notes.length === 0) return "no notes";
+  if (notes.length === 0) return "an empty clip";
   const pitches = notes.map((note) => note.pitch);
   const low = noteName(Math.min(...pitches));
   const high = noteName(Math.max(...pitches));

@@ -56,7 +56,7 @@ export class SharedLyrics {
     try {
       state = await this.api.getLyrics();
     } catch (error) {
-      if (!this.snapshot.stored) this.update({ loadError: `The lyrics couldn't be read: ${errorMessage(error)}` });
+      if (!this.snapshot.stored) this.update({ loadError: `Reading the lyrics stopped: ${errorMessage(error)}` });
       return;
     }
     if (this.received !== seen) return;
@@ -146,7 +146,7 @@ export class SharedLyrics {
       saved = await this.api.saveLyrics(write);
     } catch (error) {
       this.changed = true;
-      this.update({ saveError: `Your lyrics weren't saved: ${errorMessage(error)}` });
+      this.update({ saveError: `Your lyrics are waiting to be saved: ${errorMessage(error)}` });
       return;
     }
     this.accept(saved, write.text);
