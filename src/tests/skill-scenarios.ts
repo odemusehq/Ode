@@ -3,8 +3,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { OdeAgents } from "../agents/agents";
 import { Approvals, Decision } from "../harness/approvals";
+import { AgentLoop } from "../harness/loop";
 import { OdeSession } from "../harness/session";
-import { Workspace } from "../harness/workspace";
+import { SkillLibrary } from "../harness/skills";
+import { FolderTexts } from "../harness/texts";
+import { ToolLabels } from "../harness/tool-labels";
+import { ConversationStore } from "../mneme/conversations";
 import { Mneme } from "../mneme/artist";
 import { LyricsStore } from "../mneme/lyrics-store";
 import { userPaths } from "../mneme/paths";
@@ -142,12 +146,16 @@ class ScenarioRun {
       listening: new Listening(live, reader),
       emit,
     });
-    const workspace = new Workspace(paths.workspace, join(config.repoDir, "skills"));
+    const texts = new FolderTexts(config.repoDir);
+    const skills = new SkillLibrary(texts);
+    const agents = new OdeAgents(texts, skills);
+    const labels = new ToolLabels(registry);
+    const loop = new AgentLoop({ services, registry, skills, labels, limits: config.limits, subagentPrompt: () => agents.subagentPrompt() });
     const deletions = new DeletionChecker(reader);
+    const conversations = new ConversationStore(join(paths.workspace, "conversations"), config.limits.historyExchanges);
     const session = new OdeSession(
-      { config, workspace, registry, agents: new OdeAgents(config, registry), approvals, questions, prefs, requests, deletions, emit },
-      null,
-      () => undefined,
+      { loop, agents, labels, approvals, questions, prefs, requests, deletions, emit },
+      conversations.log(this.scenario.name),
     );
     const before = await reader.read();
     await session.send({ text: this.scenario.action });

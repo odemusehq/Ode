@@ -24,6 +24,7 @@ export function reduceEvent(state: AppState, event: UiEvent): AppState {
     case "busy":
       return event.busy ? startWork(state, event.stoppable) : finishWork(state);
     case "progress":
+    case "thought":
       return { ...state, progress: event.text };
     case "result":
       // An error the same request reported just before stays on screen.

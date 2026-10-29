@@ -51,7 +51,10 @@ export type UiEvent =
   /** A restore deleted every version after this one. */
   | { type: "versions-truncated"; afterId: string }
   | { type: "mode"; mode: Mode }
-  | { type: "done"; costUsd?: number }
+  /** Ode's short note about its next step, written before it calls tools. */
+  | { type: "thought"; text: string }
+  /** A request finished; tokens is what its model calls used. */
+  | { type: "done"; tokens?: number }
   | { type: "error"; message: string }
   | { type: "live-status"; status: LiveStatus }
   /** The shared lyrics changed: saved from the window, by Ode, or by a restore. */

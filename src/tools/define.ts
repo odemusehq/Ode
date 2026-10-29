@@ -45,7 +45,7 @@ export interface ToolContext {
 }
 
 export interface OdeTool<S extends z.ZodRawShape = z.ZodRawShape> {
-  /** snake_case; shown to the model as mcp__<server>__<name>. */
+  /** snake_case and unique across Ode's tools: the model calls the tool by this name. */
   name: string;
   /** The only documentation of the tool: what it does, when to use it, inputs, output. */
   description: string;

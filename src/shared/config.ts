@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import defaults from "./defaults.json";
 
 export const ROLES = [
   "main",
@@ -26,9 +27,19 @@ export interface RoleConfig {
 }
 
 export interface AgentLimits {
+  /** How deep subagents can start their own subagents. */
   subagentDepth: number;
   subagentsAtOnce: number;
-  budgetUsdPerRequest: number;
+  /** Model calls one request may make before Ode stops it. */
+  turnsPerRequest: number;
+  /** Tokens, sent and received, one request may use before Ode stops it. */
+  tokensPerRequest: number;
+  /** The longest answer a single model call may give, in tokens. */
+  tokensPerTurn: number;
+  /** Earlier requests and Ode's replies carried into each new request of the same song. */
+  historyExchanges: number;
+  /** How many tools one tool search offers. */
+  toolSearchResults: number;
 }
 
 export interface LiveTimeouts {
@@ -39,7 +50,9 @@ export interface LiveTimeouts {
 }
 
 export interface MemorySettings {
+  /** Things Ode noticed fade by half over this many days, so recent habits outweigh old ones. */
   halfLifeDays: number;
+  /** Size limit of the summary of the artist and the song given to the model before each request. */
   summaryMaxChars: number;
   /** Size limit of the compact project map sent with every request. */
   mapMaxChars: number;
@@ -59,18 +72,14 @@ export interface ReleaseSettings {
 
 export class ConfigError extends Error {}
 
-/** Reads Ode's settings from the environment, loaded from the repo's .env (see .env.example). */
+/** Reads the settings of the machine Ode runs on from the environment, loaded from the repo's .env (see .env.example). */
 class EnvReader {
   private readonly missing: string[] = [];
 
   constructor(private readonly env: NodeJS.ProcessEnv) {}
 
-  optional(key: string): string {
-    return this.env[key]?.trim() ?? "";
-  }
-
   required(key: string): string {
-    const value = this.optional(key);
+    const value = this.env[key]?.trim() ?? "";
     if (!value) this.missing.push(key);
     return value;
   }
@@ -94,8 +103,21 @@ class EnvReader {
   }
 }
 
+/**
+ * Ode's configuration: where it runs, from .env, and the tunable values every copy of Ode shares, from the bundled
+ * defaults.json. Models and keys are the musician's own, chosen in Settings.
+ */
 export class OdeConfig {
   static readonly repoDir = fileURLToPath(new URL("../..", import.meta.url));
+
+  readonly limits: AgentLimits = { ...defaults.agent };
+  readonly liveTimeouts: LiveTimeouts = {
+    normal: defaults.liveTimeouts.normalSeconds * 1000,
+    long: defaults.liveTimeouts.longSeconds * 1000,
+  };
+  readonly memory: MemorySettings = { ...defaults.memory };
+  readonly versions: VersionSettings = { ...defaults.versions };
+  readonly release: ReleaseSettings = { ...defaults.release };
 
   private constructor(
     readonly host: string,
@@ -104,12 +126,6 @@ export class OdeConfig {
     readonly liveApp: string,
     readonly abletonUserLibrary: string,
     readonly userDir: string,
-    readonly roles: Record<Role, RoleConfig>,
-    readonly limits: AgentLimits,
-    readonly liveTimeouts: LiveTimeouts,
-    readonly memory: MemorySettings,
-    readonly versions: VersionSettings,
-    readonly release: ReleaseSettings,
   ) {}
 
   get repoDir(): string {
@@ -123,12 +139,6 @@ export class OdeConfig {
   static load(env: NodeJS.ProcessEnv = process.env): OdeConfig {
     loadDotenv({ path: join(OdeConfig.repoDir, ".env"), quiet: true, processEnv: env });
     const reader = new EnvReader(env);
-    const metaKey = reader.optional("META_API_KEY");
-    const roles = Object.fromEntries(
-      ROLES.filter((role) => role !== "subagent").map((role) => [role, OdeConfig.readRole(reader, role, metaKey)]),
-    ) as Record<Role, RoleConfig>;
-    // The agent runtime talks to one endpoint, so subagents share the main agent's endpoint and key.
-    roles.subagent = { ...roles.main, model: reader.required("ODE_SUBAGENT_MODEL") };
     // Live's default User Library folder depends on the system, so .env holds one for each.
     const userLibrary = process.platform === "win32" ? "ODE_ABLETON_USER_LIBRARY_WINDOWS" : "ODE_ABLETON_USER_LIBRARY_MACOS";
     const config = new OdeConfig(
@@ -138,26 +148,6 @@ export class OdeConfig {
       reader.required("ODE_LIVE_APP"),
       reader.path(userLibrary),
       reader.path("ODE_USER_DIR"),
-      roles,
-      {
-        subagentDepth: reader.number("ODE_SUBAGENT_DEPTH"),
-        subagentsAtOnce: reader.number("ODE_SUBAGENTS_AT_ONCE"),
-        budgetUsdPerRequest: reader.number("ODE_BUDGET_USD_PER_REQUEST"),
-      },
-      {
-        normal: reader.number("ODE_LIVE_TIMEOUT_SECONDS") * 1000,
-        long: reader.number("ODE_LIVE_LONG_TIMEOUT_SECONDS") * 1000,
-      },
-      {
-        halfLifeDays: reader.number("ODE_MEMORY_HALF_LIFE_DAYS"),
-        summaryMaxChars: reader.number("ODE_SUMMARY_MAX_CHARS"),
-        mapMaxChars: reader.number("ODE_MAP_MAX_CHARS"),
-      },
-      {
-        snapshotEvery: reader.number("ODE_VERSION_SNAPSHOT_EVERY"),
-        groupMinutes: reader.number("ODE_VERSION_GROUP_MINUTES"),
-      },
-      { coverChoices: reader.number("ODE_COVER_ART_CHOICES") },
     );
     reader.assertComplete();
     return config;
@@ -166,20 +156,6 @@ export class OdeConfig {
   /** The settings in .env.example, whatever the local .env says: what releases of Ode are built with. */
   static defaults(): OdeConfig {
     return OdeConfig.load(parse(readFileSync(join(OdeConfig.repoDir, ".env.example"), "utf8")));
-  }
-
-  private static readRole(reader: EnvReader, role: Role, metaKey: string): RoleConfig {
-    const prefix = `ODE_${role.toUpperCase()}_`;
-    const isMain = role === "main";
-    const read = (key: string) => (isMain ? reader.required(prefix + key) : reader.optional(prefix + key));
-    const provider = read("PROVIDER");
-    const ownKey = reader.optional(`${prefix}API_KEY`);
-    return {
-      provider,
-      baseUrl: read("BASE_URL"),
-      apiKey: ownKey || (provider === "meta" ? metaKey : ""),
-      model: read("MODEL"),
-    };
   }
 }
 

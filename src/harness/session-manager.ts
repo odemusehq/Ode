@@ -1,20 +1,17 @@
-import { z } from "zod";
-import { JsonFile } from "../mneme/json-file";
+import type { ConversationStore } from "../mneme/conversations";
 import { OdeSession, type SessionDeps } from "./session";
 
-/** One conversation per song (per Live Set), resumed when the Set is opened again. */
+/** One conversation per song (per Live Set), carried on when the Set is opened again. */
 export class SessionManager {
   private static readonly NO_SET = "no-set";
-  private readonly ids: JsonFile<Record<string, string>>;
   private session: OdeSession;
   private key = SessionManager.NO_SET;
 
   constructor(
     private readonly deps: SessionDeps,
-    idsPath: string,
+    private readonly conversations: ConversationStore,
   ) {
-    this.ids = new JsonFile(idsPath, z.record(z.string(), z.string()), () => ({}));
-    this.session = this.create(null, this.key);
+    this.session = new OdeSession(deps, conversations.log(this.key));
   }
 
   get current(): OdeSession {
@@ -27,23 +24,13 @@ export class SessionManager {
    */
   async switchTo(setId: string, carryOver = false): Promise<void> {
     if (setId === this.key) return;
+    const previous = this.key;
+    this.key = setId;
     if (carryOver) {
-      const previous = this.key;
-      this.key = setId;
-      this.session.rekey((id) => void this.ids.update((saved) => ({ ...saved, [setId]: id })));
-      const id = this.session.id;
-      if (id) await this.ids.update(({ [previous]: _dropped, ...saved }) => ({ ...saved, [setId]: id }));
+      this.session.continueIn(await this.conversations.rename(previous, setId));
       return;
     }
     this.session.stop();
-    const ids = await this.ids.read();
-    this.key = setId;
-    this.session = this.create(ids[setId] ?? null, setId);
-  }
-
-  private create(resumeId: string | null, key: string): OdeSession {
-    return new OdeSession(this.deps, resumeId, (id) => {
-      void this.ids.update((saved) => ({ ...saved, [key]: id }));
-    });
+    this.session = new OdeSession(this.deps, this.conversations.log(setId));
   }
 }

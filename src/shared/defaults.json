@@ -1,0 +1,27 @@
+{
+  "agent": {
+    "subagentDepth": 2,
+    "subagentsAtOnce": 6,
+    "turnsPerRequest": 60,
+    "tokensPerRequest": 2500000,
+    "tokensPerTurn": 8000,
+    "historyExchanges": 12,
+    "toolSearchResults": 8
+  },
+  "liveTimeouts": {
+    "normalSeconds": 15,
+    "longSeconds": 300
+  },
+  "memory": {
+    "halfLifeDays": 180,
+    "summaryMaxChars": 2000,
+    "mapMaxChars": 24000
+  },
+  "versions": {
+    "snapshotEvery": 20,
+    "groupMinutes": 10
+  },
+  "release": {
+    "coverChoices": 4
+  }
+}

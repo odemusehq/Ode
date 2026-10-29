@@ -17,8 +17,12 @@ import { ToolRegistry } from "../tools";
 import type { ToolContext } from "../tools/define";
 import { OdeAgents } from "../agents/agents";
 import { Approvals } from "../harness/approvals";
+import { AgentLoop } from "../harness/loop";
 import { SessionManager } from "../harness/session-manager";
-import { Workspace } from "../harness/workspace";
+import { SkillLibrary } from "../harness/skills";
+import { FolderTexts } from "../harness/texts";
+import { ToolLabels } from "../harness/tool-labels";
+import { ConversationStore } from "../mneme/conversations";
 import { DeletionChecker } from "./deletion-checker";
 import { EventBus } from "./event-bus";
 import { OdeServer } from "./http";
@@ -113,12 +117,23 @@ export class OdeApp {
       listening: new Listening(this.live, this.reader),
       emit,
     });
+    const texts = new FolderTexts(config.repoDir);
+    const skills = new SkillLibrary(texts);
+    const agents = new OdeAgents(texts, skills);
+    const labels = new ToolLabels(registry);
+    const loop = new AgentLoop({
+      services: this.services,
+      registry,
+      skills,
+      labels,
+      limits: config.limits,
+      subagentPrompt: () => agents.subagentPrompt(),
+    });
     this.sessions = new SessionManager(
       {
-        config,
-        workspace: new Workspace(this.paths.workspace, join(config.repoDir, "skills")),
-        registry,
-        agents: new OdeAgents(config, registry),
+        loop,
+        agents,
+        labels,
         approvals: this.approvals,
         questions: this.questions,
         prefs: this.prefs,
@@ -126,7 +141,7 @@ export class OdeApp {
         deletions: new DeletionChecker(this.reader),
         emit,
       },
-      join(this.paths.workspace, "sessions.json"),
+      new ConversationStore(join(this.paths.workspace, "conversations"), config.limits.historyExchanges),
     );
     this.versionActions = new VersionActions({
       live: this.live,

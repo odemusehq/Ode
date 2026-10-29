@@ -1,30 +1,37 @@
-import { readFile } from "node:fs/promises";
-import type { AgentDefinition } from "@anthropic-ai/claude-agent-sdk";
-import type { OdeConfig } from "../shared/config";
-import type { ToolRegistry } from "../tools";
+import type { SkillLibrary } from "../harness/skills";
+import type { TextLibrary } from "../harness/texts";
 
-/** Ode's main agent and its one kind of subagent. Specialisation comes from skills. */
+/** Ode's main agent and its one kind of subagent: their prompts, each followed by the skills it can read. */
 export class OdeAgents {
-  static readonly SUBAGENT = "subagent";
-  /** The only built-in tools: reading skill files, starting subagents, loading skills, finding tools. */
-  static readonly BUILT_IN_TOOLS = ["Read", "Agent", "Skill", "ToolSearch"] as const;
+  private static readonly MAIN_PROMPT = "src/agents/ode.md";
+  private static readonly SUBAGENT_PROMPT = "src/agents/subagent.md";
+  private readonly prompts = new Map<string, Promise<string>>();
 
   constructor(
-    private readonly config: OdeConfig,
-    private readonly registry: ToolRegistry,
+    private readonly texts: TextLibrary,
+    private readonly skills: SkillLibrary,
   ) {}
 
   systemPrompt(): Promise<string> {
-    return readFile(new URL("./ode.md", import.meta.url), "utf8");
+    return this.prompt(OdeAgents.MAIN_PROMPT);
   }
 
-  async subagent(): Promise<AgentDefinition> {
-    return {
-      description:
-        "A subagent for one focused task: writing or revising lyrics, melodies, chords, drums, basslines, sounds or mix advice, reviewing a draft with fresh eyes, or updating what Ode knows about the artist. Give it the task, the material it needs, the skills to load and the format to return.",
-      prompt: await readFile(new URL("./subagent.md", import.meta.url), "utf8"),
-      tools: [...this.registry.namesFor("subagent"), ...OdeAgents.BUILT_IN_TOOLS],
-      model: this.config.roles.subagent.model,
-    };
+  subagentPrompt(): Promise<string> {
+    return this.prompt(OdeAgents.SUBAGENT_PROMPT);
+  }
+
+  /** The prompt file with the list of skills appended, read once. */
+  private prompt(path: string): Promise<string> {
+    let prompt = this.prompts.get(path);
+    if (!prompt) {
+      prompt = Promise.all([this.texts.read(path), this.skills.index()]).then(
+        ([text, index]) =>
+          `${text.trim()}\n\n# Skills\n\nRead a skill with skill_read before the work it covers; its sub-skills are named in its table.\n\n${index
+            .map((skill) => `- ${skill.name}: ${skill.description}`)
+            .join("\n")}\n`,
+      );
+      this.prompts.set(path, prompt);
+    }
+    return prompt;
   }
 }

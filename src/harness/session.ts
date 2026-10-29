@@ -1,15 +1,13 @@
-import { query, type CanUseTool, type Options, type PermissionResult } from "@anthropic-ai/claude-agent-sdk";
-import type { OdeConfig } from "../shared/config";
+import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
+import type { ConversationLog } from "../mneme/conversations";
+import type { PreferencesStore } from "../mneme/preferences";
 import type { UiEvent } from "../shared/events";
 import { Mode } from "../shared/personalisation";
-import type { PreferencesStore } from "../mneme/preferences";
-import type { ToolRegistry } from "../tools";
 import type { AnyTool } from "../tools/define";
-import { OdeAgents } from "../agents/agents";
-import { AgentEnvironment } from "./agent-environment";
-import { Approvals, Decision } from "./approvals";
-import { EventTranslator } from "./event-translator";
-import type { Workspace } from "./workspace";
+import type { OdeAgents } from "../agents/agents";
+import { Decision, type Approvals } from "./approvals";
+import { LoopEnd, type AgentLoop, type LoopEvents, type ToolGate } from "./loop";
+import type { ToolLabels } from "./tool-labels";
 
 /** One request to Ode: a typed line, a tapped suggestion or spoken words. */
 export interface OdeRequest {
@@ -43,10 +41,9 @@ export interface DeletionCheck {
 }
 
 export interface SessionDeps {
-  config: OdeConfig;
-  workspace: Workspace;
-  registry: ToolRegistry;
+  loop: AgentLoop;
   agents: OdeAgents;
+  labels: ToolLabels;
   approvals: Approvals;
   questions: OpenQuestions;
   prefs: PreferencesStore;
@@ -61,32 +58,24 @@ export class SessionBusyError extends Error {}
 /** Tools that always wait for the musician, in every mode: using the singer's voice needs their consent. */
 const CONSENT_TOOLS: ReadonlySet<string> = new Set(["voice_reference_set"]);
 
-/** Built-in tools that run without asking. Reading files is checked: only Ode's own skill files. */
-const UNCHECKED_BUILT_IN_TOOLS = OdeAgents.BUILT_IN_TOOLS.filter((name) => name !== "Read");
-
-function allow(input: Record<string, unknown>): PermissionResult {
-  return { behavior: "allow", updatedInput: input };
-}
-
-function deny(message: string): PermissionResult {
-  return { behavior: "deny", message };
-}
+/** Why each early end of a request is shown to the musician. */
+const LIMIT_MESSAGES: Partial<Record<LoopEnd, string>> = {
+  [LoopEnd.TurnLimit]: "Ode stopped: this request reached its limit of model calls. What it changed so far is saved.",
+  [LoopEnd.TokenLimit]: "Ode stopped: this request reached its limit of tokens. What it changed so far is saved.",
+};
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-/**
- * The conversation about one song. Each request runs as its own agent call that resumes the
- * song's saved conversation, so the spending cap applies per request.
- */
+/** The conversation about one song. Each request runs as one agent loop that carries on the song's recent exchanges. */
 export class OdeSession {
   private readonly waiting: OdeRequest[] = [];
-  /** Stops the agent call of the request that runs now. */
+  /** Stops the agent loop of the request that runs now. */
   private controller: AbortController | null = null;
   /** Tells exclusive work that the musician pressed Stop (Again then doesn't start its retake). */
   private exclusiveController: AbortController | null = null;
-  /** The request whose agent call runs now. */
+  /** The request whose agent loop runs now. */
   private running: OdeRequest | null = null;
   /** Requests are being taken from the queue one after another. */
   private draining = false;
@@ -97,13 +86,12 @@ export class OdeSession {
 
   constructor(
     private readonly deps: SessionDeps,
-    private sessionId: string | null,
-    private onSessionId: (id: string) => void,
+    private conversation: ConversationLog,
   ) {}
 
-  /** Where to record this conversation's id from now on (used when the Set is saved for the first time or under a new name). */
-  rekey(onSessionId: (id: string) => void): void {
-    this.onSessionId = onSessionId;
+  /** Carries this conversation on under another log (the Set was saved for the first time or under a new name). */
+  continueIn(conversation: ConversationLog): void {
+    this.conversation = conversation;
   }
 
   /** A request or other work on the Set is running. */
@@ -114,11 +102,6 @@ export class OdeSession {
   /** Stop can interrupt what runs now: an agent request, not exclusive work such as Undo or a restore. */
   get isStoppable(): boolean {
     return this.draining && !this.working;
-  }
-
-  /** The agent runtime's id for this conversation, once it has started. */
-  get id(): string | null {
-    return this.sessionId;
   }
 
   async send(request: OdeRequest): Promise<void> {
@@ -135,7 +118,7 @@ export class OdeSession {
   /**
    * Runs work on the Set while no request runs (a restore, Undo, or putting the Set back for Again).
    * Requests sent meanwhile wait and run afterwards. Throws SessionBusyError while Ode is working.
-   * The work can't be interrupted, but its signal tells it the musician pressed Stop meanwhile.
+   * The work runs to its end, and its signal tells it the musician pressed Stop meanwhile.
    */
   async exclusive<T>(work: (stopped: AbortSignal) => Promise<T>): Promise<T> {
     if (this.isBusy) throw new SessionBusyError("Ode is still working. Wait for it to finish, or press Stop.");
@@ -161,7 +144,7 @@ export class OdeSession {
     this.exclusiveController?.abort();
   }
 
-  /** Runs the waiting requests one at a time; does nothing while requests or exclusive work already run. */
+  /** Runs the waiting requests one at a time, whenever the session is free. */
   private async drain(): Promise<void> {
     if (this.draining || this.working || this.waiting.length === 0) return;
     this.draining = true;
@@ -191,73 +174,75 @@ export class OdeSession {
         this.deps.emit({ type: "error", message: errorText(error) });
         return;
       }
-      const translator = new EventTranslator(this.deps.registry);
-      if (!controller.signal.aborted) await this.runAgent(`${hiddenContext}\n\n${request.text}`, translator, controller);
+      let reply = "";
+      let tokens = 0;
+      if (!controller.signal.aborted) {
+        try {
+          const result = await this.deps.loop.run({
+            agent: "main",
+            system: await this.deps.agents.systemPrompt(),
+            history: await this.history(),
+            prompt: `${hiddenContext}\n\n${request.text}`,
+            conversation: this.conversation.id,
+            depth: 0,
+            gate: this.gate,
+            events: this.events,
+            signal: controller.signal,
+          });
+          reply = result.reply;
+          tokens = result.tokens;
+          const limit = LIMIT_MESSAGES[result.end];
+          if (limit) this.deps.emit({ type: "error", message: limit });
+          if (result.end === LoopEnd.Reply) await this.conversation.add(request.text, reply);
+        } catch (error) {
+          if (!controller.signal.aborted) this.deps.emit({ type: "error", message: errorText(error) });
+        }
+      }
       try {
-        await this.deps.requests.finish(request, translator.reply, controller.signal.aborted);
+        await this.deps.requests.finish(request, reply, controller.signal.aborted);
       } catch (error) {
         this.deps.emit({ type: "error", message: errorText(error) });
       }
-      this.deps.emit({ type: "done", costUsd: translator.costUsd });
+      this.deps.emit({ type: "done", tokens });
     } finally {
       this.controller = null;
       this.running = null;
     }
   }
 
-  private async runAgent(prompt: string, translator: EventTranslator, controller: AbortController): Promise<void> {
-    try {
-      const run = query({ prompt, options: await this.options(controller) });
-      for await (const message of run) {
-        if (message.type === "system" && message.subtype === "init" && message.session_id !== this.sessionId) {
-          this.sessionId = message.session_id;
-          this.onSessionId(message.session_id);
-        }
-        for (const event of translator.translate(message)) this.deps.emit(event);
-      }
-    } catch (error) {
-      if (!controller.signal.aborted) this.deps.emit({ type: "error", message: errorText(error) });
-    }
-  }
-
-  private async options(controller: AbortController): Promise<Options> {
-    const { config, registry, agents, workspace } = this.deps;
-    return {
-      cwd: await workspace.prepare(),
-      systemPrompt: await agents.systemPrompt(),
-      agents: { [OdeAgents.SUBAGENT]: await agents.subagent() },
-      mcpServers: registry.mcpServers(),
-      tools: [...OdeAgents.BUILT_IN_TOOLS],
-      allowedTools: [...registry.readOnlyNames(), ...UNCHECKED_BUILT_IN_TOOLS],
-      settingSources: ["project"],
-      skills: "all",
-      env: new AgentEnvironment(config).build(),
-      model: config.roles.main.model,
-      permissionMode: "default",
-      canUseTool: this.permit,
-      includePartialMessages: false,
-      maxBudgetUsd: config.limits.budgetUsdPerRequest,
-      resume: this.sessionId ?? undefined,
-      abortController: controller,
-    };
+  /** The song's recent requests and Ode's replies, as the conversation so far. */
+  private async history(): Promise<ChatCompletionMessageParam[]> {
+    return (await this.conversation.recent()).flatMap((exchange): ChatCompletionMessageParam[] => [
+      { role: "user", content: exchange.request },
+      { role: "assistant", content: exchange.reply },
+    ]);
   }
 
   /**
-   * Whether a change waits for the musician's Apply or Skip. Why? changes nothing, so it can't use a tool that changes
-   * something. Tools that change nothing never reach here (they are allowed up front).
+   * Whether a call runs now. Why? answers only explain; a change that needs the musician's Apply waits for it.
    */
-  private readonly permit: CanUseTool = async (toolName, input, { signal }) => {
-    if (toolName === "Read") {
-      const path = typeof input.file_path === "string" ? input.file_path : "";
-      return this.deps.workspace.isSkillFile(path) ? allow(input) : deny("Ode only reads its own skill files.");
-    }
-    const tool = this.deps.registry.find(toolName);
-    if (!tool) return deny(`${toolName} is not available in Ode.`);
-    if (this.running?.reply && tool.changes !== "none") return deny("This request only answers Why?: change nothing.");
-    if (!(await this.needsApproval(tool, input))) return allow(input);
-    const summary = this.deps.registry.describe(toolName, input) ?? EventTranslator.plainLabel(EventTranslator.toolLabel(toolName));
-    const decision = await this.deps.approvals.request(tool.name, input, summary, signal);
-    return decision === Decision.Allow ? allow(input) : deny("The musician skipped this change.");
+  private readonly gate: ToolGate = {
+    check: async (tool, input, signal) => {
+      if (this.running?.reply && tool.changes !== "none") return "This request only answers Why?: explain, and leave the Set as it is.";
+      if (!(await this.needsApproval(tool, input))) return null;
+      const decision = await this.deps.approvals.request(tool.name, input, this.deps.labels.for(tool.name, input), signal);
+      return decision === Decision.Allow ? null : "The musician skipped this change.";
+    },
+  };
+
+  /** Ode's work as the UI shows it: the excerpt of its thinking, a progress line per tool, and subagents. */
+  private readonly events: LoopEvents = {
+    thought: (text) => this.deps.emit({ type: "thought", text }),
+    toolStarted: (id, name, label) => {
+      this.deps.emit({ type: "tool", id, name, status: "started" });
+      this.deps.emit({ type: "progress", text: label });
+    },
+    toolFinished: (id, ok) => this.deps.emit({ type: "tool", id, name: "", status: ok ? "done" : "error" }),
+    subagentStarted: (id, task) => {
+      this.deps.emit({ type: "subagent", id, task, status: "started" });
+      this.deps.emit({ type: "progress", text: task });
+    },
+    subagentFinished: (id) => this.deps.emit({ type: "subagent", id, task: "", status: "done" }),
   };
 
   /**
