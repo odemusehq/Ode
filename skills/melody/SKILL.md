@@ -1,11 +1,11 @@
 ---
 name: melody
-description: Write, fix and vary toplines, hooks, riffs and countermelodies directly in the Set. Ode edits the notes of the melody clip the musician points at, checks key, the singer's range, chord tones on strong beats, leaps, breaths and, when words are set, syllable fit, prosody and singability, then plays the bars it changed and reports in one line. Use this skill whenever a melody, topline, lead or hook clip is selected, or the musician clicks a suggestion or types anything about a melody — "chorus doesn't lift", "catchier", "simpler", "higher", "fix the out-of-key notes", "set these words", "write something over these chords", a hummed idea to develop — even if they never say the word melody.
+description: Write, fix and vary toplines, hooks, riffs and countermelodies directly in the Set. Ode edits the notes of the melody clip the musician points at, checks key, the singer's range, chord tones on strong beats, leaps, breaths and, when words are set, syllable fit, prosody and singability, then reports in one line which bars changed, so the musician can play them. Use this skill whenever a melody, topline, lead or hook clip is selected, or the musician clicks a suggestion or types anything about a melody — "chorus doesn't lift", "catchier", "simpler", "higher", "fix the out-of-key notes", "set these words", "write something over these chords", a hummed idea to develop — even if they never say the word melody.
 ---
 
 # Melody
 
-A good melody is easy to remember, comfortable to sing, agrees with the harmony, carries the words naturally, and goes somewhere: it rises to a high point and comes to rest. Most melodic problems come from losing one of those five. Ode works on the melody already in the Set: it changes the notes the musician points at, checks them, and lets them hear the result straight away.
+A good melody is easy to remember, comfortable to sing, agrees with the harmony, carries the words naturally, and goes somewhere: it rises to a high point and comes to rest. Most melodic problems come from losing one of those five. Ode works on the melody already in the Set: it changes the notes the musician points at, checks them, and the musician plays the result in Live straight away.
 
 ## Conventions
 
@@ -57,7 +57,7 @@ Locked parts must be exactly as they were.
 
 ### 5. Let them hear it
 
-Ode plays the bars you changed when your turn ends; you don't start playback. That is why the change should cover only the bars that need it.
+When your turn ends, the musician presses play in Live: say in the result line which bars changed, so they know where to listen. That is why the change should cover only the bars that need it.
 
 ### 6. Report in one line
 
@@ -76,7 +76,7 @@ Act without asking. The one question, a single line with buttons, comes only whe
 - the melody can fit the singer only by changing the song's key, which moves every part: "Chorus peaks above your range — move the song down a tone? · Move it · Keep the key";
 - a muted lead or instrument track decides which melody to work on, and the hand edits and version history don't explain it. Muted long ago and never touched means parked; muted a moment ago while something else was soloed means it is still part of the song.
 
-The mode decides the rest: in Manual, Ode shows each change for Apply or Skip; in Let me hear it, never ask — make the best guess and say it in the result line.
+The mode decides the rest: in Manual, Ode shows each change for Apply or Skip.
 
 ## Motif: the seed
 

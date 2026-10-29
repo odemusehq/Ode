@@ -373,17 +373,7 @@
     "mute": false,
     "solo": false,
     "arm": false,
-    "devices": [
-      {
-        "index": 0,
-        "name": "Ode",
-        "className": "Device",
-        "isRack": false,
-        "parameters": [
-          {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1}
-        ]
-      }
-    ],
+    "devices": [],
     "mutedViaSolo": false,
     "groupTrack": null,
     "clipSlots": [],
@@ -396,17 +386,5 @@
     }
   },
   "takenAt": "2026-10-28T14:12:05.000Z",
-  "transport": {
-    "playing": false,
-    "time": 0,
-    "loop": {"on": true, "start": 0, "length": 16},
-    "signature": {"numerator": 4, "denominator": 4}
-  },
-  "selection": {
-    "track": {"index": 1},
-    "clip": {"track": {"index": 1}, "start": 0},
-    "scene": null,
-    "time": 0,
-    "isPlaying": false
-  }
+  "signature": {"numerator": 4, "denominator": 4}
 }

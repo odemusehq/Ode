@@ -1,11 +1,11 @@
 ---
 name: drums
-description: Program and fix drum parts directly in the Set. Ode edits the notes of the drum clip the musician points at — grooves, fills, swing, ghost notes, velocity and timing, section energy — writes only to pads the kit actually has, and checks the backbeat, the kick against the bass, the velocity shape, fills that land on the downbeat clear of the vocal, and a loop that ends cleanly, then plays the bars it changed and reports in one line. Use this skill whenever a drum clip or Drum Rack is selected, or the musician clicks a suggestion or types anything about a beat, groove, fill, swing, feel, hats, kick, snare or kit — "fill into the chorus", "more human", "chorus hits harder", "half-time bridge", "give me a beat at 90" — even if they never say drums.
+description: Program and fix drum parts directly in the Set. Ode edits the notes of the drum clip the musician points at — grooves, fills, swing, ghost notes, velocity and timing, section energy — writes only to pads the kit actually has, and checks the backbeat, the kick against the bass, the velocity shape, fills that land on the downbeat clear of the vocal, and a loop that ends cleanly, then reports in one line which bars changed, so the musician can play them. Use this skill whenever a drum clip or Drum Rack is selected, or the musician clicks a suggestion or types anything about a beat, groove, fill, swing, feel, hats, kick, snare or kit — "fill into the chorus", "more human", "chorus hits harder", "half-time bridge", "give me a beat at 90" — even if they never say drums.
 ---
 
 # Drums
 
-Drums set the time feel, the energy of each section, and the pocket that bass, chords and vocal sit in. A good part is less about how many hits there are than about where they fall, how loud each one is, and what changes when the section changes. Ode edits the drum part already in the Set and lets the musician hear it at once.
+Drums set the time feel, the energy of each section, and the pocket that bass, chords and vocal sit in. A good part is less about how many hits there are than about where they fall, how loud each one is, and what changes when the section changes. Ode edits the drum part already in the Set, so the musician can play it at once.
 
 ## Conventions
 
@@ -55,7 +55,7 @@ Bars outside the change, and locked parts, must be exactly as they were.
 
 ### 5. Let them hear it
 
-Ode plays the bars you changed when your turn ends — a bar or two earlier for a fill or a transition, so the change is heard in context; you don't start playback.
+When your turn ends, the musician presses play in Live: say in the result line which bars changed, from a bar or two earlier for a fill or a transition, so they hear the change in context.
 
 ### 6. Report in one line
 
@@ -74,7 +74,7 @@ Act without asking. The one question, a single line with buttons, comes only whe
 - deleting a drum part, or replacing a performance the musician played in by hand with a programmed pattern they didn't ask for;
 - a muted drum track or a muted second kick that the hand edits and version history don't explain, when the groove or the bass depends on it. Muted long ago and untouched means parked; muted a moment ago while soloing something else means it is still in the song.
 
-The mode decides the rest: in Manual, Ode shows each change for Apply or Skip; in Let me hear it, never ask — make the best guess and say it in the result line.
+The mode decides the rest: in Manual, Ode shows each change for Apply or Skip.
 
 ## Roles
 

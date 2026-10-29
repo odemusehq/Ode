@@ -1,11 +1,11 @@
 ---
 name: bass
-description: Write and fix basslines directly in the Set. Ode edits the notes of the bass clip the musician points at so the line follows the chords and locks with the kick, checks roots on chord changes, key, starts against the real kick notes, space around the snare, register and clashes with other low parts, then plays the bars it changed and reports in one line. Use this skill whenever a bass, sub or 808 clip is selected, or the musician clicks a suggestion or types anything about the bassline, an 808, sub-bass, walking bass, or low end that sounds muddy, empty or clashing — "lock to the kick", "follow the chords", "more movement", "simpler", "add a bass" — even if they never say bass.
+description: Write and fix basslines directly in the Set. Ode edits the notes of the bass clip the musician points at so the line follows the chords and locks with the kick, checks roots on chord changes, key, starts against the real kick notes, space around the snare, register and clashes with other low parts, then reports in one line which bars changed, so the musician can play them. Use this skill whenever a bass, sub or 808 clip is selected, or the musician clicks a suggestion or types anything about the bassline, an 808, sub-bass, walking bass, or low end that sounds muddy, empty or clashing — "lock to the kick", "follow the chords", "more movement", "simpler", "add a bass" — even if they never say bass.
 ---
 
 # Bass
 
-The bass does three jobs at once: it defines the harmony (the bass note decides how a chord is heard), it ties the harmony to the drums (it locks with the kick), and it can carry a counter-melody of its own. A good bassline does the first two without fuss and adds the third only where there is room. Ode edits the bassline already in the Set and lets the musician hear it against the drums straight away.
+The bass does three jobs at once: it defines the harmony (the bass note decides how a chord is heard), it ties the harmony to the drums (it locks with the kick), and it can carry a counter-melody of its own. A good bassline does the first two without fuss and adds the third only where there is room. Ode edits the bassline already in the Set, so the musician can play it against the drums straight away.
 
 ## Conventions
 
@@ -57,7 +57,7 @@ Locked parts must be exactly as they were.
 
 ### 5. Let them hear it
 
-Ode plays the bars you changed when your turn ends; you don't start playback.
+When your turn ends, the musician presses play in Live: say in the result line which bars changed, so they know where to listen.
 
 ### 6. Report in one line
 
@@ -76,7 +76,7 @@ Act without asking. The one question, a single line with buttons, comes only whe
 - the kick that decides the bass rhythm is on a muted track, or there are two kick parts and one is muted, and the hand edits and version history don't explain it. Muted long ago and untouched means parked; muted a moment ago while soloing something else means it is still in the song;
 - deleting a bass part, or replacing a line the musician played in by hand with a different one when they asked for something smaller.
 
-The mode decides the rest: in Manual, Ode shows each change for Apply or Skip; in Let me hear it, never ask — make the best guess and say it in the result line.
+The mode decides the rest: in Manual, Ode shows each change for Apply or Skip.
 
 ## Following the chords
 

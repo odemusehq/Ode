@@ -16,9 +16,9 @@ expected_outcome: |
   level stays matched. No track, clip or take is created, the Drift is neither duplicated nor
   replaced, and the Drums, Bass and Lead Vox stay as they were.
 
-  After the change Ode checks the pad's level in the chorus (beats 32–64), on its track meter or on the
-  Master, with no clipping and the level about where it was, and checks the pad against the Lead Vox in
-  the chorus by register or by a measurement, without calling masking measured when nothing measured
-  it (the pad is MIDI). It doesn't start playback for listening and doesn't ask the musician to listen.
-  Ode asks no question and replies in one line, for example: "Pad warmer: filter 18 kHz → 2.6 kHz, osc
-  2 to triangle, volume +2 dB · level matched, no clipping, top end thinned under the vocal."
+  After the change Ode checks that the Drift's Volume (or an added effect's output) keeps the pad's
+  level about where it was, and checks the pad against the Lead Vox in the chorus by register or by a
+  measurement, calling masking measured only when a measurement ran (the pad is MIDI). Ode decides
+  by itself and replies in one line, for example: "Pad warmer: filter 18 kHz → 2.6 kHz, osc 2 to
+  triangle, volume +2 dB · level matched at the Drift's output, top end thinned under the vocal in the
+  chorus."

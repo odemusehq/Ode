@@ -28,7 +28,7 @@ A topic is not an idea. "Heartbreak" is a topic. "Learning to cook for one after
    - **Prosody check**, when the title is already sung on notes: its stressed syllables on strong beats.
    - A word the check marks as uncertain (a name, slang) is never reported as checked.
    Fix and check again, up to three rounds; if something still fails, the result line says what.
-5. **Let them hear it.** A title and what the song is about change nothing in the Set, so there is nothing to play; the result line is the whole answer. If you also changed lines because the musician asked, Ode plays their section, from the locator named like its label.
+5. **Let them hear it.** A title and what the song is about live in the lead sheet, so the result line is the whole answer. If you also changed lines because the musician asked, the result line names their section, so the musician can play it from the locator named like its label.
 6. **Report in one line**: the title and the song in a few words · what was checked. For example:
    - "Title: 'Spare Room': putting a friend up after their break-up, told by the host · 2 syllables, stress on SPARE and ROOM, no clichés."
    - "Song is now about the late shift at a launderette, told by the attendant · title 'Not in Service', 4 syllables, no clichés · outside your usual style: a character, not you."
@@ -36,7 +36,7 @@ A topic is not an idea. "Heartbreak" is a topic. "Learning to cook for one after
 
 ## Asking
 
-Idea work almost never needs a question. Don't interview: choose a direction and let the musician react with Undo, Again or a few words. A title the musician already chose is theirs; replace it only when they ask for a new one. In Let me hear it, never ask; in Manual, Ode shows the change for Apply or Skip, and you work the same way.
+Idea work almost never needs a question. Don't interview: choose a direction and let the musician react with Undo, Again or a few words. A title the musician already chose is theirs; replace it only when they ask for a new one. In Manual, Ode shows the change for Apply or Skip, and you work the same way.
 
 ## What makes an idea strong
 

@@ -1,6 +1,6 @@
 ---
 name: harmony
-description: Choose, fix, reharmonize and voice chords directly in the Set. Ode rewrites the chord part's notes in place, keeps the bassline and the lead sheet's chord chart in agreement with the new chords, and checks that every strong-beat melody note fits its chord, that voices move smoothly, that nothing turns muddy and that chord symbols are spelled for the key, then plays the bars it changed and reports in one line. Use this skill whenever a chord, keys, pad or guitar part is selected, or the musician clicks a suggestion or types anything about chords — "fresher chords", "less predictable", "darker", "brighter", "jazzier", "smoother voicing", "what goes under this melody", "this chord sounds wrong", a key change or a chord chart — even if they never say harmony.
+description: Choose, fix, reharmonize and voice chords directly in the Set. Ode rewrites the chord part's notes in place, keeps the bassline and the lead sheet's chord chart in agreement with the new chords, and checks that every strong-beat melody note fits its chord, that voices move smoothly, that nothing turns muddy and that chord symbols are spelled for the key, then reports in one line which bars changed, so the musician can play them. Use this skill whenever a chord, keys, pad or guitar part is selected, or the musician clicks a suggestion or types anything about chords — "fresher chords", "less predictable", "darker", "brighter", "jazzier", "smoother voicing", "what goes under this melody", "this chord sounds wrong", a key change or a chord chart — even if they never say harmony.
 ---
 
 # Harmony
@@ -58,7 +58,7 @@ Locked parts must be exactly as they were.
 
 ### 5. Let them hear it
 
-Ode plays the bars you changed when your turn ends; you don't start playback.
+When your turn ends, the musician presses play in Live: say in the result line which bars changed, so they know where to listen.
 
 ### 6. Report in one line
 
@@ -74,10 +74,10 @@ When a take is outside the artist's usual chord vocabulary, the line says "outsi
 
 Act without asking. The one question, a single line with buttons, comes only when the answer changes what Ode does:
 
-- a key change that is your idea rather than the musician's, because it moves every part: "Lift the last chorus up a tone? · Lift it · Keep it". A request for a key change is the go-ahead; then check the range;
+- a key change that is your idea rather than the musician's, because it moves every part: "Lift the last chorus up a tone? · Lift it · Keep it". A request for a key change is the go-ahead; then check the range, and when the whole song moves, name the new key in the result line so the musician can set it in Live;
 - a muted chord or bass part that the hand edits and version history don't explain, when it decides which part states the harmony. Muted long ago and untouched means parked; muted a moment ago while soloing something means it is still in the song.
 
-The mode decides the rest: in Manual, Ode shows each change for Apply or Skip; in Let me hear it, never ask — make the best guess and say it in the result line.
+The mode decides the rest: in Manual, Ode shows each change for Apply or Skip.
 
 ## Function: tonic, subdominant, dominant
 

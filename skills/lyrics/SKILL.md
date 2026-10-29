@@ -5,7 +5,7 @@ description: Write and rewrite song lyrics in place in the song's lyrics, the on
 
 # Lyrics
 
-A good lyric sounds like a person talking, fits its melody, and makes the listener see and feel something on first hearing. Ode writes and edits the lyric where it lives, in the song's lyrics, in the musician's voice; it checks every line it touches and lets them hear it. The musician keeps going, presses Undo, or asks for Again.
+A good lyric sounds like a person talking, fits its melody, and makes the listener see and feel something on first hearing. Ode writes and edits the lyric where it lives, in the song's lyrics, in the musician's voice; it checks every line it touches, and the musician plays the section in Live to hear it. The musician keeps going, presses Undo, or asks for Again.
 
 ## The lyrics
 
@@ -13,7 +13,7 @@ A good lyric sounds like a person talking, fits its melody, and makes the listen
 - A line in square brackets is a label: it names the section ("[Chorus 2]") and isn't sung or counted. A line is found by its label and number: "[Verse 2] line 3" is the third sung line under [Verse 2].
 - A chorus written out more than once in the text changes in every copy.
 - Read the text and its revision at the start of the request, and save the whole text against that revision. When the save reports conflicts, the musician changed the same lines while you worked: their lines were kept. Leave them, and say so in the result line.
-- Give a new stanza the label its section's locator has ("[Verse 2]"): Ode plays a lyric change from the locator named like its label.
+- Give a new stanza the label its section's locator has ("[Verse 2]"): the musician finds a lyric change at the locator named like its label.
 
 ## The loop
 
@@ -40,7 +40,7 @@ A good lyric sounds like a person talking, fits its melody, and makes the listen
    - Point of view, tense and who "you" is agree with the lines around it (your own read).
    - A word the checks mark as uncertain is never reported as checked; say "pronunciation not certain" in the result line.
    Fix what fails and check again, up to three rounds; then the result line says what still fails.
-5. **Let them hear it.** After your turn Ode plays the section of the first changed line, from the locator named like its label to the next locator, so the musician can sing it over the track; when no locator has that name, nothing plays. You don't start playback.
+5. **Let them hear it.** The result line names the section of the first changed line, so the musician can play it from the locator named like its label and sing it over the track.
 6. **Report in one line**: what changed · what was checked. For example:
    - "Verse 1, line 4 now 'The station clock is running late' · 8 syllables on its 8 notes, no stress problems, no clichés."
    - "Bridge written: the night you finally called, in the past tense · four lines on the bridge melody, every count fits its notes, ABAB, no over-used pairs."
@@ -52,7 +52,7 @@ Ask only when the answer changes what you do:
 - before rewriting a whole section the musician didn't ask to rewrite (they asked to fix one line, and only rewriting the chorus would fix it);
 - before deleting lines or a section.
 
-Locked lines are never a question: work around them. In Let me hear it, never ask: make your best guess and say it in the result line. In Manual, Ode shows each change for Apply or Skip, and you work the same way. A question is one line with two to four buttons.
+Locked lines are never a question: work around them. In Manual, Ode shows each change for Apply or Skip, and you work the same way. A question is one line with two to four buttons.
 
 ## What each section does
 

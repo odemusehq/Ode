@@ -1,30 +1,30 @@
 ---
 name: sound-design
-description: Change how a part sounds, in place, in Ableton Live — reshape the instrument and effects already on the track (oscillators, filter, envelopes, modulation, saturation, width, space), load a better instrument, preset or sample onto that track, layer in a rack, tune and trim samples, isolate a sound from a recording or generate one — then check the part's level, its register against the parts around it and mono, and report in one line. Use this whenever the musician clicks a suggestion or types anything about how a part sounds ("warmer", "darker", "brighter", "punchier", "wider", "softer", "less harsh", "dusty", "glassy", "fatter"), selects an instrument or effect and wants it changed, needs a new sound, patch, preset or sample for a part, or wants a sound pulled from a recording or generated, even if they never say "sound design".
+description: Change how a part sounds, in place, in Ableton Live — reshape the instrument and effects already on the track, plug-ins included (oscillators, filter, envelopes, modulation, saturation, width, space), insert a better Live instrument or effect on that track and set its parameters (a preset is saved knob positions), load a sample into Simpler or a Drum Rack pad, layer in a rack, tune and trim samples, isolate a sound from a recording or generate one — then check the part's level, its register against the parts around it and mono, and report in one line. Use this whenever the musician clicks a suggestion or types anything about how a part sounds ("warmer", "darker", "brighter", "punchier", "wider", "softer", "less harsh", "dusty", "glassy", "fatter"), selects an instrument or effect and wants it changed, needs a new sound, patch, preset or sample for a part, or wants a sound pulled from a recording or generated, even if they never say "sound design".
 ---
 
 # Sound design
 
 Choose and shape sounds so every part does its job in this song: the bass holds the floor, the lead speaks over everything, the pad fills without crowding, the texture adds life without asking for attention. A sound that is great in solo can be wrong in the track, so judge every change in the section where the part plays.
 
-Ode changes the sound where it lives — the instrument and effects already on the track, or a new instrument or effect on that same track — and the musician hears it straight away. Undo and the version history are the way back, so nothing needs copying.
+Ode changes the sound where it lives — the instrument and effects already on the track, or a new instrument or effect on that same track — and the musician plays it in Live straight away. Undo and the version history are the way back, so nothing needs copying.
 
 ## The loop
 
-1. **Read.** The project map gives the selected track's instrument and effects with their main values, the clips it plays, what else plays in the same bars, the key, the tempo and the hand edits since the last request. Read the device's full parameters and the part's notes: the lowest and highest notes set its register, the note lengths set its envelope times. Note the part's level in its section before changing anything, so the level check has something to compare with. Hand edits are the musician's own moves, so build on them. Check the lead sheet's locked parts, and recall the sounds and plug-ins the artist likes.
+1. **Read.** The project map gives the selected track's instrument and effects with their main values, the clips it plays, what else plays in the same bars, the key, the tempo and the hand edits since the last request. Read the device's full parameters and the part's notes: the lowest and highest notes set its register, the note lengths set its envelope times. Note the output levels of the instrument and effects you will change, so the level check has something to compare with. Hand edits are the musician's own moves, so build on them. Check the lead sheet's locked parts, and recall the sounds and plug-ins the artist likes.
 2. **Decide** the part's role (foundation, rhythm, harmony bed, lead, counter-melody, texture) and register, turn the musician's words into parameter moves (table below), and choose the stage to change: source, filter, envelopes, modulation, then effects. Reshape what is on the track before replacing it; a sound built in an instrument the musician knows is easier for them to keep shaping.
 3. **Change it in place**, as one undo step:
    - Set the parameters of the instrument and effects already there. Add an effect after the instrument, on the same track, when the instrument can't get there alone.
-   - Replace the instrument on the same track only when the sound needs another engine (FM for a bell, a multisample for a real piano); the notes stay as they are.
+   - Replace the instrument on the same track only when the sound needs another engine (FM for a bell): insert the Live instrument by name and set its parameters; the notes stay as they are. A real piano or another multisampled instrument comes from the musician's library, so name it in the result line for them to load.
    - Never duplicate the track or the device to compare, and never put the new sound on a new track: Again gives another take and the history keeps the old one.
    - Keep the part's level. When a move changes it (resonance, unison, saturation, a lower cutoff), set the instrument's or effect's output so the musician hears a new tone, not a louder or quieter part.
    - Leave locked parts alone; if one is the problem, change what is around it and say so.
 4. **Verify** with the checks below, fixing until they pass (up to three rounds); otherwise the result line says what still fails. Never present as checked what no check measured.
-5. **Let them hear it.** When your turn ends, Ode plays the section where the part sounds. Don't start playback for that yourself, and don't ask the musician to listen.
+5. **Let them hear it.** When your turn ends, the musician presses play in Live: name the section where the part sounds in the result line, so they know where to listen.
 6. **Report in one line:** what changed, with the values that matter, then " · " and what was checked. For example:
-   - "Pad warmer: filter 18 kHz → 2.6 kHz, resonance down, osc 2 to triangle · level matched, no clipping."
-   - "Kick tuned to D and shortened to 260 ms · ends before the next bass note, no clipping."
-   - "Lead gritty: saw through Roar, band-pass at 1.8 kHz · level matched, holds in mono; rougher than your usual leads."
+   - "Pad warmer: filter 18 kHz → 2.6 kHz, resonance down, osc 2 to triangle, volume +2 dB · level matched, register below the vocal in the chorus."
+   - "Kick tuned to D and shortened to 260 ms · ends before the next bass note, on the song's root."
+   - "Lead gritty: saw through Roar, band-pass at 1.8 kHz · level matched at Roar's output, mono-compatible; rougher than your usual leads."
 
 **Again** is another take of the same request. The Set is back as it was, so take a clearly different route (another waveform, filter type or instrument), not the same move made smaller.
 
@@ -36,10 +36,10 @@ Ode changes the sound where it lives — the instrument and effects already on t
 
 | Check | When | Correct when |
 |---|---|---|
-| Level | Every change | The part's level in its section (its track meter, or the Main track measured there) is about what it was before, unless louder or quieter was asked, and neither the track nor the Main track clips |
+| Level | Every change | The output of each changed device is set so the part's level is about what it was before, unless louder or quieter was asked: every gain a move adds (resonance, unison, saturation, a hotter sample) is taken back at the output |
 | Register | Every change | The part's main energy doesn't sit on the vocal or lead in the same bars: their note ranges barely overlap, or the overlap is thinned by the filter, the voicing or an octave move |
 | Masking | The part and its neighbour are audio tracks | Measured in the section, with no strong band left shared with the vocal or lead. MIDI parts can't be measured this way: compare note ranges and filter settings, and don't call masking measured |
-| Mono | After widening (unison spread, chorus, stereo delay, detuned layers) | Mono below about 100–150 Hz; summed to mono, the part keeps most of its level. Wide but in-phase material loses up to about 3 dB; more, or a hollow tone, means the width is cancelling |
+| Mono | After widening (unison spread, chorus, stereo delay, detuned layers) | Mono below about 100–150 Hz (Utility's Bass Mono where needed), and the width comes from moderate unison spread, chorus or stereo delay; very short left–right delays cancel when summed to mono |
 | Key | A new sample, a transposed oscillator, a tuned drum | Tonal samples, kicks and 808s sit on the song's key: the root, the fifth or another chord tone for drums |
 | Clean edges | A new or trimmed sample | Starts on the transient, with short fades at the start, the end and loop points; no clicks |
 | Source | A sound isolated from a recording or generated | Its source is written in the lead sheet's notes, and a source the musician doesn't own and hasn't cleared is named in the result line |
@@ -82,9 +82,9 @@ Musicians describe sounds with adjectives. These are the usual moves; combine th
 | One sample played across keys, chopped loops, one-shots | Simpler | Classic, One-Shot and Slicing modes, warping |
 | Multisampled instruments, velocity layers, round robin | Sampler | Zones by key, velocity and sample select |
 | Drum kits | Drum Rack with a Simpler on each pad | Per-pad processing, choke groups, internal returns |
-| Realistic acoustic instruments | The musician's sample libraries or Live's Packs | Synths rarely convince as piano, strings or guitar |
+| Realistic acoustic instruments | The musician's sample libraries or Live's Packs, loaded by the musician; Ode then shapes them | Synths rarely convince as piano, strings or guitar |
 
-Live Suite's modelled instruments (Electric for electric pianos, Tension for strings, Collision for mallets, Analog for classic subtractive sounds) are worth loading when they fit. Third-party instruments are welcome when the musician has them: work with them by function (oscillators, filter, envelopes, effects) and read their parameter names and values before changing anything. Parameters and starting ranges for each Live instrument are in `references/instruments.md`.
+Live Suite's modelled instruments (Electric for electric pianos, Tension for strings, Collision for mallets, Analog for classic subtractive sounds) are worth inserting when they fit. Third-party instruments the musician already added are welcome: work with them by function (oscillators, filter, envelopes, effects) and read their parameter names and values before changing anything. Parameters and starting ranges for each Live instrument are in `references/instruments.md`.
 
 **Register matters as much as timbre.** A bright pad in the vocal's octave fights the vocal however it is filtered. Before reaching for EQ, move the patch an octave with its oscillators' octave controls, thin it, or choose a sound with less energy in that range; moving or revoicing the notes themselves belongs to the arrangement and harmony skills.
 

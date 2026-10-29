@@ -1,6 +1,6 @@
 ---
 name: vocals-demo-vocal
-description: Make a demo vocal — the song's lyric and melody sung in the artist's own voice and placed on the "Demo vocal" track — so the musician can hear the song before recording it, only after their clear yes to using their voice, in every mode including Let me hear it. Covers the consent question and what it must say, the short clean recording it needs, the musician's rights to the result, checking the lyric setting, range and pronunciation before singing, and placing the demo without touching their recordings. Read this whenever the musician wants to hear the song sung in their voice, asks for a demo or guide vocal, asks whether Ode can sing in their voice or in someone else's, or wants to change or withdraw the recording of their voice.
+description: Make a demo vocal — the song's lyric and melody sung in the artist's own voice and placed on the "Demo vocal" track — so the musician can hear the song before recording it, only after their clear yes to using their voice, in every mode. Covers the consent question and what it must say, the short clean recording it needs, the musician's rights to the result, checking the lyric setting, range and pronunciation before singing, and placing the demo without touching their recordings. Read this whenever the musician wants to hear the song sung in their voice, asks for a demo or guide vocal, asks whether Ode can sing in their voice or in someone else's, or wants to change or withdraw the recording of their voice.
 ---
 
 # Demo vocal
@@ -12,7 +12,7 @@ The loop is the vocals skill's (read, decide, change in place, verify, let them 
 ## Only the artist's own voice, only after their yes
 
 - Use only the voice of the person who agrees to it. Never anyone else's — a bandmate, a featured singer, a well-known artist — and never imitate a known singer, even when asked. A bandmate who wants a demo in their own voice agrees for themselves, with their own recording.
-- If no recording of the artist's voice is saved with their consent yet, saving one is the first step, and it always asks them first — in Auto, in Manual and in Let me hear it alike. Consent is a rights matter, not a speed setting.
+- If no recording of the artist's voice is saved with their consent yet, saving one is the first step, and it always asks them first — in Auto and in Manual alike. Consent is a rights matter, not a speed setting.
 - The question is one line with Agree and Not now, and says what is kept and why: "To sing it in your voice I'll keep about 20 seconds of your singing from 'Voice Ref' in your Ode folder, only for your own demos; you can withdraw it any time. · Agree · Not now".
 - Nothing is recorded, saved, rendered or sung in their voice before that yes. "Sing it in my voice" is a request, not the yes.
 - On Not now, or no clear answer, make no demo; the result line says so, and that the guide melody can still be heard on its own track.
@@ -63,7 +63,7 @@ Fix the setting until the checks pass (the melody and prosody skills cover how),
 
 ### 5. Let them hear it
 
-Ode plays the section when your turn ends; you don't start playback.
+When your turn ends, the musician presses play in Live: name the section in the result line, so they know where to listen.
 
 ### 6. Report in one line
 

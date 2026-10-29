@@ -27,7 +27,7 @@ The same devices in a different order make a different sound.
 
 **Parallel chains** keep the dry attack while a copy is processed. Use an Audio Effect Rack with a dry chain and an effected chain (balance them with chain volumes), or the Dry/Wet control where a device has one. Parallel distortion on bass and drums adds edge without losing weight.
 
-**Watch the level.** Distortion, resonance and feedback raise the level; louder sounds better to everyone, so match the output to the input before judging. Read the track meter after each change.
+**Watch the level.** Distortion, resonance and feedback raise the level; louder sounds better to everyone, so match the output to the input before judging. Set the device's output after each change, so the level stays where it was.
 
 ## Saturation and distortion
 
@@ -124,8 +124,8 @@ Sweeps over several bars usually need automation. When you can't write it, get t
 ## Resampling effects into new sounds
 
 Effects become new instruments when printed to audio:
-1. Record the processed sound to a new audio track (or freeze and flatten).
+1. The musician records the processed sound to a new audio track in Live (or freezes and flattens it).
 2. Edit the audio: reverse, re-pitch, cut out the best second, crossfade a loop.
-3. Load the result into Simpler or a Drum Rack pad and play it.
+3. Load the result into Simpler or a Drum Rack pad, ready for the musician to play.
 
 This is how a vocal word becomes a pad, a reverb tail becomes a riser, or a distorted noise burst becomes a snare layer. Write the original audio's source in the lead sheet's notes, so its rights carry over to the new sound.

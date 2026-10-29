@@ -54,7 +54,7 @@ Sibilance ("s", "sh", "t") usually sits somewhere around 5–9 kHz; find where i
 
 - **Multiband Dynamics:** the high band with its crossover around 5–6 kHz, compressing above threshold (ratio 3:1–6:1, fast attack, release 50–100 ms) so sibilant moments drop by 3–6 dB and the rest of the top end is untouched.
 - **Compressor with sidechain EQ:** a band-pass on the sibilance in the sidechain EQ turns the whole signal down on each "s". Good for light de-essing; heavier settings dull the voice.
-- **The musician's de-esser plug-in**, when they have one, is usually the most transparent option.
+- **The musician's de-esser plug-in**, when it is on the vocal track, is usually the most transparent option.
 - Too much de-essing makes the singer lisp; judge whole phrases, not just the "s".
 - Sibilance gets worse in reverb and when vocals are stacked: send to the reverb from after the de-esser, or de-ess the reverb return, and de-ess backing vocals more than the lead.
 
@@ -95,7 +95,7 @@ These follow from word density, not from a genre label; apply them to any vocal 
 
 ## Pitch correction
 
-Pitch correction is a creative and taste decision. Apply it only when the musician asks, with their own plug-in, and say whether the setting is meant to be transparent or audible.
+Pitch correction is a creative and taste decision. Apply it only when the musician asks, with their own plug-in, which they add to the vocal track, and say whether the setting is meant to be transparent or audible.
 
 ## Demo vocals
 
@@ -114,10 +114,10 @@ These add to the parent skill's checks.
 | Check | Correct when |
 |---|---|
 | Words clear | No part around the vocal stays strong in 2–5 kHz where the vocal sings: masking measured on audio parts, register and filter compared for MIDI parts |
-| Steady level | Measured section by section, with the vocal soloed and with the full mix, the vocal sits at a similar level against the music in every section you touched |
-| Sibilance | Measured on the vocal alone after the change: the 5–9 kHz region drops on the "s" sounds while the rest of the top end stays |
-| Mono | The lead vocal stays centred and keeps its level with the Main track summed to mono |
+| Steady level | The mix check, section by section, shows where the vocal's own audio rises and falls against the other audio parts, and the compression and fader settings even out every section you touched |
+| Sibilance | The de-esser's band sits where the audio analysis of the vocal's own audio finds the sibilance (around 5–9 kHz), set to take 3–6 dB off the "s" sounds and leave the rest of the top end |
+| Mono | The lead vocal stays panned centre, with its width coming from doubles, harmonies and the returns around it |
 
 ## Example
 
-The musician selects the Lead Vox track over guitar and piano and types "harsh, and the s's spit". The vocal peaks around 3 kHz on loud notes and has strong sibilance near 7 kHz; its first compressor reacts to every "s". In place on the vocal's chain: Multiband Dynamics before the compressor, high band from about 6 kHz taking 3–5 dB off the sibilants; a 2–3 dB dynamic cut around 3 kHz that acts only on loud notes; the plate return's high cut lowered to about 7 kHz. Result: "S's tamed: de-esser before the compressor, −4 dB above 6 kHz on sibilants, plate darker at 7 kHz · sibilance down on the vocal alone, top end kept, no clipping."
+The musician selects the Lead Vox track over guitar and piano and types "harsh, and the s's spit". The vocal peaks around 3 kHz on loud notes and has strong sibilance near 7 kHz; its first compressor reacts to every "s". In place on the vocal's chain: Multiband Dynamics before the compressor, high band from about 6 kHz taking 3–5 dB off the sibilants; a 2–3 dB dynamic cut around 3 kHz that acts only on loud notes; the plate return's high cut lowered to about 7 kHz. Result: "S's tamed: de-esser before the compressor, −4 dB above 6 kHz on sibilants, plate darker at 7 kHz · de-esser set on the sibilance the analysis found near 7 kHz, acting only on the s's."

@@ -1,17 +1,17 @@
 ---
 name: mixing
-description: Mix the song in place in Ableton Live with Live's devices or the musician's plug-ins — levels, panning and sends, EQ that carves space, compression, saturation, reverb and delay returns, buses and the low end — by changing the faders, sends and devices already in the Set, then check masking between tracks, clipping and headroom on the Main track, and mono, and report in one line. Use this whenever the musician clicks a mix suggestion's Fix or "Check the mix", says a part is buried, too loud, muddy, harsh, boomy, thin, crowded or flat, asks about EQ, compression, reverb, delay, width, sidechain or pumping, sees Live's meters going red, or wants the mix ready for mastering, even if they never say "mix".
+description: Mix the song in place in Ableton Live with Live's devices or the musician's plug-ins — levels, panning and sends, EQ that carves space, compression, saturation, reverb and delay returns, buses and the low end — by changing the faders, sends and devices already in the Set, then check masking and levels on the tracks' own audio, and mono, and report in one line. Use this whenever the musician clicks a mix suggestion's Fix or "Check the mix", says a part is buried, too loud, muddy, harsh, boomy, thin, crowded or flat, asks about EQ, compression, reverb, delay, width, sidechain or pumping, sees Live's meters going red, or wants the mix ready for mastering, even if they never say "mix".
 ---
 
 # Mixing
 
 A mix makes the song's important parts clear and the whole song feel the way the musician intends. Most of a mix is balance: the right level for each part, in its own space in frequency, stereo and depth. Processing serves that balance; it doesn't replace it.
 
-Ode mixes in place: it moves the faders, pans and sends and changes the devices already on the tracks, and adds a device only where nothing on the track can do the job. The musician hears the section straight away, and the version history keeps every earlier mix.
+Ode mixes in place: it moves the faders, pans and sends and changes the devices already on the tracks, and adds a device only where nothing on the track can do the job. The musician plays the section in Live straight away, and the version history keeps every earlier mix.
 
 ## The loop
 
-1. **Read.** From the project map: each track's mixer (volume, pan, sends) and its devices with their values, the return tracks, the Main track's devices, the sections, and the hand edits since the last request (a fader the musician just moved is a decision: mix around it). Then measure before changing anything: masking between the parts involved, in the section where the problem is; the Main track in the loudest section (peak, true peak, short-term loudness, spectrum); and the meters of the tracks you will touch. Readings back up the decision; never guess them.
+1. **Read.** From the project map: each track's mixer (volume, pan, sends) and its devices with their values, the return tracks, the Main track's devices, the sections, and the hand edits since the last request (a fader the musician just moved is a decision: mix around it). Then measure before changing anything: masking between the parts involved, in the section where the problem is, and the levels of the tracks you will touch. The mix check renders each audio track's own sound, before its devices and fader; a device or fader change is heard in Live. Readings back up the decision; never guess them.
 2. **Decide.** Name the problem in musical words ("the pad covers the vocal at 2–4 kHz in the chorus") and choose the smallest move that fixes it: a fader, a pan or a send before a cut, a cut before dynamics. Cut the competing part rather than boosting the one that should be heard; boosts make a part louder, which fools the ear into hearing it as better.
 3. **Change it in place**, as one undo step:
    - Use what is on the track first: a free band of its EQ Eight, its compressor's threshold, an existing send. Add a device only when nothing there can do it, and never a second copy of a device to compare.
@@ -20,11 +20,11 @@ Ode mixes in place: it moves the faders, pans and sends and changes the devices 
    - When a move changes level (an EQ boost, saturation, compression), match the output to the input, so the change is heard for its tone, not its loudness.
    - Leave locked parts alone; if one causes the problem, fix around it and say so.
 4. **Verify** with the checks below, fixing until they pass (up to three rounds); otherwise the result line says what still fails. A setting is not a measurement: give readings only from checks that ran after the change.
-5. **Let them hear it.** When your turn ends, Ode plays the section you worked on. Don't start playback for that yourself.
+5. **Let them hear it.** When your turn ends, the musician presses play in Live: name the section you worked on in the result line, so they know where to listen.
 6. **Report in one line:** what changed (device, parameter, from → to), then " · " and what was checked. For example:
-   - "Pad cut 3 dB at 3 kHz on its EQ Eight · vocal clear of the pad in the chorus, Master peaks −5.4 dBFS."
-   - "Reverb return high-passed at 300 Hz, pad and guitar −2 dB at 250 Hz · low mids lighter on the Main track, mono holds."
-   - "Bass compressed 4 dB, kick up 1 dB · one owner of the sub, Master peaks −4.8 dBFS."
+   - "Pad cut 3 dB at 3 kHz on its EQ Eight · on the clash with the vocal that the masking check found in the chorus."
+   - "Reverb return high-passed at 300 Hz, pad and guitar −2 dB at 250 Hz · on the 250 Hz build-up the masking check found, bass still mono below 120 Hz."
+   - "Bass compressed 4 dB, kick up 1 dB · one owner of the sub, track levels clear of clipping."
 
 **Again** is another take: the Set is back as it was, so fix it a clearly different way (a dynamic cut instead of a static one, a level move instead of a cut, carving another part).
 
@@ -34,10 +34,10 @@ Ode mixes in place: it moves the faders, pans and sends and changes the devices 
 
 | Check | When | Correct when |
 |---|---|---|
-| Masking | Parts that collide, and "Check the mix" | The parts no longer compete in the band where they collided. The masking check reads each track's own audio before its devices, so it finds the collision but can't confirm an EQ or dynamics fix: confirm with a measurement taken after the change (the section on the Main track, with the part soloed when you need it alone, and the solos put back afterwards) |
-| Clipping | Every change | Nothing clips on any track or on the Main track, and the Main track's true peak stays below 0 dBTP |
-| Headroom | "Check the mix", and before mastering | The Main track peaks around −6 to −3 dBFS in the loudest section, with no limiter doing the work |
-| Mono | Width, pan or polarity changes, and "Check the mix" | With the Main track summed to mono, the kick, bass, snare and lead vocal keep their level, and the mix loses no more than about 3 LU (wide but in-phase parts lose up to 3 dB; more means something is cancelling) |
+| Masking | Parts that collide, and "Check the mix" | The move sits on the band and in the section where the masking check found the collision, at the size the plan called for. The check reads each track's own audio before its devices, so it finds the collision, and the musician hears the fix in Live |
+| Clipping | Every change | The mix check shows every audio track's own audio below clipping, and every gain a change adds (an EQ boost, saturation, compression makeup) is taken back at the device's output |
+| Headroom | "Check the mix", and before mastering | The mix check over the loudest section finds every audio track within its gain-staging window and the summed level clear of a hot mix, and any limiter on the Main track stays switched off while mixing |
+| Mono | Width, pan or polarity changes, and "Check the mix" | The kick, bass, snare and lead vocal stay centred, everything below 100–150 Hz is mono (Bass Mono on wide parts), and the width comes from panning, doubles and stereo effects; very short left–right delays cancel when summed to mono |
 | Low end | Changes to kick, bass, 808 or anything below 150 Hz | One part owns the sub at any moment, and the low end is mono below 100–150 Hz (low-end sub-skill) |
 
 ## Questions
@@ -55,8 +55,7 @@ Organise → gain staging → static balance (faders and pan) → corrective EQ 
 - Set levels with a Utility at the start of the chain, and keep faders near their middle range for balance.
 - Re-check levels after EQ boosts, saturation and resonant filters; they raise the level.
 - Leave the Main track peaking around −6 to −3 dBFS while mixing.
-- Measure the mix with any limiter on the Main track bypassed, then switch it back as it was: a limiter hides overs, squashes the loud parts being balanced, and makes everything sound better simply because it is louder. Loudness belongs to mastering.
-- The Ode device sits last on the Main track and measures what reaches it, so the devices on the Main track go before it.
+- Mix with any limiter on the Main track switched off, then switch it back as it was: a limiter hides overs, squashes the loud parts being balanced, and makes everything sound better simply because it is louder. Loudness belongs to mastering.
 
 ## Balance
 
@@ -79,7 +78,7 @@ Organise → gain staging → static balance (faders and pan) → corrective EQ 
 - **Narrow cuts for problems, broad moves for tone.** Resonances and ringing: Q 4–10, cut 3–8 dB. Tone: Q 0.5–1.5, moves of 1–3 dB. Needing more than about 6 dB of boost usually means the sound or the arrangement should change.
 - **Carve space between parts:** cut 2–3 dB in one part where the other part's important range is (the pad at 2–4 kHz, where the vocal's presence is).
 - **EQ in context.** Decisions made on a soloed part rarely survive the full mix.
-- **Dynamic EQ** for problems that come and go (a boomy note, harsh peaks): a Multiband Dynamics band or the musician's dynamic EQ plug-in.
+- **Dynamic EQ** for problems that come and go (a boomy note, harsh peaks): a Multiband Dynamics band or a dynamic EQ plug-in the musician already has on the track.
 
 Frequency ranges per instrument and what problem words usually point to are in `references/frequency-guide.md`.
 
@@ -111,7 +110,7 @@ Device-by-device settings are in `references/live-devices.md`.
 ## Sends and returns
 
 - **Shared reverb and delay live on return tracks:** one space shared by many parts makes the mix cohesive and depth easy to balance. Return effects run 100% wet; effects that are part of a sound stay on its track.
-- **A small set usually covers a song:** a short room (0.4–1 s) for cohesion, a plate for vocals (1.2–2.5 s), a hall for depth (2–4 s), a tempo-synced delay (quarter or dotted eighth), maybe a slapback (80–140 ms, little feedback).
+- **A small set usually covers a song:** a short room (0.4–1 s) for cohesion, a plate for vocals (1.2–2.5 s), a hall for depth (2–4 s), a tempo-synced delay (quarter or dotted eighth), maybe a slapback (80–140 ms, little feedback). Ode works with the return tracks the Set has; when the song needs another, the result line names it so the musician can add it in Live.
 - **EQ the returns:** high-pass around 200–500 Hz and low-pass around 6–10 kHz, so the space doesn't muddy the low mids or add hiss and sibilance.
 - **Pre-delay** of 10–80 ms (or a short note value) keeps the dry attack clear of the reverb, which keeps words intelligible.
 - **Duck the returns** with Echo's ducking, or a compressor on the return keyed by the dry vocal: tails bloom in the gaps and stay out of the words.
@@ -146,11 +145,11 @@ Masking is one sound making another harder to hear because they share a frequenc
 
 ## Mono compatibility
 
-Phones, many club systems and some speakers play in mono or close to it. Sum the Main track to mono for the check (a Utility on the Main track set to mono, removed afterwards). Parts that vanish or turn hollow usually come from short left–right delays, heavy chorus, very wide unison, wide stereo samples or polarity problems between layers or microphones: narrow them, flip polarity, or choose another widening method.
+Phones, many club systems and some speakers play in mono or close to it. The musician hears it with the Main track summed to mono in Live (a Utility on the Main track set to mono, switched off afterwards); Ode checks the settings that usually cause trouble. Parts that vanish or turn hollow usually come from short left–right delays, heavy chorus, very wide unison, wide stereo samples or polarity problems between layers or microphones: narrow them, flip polarity, or choose another widening method.
 
 ## Reference tracks
 
-When the musician supplies a reference track, use it for tonal balance only: measure both, match their loudness, then compare low end against top end, how loud the vocal sits, and brightness and width in broad strokes. Never copy a reference's arrangement, sounds or signature, and describe the target in general qualities ("a warmer top end, the vocal more forward").
+When the musician supplies a reference track, use it for tonal balance only: measure it with the audio analysis, then compare its low end against top end, how loud the vocal sits, and its brightness and width with the mix in broad strokes; the musician compares the two by ear at matched loudness in Live. Never copy a reference's arrangement, sounds or signature, and describe the target in general qualities ("a warmer top end, the vocal more forward").
 
 ## Handing the mix to mastering
 

@@ -102,7 +102,7 @@ These add to the parent skill's checks.
 
 | Check | Correct when |
 |---|---|
-| Kit balance | At the same velocity no hit jumps out or disappears, and the drum track's peaks stay short of clipping |
+| Kit balance | At the same velocity no hit jumps out or disappears, and the pad chains' volumes leave headroom on the drum track |
 | Kick and bass | They don't both carry sub at the same moment: the kick ends before the next bass note, or one of them gives way |
 | Tuning | A pitched kick, tom or 808 sits on the key (root, fifth or another chord tone); an 808 follows the notes it plays |
 | Clean starts | Every sample starts on its transient, and tails don't blur the groove |
@@ -110,4 +110,4 @@ These add to the parent skill's checks.
 
 ## Example
 
-The musician selects the Drums track and types "kick has no punch on my laptop". The kick's energy sits almost entirely near 45 Hz, which laptop speakers can't play. In the kick's pad chain: Drum Buss after its Simpler with a little Crunch and Transients, and a 2 dB lift around 3.5 kHz for the beater. Check the level, the kick against the bass and clipping. Result: "Kick punchier on small speakers: Drum Buss Transients up, +2 dB at 3.5 kHz · sub unchanged, ends before the bass notes, no clipping." Again takes another route: a top layer from a clickier kick, high-passed at 150 Hz, aligned and polarity-checked.
+The musician selects the Drums track and types "kick has no punch on my laptop". The kick's energy sits almost entirely near 45 Hz, which laptop speakers can't play. In the kick's pad chain: Drum Buss after its Simpler with a little Crunch and Transients, and a 2 dB lift around 3.5 kHz for the beater. Check the level, the kick against the bass and the gain staging. Result: "Kick punchier on small speakers: Drum Buss Transients up, +2 dB at 3.5 kHz · sub unchanged, ends before the bass notes, Drum Buss output matched." Again takes another route: a top layer from a clickier kick, high-passed at 150 Hz, aligned and polarity-checked.

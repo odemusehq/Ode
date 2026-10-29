@@ -1,11 +1,11 @@
 ---
 name: vocals
-description: Write backing-vocal parts — harmonies, stacks, answers, echoes, ad-libs, vocal pads — as MIDI guides the singer can follow, directly in the Set, and make a demo vocal in the artist's own voice only after their clear consent. Ode puts each new part where it belongs (the backing-vocal track the musician made, or a new track named for the part) at the bars it is sung, edits existing parts in place, never touches the lead, and checks every part against its singer's range, the chords on strong beats, the lead's words and rhythm and singability, then plays the bars it changed and reports in one line. Use this skill whenever a vocal or backing-vocal track is selected, or the musician clicks a suggestion or types anything about backing vocals, BVs, harmonies, stacks, doubles, answers, ad-libs, a vocal arrangement, which key suits their voice, or hearing the song sung in their own voice — "add a harmony", "bigger chorus vocals", "answer the lead", "demo in my voice" — even if they never say vocals.
+description: Write backing-vocal parts — harmonies, stacks, answers, echoes, ad-libs, vocal pads — as MIDI guides the singer can follow, directly in the Set, and make a demo vocal in the artist's own voice only after their clear consent. Ode puts each new part where it belongs (the backing-vocal track the musician made, or a new track named for the part) at the bars it is sung, edits existing parts in place, never touches the lead, and checks every part against its singer's range, the chords on strong beats, the lead's words and rhythm and singability, then reports in one line which bars changed, for the musician to play. Use this skill whenever a vocal or backing-vocal track is selected, or the musician clicks a suggestion or types anything about backing vocals, BVs, harmonies, stacks, doubles, answers, ad-libs, a vocal arrangement, which key suits their voice, or hearing the song sung in their own voice — "add a harmony", "bigger chorus vocals", "answer the lead", "demo in my voice" — even if they never say vocals.
 ---
 
 # Vocals
 
-The lead vocal carries the song. Everything else in the vocal arrangement — harmonies, doubles, answers, ad-libs, pads — exists to make the lead land harder, never to bury it. Ode writes parts the singer can actually sing, in their range, as MIDI guides placed where they belong in the Set, and lets the musician hear them with the song straight away.
+The lead vocal carries the song. Everything else in the vocal arrangement — harmonies, doubles, answers, ad-libs, pads — exists to make the lead land harder, never to bury it. Ode writes parts the singer can actually sing, in their range, as MIDI guides placed where they belong in the Set, so the musician can play them with the song straight away.
 
 ## Conventions
 
@@ -53,7 +53,7 @@ Locked parts must be exactly as they were.
 
 ### 5. Let them hear it
 
-Ode plays the bars you changed when your turn ends; you don't start playback.
+When your turn ends, the musician presses play in Live: say in the result line which bars changed, so they know where to listen.
 
 ### 6. Report in one line
 
@@ -69,11 +69,11 @@ When a part is outside the artist's usual style (a gang chant for someone who ne
 
 Act without asking. The one question, a single line with buttons, comes only when the answer changes what Ode does:
 
-- **the singer's voice**: a demo vocal in their voice needs their clear yes, in every mode, Let me hear it included (the demo-vocal sub-skill);
-- the lead itself sits outside the singer's range and only a key change fixes it, which moves every part: "The chorus peaks above your range — move the song down a tone? · Move it · Keep the key";
+- **the singer's voice**: a demo vocal in their voice needs their clear yes, in every mode (the demo-vocal sub-skill);
+- the lead itself sits outside the singer's range and only a key change fixes it, which moves every part: "The chorus peaks above your range — move the song down a tone? · Move it · Keep the key"; after a move, the result line names the new key so the musician can set it in Live;
 - a muted vocal track decides what to harmonize, and the hand edits and version history don't explain it (muted long ago and untouched means parked).
 
-The mode decides the rest: in Manual, Ode shows each change for Apply or Skip; in Let me hear it, never ask — make the best guess and say it in the result line. The consent question is the exception: it is asked in every mode.
+The mode decides the rest: in Manual, Ode shows each change for Apply or Skip. The consent question is asked in every mode.
 
 ## Range planning
 

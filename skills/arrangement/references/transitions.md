@@ -38,7 +38,7 @@ How to build and place common transitions in Live. A transition signals that a c
 - **High-pass the riser** at 200–500 Hz so it adds tension without adding low end; the low end should be clearing out before the arrival, not filling up.
 - **End it with intent.** Ending exactly on the downbeat makes a smooth arrival; ending a beat early and leaving silence makes a harder one.
 - **Downlifter.** The reverse movement (falling pitch and filter, level fading) after a peak, leading into a calmer section. Often follows an impact.
-- Pre-made risers from the musician's library are fine; trim them to the build length and keep them in key if they are tonal.
+- Pre-made risers the musician places from their library are fine; trim them to the build length and keep them in key if they are tonal.
 
 ## Reverse cymbals and reverse reverbs
 
@@ -46,7 +46,7 @@ How to build and place common transitions in Live. A transition signals that a c
 - **Reverse reverb (a swell into a word or hit).**
   1. Copy the audio of the first word or hit of the new section to a separate track.
   2. Reverse it.
-  3. Add a long reverb (decay 2–5 s) at 100% wet and record or resample the result to audio.
+  3. Add a long reverb (decay 2–5 s) at 100% wet; the musician records or resamples the result to audio in Live.
   4. Reverse that recording, so the reverb tail now comes before the sound.
   5. Place it so the swell ends exactly where the original dry word or hit begins; trim and fade its start.
 - High-pass the swell (200–400 Hz) so it doesn't muddy the end of the previous section.
@@ -77,7 +77,7 @@ How to build and place common transitions in Live. A transition signals that a c
 ## Tape stops
 
 - The sound slows down and drops in pitch to nothing, like a tape machine stopping. Usually over a quarter beat to one beat at the end of a section, into silence or a new section.
-- Resample the last beat to audio and make the pitch and speed fall (for example a fast downward pitch envelope in Simpler, or by re-pitching the warped clip), or use a tape-stop plug-in if the musician has one.
+- Resample the last beat to audio and make the pitch and speed fall (for example a fast downward pitch envelope in Simpler, or by re-pitching the warped clip), or set up a tape-stop plug-in the musician already has on the track.
 - Use it rarely; it is a strong, recognisable effect.
 
 ## Impacts and crashes

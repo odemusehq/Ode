@@ -5,7 +5,7 @@ description: Recipes for turning the synth on the selected track into a specific
 
 # Synth sound recipes
 
-The loop, the checks and the one-line result are in the parent sound-design skill; this file holds what is specific to synths. Each recipe is a starting point: set it on the instrument already on the track, or load the instrument it names onto that track, then move the values while checking the part in its section. The same recipes translate to any subtractive, wavetable or FM plug-in the musician prefers, and the musician's own presets are often the closest start.
+The loop, the checks and the one-line result are in the parent sound-design skill; this file holds what is specific to synths. Each recipe is a starting point: set it on the instrument already on the track, or insert the Live instrument it names on that track, then move the values while checking the part in its section. The same recipes translate to any subtractive, wavetable or FM plug-in the musician already added, and a preset of their own, loaded by them, is often the closest start.
 
 ## Read the part first
 
@@ -94,4 +94,4 @@ Many unison voices and long releases add up on the CPU: use as few voices as giv
 
 ## Example
 
-The musician selects the Lead track — an instrumental hook at 110 BPM in G minor with no instrument yet; their songs mostly use soft, clean synths — and clicks "Make a lead". Load Drift on the track: triangle oscillator, filter around 2.5 kHz, Mono with 40 ms glide, delayed vibrato, then Echo after it at a dotted eighth with low feedback. Check the level, the register against the vocal (the hook plays where the vocal rests) and mono. Result: "Lead on Drift: triangle, filter 2.5 kHz, 40 ms glide, dotted-eighth echo · level set, clear of the vocal's phrases, holds in mono." Again tries a clearly different take — a Wavetable saw with light unison and a ping-pong delay — and a third take might put a square wave through Roar into a moving band-pass, with "rougher than your usual leads" in its result line.
+The musician selects the Lead track — an instrumental hook at 110 BPM in G minor with no instrument yet; their songs mostly use soft, clean synths — and clicks "Make a lead". Insert Drift on the track: triangle oscillator, filter around 2.5 kHz, Mono with 40 ms glide, delayed vibrato, then Echo after it at a dotted eighth with low feedback. Check the level, the register against the vocal (the hook plays where the vocal rests) and mono. Result: "Lead on Drift: triangle, filter 2.5 kHz, 40 ms glide, dotted-eighth echo · level set, clear of the vocal's phrases, mono-compatible." Again tries a clearly different take — a Wavetable saw with light unison and a ping-pong delay — and a third take might put a square wave through Roar into a moving band-pass, with "rougher than your usual leads" in its result line.

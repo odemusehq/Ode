@@ -43,7 +43,7 @@ The arrangement often settles it for free: short bass notes that leave room for 
 ## Phase and polarity
 
 - Low frequencies from two sources can cancel: kick and bass, layered kicks, a bass recorded through two sources, a sub layer and a mid layer.
-- Flip the polarity of one with Utility and keep the setting where the low end measures stronger on the Main track. If neither is clearly better, nudge one by a few milliseconds and measure again.
+- Flip the polarity of one with Utility; the musician compares both settings in Live and keeps the one where the low end sounds stronger. When the two sound alike, a nudge of a few milliseconds on one of them is the next move.
 - Check after every change of sample or layer; a new kick sample can bring back a cancellation fixed earlier.
 
 ## Mono below about 100–150 Hz
@@ -66,7 +66,7 @@ Phones, laptops and small speakers can't reproduce the sub, so a bass made only 
 ## How much low end
 
 - Too much sub eats headroom, makes the master quieter at the same peak level and sounds woolly on big systems.
-- On the Main track's spectrum a healthy sub is steady from note to note rather than jumping on certain notes.
+- A healthy sub is steady from note to note; a sub that jumps on certain notes points to boomy notes (see EQ above).
 - With a reference track the musician supplied, compare the low end at matched loudness, for tonal balance only: heavier or lighter, steadier or more uneven.
 
 ## Low-end checks
@@ -77,10 +77,10 @@ These add to the parent skill's checks.
 |---|---|
 | One owner | Kick and bass (or 808) aren't both strong below about 100 Hz at the same moment: masking measured where both are audio; for MIDI parts, the bass notes compared against the kick hits |
 | Tuning | The kick's fundamental and the bass notes agree with the key |
-| Polarity | The low end measures stronger on the Main track with the polarity setting you kept |
-| Mono | Mono below 100–150 Hz; the low end doesn't drop or change character with the Main track summed to mono |
-| Headroom | Low-end peaks don't set the Main track's peak level on their own; reverbs and the parts that don't need lows are high-passed |
+| Polarity | The result line names the polarity setting you kept, so the musician can compare it with the flipped one in Live |
+| Mono | Mono below 100–150 Hz: Utility's Bass Mono, or a mono source, on every wide low part, with a bass's stereo effects above that range |
+| Headroom | Reverbs and the parts that live above the low end are high-passed, and where the kick and bass are audio, the mix check shows their peaks with room below clipping |
 
 ## Example
 
-The musician selects the 808 at 140 BPM and types "kick and 808 are mush". The kick's fundamental is near 55 Hz and the 808 mostly plays F1 (about 44 Hz) and G1 (about 49 Hz) at full length under every kick, with the kick already routed to a compressor's sidechain on the 808. In place: that compressor set to attack 0.5 ms, release 100 ms, 5 dB of gain reduction, and the kick re-tuned up to about 65 Hz (C2, the fifth of F) with a shorter tail. Result: "808 ducks 5 dB under the kick, kick tuned to C and shortened · one owner of the sub on each hit, mono below 120 Hz, Master peaks −5.1 dBFS." Again takes a different route: shorter 808 notes that leave a gap at each kick, so no ducking is needed.
+The musician selects the 808 at 140 BPM and types "kick and 808 are mush". The kick's fundamental is near 55 Hz and the 808 mostly plays F1 (about 44 Hz) and G1 (about 49 Hz) at full length under every kick, with the kick already routed to a compressor's sidechain on the 808. In place: that compressor set to attack 0.5 ms, release 100 ms, 5 dB of gain reduction, and the kick re-tuned up to about 65 Hz (C2, the fifth of F) with a shorter tail. Result: "808 ducks 5 dB under the kick, kick tuned to C and shortened · one owner of the sub on each hit, mono below 120 Hz." Again takes a different route: shorter 808 notes that leave a gap at each kick, so no ducking is needed.

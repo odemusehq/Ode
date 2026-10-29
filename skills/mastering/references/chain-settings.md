@@ -69,17 +69,17 @@ Use only when one frequency range misbehaves on its own: a low end that booms on
 ## Clipping before the limiter
 
 Shaving the sharpest peaks before the limiter lets the limiter work less, which often sounds cleaner than limiting alone.
-- Use the musician's clipper plug-in, or Saturator with a clipping curve, set so it only touches the peaks.
+- Use a clipper plug-in the musician already added, or Saturator with a clipping curve, set so it only touches the peaks.
 - Aim for 1–2 dB of clipping on the loudest transients; more starts to distort kick and snare.
-- Measure true peak after the limiter as usual; clipping doesn't replace the limiter's ceiling.
+- Keep the limiter's ceiling as set: the clipper shaves the sharpest peaks, and the ceiling still holds the true peak.
 
 ## Limiter
 
 | Setting | Start from | Why |
 |---|---|---|
 | Ceiling | −1 dBTP (−2 dBTP for loud, dense masters) | Margin for lossy encoding and for peaks between samples |
-| True peak mode | On, where your version of Live offers it | Limits peaks between samples, not only the samples themselves; still measure true peak afterwards |
-| Gain | Raise until the loudness target is reached or the sound starts to suffer | Loudness comes from here, but only as far as the music allows |
+| True peak mode | On, where your version of Live offers it | Limits the peaks between samples as well as the samples themselves |
+| Gain | Raise toward the loudness target, as far as the sound allows | Loudness comes from here, but only as far as the music allows |
 | Release | Auto, or 50–300 ms | Shorter is louder but can distort; longer is cleaner but can pump |
 | Lookahead | Longer for cleaner limiting | Gives the limiter time to react smoothly |
 | Stereo linking | Both channels limited together (stereo or fully linked, not left/right or mid/side) | Prevents the stereo image from shifting when one side is limited harder |
@@ -89,14 +89,14 @@ Shaving the sharpest peaks before the limiter lets the limiter work less, which 
 
 ## Order and gain staging
 
-Typical order: Utility (trim) → EQ Eight (corrective) → Glue Compressor → Multiband Dynamics (if needed) → Saturator or Roar (optional) → EQ Eight (tonal) → clipper (optional) → Limiter → the Ode device.
+Typical order: Utility (trim) → EQ Eight (corrective) → Glue Compressor → Multiband Dynamics (if needed) → Saturator or Roar (optional) → EQ Eight (tonal) → clipper (optional) → Limiter.
 
-- The Ode device stays last on the Main track: it measures what reaches it, so every mastering device goes before it.
+- The Limiter stays last on the Main track, so its ceiling holds for every device before it.
 - Swap the compressor and the corrective EQ if a problem frequency is driving the compressor.
 - After each stage, match its output to its input so bypassing it only changes the tone, not the level.
 
 ## Things to keep off the master
 
 - Monitoring tools: room correction, headphone correction or speaker simulation belong to monitoring only; switch them off or remove them before exporting.
-- Analysers and meters are harmless, but make sure nothing between the limiter and the Ode device changes the level.
+- Analysers and meters after the limiter are harmless when they leave the level as it is.
 - A Utility left in mono or at a reduced gain after a check.

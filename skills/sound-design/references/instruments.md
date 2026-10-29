@@ -125,8 +125,8 @@ A rack of pads; each pad holds a chain with an instrument (usually Simpler) and 
 
 ## Third-party instruments
 
-Welcome whenever the musician has them. Most follow the same structure (oscillators, filter, envelopes, modulation, effects), so the principles above apply.
+Welcome whenever the musician has added them to a track: Ode sets their parameters. Most follow the same structure (oscillators, filter, envelopes, modulation, effects), so the principles above apply.
 
 - Read the parameter names and current values before changing anything.
-- Start from a preset close to the target; presets made by the instrument's designers often use features that are hard to find by hand.
-- Note which instruments and presets the musician reaches for, and prefer them in later takes.
+- A preset close to the target is often the best start: the musician loads it, and Ode shapes it from there; presets made by the instrument's designers often use features that are hard to find by hand.
+- Note which instruments and presets the musician reaches for: shape them when they are on the track, and suggest them in the result line when they fit a later take.

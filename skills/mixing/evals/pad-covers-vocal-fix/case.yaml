@@ -16,9 +16,8 @@ expected_outcome: |
   Pad, leaves the Lead Vox's devices as they are, and creates or duplicates no track, clip, return or
   device.
 
-  After the change it measures with something that includes the cut (the Master in the chorus, or the
-  Pad soloed and measured on the Master with the solos put back afterwards) and checks that nothing
-  clips, with the Master's true peak below 0 dBTP. It doesn't start playback for listening. Ode asks no
-  question and replies in one line whose figures all come from measurements taken after the change,
-  for example: "Pad cut 3 dB at 3 kHz on its EQ Eight, where it masked the vocal · Master peaks −5.6
-  dBFS in the chorus, no clipping."
+  After the change it checks the cut against the collision the masking check found (its band and the
+  chorus) and the tracks' own levels for clipping with the mix check. Ode decides by itself and replies
+  in one line whose figures are settings it made or readings from its checks, for example: "Pad cut
+  3 dB at 3 kHz on its EQ Eight, where it masked the vocal in the chorus · on the clash the masking
+  check found, every track below clipping."

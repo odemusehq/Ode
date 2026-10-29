@@ -11,6 +11,5 @@ expected_outcome: |
   notes on beat 2, where the snare plays, are gone. No clip, track or take is added, and the Drums and
   Keys clips stay exactly as they were. Before replying, Ode checks the roots on the chord changes, the
   key (A minor, approach notes allowed), the note starts against the real kick notes and the register
-  (E1 to C3). Ode plays the bars it changed after its turn and replies in one line, for example:
-  "Bass now hits with the kick on 1, the 'and' of 2 and the 'and' of 3 · roots on every chord, in key,
-  nothing below E1." No question is asked.
+  (E1 to C3). Ode replies in one line, for example: "Bass now hits with the kick on 1, the 'and' of 2
+  and the 'and' of 3 · roots on every chord, in key, nothing below E1." No question is asked.

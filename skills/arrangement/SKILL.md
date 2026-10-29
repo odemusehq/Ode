@@ -7,11 +7,11 @@ description: Arrange the song in place in Ableton Live by deciding what plays in
 
 Arrangement decides what plays when. The same eight bars can be a forgettable loop or a song that pulls the listener from the first bar to the last; the difference is how energy and interest change over time, and how clearly the important part (usually the vocal or the hook) is heard at every moment. Which sections a song has and how long they are is song form (the song-form skill); this skill works inside and between the sections.
 
-Ode arranges in the Set: it edits the clips already in each section, takes parts out, brings them in, and adds what a section needs where it belongs. The musician hears the result straight away, and the version history keeps the arrangement as it was.
+Ode arranges in the Set: it edits the clips already in each section, takes parts out, brings them in, and adds what a section needs where it belongs. The musician plays the result in Live straight away, and the version history keeps the arrangement as it was.
 
 ## The loop
 
-1. **Read.** From the project map: the locators (the sections and their bars), tempo and time signature, every track and the clips it plays in each section, which clips and tracks are muted, the hand edits since the last request, and the lead sheet's sections and locked parts. Read the notes of the clips you may change. Work out what plays where (parts down the side, sections across) and rate each section's energy from 1 to 10: flat neighbours, an early peak and crowded spots show at a glance.
+1. **Read.** From the project map: the locators (the sections and their bars), tempo and time signature (a scene's own, or 4/4 unless the musician says otherwise), every track and the clips it plays in each section, which clips and tracks are muted, the hand edits since the last request, and the lead sheet's sections and locked parts. Read the notes of the clips you may change. Work out what plays where (parts down the side, sections across) and rate each section's energy from 1 to 10: flat neighbours, an early peak and crowded spots show at a glance.
 2. **Decide** the cause of what the musician describes ("the drop doesn't hit": the build before it is as full as the drop) and the smallest set of moves that fixes it, using the levers and rules below. Contrast does most of the work, so before adding to a section, look at what can come out of the one before it. Move several levers together so the change is obvious.
 3. **Change it in place**, as one undo step:
    - Edit the clips already in the section: their notes (a fill in the last bar, hats from eighths to sixteenths, a part doubled an octave up), their mute and their length.
@@ -20,7 +20,7 @@ Ode arranges in the Set: it edits the clips already in each section, takes parts
    - Never copy sections, clips or tracks to keep the old arrangement or to offer another version: Again gives another take, and the history keeps the old one.
    - Leave locked parts alone: arrange around them (bring other parts in or out against them, put a transition before them) without touching their notes, clips or devices.
 4. **Verify** with the checks below, fixing until they pass (up to three rounds); otherwise the result line says what still fails.
-5. **Let them hear it.** When your turn ends, Ode plays the bars you changed, from a bar or two earlier for a transition. Don't start playback for that yourself.
+5. **Let them hear it.** When your turn ends, the musician presses play in Live: name the bars you changed in the result line, from a bar or two earlier for a transition, so they know where to listen.
 6. **Report in one line:** what changed, then " · " and what was checked. For example:
    - "Last chorus bigger: hats in sixteenths, crash on the downbeat, pad held back in verse 2 · above chorus 1 on three levers, all in key, lands on bar 29."
    - "Verse 2 half-time for its first 8 bars, bass out for the last beat · lighter than chorus 1, downbeats intact."
@@ -34,7 +34,7 @@ Ode arranges in the Set: it edits the clips already in each section, takes parts
 
 | Check | When | Correct when |
 |---|---|---|
-| Energy | Every change | The changed section sits where the plan puts it against its neighbours. Compare what plays, the drums' note density and the highest register in each section, and measure the sections' short-term loudness on the Main track when you can. A section meant to be bigger beats the one it answers on at least two levers besides level, and the biggest moment comes late |
+| Energy | Every change | The changed section sits where the plan puts it against its neighbours. Compare what plays, the drums' note density and the highest register in each section. A section meant to be bigger beats the one it answers on at least two levers besides level, and the biggest moment comes late |
 | Downbeats | Every change | Section changes, entries and impacts start on beat 1 of the section's first bar; risers and reverse sounds end exactly on it; clip edges sit on the bar grid unless a pickup is meant |
 | Clean edges | Clips cut, shortened or moved | No note left hanging across a cut (shorten it to end there); no audio clip cut mid-word or mid-hit |
 | Key | Notes written or moved | Every new note is in the song's key, or is a chromatic note with a reason (a passing note, a chord the song already borrows) |
@@ -47,8 +47,6 @@ Ode arranges in the Set: it edits the clips already in each section, takes parts
 Act without asking: moving, muting and editing clips in a section are edits in place that Undo reverses, and the mode decides whether a change waits for Apply. Ask one line with buttons only when the answer changes what you would do:
 - in Auto, before deleting a part from the whole song or rewriting every bar of a section (in Manual, the Apply card already asks);
 - in Auto and Manual, when the part you would bring in is on a muted track and you can't tell why. Work it out first from the hand edits and the version history: muted long ago and untouched since usually means parked, so leave it out; muted moments ago while another track was soloed usually means it was muted to hear the others, so it still counts. Ask only when neither fits: "The guitar is muted — use it in the last chorus? · Use it · Leave it out".
-
-In Let me hear it, don't ask: make the best guess and say it in the result line.
 
 ## Energy
 

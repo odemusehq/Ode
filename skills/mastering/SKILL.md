@@ -1,6 +1,6 @@
 ---
 name: mastering
-description: Master the song in place in Ableton Live — build or tune the mastering chain on the Main track (Utility, EQ Eight, Glue Compressor, Multiband Dynamics when needed, saturation or a clipper, Limiter) with Live's devices or the musician's mastering plug-ins, aimed at the loudness target (around −14 LUFS integrated and −1 dBTP for streaming, or the loudness target in the musician's settings for club, CD or other uses) — then measure integrated and short-term loudness, true peak and mono on the Main track, check that the song keeps its dynamics, and report the measured numbers in one line. Use this whenever the musician clicks "Master for streaming", asks for a master, says the song is too quiet, too loud or squashed next to other songs, mentions LUFS, true peak, a limiter, streaming, club or CD versions, or is getting ready to export for release, even if they never say "mastering".
+description: Master the song in place in Ableton Live — build or tune the mastering chain on the Main track (Utility, EQ Eight, Glue Compressor, Multiband Dynamics when needed, saturation or a clipper, Limiter) with Live's devices or the mastering plug-ins the musician already added, aimed at the loudness target (around −14 LUFS integrated and −1 dBTP for streaming, or the loudness target in the musician's settings for club, CD or other uses) — then check the chain's order and settings against the target, measure a bounce of the master when the musician exports one, check that the song keeps its dynamics, and report in one line. Use this whenever the musician clicks "Master for streaming", asks for a master, says the song is too quiet, too loud or squashed next to other songs, mentions LUFS, true peak, a limiter, streaming, club or CD versions, or is getting ready to export for release, even if they never say "mastering".
 ---
 
 # Mastering
@@ -11,18 +11,18 @@ Ode masters in place on the Main track: it builds the chain once and tunes its v
 
 ## The loop
 
-1. **Read.** The Main track's devices (the Ode device, any chain the musician already has, Master-bus processing their sound depends on), the target (named in the request — streaming, club, CD — or else the loudness target in the musician's settings), the genre, the sections and which one is loudest, and anything locked (a locked mix means the Main track chain only). Measure before changing anything: integrated loudness over the whole song, short-term loudness and true peak in the loudest section, and the spectrum.
+1. **Read.** The Main track's devices (any chain the musician already has, Master-bus processing their sound depends on), the target (named in the request — streaming, club, CD — or else the loudness target in the musician's settings), the genre, the sections and which one is loudest, and anything locked (a locked mix means the Main track chain only). When the musician gives a bounce of the mix, measure it with the audio analysis before changing anything: integrated loudness over the whole song, short-term loudness and true peak in the loudest section, and the spectrum.
 2. **Decide** what the master needs, in plain words ("a little dull above 8 kHz, the low end booms on two notes, about 5 dB below the target"), and which stages of the chain solve it. When a small mix fix is clearly better (one boomy bass note), make it with the mixing skill and say so in the result line.
 3. **Change it in place**, as one undo step:
-   - Build the chain on the Main track before the Ode device and keep the Ode device last: it measures what reaches it, so a device after it would go unmeasured.
+   - Build the chain on the Main track with the Limiter last, so its ceiling holds for everything before it.
    - Use only the stages the song needs, in the order below. On later requests, tune the chain that is there; when the musician has their own chain, tune it rather than adding another.
-   - Raise the Limiter's gain until the target is reached or the music starts to suffer, whichever comes first.
-4. **Verify** with the checks below, fixing until they pass (up to three rounds); otherwise the result line says what still fails. Measure after the last change, and never give a loudness or peak figure that wasn't measured.
-5. **Let them hear it.** When your turn ends, Ode plays the loudest section. Don't start playback for that yourself.
-6. **Report in one line** with the measured numbers. For example:
-   - "Mastered for streaming: EQ Eight, Glue 1.5 dB, Limiter at −1 dBTP · −14.1 LUFS integrated, −1.2 dBTP, chorus still 2 LU above the verse."
-   - "Limiter eased 2 dB, Saturator clipping shaves the kick peaks · −9.0 LUFS, −1.0 dBTP, kick clean again."
-   - "Low end steadier: low band compressed 1.5 dB on the booming notes · −14.0 LUFS, −1.1 dBTP, mono holds."
+   - Raise the Limiter's gain toward the target, as far as the music allows; a bounce of the master, when the musician exports one, shows how close it came.
+4. **Verify** with the checks below, fixing until they pass (up to three rounds); otherwise the result line says what still fails. Ode's measurements hear the tracks before their devices, so loudness and peak figures for the master come only from a bounce the musician exports; give only figures that were measured.
+5. **Let them hear it.** When your turn ends, the musician presses play in Live: name the loudest section in the result line, so they hear the master where it works hardest.
+6. **Report in one line** with the settings, the target and any measured numbers. For example:
+   - "Mastered for streaming: EQ Eight low cut at 25 Hz, Glue at ratio 2, Limiter ceiling −1 dB with true peak on · aimed at −14 LUFS, one limiter, last; play chorus 3 to hear it."
+   - "Limiter eased 2 dB after your bounce measured −0.4 dBTP, Saturator clipping shaves the kick peaks · ceiling −1 dB, aimed at −9 LUFS for club."
+   - "Low end steadier: Multiband low band at 1.5:1 on the booming notes · low end mono below 120 Hz, ceiling −1 dB."
 
 **Again** is another take: the Set is back as it was, so make a clearly different master on the same target (more glue and less limiting, a darker or brighter balance), not the same chain nudged.
 
@@ -32,11 +32,11 @@ Ode masters in place on the Main track: it builds the chain once and tunes its v
 
 | Check | When | Correct when |
 |---|---|---|
-| Loudness | Every change | Integrated loudness over the whole song is within ±1 LU of the target. Tune with the loudest section's short-term loudness, then confirm over the whole song: a short stretch gives the wrong integrated number |
-| True peak | Every change | At or below the ceiling: −1 dBTP for streaming, −2 dBTP for masters louder than about −14 LUFS, below 0 dBTP with a margin for club and CD |
-| Dynamics | Limiter and compression changes | The chorus or drop still measures louder than the verse, and another dB of limiter gain still buys close to a dB of loudness. When it buys clearly less, the limiter is flattening the peaks: stop there |
-| Tonal balance | EQ changes | The spectrum moved the way the plan said (air up, low end steadier) and no further; against a reference the musician supplied, compared at matched loudness |
-| Mono | Width or mid/side changes, and the final check | Summed to mono, the master loses no more than about 3 LU and the low end holds |
+| Loudness | Every change | The Limiter's gain is raised toward the target as far as the music allows. When the musician exports a bounce, its integrated loudness over the whole song is within ±1 LU of the target: a short stretch gives the wrong integrated number |
+| True peak | Every change | The Limiter's ceiling sits at the target's: −1 dB for streaming, −2 dB for masters louder than about −14 LUFS, below 0 dB with a margin for club and CD, with true-peak limiting on where the Limiter offers it; a bounce, when there is one, measures at or below it |
+| Dynamics | Limiter and compression changes | Compression stays gentle (1–2 dB on the loud parts) and the limiting moderate (about 3–4 dB at most), so the chorus or drop keeps its lift over the verse; on a bounce, the chorus still measures louder than the verse |
+| Tonal balance | EQ changes | Each EQ move is the band and size the plan named (air up, low end steadier), 0.5–2 dB; against a reference the musician supplied, compared at matched loudness |
+| Mono | Width or mid/side changes, and the final check | The low end stays mono below about 100–150 Hz, and width moves on the sides stay small (around 90–110%) |
 
 ## Questions
 
@@ -55,11 +55,11 @@ A typical order, using only the stages the song needs. Mastering moves are small
 2. **EQ Eight, corrective** — a gentle low cut (12 dB/octave around 20–30 Hz) only if there is rumble below the music; narrow cuts for resonances; mid/side moves only with a clear reason.
 3. **Glue Compressor** — ratio 2, attack 10 or 30 ms, release Auto, 1–2 dB of gain reduction on the loud parts. A high-pass on its sidechain (around 80–150 Hz) stops the kick and bass from pumping the whole mix.
 4. **Multiband Dynamics, only when needed** — when one band misbehaves (low end booming on some notes, a harsh top on loud passages): gentle ratios (1.5:1–3:1), 1–2 dB on that band only.
-5. **Saturation, optional** — Saturator or Roar at low settings for density and a little loudness without peak level; a clipper (the musician's clipper plug-in, or Saturator's clipping set carefully) can shave 1–2 dB off the sharpest peaks so the limiter works less.
+5. **Saturation, optional** — Saturator or Roar at low settings for density and a little loudness without peak level; a clipper (a clipper plug-in the musician already added, or Saturator's clipping set carefully) can shave 1–2 dB off the sharpest peaks so the limiter works less.
 6. **EQ Eight, tonal** — broad shelves or bells of 0.5–1.5 dB to set the final balance.
-7. **Limiter, last before the Ode device** — ceiling −1 dB for streaming (with true-peak limiting where the Limiter offers it, and true peak measured either way); gain raised until the target is reached or the sound starts to suffer.
+7. **Limiter, last on the Main track** — ceiling −1 dB for streaming (with true-peak limiting where the Limiter offers it, and true peak measured on a bounce when there is one); gain raised toward the target as far as the sound allows.
 
-Third-party mastering plug-ins are welcome when the musician has them; the same order and the same small moves apply. Detailed settings for each device, with reasons, are in `references/chain-settings.md`.
+Third-party mastering plug-ins the musician already added are welcome; the same order and the same small moves apply. Detailed settings for each device, with reasons, are in `references/chain-settings.md`.
 
 ## Loudness and true peak
 

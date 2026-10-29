@@ -63,7 +63,7 @@ Typical values as commonly published or reported:
 4. Raise loudness until either the target is reached or the music starts to suffer (punch lost, distortion, the chorus no longer bigger than the verse). Stop at whichever comes first.
 5. Make a separate master only when there is a real reason: a club version, a vinyl cut, a CD with a different loudness.
 
-Never present a loudness figure as checked unless it was measured on the master, and measure exported files too when they are available.
+Present a loudness figure as checked only when the audio analysis measured it on an exported file of the master (a bounce the musician exports); otherwise give the target and the settings.
 
 ## If the musician asks why
 

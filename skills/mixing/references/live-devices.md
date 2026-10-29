@@ -1,6 +1,6 @@
 # Live's devices for mixing
 
-Controls and starting values for Live's built-in devices in a mix. Values are starting points to move from while listening in context, compared at matched level. Third-party equivalents work the same way when the musician prefers them.
+Controls and starting values for Live's built-in devices in a mix. Values are starting points to move from while listening in context, compared at matched level. Third-party equivalents the musician already added work the same way.
 
 ## Contents
 - EQ Eight and Channel EQ
@@ -122,7 +122,7 @@ Controls: Gain, Width, Mono, Bass Mono with an adjustable frequency, Balance, po
 
 ## Limiter (in a mix)
 
-Keep the Limiter off the Main track while mixing. On individual tracks it can catch rare peaks (a stray loud hit), set to touch only those peaks. If the musician wants a louder rough mix to play to someone, a limiter goes last on the Main track, just before the Ode device, and is switched off again for mixing; the mastering skill covers real limiting.
+Keep the Limiter off the Main track while mixing. On individual tracks it can catch rare peaks (a stray loud hit), set to touch only those peaks. If the musician wants a louder rough mix to play to someone, a limiter goes last on the Main track and is switched off again for mixing; the mastering skill covers real limiting.
 
 ## The mixer itself
 
@@ -130,4 +130,3 @@ Keep the Limiter off the Main track while mixing. On individual tracks it can ca
 - Live's split stereo pan mode pans the left and right channels of a stereo track independently, useful for narrowing a wide recording or placing its sides.
 - Post-fader sends keep the effect level in proportion to the fader; pre-fader sends keep it constant whatever the fader does.
 - Group tracks are buses; return tracks hold shared effects.
-- The Ode device sits last on the Main track and measures what reaches it, so every other device on the Main track goes before it.

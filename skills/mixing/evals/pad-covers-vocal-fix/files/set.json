@@ -872,20 +872,7 @@
       "panning": {"index": 1, "name": "Track Panning", "min": -1, "max": 1, "isQuantized": false, "defaultValue": 0, "valueItems": [], "value": 0},
       "sends": []
     },
-    "devices": [
-      {
-        "index": 0,
-        "name": "Ode",
-        "className": "MxDeviceAudioEffect",
-        "isRack": false,
-        "parameters": [
-          {"index": 0, "name": "Device On", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 1, "valueItems": ["Off", "On"], "value": 1},
-          {"index": 1, "name": "Again", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 0, "valueItems": ["Off", "On"], "value": 0},
-          {"index": 2, "name": "Undo", "min": 0, "max": 1, "isQuantized": true, "defaultValue": 0, "valueItems": ["Off", "On"], "value": 0}
-        ]
-      }
-    ]
+    "devices": []
   },
-  "transport": {"playing": false, "time": 32, "loop": {"on": false, "start": 32, "length": 32}, "signature": {"numerator": 4, "denominator": 4}},
-  "selection": {"track": {"index": 3}, "clip": {"track": {"index": 3}, "start": 32}, "scene": null, "time": 32, "isPlaying": false}
+  "signature": {"numerator": 4, "denominator": 4}
 }

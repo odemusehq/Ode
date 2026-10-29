@@ -44,7 +44,7 @@ When a recording of the final vocal exists, compare a transcription of it with t
 
 ## Questions
 
-Never ask for facts in prose and never invent them: credits, splits, codes and dates come from the musician or their distributor. Ask at most two questions, each one line with buttons: which cover to use, with the covers as the answers shown as images; and one missing credit, when two to four answers cover it. Every other gap is marked missing in the credits and named in the result line. The usual defaults (no text on the cover, the spelling setting) need no question. In Let me hear it, ask nothing: make the cover that fits the song best the release cover, say which in the result line, and name the missing credits.
+Never ask for facts in prose and never invent them: credits, splits, codes and dates come from the musician or their distributor. Ask at most two questions, each one line with buttons: which cover to use, with the covers as the answers shown as images; and one missing credit, when two to four answers cover it. Every other gap is marked missing in the credits and named in the result line. The usual defaults (no text on the cover, the spelling setting) need no question.
 
 ## Rights and clearance
 

@@ -620,20 +620,5 @@
       }
     ]
   },
-  "transport": {
-    "playing": false,
-    "time": 48,
-    "loop": { "on": false, "start": 0, "length": 16 },
-    "signature": { "numerator": 4, "denominator": 4 }
-  },
-  "selection": {
-    "track": { "index": 3 },
-    "clip": {
-      "track": { "index": 3 },
-      "start": 48
-    },
-    "scene": null,
-    "time": 48,
-    "isPlaying": false
-  }
+  "signature": { "numerator": 4, "denominator": 4 }
 }

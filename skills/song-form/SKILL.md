@@ -28,7 +28,7 @@ Song form decides when the listener hears what: when the story starts, when the 
 - **Locators.** One on the first downbeat of every section, named with the established section name and a number where it repeats: "Intro", "Verse 1", "Pre-Chorus 1", "Chorus 1", "Post-Chorus 1", "Bridge", "Breakdown", "Build", "Drop 1", "Outro". A pickup belongs to its section musically, but the locator goes on the downbeat so loops and jumps start cleanly. Add a key or tempo change to the name when it helps: "Chorus 3 (up a step)".
 - **The musician's locators.** They stay where they are. Where one already marks a section start, rename it in place to that section's name instead of adding a second locator; leave the others untouched.
 - **The lead sheet's sections.** Update the existing sections in place to match the Arrangement — kind, name, start beat, length — each keeping its chords. Sections the Arrangement has and the lead sheet lacks are added, with no lyrics written for them; nothing is duplicated.
-- **The lyrics.** Every sung line stays as it is. When a section is renamed, rename its label in the lyrics to match ("[Verse]" → "[Verse 1]"), because Ode plays a lyric change from the locator named like its label.
+- **The lyrics.** Every sung line stays as it is. When a section is renamed, rename its label in the lyrics to match ("[Verse]" → "[Verse 1]"), so the lyrics and the Arrangement name the same sections.
 - Marking sections changes no clip, note or device. A plan that changes lengths or order is carried out with the arrangement skill, and the locators and lead sheet follow.
 - Never keep a second, alternative plan in the Set or the lead sheet; Again gives another take, and the history keeps the old one.
 
@@ -51,7 +51,7 @@ Fix and check again until they pass; if something still fails, the result line s
 
 ### 5. Let them hear it
 
-Ode plays what changed when your turn ends; you don't start playback. Marking sections changes no sound; a change of lengths or order plays from just before the first section it touched.
+When your turn ends, the musician presses play in Live. Marking sections leaves the sound as it was; after a change of lengths or order, the result line names the first section it touched, so the musician can play from just before it.
 
 ### 6. Report in one line
 
@@ -71,7 +71,7 @@ Act without asking. The one question, a single line with buttons, comes only whe
 - rewriting the whole form of a song that already has one, or moving or deleting the musician's own locators;
 - a muted track decides where a section starts, and the hand edits and version history don't explain it (muted long ago and untouched means parked).
 
-The mode decides the rest: in Manual, Ode shows each change for Apply or Skip; in Let me hear it, never ask — make the best guess and say it in the result line.
+The mode decides the rest: in Manual, Ode shows each change for Apply or Skip.
 
 ## Section roles
 

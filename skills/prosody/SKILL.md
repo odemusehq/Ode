@@ -12,7 +12,7 @@ Prosody is the fit between what is said and how it is set. When it works, the wo
 1. **Read.**
    - The line in the lyrics ("[Chorus] line 1") and the notes it is sung on: the lyrics-to-melody check splits the vocal melody in the section's bars into one phrase per line and reports each line's stress problems against its phrase (the syllables skill explains how to find the melody).
    - What is locked: everything the lead sheet's locked list names (a lyric line, a melody the musician loves, a recorded vocal).
-   - The time signature, the tempo, the song's key, and the vocal range from the settings (or a typical range when it isn't set).
+   - The time signature (a scene's own, or 4/4 unless the musician says otherwise), the tempo, the song's key, and the vocal range from the settings (or a typical range when it isn't set).
    - The hand edits since the last request: if the musician just moved notes or retyped the line, start from what they did.
 2. **Decide** the smallest change that puts the stress right, in this order:
    1. **Rhythm only:** shift a note, shorten or lengthen it, add or drop a pickup. Words and pitches stay as they are.
@@ -27,7 +27,7 @@ Prosody is the fit between what is said and how it is set. When it works, the wo
    - **Singability check:** open vowels on long and high notes, no consonant clusters on very short notes, and a rest to breathe at least every eight beats or so.
    - **Key and range:** every moved note is in the key and inside the singer's range.
    Fix and check again, up to three rounds; if a problem remains, the result line says which.
-5. **Let them hear it.** After your turn Ode plays what changed: moved notes in their bars, from a bar earlier when the change is at the start of a section; changed words from the locator named like the line's label to the next locator. You don't start playback.
+5. **Let them hear it.** The result line says where the change is, so the musician can play it: moved notes by their bars, from a bar earlier when the change is at the start of a section; changed words by the line's label, which names the locator to play from.
 6. **Report in one line**: what moved or changed · what was checked. For example:
    - "Verse 2, line 1: 'for' now comes in on the 'and' of 4, so 'forget' lands on GET (beat 1) · no stress problems, same pitches."
    - "Bridge line 3: the long note moved from 'the' to 'far' · no stress problems, open 'ah' on the held note."
@@ -35,7 +35,7 @@ Prosody is the fit between what is said and how it is set. When it works, the wo
 
 ## Asking
 
-Prosody fixes rarely need a question: locked lines and locked notes tell you what you may change. Ask only before rewriting a whole section the musician didn't point at. In Let me hear it, never ask; in Manual, Ode shows the change for Apply or Skip, and you work the same way.
+Prosody fixes rarely need a question: locked lines and locked notes tell you what you may change. Ask only before rewriting a whole section the musician didn't point at. In Manual, Ode shows the change for Apply or Skip, and you work the same way.
 
 ## Stressed syllables on strong beats
 
