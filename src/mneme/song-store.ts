@@ -29,6 +29,8 @@ export class SongStore {
   private id = "";
   private dir = "";
   private sheet: JsonFile<LeadSheet> | null = null;
+  /** One lead-sheet file per song, kept across switches, so every write to a song's file waits its turn in one queue. */
+  private readonly sheets = new Map<string, JsonFile<LeadSheet>>();
 
   constructor(
     private readonly paths: UserPaths,
@@ -91,29 +93,21 @@ export class SongStore {
   }
 
   /** Stores a whole lead sheet. The lyrics and their revision stay as stored: they change only through `saveLyrics`. */
-  async replace(sheet: LeadSheet): Promise<LeadSheet> {
-    return this.changed(
-      await this.file().update((current) => LeadSheetSchema.parse({ ...sheet, lyrics: current.lyrics, lyricsRevision: current.lyricsRevision })),
-    );
+  replace(sheet: LeadSheet): Promise<LeadSheet> {
+    return this.change((current) => LeadSheetSchema.parse({ ...sheet, lyrics: current.lyrics, lyricsRevision: current.lyricsRevision }));
   }
 
   /** Replaces the fields given. The lyrics and their revision stay as stored: they change only through `saveLyrics`. */
-  async update(patch: Partial<LeadSheet>): Promise<LeadSheet> {
-    return this.changed(
-      await this.file().update((current) =>
-        LeadSheetSchema.parse({ ...current, ...patch, lyrics: current.lyrics, lyricsRevision: current.lyricsRevision }),
-      ),
-    );
+  update(patch: Partial<LeadSheet>): Promise<LeadSheet> {
+    return this.change((current) => LeadSheetSchema.parse({ ...current, ...patch, lyrics: current.lyrics, lyricsRevision: current.lyricsRevision }));
   }
 
   /**
    * Stores new lyrics as the next revision. `edit` gets the sheet as stored and returns the text to keep; the sheet
    * stays as it is between the two, so a merge made in `edit` is kept.
    */
-  async saveLyrics(edit: (current: LeadSheet) => string): Promise<LeadSheet> {
-    return this.changed(
-      await this.file().update((current) => LeadSheetSchema.parse({ ...current, lyrics: edit(current), lyricsRevision: current.lyricsRevision + 1 })),
-    );
+  saveLyrics(edit: (current: LeadSheet) => string): Promise<LeadSheet> {
+    return this.change((current) => LeadSheetSchema.parse({ ...current, lyrics: edit(current), lyricsRevision: current.lyricsRevision + 1 }));
   }
 
   /** The sung lines of the lyrics, without blank and label lines. */
@@ -124,7 +118,9 @@ export class SongStore {
   private use(id: string): void {
     this.id = id;
     this.dir = join(this.paths.songs, id);
-    this.sheet = new JsonFile(join(this.dir, "song.json"), LeadSheetSchema as unknown as ZodType<LeadSheet>, emptyLeadSheet);
+    const sheet = this.sheets.get(id) ?? new JsonFile(join(this.dir, "song.json"), LeadSheetSchema as unknown as ZodType<LeadSheet>, emptyLeadSheet);
+    this.sheets.set(id, sheet);
+    this.sheet = sheet;
   }
 
   private file(): JsonFile<LeadSheet> {
@@ -132,22 +128,26 @@ export class SongStore {
     return this.sheet;
   }
 
-  /** Keeps the list's title and date in step with the sheet, then tells the windows. */
-  private async changed(sheet: LeadSheet): Promise<LeadSheet> {
+  /**
+   * Changes the song in use when the change starts, even when the musician opens another song meanwhile: that song's
+   * entry in the list takes the title and date, and the windows hear of it while it is still the song in use.
+   */
+  private async change(edit: (current: LeadSheet) => LeadSheet): Promise<LeadSheet> {
     const id = this.id;
+    const sheet = await this.file().update(edit);
     await this.index.update((index) => ({
       ...index,
       songs: index.songs.map((song) => (song.id === id ? { ...song, title: sheet.title, updatedAt: new Date().toISOString() } : song)),
     }));
-    this.onChange(sheet);
+    if (id === this.id) this.onChange(sheet);
     return sheet;
   }
 }
 
 /** The open song's version history. It follows the song when another Set opens or the Set is saved under a new name. */
 export class SongVersions {
-  private current: VersionHistory | null = null;
-  private dir = "";
+  /** One history per song, kept across switches, so every write to a song's history waits its turn in one queue. */
+  private readonly histories = new Map<string, VersionHistory>();
 
   constructor(
     private readonly song: SongStore,
@@ -156,10 +156,8 @@ export class SongVersions {
 
   get history(): VersionHistory {
     const dir = this.song.versionsDir;
-    if (!this.current || dir !== this.dir) {
-      this.current = new VersionHistory(dir, this.snapshotEvery);
-      this.dir = dir;
-    }
-    return this.current;
+    const history = this.histories.get(dir) ?? new VersionHistory(dir, this.snapshotEvery);
+    this.histories.set(dir, history);
+    return history;
   }
 }
