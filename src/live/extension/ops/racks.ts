@@ -4,7 +4,7 @@ import { MIDI_MAX } from "../notes";
 import { deviceText } from "../refs";
 import { indexOfObject } from "../sdk";
 import { OperationGroup } from "./group";
-import { OperationKind, type OpArgs, type OpRun, type OperationTable } from "./operation";
+import { type OpArgs, type OpRun, type OperationTable } from "./operation";
 
 type RackOp =
   | "rack_get_chains"
@@ -18,12 +18,12 @@ type RackOp =
 export class RackOperations extends OperationGroup<RackOp> {
   table(): OperationTable<RackOp> {
     return {
-      rack_get_chains: { kind: OperationKind.Read, prepare: (args) => this.getChains(args) },
-      rack_insert_chain: { kind: OperationKind.Structure, prepare: (args) => this.insertChain(args) },
-      chain_insert_device: { kind: OperationKind.Structure, prepare: (args) => this.insertDevice(args) },
-      chain_delete_device: { kind: OperationKind.Structure, prepare: ({ device }) => this.deleteDevice(device) },
-      chain_duplicate_device: { kind: OperationKind.Structure, prepare: ({ device }) => this.duplicateDevice(device) },
-      drum_pad_set_note: { kind: OperationKind.Change, prepare: (args) => this.setPadNote(args) },
+      rack_get_chains: { prepare: (args) => this.getChains(args) },
+      rack_insert_chain: { prepare: (args) => this.insertChain(args) },
+      chain_insert_device: { prepare: (args) => this.insertDevice(args) },
+      chain_delete_device: { prepare: ({ device }) => this.deleteDevice(device) },
+      chain_duplicate_device: { prepare: ({ device }) => this.duplicateDevice(device) },
+      drum_pad_set_note: { prepare: (args) => this.setPadNote(args) },
     };
   }
 

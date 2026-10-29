@@ -2,7 +2,6 @@ import { describeError } from "../errors";
 import type { Live } from "../sdk";
 import { GroupedFollowUps } from "./follow-ups";
 import {
-  OperationKind,
   operationsByName,
   type AnyOperation,
   type FollowUps,
@@ -28,7 +27,7 @@ export class UndoOperations {
 
   table(): OperationTable<"apply_as_one_undo_step"> {
     return {
-      apply_as_one_undo_step: { kind: OperationKind.Structure, prepare: (args) => this.applyAsOneUndoStep(args) },
+      apply_as_one_undo_step: { prepare: (args) => this.applyAsOneUndoStep(args) },
     };
   }
 

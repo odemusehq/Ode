@@ -1,6 +1,6 @@
 import { WarpMode } from "@ableton-extensions/sdk";
 import { OperationGroup } from "./group";
-import { OperationKind, type OpArgs, type OpRun, type OperationTable } from "./operation";
+import { type OpArgs, type OpRun, type OperationTable } from "./operation";
 
 type AudioClipOp = "audio_clip_get" | "audio_clip_set";
 
@@ -18,8 +18,8 @@ function isWarpMode(value: number): value is WarpMode {
 export class AudioClipOperations extends OperationGroup<AudioClipOp> {
   table(): OperationTable<AudioClipOp> {
     return {
-      audio_clip_get: { kind: OperationKind.Read, prepare: (args) => this.get(args) },
-      audio_clip_set: { kind: OperationKind.Change, prepare: (args) => this.setClip(args) },
+      audio_clip_get: { prepare: (args) => this.get(args) },
+      audio_clip_set: { prepare: (args) => this.setClip(args) },
     };
   }
 

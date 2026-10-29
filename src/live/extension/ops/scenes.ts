@@ -1,5 +1,5 @@
 import { OperationGroup } from "./group";
-import { OperationKind, type OpArgs, type OpRun, type OperationTable } from "./operation";
+import { type OpArgs, type OpRun, type OperationTable } from "./operation";
 
 type SceneOp = "scene_get" | "scene_rename";
 
@@ -7,8 +7,8 @@ type SceneOp = "scene_get" | "scene_rename";
 export class SceneOperations extends OperationGroup<SceneOp> {
   table(): OperationTable<SceneOp> {
     return {
-      scene_get: { kind: OperationKind.Read, prepare: (args) => this.get(args) },
-      scene_rename: { kind: OperationKind.Change, prepare: (args) => this.rename(args) },
+      scene_get: { prepare: (args) => this.get(args) },
+      scene_rename: { prepare: (args) => this.rename(args) },
     };
   }
 

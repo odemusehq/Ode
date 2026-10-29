@@ -1,6 +1,6 @@
 import { fromLiveNotes, toLiveNotes } from "../notes";
 import { OperationGroup } from "./group";
-import { OperationKind, type OpArgs, type OpRun, type OperationTable } from "./operation";
+import { type OpArgs, type OpRun, type OperationTable } from "./operation";
 
 type MidiNoteOp = "midi_clip_get_notes" | "midi_clip_set_notes";
 
@@ -8,8 +8,8 @@ type MidiNoteOp = "midi_clip_get_notes" | "midi_clip_set_notes";
 export class MidiNoteOperations extends OperationGroup<MidiNoteOp> {
   table(): OperationTable<MidiNoteOp> {
     return {
-      midi_clip_get_notes: { kind: OperationKind.Read, prepare: (args) => this.getNotes(args) },
-      midi_clip_set_notes: { kind: OperationKind.Change, prepare: (args) => this.setNotes(args) },
+      midi_clip_get_notes: { prepare: (args) => this.getNotes(args) },
+      midi_clip_set_notes: { prepare: (args) => this.setNotes(args) },
     };
   }
 

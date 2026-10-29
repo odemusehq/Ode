@@ -19,7 +19,7 @@ import { ClipPlace, type ClipLocation } from "../locations";
 import type { Version } from "../sdk";
 import type { TrackDirectory, TrackPosition } from "../track-directory";
 import { OperationGroup } from "./group";
-import { OperationKind, type OpRun, type OperationTable } from "./operation";
+import { type OpRun, type OperationTable } from "./operation";
 
 type SnapshotOp = "set_snapshot";
 
@@ -44,7 +44,7 @@ interface TrackContext {
 export class SnapshotOperations extends OperationGroup<SnapshotOp> {
   table(): OperationTable<SnapshotOp> {
     return {
-      set_snapshot: { kind: OperationKind.Read, prepare: () => this.snapshot() },
+      set_snapshot: { prepare: () => this.snapshot() },
     };
   }
 

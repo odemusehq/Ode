@@ -4,7 +4,7 @@ import { ClipPlace } from "../locations";
 import { takeLaneText } from "../refs";
 import { NewName } from "../tags";
 import { OperationGroup } from "./group";
-import { OperationKind, type FollowUps, type OpArgs, type OpRun, type OperationTable } from "./operation";
+import { type FollowUps, type OpArgs, type OpRun, type OperationTable } from "./operation";
 
 type TakeLaneOp = "take_lane_get" | "take_lane_rename" | "take_lane_create_midi_clip" | "take_lane_create_audio_clip";
 
@@ -12,14 +12,12 @@ type TakeLaneOp = "take_lane_get" | "take_lane_rename" | "take_lane_create_midi_
 export class TakeLaneOperations extends OperationGroup<TakeLaneOp> {
   table(): OperationTable<TakeLaneOp> {
     return {
-      take_lane_get: { kind: OperationKind.Read, prepare: (args) => this.get(args) },
-      take_lane_rename: { kind: OperationKind.Change, prepare: (args) => this.rename(args) },
+      take_lane_get: { prepare: (args) => this.get(args) },
+      take_lane_rename: { prepare: (args) => this.rename(args) },
       take_lane_create_midi_clip: {
-        kind: OperationKind.Structure,
         prepare: (args, followUps) => this.createMidiClip(args, followUps),
       },
       take_lane_create_audio_clip: {
-        kind: OperationKind.Structure,
         prepare: (args, followUps) => this.createAudioClip(args, followUps),
       },
     };

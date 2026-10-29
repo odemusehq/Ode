@@ -1,6 +1,6 @@
 import { LiveError } from "../errors";
 import { OperationGroup } from "./group";
-import { OperationKind, type OpArgs, type OpRun, type OperationTable } from "./operation";
+import { type OpArgs, type OpRun, type OperationTable } from "./operation";
 
 type SimplerOp = "simpler_get_sample" | "simpler_replace_sample";
 
@@ -8,8 +8,8 @@ type SimplerOp = "simpler_get_sample" | "simpler_replace_sample";
 export class SimplerOperations extends OperationGroup<SimplerOp> {
   table(): OperationTable<SimplerOp> {
     return {
-      simpler_get_sample: { kind: OperationKind.Read, prepare: (args) => this.getSample(args) },
-      simpler_replace_sample: { kind: OperationKind.Change, prepare: (args) => this.replaceSample(args) },
+      simpler_get_sample: { prepare: (args) => this.getSample(args) },
+      simpler_replace_sample: { prepare: (args) => this.replaceSample(args) },
     };
   }
 

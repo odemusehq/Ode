@@ -1,16 +1,6 @@
 import type { ExtensionOp } from "../../../shared/live";
 import type { ExtensionOpArgs, ExtensionOpResults } from "../../../shared/live-ops";
 
-/** How an operation affects the Set; it decides which operations can share one undo step. */
-export enum OperationKind {
-  /** Reads the Set, or works with files, without changing the Set. */
-  Read = "read",
-  /** Changes objects that already exist. */
-  Change = "change",
-  /** Creates or deletes objects, so references looked up afterwards can point somewhere else. */
-  Structure = "structure",
-}
-
 /** Starts an operation: its changes begin at once, and the promise brings its result. */
 export type Run<R> = () => Promise<R>;
 
@@ -20,14 +10,12 @@ export interface FollowUps {
 }
 
 export interface Operation<K extends ExtensionOp> {
-  readonly kind: OperationKind;
-  /** Looks up every reference and checks the arguments, without changing the Set. */
+  /** Looks up every reference and checks the arguments; the Set stays as it is until the run starts. */
   prepare(args: ExtensionOpArgs[K], followUps: FollowUps): Run<ExtensionOpResults[K]>;
 }
 
 /** An operation with its argument and result types set aside, for looking it up by name. */
 export interface AnyOperation {
-  readonly kind: OperationKind;
   prepare(args: unknown, followUps: FollowUps): Run<unknown>;
 }
 

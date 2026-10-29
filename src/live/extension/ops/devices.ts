@@ -2,7 +2,7 @@ import type { DeviceParameter } from "@ableton-extensions/sdk";
 import { LiveError } from "../errors";
 import type { Version } from "../sdk";
 import { OperationGroup } from "./group";
-import { OperationKind, type OpArgs, type OpRun, type OperationTable } from "./operation";
+import { type OpArgs, type OpRun, type OperationTable } from "./operation";
 
 type DeviceOp = "device_get" | "parameter_get" | "parameter_set" | "mixer_get";
 
@@ -10,10 +10,10 @@ type DeviceOp = "device_get" | "parameter_get" | "parameter_set" | "mixer_get";
 export class DeviceOperations extends OperationGroup<DeviceOp> {
   table(): OperationTable<DeviceOp> {
     return {
-      device_get: { kind: OperationKind.Read, prepare: (args) => this.get(args) },
-      parameter_get: { kind: OperationKind.Read, prepare: (args) => this.getParameter(args) },
-      parameter_set: { kind: OperationKind.Change, prepare: (args) => this.setParameter(args) },
-      mixer_get: { kind: OperationKind.Read, prepare: (args) => this.getMixer(args) },
+      device_get: { prepare: (args) => this.get(args) },
+      parameter_get: { prepare: (args) => this.getParameter(args) },
+      parameter_set: { prepare: (args) => this.setParameter(args) },
+      mixer_get: { prepare: (args) => this.getMixer(args) },
     };
   }
 

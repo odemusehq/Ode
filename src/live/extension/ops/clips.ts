@@ -1,6 +1,6 @@
 import { TaggedName } from "../tags";
 import { OperationGroup } from "./group";
-import { OperationKind, type OpArgs, type OpRun, type OperationTable } from "./operation";
+import { type OpArgs, type OpRun, type OperationTable } from "./operation";
 
 type ClipOp = "clip_get" | "clip_set";
 
@@ -11,8 +11,8 @@ const LARGEST_COLOR = 0xffffff;
 export class ClipOperations extends OperationGroup<ClipOp> {
   table(): OperationTable<ClipOp> {
     return {
-      clip_get: { kind: OperationKind.Read, prepare: (args) => this.get(args) },
-      clip_set: { kind: OperationKind.Change, prepare: (args) => this.setClip(args) },
+      clip_get: { prepare: (args) => this.get(args) },
+      clip_set: { prepare: (args) => this.setClip(args) },
     };
   }
 

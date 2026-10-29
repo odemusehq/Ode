@@ -5,7 +5,7 @@ import { ClipPlace, type ClipLocation } from "../locations";
 import { clipSlotText, clipText, type FoundClipSlot } from "../refs";
 import { NewName } from "../tags";
 import { OperationGroup } from "./group";
-import { OperationKind, type FollowUps, type OpArgs, type OpRun, type OperationTable } from "./operation";
+import { type FollowUps, type OpArgs, type OpRun, type OperationTable } from "./operation";
 
 type ClipSlotOp = "clip_slot_get" | "clip_slot_create_midi_clip" | "clip_slot_create_audio_clip" | "clip_slot_delete_clip";
 
@@ -13,16 +13,14 @@ type ClipSlotOp = "clip_slot_get" | "clip_slot_create_midi_clip" | "clip_slot_cr
 export class ClipSlotOperations extends OperationGroup<ClipSlotOp> {
   table(): OperationTable<ClipSlotOp> {
     return {
-      clip_slot_get: { kind: OperationKind.Read, prepare: (args) => this.get(args) },
+      clip_slot_get: { prepare: (args) => this.get(args) },
       clip_slot_create_midi_clip: {
-        kind: OperationKind.Structure,
         prepare: (args, followUps) => this.createMidiClip(args, followUps),
       },
       clip_slot_create_audio_clip: {
-        kind: OperationKind.Structure,
         prepare: (args, followUps) => this.createAudioClip(args, followUps),
       },
-      clip_slot_delete_clip: { kind: OperationKind.Structure, prepare: (args) => this.deleteClip(args) },
+      clip_slot_delete_clip: { prepare: (args) => this.deleteClip(args) },
     };
   }
 

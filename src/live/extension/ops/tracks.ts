@@ -3,7 +3,7 @@ import { ClipPlace } from "../locations";
 import { indexOfObject } from "../sdk";
 import { NewName, TaggedName } from "../tags";
 import { OperationGroup } from "./group";
-import { OperationKind, type FollowUps, type OpArgs, type OpRun, type OperationTable } from "./operation";
+import { type FollowUps, type OpArgs, type OpRun, type OperationTable } from "./operation";
 
 type TrackOp =
   | "track_get"
@@ -21,16 +21,16 @@ type TrackOp =
 export class TrackOperations extends OperationGroup<TrackOp> {
   table(): OperationTable<TrackOp> {
     return {
-      track_get: { kind: OperationKind.Read, prepare: (args) => this.get(args) },
-      track_set: { kind: OperationKind.Change, prepare: (args) => this.setTrack(args) },
-      track_create_midi_clip: { kind: OperationKind.Structure, prepare: (args, followUps) => this.createMidiClip(args, followUps) },
-      track_create_audio_clip: { kind: OperationKind.Structure, prepare: (args, followUps) => this.createAudioClip(args, followUps) },
-      track_delete_clip: { kind: OperationKind.Structure, prepare: (args) => this.deleteClip(args) },
-      track_clear_range: { kind: OperationKind.Structure, prepare: (args) => this.clearRange(args) },
-      track_create_take_lane: { kind: OperationKind.Structure, prepare: (args, followUps) => this.createTakeLane(args, followUps) },
-      track_insert_device: { kind: OperationKind.Structure, prepare: (args) => this.insertDevice(args) },
-      track_delete_device: { kind: OperationKind.Structure, prepare: ({ device }) => this.deleteDevice(device) },
-      track_duplicate_device: { kind: OperationKind.Structure, prepare: ({ device }) => this.duplicateDevice(device) },
+      track_get: { prepare: (args) => this.get(args) },
+      track_set: { prepare: (args) => this.setTrack(args) },
+      track_create_midi_clip: { prepare: (args, followUps) => this.createMidiClip(args, followUps) },
+      track_create_audio_clip: { prepare: (args, followUps) => this.createAudioClip(args, followUps) },
+      track_delete_clip: { prepare: (args) => this.deleteClip(args) },
+      track_clear_range: { prepare: (args) => this.clearRange(args) },
+      track_create_take_lane: { prepare: (args, followUps) => this.createTakeLane(args, followUps) },
+      track_insert_device: { prepare: (args) => this.insertDevice(args) },
+      track_delete_device: { prepare: ({ device }) => this.deleteDevice(device) },
+      track_duplicate_device: { prepare: ({ device }) => this.duplicateDevice(device) },
     };
   }
 

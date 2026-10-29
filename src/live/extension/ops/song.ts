@@ -4,7 +4,7 @@ import { LiveError } from "../errors";
 import type { Version } from "../sdk";
 import { NewName, TaggedName } from "../tags";
 import { OperationGroup } from "./group";
-import { OperationKind, type FollowUps, type OpArgs, type OpRun, type OperationTable } from "./operation";
+import { type FollowUps, type OpArgs, type OpRun, type OperationTable } from "./operation";
 
 type SongOp =
   | "song_get"
@@ -35,24 +35,22 @@ enum TrackType {
 export class SongOperations extends OperationGroup<SongOp> {
   table(): OperationTable<SongOp> {
     return {
-      song_get: { kind: OperationKind.Read, prepare: () => this.get() },
-      song_set_tempo: { kind: OperationKind.Change, prepare: (args) => this.setTempo(args) },
+      song_get: { prepare: () => this.get() },
+      song_set_tempo: { prepare: (args) => this.setTempo(args) },
       song_create_midi_track: {
-        kind: OperationKind.Structure,
         prepare: (args, followUps) => this.createTrack(TrackType.Midi, args, followUps),
       },
       song_create_audio_track: {
-        kind: OperationKind.Structure,
         prepare: (args, followUps) => this.createTrack(TrackType.Audio, args, followUps),
       },
-      song_delete_track: { kind: OperationKind.Structure, prepare: (args) => this.deleteTrack(args) },
-      song_duplicate_track: { kind: OperationKind.Structure, prepare: (args, followUps) => this.duplicateTrack(args, followUps) },
-      song_create_scene: { kind: OperationKind.Structure, prepare: (args, followUps) => this.createScene(args, followUps) },
-      song_delete_scene: { kind: OperationKind.Structure, prepare: (args) => this.deleteScene(args) },
-      song_duplicate_scene: { kind: OperationKind.Structure, prepare: (args) => this.duplicateScene(args) },
-      song_create_locator: { kind: OperationKind.Structure, prepare: (args, followUps) => this.createLocator(args, followUps) },
-      song_delete_locator: { kind: OperationKind.Structure, prepare: (args) => this.deleteLocator(args) },
-      locator_rename: { kind: OperationKind.Change, prepare: (args) => this.renameLocator(args) },
+      song_delete_track: { prepare: (args) => this.deleteTrack(args) },
+      song_duplicate_track: { prepare: (args, followUps) => this.duplicateTrack(args, followUps) },
+      song_create_scene: { prepare: (args, followUps) => this.createScene(args, followUps) },
+      song_delete_scene: { prepare: (args) => this.deleteScene(args) },
+      song_duplicate_scene: { prepare: (args) => this.duplicateScene(args) },
+      song_create_locator: { prepare: (args, followUps) => this.createLocator(args, followUps) },
+      song_delete_locator: { prepare: (args) => this.deleteLocator(args) },
+      locator_rename: { prepare: (args) => this.renameLocator(args) },
     };
   }
 
