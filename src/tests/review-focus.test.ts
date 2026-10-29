@@ -8,15 +8,16 @@ import type { WSContext } from "hono/ws";
 import { NotFoundError } from "../live/extension/errors";
 import { ReferenceResolver } from "../live/extension/refs";
 import { userPaths } from "../mneme/paths";
+import { SettingsStore } from "../mneme/settings-store";
 import { SongStore } from "../mneme/song-store";
 import { analyzeLine } from "../music/phonetics/line-analyzer";
 import { analyzeLyrics } from "../music/prosody/lyrics-analyzer";
 import { compareRhyme } from "../music/rhyme/rhyme-comparer";
 import { LiveHub, NotConnectedError } from "../server/live-hub";
 import { ModelServices } from "../services";
-import { OdeConfig } from "../shared/config";
+import { ModelRoles } from "../services/model-roles";
+import { ProviderCatalog } from "../services/provider-catalog";
 import { FakeLive } from "./fake-live";
-import { testEnv } from "./test-env";
 
 const TIMEOUTS = { normal: 200, long: 400 };
 const NO_EVENTS = { onSetInfo: () => undefined, onStatus: () => undefined };
@@ -124,19 +125,19 @@ test("words missing from the dictionaries are marked not certain, and the accent
 
 // 5. Providers missing or not configured.
 
-test("optional providers left unset say 'not configured' instead of failing", async () => {
+test("optional providers left unset name the setting to add", async () => {
   const dir = await tempDir();
-  const services = new ModelServices(OdeConfig.load(testEnv(dir)));
-  const available = services.available();
+  const services = new ModelServices(new ModelRoles(new SettingsStore(dir, ProviderCatalog.bundled), ProviderCatalog.bundled));
+  const available = await services.available();
   assert.equal(available.stem_separation, false);
   assert.equal(available.singing_voice, false);
   assert.equal(available.sound_generation, false);
   await assert.rejects(
     async () => services.generateSound("rain on a tin roof", 2, join(dir, "rain.wav")),
-    /not configured: set ODE_SOUND_GENERATION_PROVIDER/,
+    /Add a sound generation service/,
   );
   await assert.rejects(
     async () => services.separateStem(join(dir, "song.wav"), "the guitar", dir),
-    /not configured: set ODE_STEM_SEPARATION_PROVIDER/,
+    /Add a stem separation service/,
   );
 });

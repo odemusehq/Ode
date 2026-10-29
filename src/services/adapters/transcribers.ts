@@ -1,4 +1,3 @@
-import OpenAI, { toFile } from "openai";
 import type { RoleConfig } from "../../shared/config";
 import type { Transcriber } from "../capabilities";
 import type { SpeechAudio } from "../speech-audio";
@@ -31,30 +30,6 @@ export class MetaTranscriber implements Transcriber {
     return {
       text: result.transcript,
       turns: result.turns.map((turn) => ({ start: turn.startMs / 1000, end: turn.endMs / 1000, text: turn.transcript })),
-    };
-  }
-}
-
-/** Any OpenAI-compatible /audio/transcriptions endpoint (a hosted service or a local Whisper server). */
-export class OpenAiCompatibleTranscriber implements Transcriber {
-  private readonly client: OpenAI;
-
-  constructor(
-    private readonly role: RoleConfig,
-    private readonly audio: SpeechAudio,
-  ) {
-    this.client = new OpenAI({ baseURL: role.baseUrl, apiKey: role.apiKey });
-  }
-
-  async transcribe(audioPath: string): Promise<Transcript> {
-    const result = await this.client.audio.transcriptions.create({
-      model: this.role.model,
-      file: await toFile(await this.audio.wav(audioPath), "audio.wav"),
-      response_format: "verbose_json",
-    });
-    return {
-      text: result.text,
-      turns: (result.segments ?? []).map((segment) => ({ start: segment.start, end: segment.end, text: segment.text })),
     };
   }
 }

@@ -21,6 +21,8 @@ export interface RoleConfig {
   baseUrl: string;
   apiKey: string;
   model: string;
+  /** A header that keeps one conversation's requests on the same server, where the provider asks for it. */
+  conversationHeader?: string;
 }
 
 export interface AgentLimits {

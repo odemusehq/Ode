@@ -10,6 +10,7 @@ import { LyricsStore } from "../mneme/lyrics-store";
 import { userPaths } from "../mneme/paths";
 import { PreferencesStore } from "../mneme/preferences";
 import { SetDiff } from "../mneme/set-diff";
+import { SettingsStore } from "../mneme/settings-store";
 import { SongStore, SongVersions } from "../mneme/song-store";
 import { ContextSummary } from "../mneme/summary";
 import { DeletionChecker } from "../server/deletion-checker";
@@ -21,7 +22,9 @@ import { SnapshotReader } from "../server/snapshot-reader";
 import { SuggestionFinder } from "../server/suggestions";
 import { VersionRecorder } from "../server/version-recorder";
 import { ModelServices } from "../services";
-import { isConfigured } from "../services/roles";
+import { ModelRoles } from "../services/model-roles";
+import { ProviderCatalog } from "../services/provider-catalog";
+import type { RoleSource } from "../services/types";
 import { ConfigError, OdeConfig } from "../shared/config";
 import type { UiEvent } from "../shared/events";
 import type { SetSnapshot } from "../shared/set-snapshot";
@@ -97,7 +100,10 @@ interface Trace {
 
 /** Runs one case with the real agent and tools against the fake Set, wired as the server wires them. */
 class ScenarioRun {
-  constructor(private readonly scenario: ScenarioCase) {}
+  constructor(
+    private readonly scenario: ScenarioCase,
+    private readonly roles: RoleSource,
+  ) {}
 
   async trace(): Promise<Trace> {
     const userDir = await mkdtemp(join(tmpdir(), `ode-scenario-${this.scenario.name}-`));
@@ -122,7 +128,7 @@ class ScenarioRun {
     const reader = new SnapshotReader(live, song);
     const recorder = new VersionRecorder(reader, versions, emit);
     const selection = new SelectionState({ live, reader, versions, finder: new SuggestionFinder(live, song, prefs), busy: () => false, emit });
-    const services = new ModelServices(config);
+    const services = new ModelServices(this.roles);
     const registry = new ToolRegistry({ config, live, song, lyrics, versions, snapshots: reader, questions, mneme, prefs, services, emit });
     const requests = new RequestContext({
       config,
@@ -207,15 +213,18 @@ class ScenarioSuite {
       if (error instanceof ConfigError) return ScenarioSuite.skip(error.message);
       throw error;
     }
-    if (!isConfigured(config.roles.main)) return ScenarioSuite.skip("the main model isn't set (ODE_MAIN_* in .env).");
-    const judge = new ScenarioJudge(new ModelServices(config));
+    // The developer's own Settings, kept as settings.json in the Ode folder named in .env.
+    const roles = new ModelRoles(new SettingsStore(config.userDir, ProviderCatalog.bundled), ProviderCatalog.bundled);
+    const services = new ModelServices(roles);
+    if (!(await services.available()).main) return ScenarioSuite.skip("the main model needs a provider, model and key: choose them in Ode: Settings.");
+    const judge = new ScenarioJudge(services);
     const cases = await ScenarioCase.all(join(config.repoDir, "skills"), only);
     const report: { skill: string; case: string; trace: Trace | null; error?: string; grades: { statement: string; passed: boolean; evidence: string }[] }[] = [];
     let failed = 0;
     for (const scenario of cases) {
       console.log(`\n${scenario.skill} / ${scenario.name}: "${scenario.action}"`);
       try {
-        const trace = await new ScenarioRun(scenario).trace();
+        const trace = await new ScenarioRun(scenario, roles).trace();
         const grades = [];
         for (const statement of scenario.graders) {
           const grade = await judge.grade(trace, statement);

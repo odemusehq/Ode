@@ -1,11 +1,11 @@
 import type { RoleConfig } from "../shared/config";
-import { AnthropicCompatibleText } from "./adapters/anthropic-compatible-text";
 import { ElevenLabsSoundGenerator } from "./adapters/elevenlabs-sound";
 import { FalStemSeparator } from "./adapters/fal-stem-separator";
 import { OpenAiCompatibleAudioUnderstander } from "./adapters/openai-compatible-audio";
 import { OpenAiCompatibleImageGenerator } from "./adapters/openai-compatible-images";
+import { OpenAiCompatibleText } from "./adapters/openai-compatible-text";
 import { SelfHostedSingingVoice, SelfHostedSoundGenerator, SelfHostedStemSeparator } from "./adapters/self-hosted";
-import { MetaTranscriber, OpenAiCompatibleTranscriber } from "./adapters/transcribers";
+import { MetaTranscriber } from "./adapters/transcribers";
 import { Capability, type CapabilityAdapters } from "./capabilities";
 import { Provider, asProvider } from "./providers";
 import type { SpeechAudio } from "./speech-audio";
@@ -17,26 +17,18 @@ type FactoryTable = { [C in Capability]: Partial<Record<Provider, Factory<C>>> }
 export class AdapterRegistry {
   private static readonly TABLE: FactoryTable = {
     [Capability.Text]: {
-      [Provider.Meta]: (role) => new AnthropicCompatibleText(role),
-      [Provider.Anthropic]: (role) => new AnthropicCompatibleText(role),
-      [Provider.OpenRouter]: (role) => new AnthropicCompatibleText(role),
-      [Provider.SelfHosted]: (role) => new AnthropicCompatibleText(role),
+      [Provider.Meta]: (role) => new OpenAiCompatibleText(role),
+      [Provider.Baseten]: (role) => new OpenAiCompatibleText(role),
+      [Provider.Modal]: (role) => new OpenAiCompatibleText(role),
     },
     [Capability.AudioUnderstanding]: {
       [Provider.Meta]: (role, speech) => new OpenAiCompatibleAudioUnderstander(role, speech),
-      [Provider.OpenAI]: (role, speech) => new OpenAiCompatibleAudioUnderstander(role, speech),
-      [Provider.OpenRouter]: (role, speech) => new OpenAiCompatibleAudioUnderstander(role, speech),
-      [Provider.SelfHosted]: (role, speech) => new OpenAiCompatibleAudioUnderstander(role, speech),
     },
     [Capability.Transcription]: {
       [Provider.Meta]: (role, speech) => new MetaTranscriber(role, speech),
-      [Provider.OpenAI]: (role, speech) => new OpenAiCompatibleTranscriber(role, speech),
-      [Provider.SelfHosted]: (role, speech) => new OpenAiCompatibleTranscriber(role, speech),
     },
     [Capability.ImageGeneration]: {
       [Provider.Meta]: (role) => new OpenAiCompatibleImageGenerator(role),
-      [Provider.OpenAI]: (role) => new OpenAiCompatibleImageGenerator(role),
-      [Provider.SelfHosted]: (role) => new OpenAiCompatibleImageGenerator(role),
     },
     [Capability.StemSeparation]: {
       [Provider.Fal]: (role) => new FalStemSeparator(role),

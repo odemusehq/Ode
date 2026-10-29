@@ -1,0 +1,51 @@
+{
+  "chat": [
+    {
+      "id": "meta",
+      "name": "Meta",
+      "baseUrl": "https://api.meta.ai/v1",
+      "keyHint": "Your API key from dev.meta.ai",
+      "models": [
+        { "id": "muse-wonder-1.0", "name": "Muse Wonder 1.0 (preview)" },
+        { "id": "muse-spark-1.3", "name": "Muse Spark 1.3" },
+        { "id": "muse-spark-1.2", "name": "Muse Spark 1.2" },
+        { "id": "muse-spark-1.1", "name": "Muse Spark 1.1" }
+      ]
+    },
+    {
+      "id": "baseten",
+      "name": "Baseten",
+      "baseUrl": "https://inference.baseten.co/v1",
+      "keyHint": "Your API key from Baseten's settings",
+      "models": [{ "id": "meta-models/muse-spark-open", "name": "Muse Spark Open", "credit": "Built with Muse Spark Open" }]
+    },
+    {
+      "id": "modal",
+      "name": "Modal",
+      "baseUrl": "https://inference.us-west.modal.direct/v1",
+      "keyHint": "Your proxy token from Modal's dashboard, written as wk-….ws-…",
+      "modelHint": "Your Modal endpoints appear here once the token is in. Set one up in Modal's dashboard: Endpoints, then Muse Spark Open.",
+      "listsModels": true,
+      "credit": "Built with Muse Spark Open",
+      "conversationHeader": "Modal-Routing-Affinity-Key",
+      "models": []
+    }
+  ],
+  "meta": {
+    "baseUrl": "https://api.meta.ai/v1",
+    "audioUnderstanding": "muse-spark-1.2",
+    "transcription": "muse-voice-transcribe-1.0",
+    "imageGeneration": "muse-image-1.0"
+  },
+  "services": {
+    "stem_separation": [
+      { "id": "fal", "name": "fal", "baseUrl": "https://fal.run" },
+      { "id": "self-hosted", "name": "Your own server", "baseUrl": "" }
+    ],
+    "singing_voice": [{ "id": "self-hosted", "name": "Your own server", "baseUrl": "" }],
+    "sound_generation": [
+      { "id": "elevenlabs", "name": "ElevenLabs", "baseUrl": "https://api.elevenlabs.io" },
+      { "id": "self-hosted", "name": "Your own server", "baseUrl": "" }
+    ]
+  }
+}

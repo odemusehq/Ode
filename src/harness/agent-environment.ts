@@ -1,5 +1,4 @@
 import type { OdeConfig } from "../shared/config";
-import { Provider } from "../services/providers";
 
 /** Environment for the agent runtime: which endpoint and models to use, and subagent limits. */
 export class AgentEnvironment {
@@ -12,12 +11,10 @@ export class AgentEnvironment {
     );
     delete inherited.ANTHROPIC_API_KEY;
     delete inherited.ANTHROPIC_AUTH_TOKEN;
-    // Anthropic's own API takes an API key header; other Anthropic-compatible endpoints take a bearer token.
-    const credential: Record<string, string> =
-      main.provider === Provider.Anthropic ? { ANTHROPIC_API_KEY: main.apiKey } : { ANTHROPIC_AUTH_TOKEN: main.apiKey };
+    // Every provider Ode offers takes the key as a bearer token.
     return {
       ...inherited,
-      ...credential,
+      ANTHROPIC_AUTH_TOKEN: main.apiKey,
       ANTHROPIC_BASE_URL: main.baseUrl,
       ANTHROPIC_MODEL: main.model,
       ANTHROPIC_DEFAULT_OPUS_MODEL: main.model,

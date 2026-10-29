@@ -26,6 +26,8 @@ export const API = {
   why: "/api/why", // POST VersionRequest → { ok: true } (the answer arrives as an "answer" event)
   mode: "/api/mode", // PUT ModeRequest → { mode: Mode }
   speech: "/api/speech", // POST a mono WAV of the musician speaking → { text } (also sent to Ode as a request)
+  settings: "/api/settings", // GET → SettingsResponse; PUT SettingsUpdate → SettingsView
+  settingsModels: "/api/settings/models", // POST ModelListRequest → ChatModelOption[] (the models a key reaches)
   livePointer: "/api/live/pointer", // POST LivePointer (from the extension)
   livePending: "/api/live/pending", // GET → LiveRequest[] (extension fallback when its connection was closed)
   liveResults: "/api/live/results", // POST LiveResponse[] (extension fallback)

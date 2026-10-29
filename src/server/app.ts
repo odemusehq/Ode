@@ -7,9 +7,12 @@ import { Mneme } from "../mneme/artist";
 import { LyricsStore } from "../mneme/lyrics-store";
 import { userPaths, type UserPaths } from "../mneme/paths";
 import { PreferencesStore } from "../mneme/preferences";
+import { SettingsStore } from "../mneme/settings-store";
 import { SongStore, SongVersions } from "../mneme/song-store";
 import { ContextSummary } from "../mneme/summary";
 import { ModelServices } from "../services";
+import { ModelRoles } from "../services/model-roles";
+import { ProviderCatalog } from "../services/provider-catalog";
 import { ToolRegistry } from "../tools";
 import type { ToolContext } from "../tools/define";
 import { OdeAgents } from "../agents/agents";
@@ -40,6 +43,8 @@ export class OdeApp {
   readonly lyrics: LyricsStore;
   readonly versions: SongVersions;
   readonly live: LiveHub;
+  readonly settings: SettingsStore;
+  readonly models: ModelRoles;
   readonly services: ModelServices;
   readonly approvals: Approvals;
   readonly questions: Questions;
@@ -66,7 +71,9 @@ export class OdeApp {
       onSelection: (selection) => void this.selection.select(selection).catch(() => undefined),
       onCommand: (command) => void this.versionActions.command(command),
     });
-    this.services = new ModelServices(config);
+    this.settings = new SettingsStore(this.paths.root, ProviderCatalog.bundled);
+    this.models = new ModelRoles(this.settings, ProviderCatalog.bundled);
+    this.services = new ModelServices(this.models);
     this.approvals = new Approvals(emit);
     this.questions = new Questions(emit);
     this.reader = new SnapshotReader(this.live, this.song);
@@ -139,6 +146,8 @@ export class OdeApp {
       lyrics: this.lyrics,
       prefs: this.prefs,
       services: this.services,
+      settings: this.settings,
+      models: this.models,
       approvals: this.approvals,
       questions: this.questions,
       sessions: this.sessions,

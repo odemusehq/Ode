@@ -1,4 +1,5 @@
 import type { Role } from "../shared/config";
+import type { ChatReply, ChatTurn } from "./adapters/openai-compatible-text";
 import type { DemoVocalInput, Transcript } from "./types";
 
 /** What Ode needs from models, independent of who provides them. */
@@ -30,6 +31,10 @@ export interface TextOptions {
 
 export interface TextGenerator {
   ask(prompt: string, options: TextOptions): Promise<string>;
+  /** One turn of a conversation with tools, for the agent loop. */
+  complete(turn: ChatTurn): Promise<ChatReply>;
+  /** The model names the key reaches. */
+  models(): Promise<string[]>;
 }
 
 export interface AudioUnderstander {

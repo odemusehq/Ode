@@ -1,12 +1,9 @@
-/** Model providers Ode knows how to talk to. The provider of each role is set in .env. */
+/** Model providers Ode knows how to talk to. The chat provider is chosen in Settings; optional services each pick one. */
 export enum Provider {
   Meta = "meta",
-  Anthropic = "anthropic",
-  OpenRouter = "openrouter",
-  OpenAI = "openai",
-  Replicate = "replicate",
-  Fal = "fal",
+  Baseten = "baseten",
   Modal = "modal",
+  Fal = "fal",
   ElevenLabs = "elevenlabs",
   SelfHosted = "self-hosted",
 }

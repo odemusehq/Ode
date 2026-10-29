@@ -17,7 +17,11 @@ import type { LyricsStore } from "../mneme/lyrics-store";
 import { VersionNotFoundError } from "../mneme/version-history";
 import { tempFile } from "../mneme/paths";
 import type { PreferencesStore } from "../mneme/preferences";
+import type { SettingsStore } from "../mneme/settings-store";
 import type { SongStore } from "../mneme/song-store";
+import type { ModelRoles } from "../services/model-roles";
+import { ProviderCatalog } from "../services/provider-catalog";
+import { ModelListRequestSchema, SettingsUpdateSchema, type SettingsResponse } from "../shared/settings";
 import type { Services } from "../services/types";
 import { Decision, type Approvals } from "../harness/approvals";
 import { SessionBusyError } from "../harness/session";
@@ -38,6 +42,8 @@ export interface ServerDeps {
   lyrics: LyricsStore;
   prefs: PreferencesStore;
   services: Services;
+  settings: SettingsStore;
+  models: ModelRoles;
   approvals: Approvals;
   questions: Questions;
   sessions: SessionManager;
@@ -83,6 +89,7 @@ export class OdeServer {
     this.routeLiveSockets();
     this.routeApi();
     this.routeVersions();
+    this.routeSettings();
     this.routeUi();
     const server = serve({ fetch: this.app.fetch, hostname: this.deps.config.host, port: this.deps.config.port });
     this.sockets.injectWebSocket(server);
@@ -271,6 +278,37 @@ export class OdeServer {
         await versions.why(parsed.data.versionId);
         return { ok: true };
       });
+    });
+  }
+
+  /** The musician's provider, model and keys. Keys go in, and come back only as set or empty. */
+  private routeSettings(): void {
+    const { app } = this;
+    const { settings, models } = this.deps;
+
+    app.get(API.settings, async (c) => {
+      const response: SettingsResponse = {
+        settings: await settings.view(),
+        providers: ProviderCatalog.bundled.chatOptions(),
+        services: ProviderCatalog.bundled.serviceOptions(),
+      };
+      return c.json(response);
+    });
+
+    app.put(API.settings, async (c) => {
+      const parsed = SettingsUpdateSchema.safeParse(await OdeServer.body(c));
+      if (!parsed.success) return c.json({ error: "Send { provider, model, services } with any keys to change." }, 400);
+      return c.json(await settings.update(parsed.data));
+    });
+
+    app.post(API.settingsModels, async (c) => {
+      const parsed = ModelListRequestSchema.safeParse(await OdeServer.body(c));
+      if (!parsed.success) return c.json({ error: "Send { provider } and the key to list models with." }, 400);
+      try {
+        return c.json(await models.models(parsed.data));
+      } catch (error) {
+        return c.json({ error: OdeServer.messageOf(error) }, 502);
+      }
     });
   }
 

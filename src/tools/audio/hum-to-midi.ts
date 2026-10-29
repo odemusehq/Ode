@@ -77,7 +77,7 @@ async function transcribeWords(
   notes: Note[],
   tempo: number,
 ): Promise<{ words: SungWords } | { wordsNote: string }> {
-  if (!ctx.services.available().transcription) {
+  if (!(await ctx.services.available()).transcription) {
     return { wordsNote: `Words were not transcribed (${notConfiguredMessage("transcription")}); the notes are complete.` };
   }
   try {
