@@ -36,7 +36,14 @@
     "baseUrl": "https://api.meta.ai/v1",
     "audioUnderstanding": "muse-spark-1.2",
     "transcription": "muse-voice-transcribe-1.0",
-    "imageGeneration": "muse-image-1.0"
+    "imageGeneration": "muse-image-1.0",
+    "lyricsCheck": {
+      "default": "muse-spark-1.3",
+      "models": [
+        { "id": "muse-spark-1.3", "name": "Muse Spark 1.3", "effort": "minimal" },
+        { "id": "muse-wonder-1.0", "name": "Muse Wonder 1.0 (preview)", "effort": "minimal" }
+      ]
+    }
   },
   "services": {
     "stem_separation": [

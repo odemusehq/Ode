@@ -16,12 +16,24 @@ export interface ChatProvider extends ChatProviderOption {
   readonly conversationHeader?: string;
 }
 
-/** Meta's models for listening, transcription and cover art, used with a Meta key whatever the chat provider. */
+/** A Meta model that highlights syllables and rhymes in the Lyrics editor, with the lowest reasoning effort it accepts. */
+export interface LyricsCheckModel extends ChatModelOption {
+  readonly effort: string;
+}
+
+/** The models Settings offers for highlighting syllables and rhymes, and the one Ode uses until the musician picks. */
+export interface LyricsCheckModels {
+  readonly default: string;
+  readonly models: LyricsCheckModel[];
+}
+
+/** Meta's models for listening, transcription, cover art and lyrics checks, used with a Meta key whatever the chat provider. */
 export interface MetaModels {
   readonly baseUrl: string;
   readonly audioUnderstanding: string;
   readonly transcription: string;
   readonly imageGeneration: string;
+  readonly lyricsCheck: LyricsCheckModels;
 }
 
 interface CatalogFile {
@@ -72,5 +84,18 @@ export class ProviderCatalog {
     const provider = this.chatProvider(providerId);
     const model: ChatModelOption | undefined = provider?.models.find((each) => each.id === modelId);
     return model?.credit ?? (provider?.listsModels ? (provider.credit ?? null) : null);
+  }
+
+  /** The models Settings offers for highlighting syllables and rhymes. */
+  lyricsCheckOptions(): ChatModelOption[] {
+    return this.file.meta.lyricsCheck.models.map(({ id, name }) => ({ id, name }));
+  }
+
+  /** The model that highlights syllables and rhymes: the musician's pick when the catalog offers it, else the default. */
+  lyricsCheckModel(chosen: string): LyricsCheckModel {
+    const { default: fallback, models } = this.file.meta.lyricsCheck;
+    const model = models.find((each) => each.id === chosen) ?? models.find((each) => each.id === fallback);
+    if (!model) throw new Error(`providers.json needs a lyrics check model called ${fallback}.`);
+    return model;
   }
 }
