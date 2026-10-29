@@ -20,7 +20,7 @@ export class ModelServices implements Services {
     });
   }
 
-  chat(role: "main" | "subagent"): Promise<TextGenerator> {
+  chat(role: "main" | "subagent" | "lyrics_check"): Promise<TextGenerator> {
     return this.adapter(role, Capability.Text);
   }
 

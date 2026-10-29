@@ -33,6 +33,10 @@
   "suggestions": {
     "perSelection": 6
   },
+  "lyricsSupport": {
+    "maxTokens": 6000,
+    "cacheSize": 400
+  },
   "dialogs": {
     "ask": {
       "width": 760,

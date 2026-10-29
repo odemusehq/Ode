@@ -70,3 +70,37 @@ export interface LyricsWrite {
 export interface LyricsSaved extends LyricsState {
   conflicts: number[];
 }
+
+/** How the Lyrics editor marks one word: its sung syllables as spelling pieces, and each one's stress (1 main, 2 secondary, 0 light). */
+export interface WordCheck {
+  text: string;
+  syllables: string[];
+  stress: number[];
+}
+
+/** The rhyme the editor colours at a line's end. */
+export interface RhymeCheck {
+  /** "A", "B"… in the section's scheme; empty for a line without a rhyming partner. */
+  letter: string;
+  quality: "perfect" | "near" | "none";
+  /** The letters of the last word that carry the rhyme, such as "ide" in "inside"; empty without a rhyme. */
+  part: string;
+}
+
+export interface LineCheck {
+  words: WordCheck[];
+  rhyme: RhymeCheck;
+}
+
+/** Lyrics support's marks for one section, one entry per line sent, in order. */
+export interface LyricsCheck {
+  lines: LineCheck[];
+}
+
+/** A section to check: its sung lines, with labels and blank lines left out. */
+export interface LyricsCheckRequest {
+  lines: string[];
+}
+
+/** The marks, or why Lyrics support is quiet: a provider or key still to set, or a model out of reach. */
+export type LyricsCheckResponse = { status: "ok"; check: LyricsCheck } | { status: "setup" } | { status: "unreachable"; detail: string };

@@ -18,6 +18,7 @@ import { SettingsStore } from "../mneme/settings-store";
 import { SongStore, SongVersions } from "../mneme/song-store";
 import { ContextSummary } from "../mneme/summary";
 import { ModelServices } from "../services";
+import { LyricsChecker } from "../services/lyrics-checker";
 import { ModelRoles } from "../services/model-roles";
 import { ProviderCatalog } from "../services/provider-catalog";
 import { ToolRegistry } from "../tools";
@@ -159,6 +160,7 @@ export class OdeApp {
       song: this.song,
       songs: this.songs,
       lyrics: this.lyrics,
+      lyricsChecker: new LyricsChecker(this.services, texts, config.lyricsSupport),
       prefs: this.prefs,
       settings: this.settings,
       models: this.models,

@@ -9,6 +9,7 @@ import { z } from "zod";
 import { API, type SongsResponse, type StatusResponse } from "../shared/api";
 import type { UiEvent } from "../shared/events";
 import type { DialogView, OdeConfig } from "../shared/config";
+import type { LyricsCheckResponse } from "../shared/lyrics";
 import { Mode } from "../shared/personalisation";
 import { VersionAuthor, type RestoreResult } from "../shared/versions";
 import { LyricsForAnotherSongError, type LyricsStore } from "../mneme/lyrics-store";
@@ -16,6 +17,7 @@ import { VersionNotFoundError } from "../mneme/version-history";
 import type { PreferencesStore } from "../mneme/preferences";
 import type { SettingsStore } from "../mneme/settings-store";
 import { SongNotFoundError, type SongStore } from "../mneme/song-store";
+import type { LyricsChecker } from "../services/lyrics-checker";
 import type { ModelRoles } from "../services/model-roles";
 import { ProviderCatalog } from "../services/provider-catalog";
 import { ModelListRequestSchema, SettingsUpdateSchema, type SettingsResponse } from "../shared/settings";
@@ -39,6 +41,7 @@ export interface ServerDeps {
   song: SongStore;
   songs: SongSwitcher;
   lyrics: LyricsStore;
+  lyricsChecker: LyricsChecker;
   prefs: PreferencesStore;
   settings: SettingsStore;
   models: ModelRoles;
@@ -56,6 +59,7 @@ const ChoiceSchema = z.object({ choice: z.string() });
 const NameSchema = z.object({ name: z.string() });
 const ModeSchema = z.object({ mode: z.enum(Mode) });
 const LyricsWriteSchema = z.object({ songId: z.string().min(1).optional(), text: z.string(), baseRevision: z.number().int().min(0) });
+const LyricsCheckSchema = z.object({ lines: z.array(z.string()) });
 const VersionRequestSchema = z.object({ versionId: z.string().min(1) });
 const SongOpenSchema = z.object({ id: z.string().min(1) });
 const SongCreateSchema = z.object({ title: z.string() });
@@ -253,6 +257,15 @@ export class OdeServer {
         if (error instanceof LyricsForAnotherSongError) return c.json({ error: error.message }, 409);
         throw error;
       }
+    });
+
+    // Lyrics support marks one section: the accent is the song's pronunciation setting.
+    app.post(API.lyricsCheck, async (c) => {
+      const parsed = LyricsCheckSchema.safeParse(await OdeServer.body(c));
+      if (!parsed.success) return c.json({ error: "Send { lines } with the section's sung lines." }, 400);
+      const accent = (await prefs.effective(await song.read())).pronunciation;
+      const answer: LyricsCheckResponse = await this.deps.lyricsChecker.check(parsed.data.lines, accent);
+      return c.json(answer);
     });
 
     app.get("/api/release/file/:name", async (c) => {

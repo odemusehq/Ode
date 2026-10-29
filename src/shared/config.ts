@@ -107,6 +107,13 @@ export interface SuggestionSettings {
   perSelection: number;
 }
 
+export interface LyricsSupportSettings {
+  /** The longest answer Lyrics support may give for one section, reasoning included. */
+  maxTokens: number;
+  /** How many checked sections Ode keeps, so a section seen before is marked at once. */
+  cacheSize: number;
+}
+
 /** The dialogs Ode opens from Live's right-click menu, each a view of Ode's page. */
 export enum DialogView {
   Ask = "ask",
@@ -139,6 +146,7 @@ export class OdeConfig {
   readonly release: ReleaseSettings = { ...defaults.release };
   readonly server: ServerSettings = { ...defaults.server };
   readonly suggestions: SuggestionSettings = { ...defaults.suggestions };
+  readonly lyricsSupport: LyricsSupportSettings = { ...defaults.lyricsSupport };
   readonly dialogs: Record<DialogView, DialogSize> = { ...defaults.dialogs };
 
   constructor(
