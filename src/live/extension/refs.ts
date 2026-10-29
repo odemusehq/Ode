@@ -238,10 +238,15 @@ export class ReferenceResolver {
     return { clip, location: { place: ClipPlace.Session, track, slot: index, clipSlot } };
   }
 
-  /** The track's main lane first, then its take lanes. */
+  /** The take lane the reference names; with no lane, the track's main lane first, then its take lanes. */
   private arrangementClip(ref: ArrangementClipRef): FoundClip {
     const track = this.track(ref.track);
     const startsThere = (clip: Clip<Version>) => Math.abs(clip.startTime - ref.start) <= BEAT_TOLERANCE;
+    if (ref.lane !== undefined) {
+      const take = track.takeLanes[ref.lane]?.clips.find(startsThere);
+      if (take) return { clip: take, location: { place: ClipPlace.Arrangement, track, lane: ref.lane } };
+      throw new NotFoundError(clipText(ref));
+    }
     const clip = track.arrangementClips.find(startsThere);
     if (clip) return { clip, location: { place: ClipPlace.Arrangement, track, lane: null } };
     for (const [lane, takeLane] of track.takeLanes.entries()) {

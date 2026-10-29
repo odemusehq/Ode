@@ -16,6 +16,8 @@ export interface ArrangementClipRef {
   track: TrackRef;
   /** Start of the clip in the Arrangement, in beats. */
   start: number;
+  /** The take lane the clip is on, 0 for the first; the main lane when left out. */
+  lane?: number;
 }
 
 export type ClipRef = ClipSlotRef | ArrangementClipRef | { tag: string };

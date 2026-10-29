@@ -73,7 +73,8 @@ export class SetLookup {
       const clip = track.clipSlots[ref.slot]?.clip;
       return clip ? { track, clip, arranged: false } : undefined;
     }
-    const clip = SetLookup.arrangedClips(track).find((candidate) => Math.abs(candidate.startTime - ref.start) <= BEAT_TOLERANCE);
+    const candidates = ref.lane === undefined ? SetLookup.arrangedClips(track) : (track.takeLanes[ref.lane]?.clips ?? []);
+    const clip = candidates.find((candidate) => Math.abs(candidate.startTime - ref.start) <= BEAT_TOLERANCE);
     return clip ? { track, clip, arranged: true } : undefined;
   }
 

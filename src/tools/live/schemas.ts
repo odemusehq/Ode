@@ -18,8 +18,12 @@ export const ClipSlotRefSchema = z
   .describe("A Session View clip slot.");
 
 export const ArrangementClipRefSchema = z
-  .object({ track: TrackRefSchema, start: z.number().min(0).describe("Start of the clip in the Arrangement, in beats") })
-  .describe("An Arrangement clip, found by its track and start beat.");
+  .object({
+    track: TrackRefSchema,
+    start: z.number().min(0).describe("Start of the clip in the Arrangement, in beats"),
+    lane: index.optional().describe("The take lane the clip is on, 0 for the first; leave it out for the main lane"),
+  })
+  .describe("An Arrangement clip, found by its track, start beat and lane.");
 
 export const ClipRefSchema = z
   .union([ClipSlotRefSchema, ArrangementClipRefSchema, z.object({ tag: z.string().min(1) })])

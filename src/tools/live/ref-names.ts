@@ -56,7 +56,8 @@ export class RefNames {
       return [track, name ? `clip ${name}` : `slot ${ref.slot + 1}`].join(SEPARATOR);
     }
     const start = ref.start;
-    const clip = owner ? RefNames.clipsOf(owner).find((candidate) => Math.abs(candidate.startTime - start) <= BEAT_TOLERANCE) : undefined;
+    const candidates = owner ? (ref.lane === undefined ? RefNames.clipsOf(owner) : (owner.takeLanes[ref.lane]?.clips ?? [])) : [];
+    const clip = candidates.find((candidate) => Math.abs(candidate.startTime - start) <= BEAT_TOLERANCE);
     if (!clip) return [track, `clip at ${this.position(start)}`].join(SEPARATOR);
     const name = SetWording.name(clip);
     return [track, name ? `clip ${name}` : `clip in ${this.span(clip.startTime, clip.endTime)}`].join(SEPARATOR);

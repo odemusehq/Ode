@@ -391,7 +391,7 @@ export class RestorePlanner {
       const call: PlannedCall =
         "slot" in clipKey
           ? { op: "clip_slot_delete_clip", args: { slot: { track, slot: clipKey.slot } }, label: change.label }
-          : { op: "track_delete_clip", args: { clip: { track, start: clipKey.start } }, label: change.label };
+          : { op: "track_delete_clip", args: { clip: RestorePlanner.arrangedRef(track, clipKey) }, label: change.label };
       this.removals.push({ call, depth: 1, index: "slot" in clipKey ? clipKey.slot : clipKey.start });
       return;
     }
@@ -443,7 +443,7 @@ export class RestorePlanner {
       else this.staged.add(stage, { op: "track_create_midi_clip", args: { track, start: key.start, length, notes, ...named }, label });
       if (clip.startMarker > BEAT_TOLERANCE || clip.loopStart > BEAT_TOLERANCE) this.skipped.push(`${label} · start and loop positions`);
     }
-    const ref: ClipRef = clip.tag ? { tag: clip.tag } : "slot" in key ? { track, slot: key.slot } : { track, start: key.start };
+    const ref: ClipRef = clip.tag ? { tag: clip.tag } : "slot" in key ? { track, slot: key.slot } : RestorePlanner.arrangedRef(track, key);
     const canLoop = !audio || audio.warping;
     this.staged.add(stage + 1, { op: "clip_set", args: { clip: ref, color: clip.color, muted: clip.muted, ...(canLoop ? { looping: clip.looping } : {}) }, label });
     if (audio?.warping) this.staged.add(stage + 1, { op: "audio_clip_set", args: { clip: ref, warpMode: audio.warpMode }, label });
@@ -451,7 +451,7 @@ export class RestorePlanner {
 
   private planClipField(change: SetChange, key: TrackKey, clipKey: ClipKey, field: ClipField): void {
     const track = RestorePlanner.currentRef(key);
-    const clip: ClipRef = "slot" in clipKey ? { track, slot: clipKey.slot } : { track, start: clipKey.start };
+    const clip: ClipRef = "slot" in clipKey ? { track, slot: clipKey.slot } : RestorePlanner.arrangedRef(track, clipKey);
     const { after, before, label } = change;
     switch (field) {
       case "notes":
@@ -677,6 +677,11 @@ export class RestorePlanner {
   }
 
   // ─── Shapes of before and after ───────────────────────────────────────────
+
+  /** An Arrangement clip by its start and, on a take lane, its lane. */
+  private static arrangedRef(track: TrackRef, key: { start: number; lane?: number }): ClipRef {
+    return key.lane === undefined ? { track, start: key.start } : { track, start: key.start, lane: key.lane };
+  }
 
   /** A whole list, as SetDiff keeps locators and scenes. */
   private static listOf<T>(value: unknown): T[] {

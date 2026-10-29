@@ -45,10 +45,11 @@ interface Position {
   readonly index: number;
 }
 
-/** The reference Ode reports for a clip: its clip slot, or its track and start beat in the Arrangement. */
+/** The reference Ode reports for a clip: its clip slot, or its track, start beat and take lane in the Arrangement. */
 export function clipReference(clip: Clip<Version>, location: ClipLocation, tracks: TrackDirectory): ClipRef {
   const track = tracks.position(location.track).ref;
-  return location.place === ClipPlace.Session ? { track, slot: location.slot } : { track, start: clip.startTime };
+  if (location.place === ClipPlace.Session) return { track, slot: location.slot };
+  return location.lane === null ? { track, start: clip.startTime } : { track, start: clip.startTime, lane: location.lane };
 }
 
 /** Finds where an object that Live handed over sits in the Set, by walking up its parents. */
