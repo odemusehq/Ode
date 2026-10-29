@@ -77,13 +77,14 @@ export class SharedLyrics {
     this.saver.schedule(() => void this.save());
   }
 
-  /** Saves what is waiting now, before Ode is asked anything; resolves once it is saved or the save failed. */
-  async flush(): Promise<void> {
+  /** Saves every pending edit. False keeps the draft in place when saving fails. */
+  async flush(): Promise<boolean> {
     this.saver.cancel();
     while (this.saving || this.changed) {
       await (this.saving ?? this.save());
-      if (this.snapshot.saveError !== null) return;
+      if (this.snapshot.saveError !== null) return false;
     }
+    return this.snapshot.saveError === null;
   }
 
   retrySave(): void {
@@ -111,6 +112,10 @@ export class SharedLyrics {
   private take(state: LyricsState): boolean {
     const { stored } = this.snapshot;
     if (stored && state.songId !== stored.songId) {
+      if (this.changed || this.saving) {
+        this.update({ saveError: "The song changed while these lyrics were unsaved. Your draft is still here; save it before leaving." });
+        return false;
+      }
       this.saver.cancel();
       this.changed = false;
       this.adopt(state);

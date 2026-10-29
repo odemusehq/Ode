@@ -1,5 +1,5 @@
 import type { ApprovalRequest } from "../../shared/api";
-import type { ResultKind, Suggestion } from "../../shared/events";
+import type { ConversationExchange, ResultKind, Suggestion } from "../../shared/events";
 import type { Mode } from "../../shared/personalisation";
 import type { VersionListItem } from "../../shared/versions";
 
@@ -49,6 +49,8 @@ export interface Step {
   /** In the musician's words: "Writing a bass line for Verse 1". */
   label: string;
   status: "running" | "done" | "error";
+  /** A brief public purpose recorded with this action, when available. */
+  reason?: string;
 }
 
 /** Ode's short answer to Why? about one of its changes. */
@@ -58,6 +60,8 @@ export interface WhyAnswer {
 }
 
 export interface AppState {
+  songId: string | null;
+  exchanges: readonly ConversationExchange[];
   stream: StreamState;
   busy: boolean;
   /** Stop can interrupt what Ode is doing now. */
@@ -94,6 +98,8 @@ export interface AppState {
 
 export function initialState(): AppState {
   return {
+    songId: null,
+    exchanges: [],
     stream: StreamState.Connecting,
     busy: false,
     stoppable: false,

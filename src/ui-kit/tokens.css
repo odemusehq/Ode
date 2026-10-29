@@ -70,8 +70,8 @@
   --font-weight-heading: 500;
   /* Georama's cap height: 700 of 1000 units */
   --cap-height-heading: 0.7em;
-  --font-size-xs: 10px;
-  --font-size-sm: 11px;
+  --font-size-xs: 12px;
+  --font-size-sm: 12px;
   --font-size-md: 13px;
   --font-size-lg: 15px;
   --font-weight-medium: 500;
@@ -101,8 +101,8 @@
   --z-popover: 10;
 
   /* Control sizes */
-  --control-height: 28px;
-  --control-height-sm: 22px;
+  --control-height: 32px;
+  --control-height-sm: 28px;
   --icon-size: 16px;
   --icon-stroke: 1.75;
   --dot-size: 8px;

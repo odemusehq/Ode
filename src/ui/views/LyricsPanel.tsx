@@ -6,7 +6,8 @@ import { LyricsMarks, SupportStatus } from "../app/lyrics-marks";
 import { LyricsViewStore, type LyricsView } from "../app/lyrics-view";
 import { LineMarks } from "./LineMarks";
 import { SectionAction, SectionCard, type SectionQuestion } from "./SectionCard";
-import { SectionLinker, SectionMover } from "./section-pointer";
+import { SectionMover } from "./section-pointer";
+import { MarkLayout } from "./mark-layout";
 import "./LyricsPanel.css";
 
 /** The View menu: which of Lyrics support's marks the editor shows. */
@@ -58,6 +59,9 @@ interface CardQuestion {
   question: SectionQuestion;
 }
 
+/** A pending operation identifies the original section, never an old whole-song array. */
+interface SectionIntent { section: string; index: number; names: (string | null)[] }
+
 /**
  * The lyrics as section cards. Every change becomes the whole text again, labels included, so Ode reads and writes the
  * same text the musician sees; sections that share a name are linked copies and change together.
@@ -71,7 +75,6 @@ function LyricsEditor({ text, strictRhymes }: LyricsEditorProps) {
   const [partners, setPartners] = useState<string | null>(null);
   const list = useRef<HTMLDivElement>(null);
   const indicator = useRef<HTMLDivElement>(null);
-  const cable = useRef<SVGSVGElement>(null);
   const marks = useMemo(() => new LyricsMarks(client.api), [client.api]);
   const support = useSyncExternalStore(marks.subscribe, marks.getSnapshot);
   const [view, setView] = useState<LyricsView>(() => LyricsViewStore.load());
@@ -98,6 +101,22 @@ function LyricsEditor({ text, strictRhymes }: LyricsEditorProps) {
   };
 
   const save = (next: LyricsSection[]) => client.lyrics.edit(LyricsSections.join(next));
+  const intent = (index: number): SectionIntent => ({ section: JSON.stringify(sections[index]), index, names: sections.map((section) => section.name) });
+  const changeLatest = (targets: SectionIntent[], change: (current: LyricsSection[], positions: number[]) => LyricsSection[]) => {
+    const current = LyricsSections.parse(client.lyrics.getSnapshot().text);
+    const positions = targets.map((target) => {
+      const matches = current.flatMap((section, index) => JSON.stringify(section) === target.section ? [index] : []);
+      if (matches.length === 1) return matches[0]!;
+      // Identical linked copies need unchanged ordering to identify the selected copy safely.
+      if (matches.includes(target.index) && JSON.stringify(current.map((section) => section.name)) === JSON.stringify(target.names)) return target.index;
+      return -1;
+    });
+    if (positions.includes(-1)) {
+      client.store.setError("That section changed while the question was open. Your newer lyrics are safe; choose the section action again.");
+      return;
+    }
+    save(change(current, positions));
+  };
   const copiesOf = (name: string | null) => (name === null ? 1 : sections.filter((section) => section.name === name).length);
 
   const rename = (index: number | null) => {
@@ -135,6 +154,8 @@ function LyricsEditor({ text, strictRhymes }: LyricsEditorProps) {
       save(sections.map((each, at) => (at === index ? { ...each, name } : each)));
       return;
     }
+    const target = intent(index);
+    const source = intent(sections.indexOf(existing));
     ask(
       index,
       {
@@ -143,10 +164,10 @@ function LyricsEditor({ text, strictRhymes }: LyricsEditorProps) {
         cancelLabel: "Keep apart",
         onConfirm: () => {
           setAsking(null);
-          save(sections.map((each, at) => (at === index ? { name, lines: [...existing.lines] } : each)));
+          changeLatest([target, source], (current, [to, from]) => current.map((each, at) => at === to ? { name, lines: [...current[from!]!.lines] } : each));
         },
       },
-      () => save(sections.map((each, at) => (at === index ? { ...each, name: LyricsSections.freeName(sections, name) } : each))),
+      () => changeLatest([target], (current, [to]) => current.map((each, at) => at === to ? { ...each, name: LyricsSections.freeName(current, name) } : each)),
     );
   };
 
@@ -175,12 +196,13 @@ function LyricsEditor({ text, strictRhymes }: LyricsEditorProps) {
         return;
       }
       case SectionAction.Delete:
+        const target = intent(index);
         ask(index, {
           message: `Delete ${section.name ?? "this section"} and its lines? History keeps the version before.`,
           confirmLabel: "Delete",
           onConfirm: () => {
             setAsking(null);
-            save(sections.filter((_, at) => at !== index));
+            changeLatest([target], (current, [to]) => current.filter((_, at) => at !== to));
           },
         });
     }
@@ -192,6 +214,7 @@ function LyricsEditor({ text, strictRhymes }: LyricsEditorProps) {
     if (!moved) return;
     next.splice(to, 0, moved);
     save(next);
+    requestAnimationFrame(() => list.current?.querySelector<HTMLButtonElement>(`[data-index="${to}"] .section__grip`)?.focus());
   };
 
   /** Links a section to another: after a yes, the target takes the section's name and lines. */
@@ -199,12 +222,14 @@ function LyricsEditor({ text, strictRhymes }: LyricsEditorProps) {
     const source = sections[from];
     const target = sections[to];
     if (!source || !target || source.name === null) return;
+    const sourceIntent = intent(from);
+    const targetIntent = intent(to);
     ask(to, {
       message: `Replace the lines of ${target.name ?? "this section"} with ${source.name} and link them?`,
       confirmLabel: "Replace and link",
       onConfirm: () => {
         setAsking(null);
-        save(sections.map((each, at) => (at === to ? { name: source.name, lines: [...source.lines] } : each)));
+        changeLatest([sourceIntent, targetIntent], (current, [sourceAt, targetAt]) => current.map((each, at) => at === targetAt ? { name: current[sourceAt!]!.name, lines: [...current[sourceAt!]!.lines] } : each));
       },
     });
   };
@@ -230,16 +255,16 @@ function LyricsEditor({ text, strictRhymes }: LyricsEditorProps) {
           label="View"
           buttonText="View"
           items={VIEW_ITEMS.map((item) => ({ ...item, checked: view[item.id] }))}
+          multiple
           onSelect={toggleView}
           align={MenuAlign.End}
         />
       </div>
       <div ref={list} className="lyrics-editor__sections">
-        <svg ref={cable} className="lyrics-cable" aria-hidden="true" />
         <div ref={indicator} className="lyrics-editor__drop" hidden />
         {sections.map((section, index) => (
           <SectionCard
-            key={`${index}:${section.name ?? ""}`}
+            key={index}
             section={section}
             index={index}
             copies={copiesOf(section.name)}
@@ -261,14 +286,18 @@ function LyricsEditor({ text, strictRhymes }: LyricsEditorProps) {
               const to = index + direction;
               if (to >= 0 && to < sections.length) move(index, to);
             }}
-            onLinkHandle={(event) => {
-              if (!list.current || !cable.current) return;
-              event.preventDefault();
-              const accepts = (to: number) => to !== index && sections[to]?.name !== section.name;
-              new SectionLinker(list.current, cable.current).start(index, event.currentTarget, accepts, link);
-            }}
+            linkTargets={sections.flatMap((other, at) => at !== index && other.name !== section.name ? [{ id: String(at), label: other.name ?? `Untitled section ${at + 1}` }] : [])}
+            onLinkTo={(to) => link(index, to)}
             onPartners={(show) => setPartners(show ? section.name : null)}
             renderMarks={marksBehind(section.name !== null && strictRhymes.includes(section.name))}
+            analysis={<details className="section__analysis"><summary>Line analysis</summary><ol>
+              {section.lines.filter(LyricsSections.isSung).map((line, lineIndex) => {
+                const check = marks.marksFor(section.lines.filter(LyricsSections.isSung))[lineIndex];
+                return <li key={lineIndex}><p>{line}</p>{check ? <p>
+                  {MarkLayout.count(check)} syllables. {check.words.map((word) => `${word.text}: ${word.syllables.map((syllable, at) => `${syllable} (${word.stress[at] === 1 ? "primary stress" : word.stress[at] === 2 ? "secondary stress" : "unstressed"})`).join(", ")}`).join("; ")}. Rhyme: {check.rhyme.letter ? `${check.rhyme.letter}, ${check.rhyme.quality}${check.rhyme.part ? `, ending ${check.rhyme.part}` : ""}` : "no partner"}.
+                </p> : <p>Analysis is not available for this line yet.</p>}</li>;
+              })}
+            </ol></details>}
             extras={
               section.name !== null && (
                 <StrictToggle

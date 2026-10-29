@@ -28,7 +28,9 @@ export class ToolLabels {
   /** The tool's own description of the call ("Bass · EQ Eight · 1 Frequency A to 200"), or a plain label. */
   for(name: string, input: unknown): string {
     const described = this.registry.describe(name, input);
-    return described ? described.replace(/\.$/, "") : ToolLabels.plain(name);
+    if (described) return described.replace(/\.$/, "");
+    const target = this.registry.target?.(name, input);
+    return `${target ? `${target} · ` : ""}${ToolLabels.plain(name)}`;
   }
 
   /** "midi_clip_get_notes" → "Reading MIDI clip notes"; "prosody_check" → "Checking prosody". */

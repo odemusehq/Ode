@@ -60,7 +60,7 @@ export function HistoryChanges({ versionId, id }: HistoryChangesProps) {
 interface ChangePartProps {
   title: string;
   changes: readonly SetChange[];
-  beatsPerBar: number;
+  beatsPerBar: number | null;
   /** A track the version touched: highlighted. */
   track?: boolean;
 }
@@ -81,7 +81,7 @@ function ChangePart({ title, changes, beatsPerBar, track }: ChangePartProps) {
 interface ChangeItemProps {
   change: SetChange;
   heading: string;
-  beatsPerBar: number;
+  beatsPerBar: number | null;
 }
 
 function ChangeItem({ change, heading, beatsPerBar }: ChangeItemProps) {
@@ -130,7 +130,7 @@ interface NotesBeforeAfterProps {
   label: string;
   before?: Note[];
   after?: Note[];
-  beatsPerBar: number;
+  beatsPerBar: number | null;
 }
 
 /** The notes before and after on two rolls with the same rows and length, so they line up. */

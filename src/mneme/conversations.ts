@@ -1,48 +1,68 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { z } from "zod";
+import type { ConversationActivity, ConversationExchange } from "../shared/conversation";
 import { JsonFile } from "./json-file";
 
-/** One request and Ode's final reply to it. */
-export const ExchangeSchema = z.object({ request: z.string(), reply: z.string(), at: z.string() });
+export const ExchangeSchema = z.object({
+  id: z.string().optional(), request: z.string(), reply: z.string(), at: z.string(),
+  activity: z.array(z.object({ id: z.string(), label: z.string(), status: z.enum(["running", "done", "error"]), reason: z.string().optional() })).optional(),
+  rationale: z.string().optional(),
+  versionId: z.string().nullable().optional(),
+  status: z.enum(["running", "complete", "stopped", "failed"]).optional(),
+});
 export type Exchange = z.infer<typeof ExchangeSchema>;
 
-/** A song's recent requests and replies, carried into its next request so the conversation goes on. */
+/** The complete song conversation on disk, with a bounded window for the model. */
 export class ConversationLog {
-  constructor(
-    /** Names the conversation for model providers that keep it on one server. */
-    readonly id: string,
-    private readonly file: JsonFile<Exchange[]>,
-    private readonly keep: number,
-  ) {}
+  constructor(readonly id: string, private readonly file: JsonFile<Exchange[]>, private readonly keep: number) {}
 
-  recent(): Promise<Exchange[]> {
-    return this.file.read();
+  async all(): Promise<ConversationExchange[]> {
+    return (await this.file.read()).map((entry) => ({ ...entry,
+      id: entry.id ?? createHash("sha256").update(entry.at + entry.request).digest("hex").slice(0, 24),
+      status: entry.status ?? "complete",
+    }));
+  }
+
+  async recent(): Promise<Exchange[]> {
+    const exchanges = (await this.all()).filter((entry) => entry.status !== "running");
+    return this.keep > 0 ? exchanges.slice(-this.keep) : [];
+  }
+
+  async begin(request: string): Promise<string> {
+    const id = randomUUID();
+    await this.file.update((entries) => [...entries, { id, request, reply: "", at: new Date().toISOString(), status: "running" }]);
+    return id;
+  }
+
+  async finish(id: string, reply: string, status: ConversationExchange["status"], versionId?: string | null): Promise<void> {
+    await this.file.update((entries) => entries.map((entry) => entry.id === id ? { ...entry, reply, status, ...(versionId === undefined ? {} : { versionId }),
+      activity: entry.activity?.map((step) => step.status === "running" ? { ...step, status: "error" as const } : step) } : entry));
+  }
+
+  async checkpoint(id: string, activity: ConversationActivity[], rationale: string): Promise<void> {
+    const saved = structuredClone(activity);
+    await this.file.update((entries) => entries.map((entry) => entry.id === id ? { ...entry, activity: saved, rationale } : entry));
+  }
+
+  /** A process restart preserves interrupted work rather than silently resuming edits. */
+  async recover(): Promise<void> {
+    await this.file.update((entries) => entries.map((entry) => entry.status === "running"
+      ? { ...entry, status: "stopped", reply: entry.reply || "Interrupted. Check the current Set before continuing.",
+          activity: entry.activity?.map((step) => step.status === "running" ? { ...step, status: "error" as const } : step) } : entry));
   }
 
   async add(request: string, reply: string): Promise<void> {
-    // slice(-0) would keep everything, so a limit of 0 keeps an empty list.
-    await this.file.update((exchanges) => (this.keep > 0 ? [...exchanges, { request, reply, at: new Date().toISOString() }].slice(-this.keep) : []));
+    const id = await this.begin(request);
+    await this.finish(id, reply, "complete");
   }
 }
 
-/** Every song's conversation, one JSON file per song in Ode's folder. */
+/** Every song keeps its own transcript; settings and artist memory are separate. */
 export class ConversationStore {
-  constructor(
-    private readonly folder: string,
-    private readonly keep: number,
-  ) {}
-
+  constructor(private readonly folder: string, private readonly keep: number) {}
   log(key: string): ConversationLog {
-    return new ConversationLog(ConversationStore.id(key), new JsonFile(this.path(key), z.array(ExchangeSchema), () => []), this.keep);
-  }
-
-  private path(key: string): string {
-    return join(this.folder, `${ConversationStore.id(key)}.json`);
-  }
-
-  /** A file name for any key. */
-  private static id(key: string): string {
-    return createHash("sha256").update(key).digest("hex").slice(0, 32);
+    const id = createHash("sha256").update(key).digest("hex").slice(0, 32);
+    return new ConversationLog(id, new JsonFile(join(this.folder, `${id}.json`), z.array(ExchangeSchema), () => []), this.keep);
   }
 }

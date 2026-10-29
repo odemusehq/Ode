@@ -252,9 +252,14 @@
 }
 
 .section-text:focus-within {
-  box-shadow: 0 0 0 var(--border-width) var(--color-border);
+  box-shadow: 0 0 0 var(--focus-ring-width) var(--color-highlight);
   border-radius: var(--radius-md);
 }
+
+.section__analysis { font-size: var(--font-size-sm); color: var(--color-text-muted); margin-top: var(--space-3); }
+.section__analysis summary { cursor: pointer; padding-block: var(--space-2); }
+.section__analysis ol { padding-left: var(--space-5); }
+.section__analysis li { margin-block: var(--space-3); }
 
 .section-text__marks {
   position: absolute;

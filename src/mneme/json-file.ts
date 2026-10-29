@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, open, readFile, rename } from "node:fs/promises";
+import { chmod, mkdir, open, readFile, rename, rm } from "node:fs/promises";
 import { dirname } from "node:path";
 import type { z } from "zod";
 import defaults from "../shared/defaults.json";
@@ -27,6 +27,7 @@ export class JsonFile<T> {
   async read(): Promise<T> {
     let text: string;
     try {
+      if (this.options.mode !== undefined) await chmod(this.path, this.options.mode);
       text = await readFile(this.path, "utf8");
     } catch (error) {
       if (JsonFile.isMissing(error)) return this.createDefault();
@@ -61,7 +62,7 @@ export class JsonFile<T> {
   static async setAside(path: string, reason: unknown): Promise<void> {
     const aside = `${path}.unreadable-${Date.now()}`;
     await rename(path, aside).catch(() => undefined);
-    console.error(`Ode set ${path} aside as ${aside}: ${reason instanceof Error ? reason.message : String(reason)}`);
+    console.error(`Ode set ${path} aside as ${aside}: ${reason instanceof SyntaxError ? "Invalid JSON" : reason instanceof Error ? reason.message : String(reason)}`);
   }
 
   /**
@@ -69,7 +70,7 @@ export class JsonFile<T> {
    * sees the old file or the new one whole. A rename that another program holds up is tried again for a moment.
    */
   static async writeAtomically(path: string, text: string, mode?: number): Promise<void> {
-    await mkdir(dirname(path), { recursive: true });
+    await mkdir(dirname(path), { recursive: true, ...(mode === undefined ? {} : { mode: 0o700 }) });
     const temporary = `${path}.${randomUUID()}.tmp`;
     const file = await open(temporary, "w", mode);
     try {
@@ -85,7 +86,10 @@ export class JsonFile<T> {
         return;
       } catch (error) {
         const code = (error as NodeJS.ErrnoException).code ?? "";
-        if (!BUSY_CODES.has(code) || attempt >= renameRetries) throw error;
+        if (!BUSY_CODES.has(code) || attempt >= renameRetries) {
+          await rm(temporary, { force: true });
+          throw error;
+        }
         await new Promise((resolve) => setTimeout(resolve, renameRetryMs * (attempt + 1)));
       }
     }

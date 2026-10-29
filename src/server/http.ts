@@ -1,3 +1,6 @@
+import { ResultKind } from "../shared/events";
+import { bodyLimit } from "hono/body-limit";
+import { LocalAudioFiles, MAX_AUDIO_UPLOAD_BYTES } from "../live/local-audio-files";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { basename, extname, join } from "node:path";
@@ -159,7 +162,12 @@ export class OdeServer {
     if (!READS.has(c.req.method)) {
       const origin = c.req.header("origin");
       if (origin !== undefined && !hosts.some((host) => origin === `http://${host}`)) return c.text(OPEN_FROM_LIVE, 403);
-      if (!(c.req.header("content-type") ?? "").startsWith(JSON_TYPE)) return c.json({ error: "Send the request as JSON." }, 415);
+      const upload = c.req.path === API.audioImport;
+      const contentType = c.req.header("content-type") ?? "";
+      if (upload && origin === undefined) return c.text(OPEN_FROM_LIVE, 403);
+      if (!(upload ? contentType.startsWith("multipart/form-data;") : contentType.startsWith(JSON_TYPE))) {
+        return c.json({ error: upload ? "Choose an audio file to attach." : "Send the request as JSON." }, 415);
+      }
     }
     await next();
     for (const [name, value] of Object.entries(SAFETY_HEADERS)) c.res.headers.set(name, value);
@@ -211,8 +219,37 @@ export class OdeServer {
     app.post(API.chat, async (c) => {
       const parsed = TextSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: "Send { text } with what to ask Ode." }, 400);
-      void sessions.current.send({ text: parsed.data.text });
+      await sessions.current.accept({ text: parsed.data.text });
       return c.json({ ok: true });
+    });
+
+    app.get(API.conversation, async (c) => {
+      const session = sessions.current;
+      return c.json({ songId: session.songId, exchanges: await session.transcript() });
+    });
+
+    app.post(API.audioImport, bodyLimit({ maxSize: MAX_AUDIO_UPLOAD_BYTES + 1024 * 1024,
+      onError: (c) => c.json({ error: "The audio file is too large. Attach a shorter range (up to 128 MiB)." }, 413),
+    }), async (c) => {
+      const form = await c.req.formData();
+      const file = form.get("file");
+      const scope = form.get("scope") ?? "reference";
+      if (!(file instanceof File) || !["sample", "reference", "processed-bounce"].includes(String(scope))) {
+        return c.json({ error: "Choose an audio file and its intended use." }, 400);
+      }
+      if (file.size > MAX_AUDIO_UPLOAD_BYTES) return c.json({ error: "The audio file exceeds 128 MiB." }, 413);
+      const start = form.get("start"), end = form.get("end");
+      const library = new LocalAudioFiles(config.userDir, config.tempDir);
+      try {
+        const record = await library.add({ name: file.name, bytes: new Uint8Array(await file.arrayBuffer()),
+          purpose: scope === "sample" ? "library" : scope as "reference" | "processed-bounce",
+          source: String(form.get("sourceDescription") ?? ""),
+          ...(start !== null && end !== null ? { range: { start: Number(start), end: Number(end) } } : {}),
+        });
+        return c.json({ ...await library.open(record.id), scope });
+      } catch (error) {
+        return c.json({ error: OdeServer.messageOf(error) }, 400);
+      }
     });
 
     app.post(API.stop, (c) => {
@@ -421,13 +458,25 @@ export class OdeServer {
       const send = (event: UiEvent) => {
         void stream.writeSSE({ data: JSON.stringify(event) });
       };
+      const pending: UiEvent[] = [];
+      let replaying = true;
+      const unsubscribe = bus.subscribe((event) => { if (replaying) pending.push(event); else send(event); });
+      stream.onAbort(unsubscribe);
+      const session = sessions.current;
+      const exchanges = await session.transcript();
+      if (session === sessions.current) send({ type: "conversation", songId: session.songId, exchanges });
       send({ type: "busy", busy: sessions.current.isBusy, stoppable: sessions.current.isStoppable });
       send({ type: "mode", mode });
       for (const approval of approvals.pending()) send({ type: "approval", ...approval });
       for (const question of questions.pending()) send({ type: "question", ...question });
       selection.replay(send);
-      const unsubscribe = bus.subscribe(send);
-      stream.onAbort(unsubscribe);
+      const last = [...exchanges].reverse().find((exchange) => exchange.status !== "running");
+      if (session === sessions.current && last?.reply) send({ type: "result", text: last.reply,
+        versionId: last.versionId ?? null,
+        kind: last.versionId ? last.status === "stopped" ? ResultKind.Stopped : ResultKind.Change : ResultKind.Reply,
+      });
+      replaying = false;
+      for (const event of pending) send(event);
       while (!stream.aborted) {
         await stream.sleep(this.deps.config.server.keepaliveMs);
         await stream.writeSSE({ event: "keepalive", data: "" });

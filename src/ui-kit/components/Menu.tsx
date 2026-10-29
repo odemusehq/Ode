@@ -31,12 +31,14 @@ export interface MenuProps<T extends string> {
   /** Which edge of the button the menu lines up with. */
   align?: MenuAlign;
   disabled?: boolean;
+  /** Independent options use checkbox semantics; a single selection uses radio semantics. */
+  multiple?: boolean;
 }
 
 const NEXT_KEYS: Record<string, number> = { ArrowDown: 1, ArrowUp: -1 };
 
 /** A button that opens a short list of actions, or of options with the chosen one checked. */
-export function Menu<T extends string>({ label, buttonText, icon, items, onSelect, align = MenuAlign.Start, disabled }: MenuProps<T>) {
+export function Menu<T extends string>({ label, buttonText, icon, items, onSelect, align = MenuAlign.Start, disabled, multiple = false }: MenuProps<T>) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -123,7 +125,7 @@ export function Menu<T extends string>({ label, buttonText, icon, items, onSelec
                   else itemButtons.current.delete(item.id);
                 }}
                 type="button"
-                role={choice ? "menuitemradio" : "menuitem"}
+                role={choice ? (multiple ? "menuitemcheckbox" : "menuitemradio") : "menuitem"}
                 aria-checked={choice ? Boolean(item.checked) : undefined}
                 tabIndex={-1}
                 className={cx("ode-menu__item", item.checked && "ode-menu__item--checked")}

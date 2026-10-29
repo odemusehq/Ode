@@ -1,10 +1,10 @@
 import type { StatusResponse } from "../../shared/api";
-import type { UiEvent } from "../../shared/events";
+import type { ConversationExchange, UiEvent } from "../../shared/events";
 import type { Mode } from "../../shared/personalisation";
 import type { VersionListItem } from "../../shared/versions";
 import { StreamState, initialState } from "./model";
 import type { AppState } from "./model";
-import { finishWork, reduceEvent } from "./reducer";
+import { reduceEvent } from "./reducer";
 
 /** Holds the app state and tells subscribers when it changes; read it with useSyncExternalStore. */
 export class Store {
@@ -24,11 +24,10 @@ export class Store {
     this.update(reduceEvent(this.state, event));
   }
 
-  /** While the stream is down the working state is cleared; the server sends it again when the stream opens. */
+  /** A lost connection leaves the last known work visible; it does not imply the server stopped. */
   setStream(stream: StreamState): void {
     if (stream === this.state.stream) return;
-    const lost = stream === StreamState.Reconnecting || stream === StreamState.Closed;
-    this.update(lost ? { ...finishWork(this.state), stream } : { ...this.state, stream });
+    this.update({ ...this.state, stream });
   }
 
   /** The stream opened: the server sends the questions and changes still waiting, so the old cards go. */
@@ -47,6 +46,10 @@ export class Store {
       versionGroupMinutes: status.versionGroupMinutes,
       credit: status.credit,
     });
+  }
+
+  setConversation(songId: string, exchanges: readonly ConversationExchange[]): void {
+    this.apply({ type: "conversation", songId, exchanges: [...exchanges] });
   }
 
   setMode(mode: Mode | null): void {

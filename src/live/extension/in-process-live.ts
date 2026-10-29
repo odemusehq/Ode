@@ -10,7 +10,7 @@ export class InProcessLive implements LiveConnections {
   readonly extension: LiveLink;
 
   constructor(operations: OperationRegistry) {
-    this.extension = { call: async <R>(op: string, args: unknown) => InProcessLive.plain(await operations.run(op, args)) as R };
+    this.extension = { call: async <R>(op: string, args: unknown, signal?: AbortSignal) => InProcessLive.plain(await operations.run(op, args, signal)) as R };
   }
 
   private static plain(value: unknown): unknown {

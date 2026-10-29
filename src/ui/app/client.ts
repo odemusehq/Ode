@@ -19,6 +19,7 @@ export class OdeClient {
   private readonly stream: EventStream;
   /** An Undo is on its way; a second press meanwhile is ignored, so each Undo goes back one version. */
   private undoing = false;
+  private conversationRead = 0;
 
   constructor(readonly layout: Layout) {
     this.stream = new EventStream(API.events, {
@@ -43,6 +44,7 @@ export class OdeClient {
     const reads = [this.refreshStatus()];
     if (this.layout === Layout.Lyrics) reads.push(this.lyrics.load(true));
     if (this.layout === Layout.History) reads.push(this.loadVersions());
+    if (this.layout === Layout.Ask) reads.push(this.loadConversation());
     await Promise.allSettled(reads);
   }
 
@@ -52,22 +54,21 @@ export class OdeClient {
 
   /** Saves the lyrics waiting to be saved, then switches Ode to another song and reads its title, lyrics or history. Throws when it fails. */
   async openSong(id: string): Promise<void> {
-    await this.lyrics.flush();
+    await this.saveLyrics();
     await this.api.openSong(id);
     await this.refresh();
   }
 
   /** Saves the lyrics waiting to be saved, then starts a new song and switches to it. Throws when it fails. */
   async createSong(title: string): Promise<void> {
-    await this.lyrics.flush();
+    await this.saveLyrics();
     await this.api.createSong(title);
     await this.refresh();
   }
 
   /** Saves the lyrics waiting to be saved, then closes the dialog back to Live; a failed save keeps it open, with the reason on the panel. */
   async close(): Promise<void> {
-    await this.lyrics.flush();
-    if (this.lyrics.getSnapshot().saveError !== null) return;
+    if (!await this.lyrics.flush()) return;
     LiveDialog.close(DialogResult.Done);
   }
 
@@ -84,27 +85,29 @@ export class OdeClient {
   }
 
   /** Sends a typed line or a tapped suggestion; Ode answers with a result line. */
-  async send(text: string): Promise<void> {
+  async send(text: string): Promise<boolean> {
     const request = text.trim();
-    if (!request) return;
+    if (!request) return false;
     this.store.startRequest();
-    await this.lyrics.flush();
     try {
+      await this.saveLyrics();
       await this.api.chat({ text: request });
+      return true;
     } catch (error) {
       this.store.setError(`Your request stayed here: ${errorMessage(error)}`);
+      return false;
     }
   }
 
-  tap(suggestion: Suggestion): Promise<void> {
+  tap(suggestion: Suggestion): Promise<boolean> {
     return this.send(suggestion.request);
   }
 
   /** Asks why Ode made the change with this version; the short answer goes under its result line. */
   async askWhy(versionId: string): Promise<void> {
     this.store.startRequest();
-    await this.lyrics.flush();
     try {
+      await this.saveLyrics();
       await this.api.why({ versionId });
     } catch (error) {
       this.store.setError(`Ode's answer stopped: ${errorMessage(error)}`);
@@ -114,8 +117,8 @@ export class OdeClient {
   /** Another take of the change with this version, in place. */
   async again(versionId: string): Promise<void> {
     this.store.startRequest();
-    await this.lyrics.flush();
     try {
+      await this.saveLyrics();
       await this.api.again({ versionId });
     } catch (error) {
       this.store.setError(`Another take stopped: ${errorMessage(error)}`);
@@ -177,7 +180,7 @@ export class OdeClient {
     }
   }
 
-  /** Restores a version the musician confirmed; the versions after it are deleted. Throws when it fails. */
+  /** Restores supported state after confirmation and keeps the saved history. Throws when it fails. */
   async restoreVersion(id: string): Promise<RestoreResult> {
     const outcome = await this.api.restoreVersion(id);
     await this.loadVersions();
@@ -195,10 +198,25 @@ export class OdeClient {
   }
 
   private receive(event: UiEvent): void {
+    if (event.type === "conversation" || event.type === "title") this.conversationRead += 1;
     this.store.apply(event);
     if (event.type === "lyrics" && this.layout === Layout.Lyrics) this.lyrics.receive(event.lyrics);
     // Another song is in use: its lyrics and history replace these.
     if (event.type === "title") void this.refresh();
+  }
+
+  private async loadConversation(): Promise<void> {
+    const read = ++this.conversationRead;
+    try {
+      const conversation = await this.api.getConversation();
+      if (read === this.conversationRead) this.store.setConversation(conversation.songId, conversation.exchanges);
+    } catch (error) {
+      if (read === this.conversationRead) this.store.setError(`Reading the conversation stopped: ${errorMessage(error)}`);
+    }
+  }
+
+  private async saveLyrics(): Promise<void> {
+    if (!await this.lyrics.flush()) throw new Error(this.lyrics.getSnapshot().saveError ?? "Save the lyrics before continuing.");
   }
 
   private async checkVersions(): Promise<void> {

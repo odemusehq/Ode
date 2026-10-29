@@ -1,3 +1,5 @@
+import type { ConversationExchange } from "./conversation";
+export type { ConversationExchange } from "./conversation";
 import type { SelectionInfo } from "./live-ops";
 import type { LyricsState } from "./lyrics";
 import type { Mode } from "./personalisation";
@@ -26,7 +28,8 @@ export enum ResultKind {
 
 /** Events the local server streams to the UI over server-sent events. */
 export type UiEvent =
-  | { type: "message"; role: "user" | "assistant"; text: string }
+  | { type: "message"; role: "user" | "assistant"; text: string; id?: string }
+  | { type: "conversation"; songId: string; exchanges: ConversationExchange[] }
   | { type: "tool"; id: string; name: string; status: "started" | "done" | "error"; summary?: string }
   | { type: "subagent"; id: string; task: string; status: "started" | "done" }
   /** Manual mode, or a change beyond Undo's reach: waiting for Apply or Skip. */
@@ -58,4 +61,4 @@ export type UiEvent =
   /** The shared lyrics changed: saved from the window, by Ode, or by a restore. */
   | { type: "lyrics"; lyrics: LyricsState }
   /** The song's title, when it changes or another song opens. */
-  | { type: "title"; title: string };
+  | { type: "title"; title: string; songId?: string };

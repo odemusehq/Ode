@@ -12,7 +12,7 @@ export function AskDialog() {
   return (
     <div className="app">
       <DialogHeader withMode />
-      <div className="app-body app-body--scroll">
+      <div className="app-body">
         <NowPanel />
       </div>
       <DialogFooter />

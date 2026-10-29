@@ -33,9 +33,15 @@ export class Questions implements MusicianQuestions {
   /** The musician tapped an answer. False when the question is gone or the answer is outside its buttons. */
   answer(id: string, choice: string): boolean {
     const question = this.waiting.get(id);
-    if (!question || !question.view.options.includes(choice)) return false;
+    if (!question || !choice.trim()) return false;
     this.settle(id, choice);
     return true;
+  }
+
+  /** A plain chat reply answers the oldest pending question. */
+  reply(text: string): boolean {
+    const [id] = this.waiting.keys();
+    return id !== undefined && this.answer(id, text);
   }
 
   /** The questions still waiting, for a window that just connected. */

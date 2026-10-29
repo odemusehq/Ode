@@ -36,6 +36,7 @@ export interface SectionCardProps {
   extras?: ReactNode;
   /** Drawn behind the section's text, line for line. */
   renderMarks?: (lines: readonly string[]) => ReactNode;
+  analysis?: ReactNode;
   onRename: () => void;
   onName: (name: string) => void;
   onQuickName: (name: string) => void;
@@ -44,7 +45,8 @@ export interface SectionCardProps {
   onAction: (action: SectionAction) => void;
   onGrip: (event: PointerEvent<HTMLButtonElement>) => void;
   onStep: (direction: -1 | 1) => void;
-  onLinkHandle: (event: PointerEvent<HTMLButtonElement>) => void;
+  linkTargets: readonly { id: string; label: string }[];
+  onLinkTo: (index: number) => void;
   onPartners: (show: boolean) => void;
 }
 
@@ -74,20 +76,12 @@ export function SectionCard(props: SectionCardProps) {
   return (
     <div className={cx("section", linked && "section--linked", partner && "section--partner")} data-index={index}>
       <div className="section__rail">
-        <button type="button" className="section__grip" aria-label={`Move ${title}`} title="Drag to move" onPointerDown={props.onGrip} onKeyDown={step}>
+        <button type="button" className="section__grip" aria-label={`Move ${title}; use Up and Down arrow keys to reorder`} title="Drag to move, or use Up and Down arrow keys" onPointerDown={props.onGrip} onKeyDown={step}>
           <Icon name={IconName.Grip} />
         </button>
         <span className="section__bar" />
         {section.name !== null && (
-          <button
-            type="button"
-            className="section__link"
-            aria-label={`Link ${title} to another section`}
-            title="Drag onto another section to link them"
-            onPointerDown={props.onLinkHandle}
-          >
-            <Icon name={IconName.Link} />
-          </button>
+          <Menu label={`Copy ${title} into and link to another section`} icon={IconName.Link} items={props.linkTargets} disabled={props.linkTargets.length === 0} onSelect={(id) => props.onLinkTo(Number(id))} />
         )}
       </div>
       <div className="section__body">
@@ -136,6 +130,7 @@ export function SectionCard(props: SectionCardProps) {
           />
         )}
         <SectionText lines={section.lines} label={`${title} lyrics`} onLines={props.onLines} renderMarks={renderMarks} />
+        {props.analysis}
       </div>
     </div>
   );

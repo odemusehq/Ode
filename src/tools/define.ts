@@ -32,6 +32,8 @@ export interface MusicianQuestions {
 }
 
 export interface ToolContext {
+  /** Stops later stages of an interrupted request. */
+  signal?: AbortSignal;
   config: OdeConfig;
   live: LiveConnections;
   song: SongStore;

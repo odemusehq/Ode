@@ -11,7 +11,7 @@ export class SessionManager {
     private readonly deps: SessionDeps,
     private readonly conversations: ConversationStore,
   ) {
-    this.session = new OdeSession(deps, conversations.log(this.key));
+    this.session = new OdeSession(deps, conversations.log(this.key), this.key);
   }
 
   get current(): OdeSession {
@@ -23,6 +23,6 @@ export class SessionManager {
     if (songId === this.key) return;
     this.key = songId;
     this.session.stop();
-    this.session = new OdeSession(this.deps, this.conversations.log(songId));
+    this.session = new OdeSession(this.deps, this.conversations.log(songId), songId);
   }
 }

@@ -1,4 +1,4 @@
-import type { Suggestion, UiEvent } from "../../shared/events";
+import type { ConversationExchange, Suggestion, UiEvent } from "../../shared/events";
 import { VersionAuthor } from "../../shared/versions";
 import type { VersionListItem } from "../../shared/versions";
 import type { AppState, Step } from "./model";
@@ -12,7 +12,14 @@ type ApprovalEvent = Extract<UiEvent, { type: "approval" }>;
  */
 export function reduceEvent(state: AppState, event: UiEvent): AppState {
   switch (event.type) {
+    case "conversation": {
+      const next = state.songId !== event.songId ? clearSong(state) : state;
+      const before = next.exchanges.find((exchange) => exchange.status === "running")?.id;
+      const after = event.exchanges.find((exchange) => exchange.status === "running")?.id;
+      return { ...next, ...(before !== after ? { steps: [], thought: null, progress: null } : {}), songId: event.songId, exchanges: event.exchanges };
+    }
     case "message":
+      return addMessage(state, event);
     case "lyrics":
       return state;
     case "tool":
@@ -51,12 +58,37 @@ export function reduceEvent(state: AppState, event: UiEvent): AppState {
     case "mode":
       return { ...state, mode: event.mode };
     case "done":
-      return finishWork(state);
+      // A turn can finish while its queued continuation starts. Global busy comes from the busy event.
+      return state;
     case "error":
       return { ...state, error: event.message, progress: null };
     case "title":
-      return { ...state, title: event.title };
+      return event.songId && event.songId === state.songId
+        ? { ...state, title: event.title }
+        : { ...clearSong(state), songId: event.songId ?? null, title: event.title };
   }
+}
+
+/** A title may arrive before the new song's conversation. Never keep old action targets under it. */
+function clearSong(state: AppState): AppState {
+  return { ...state, exchanges: [], result: null, answer: null, steps: [], questions: [], approvals: [], suggestions: [], focus: null, versions: null, historyError: null, error: null };
+}
+
+function addMessage(state: AppState, event: Extract<UiEvent, { type: "message" }>): AppState {
+  const exchanges = [...state.exchanges];
+  const at = event.id ? exchanges.findIndex((exchange) => exchange.id === event.id) : exchanges.findLastIndex((exchange) => exchange.status === "running");
+  const known = exchanges[at];
+  if (event.role === "user") {
+    if (known && known.request === event.text) return state;
+    const exchange: ConversationExchange = { id: event.id ?? `message-${Date.now()}-${exchanges.length}`, request: event.text, reply: "", at: new Date().toISOString(), status: "running" };
+    if (known && event.id) exchanges[at] = { ...known, ...exchange };
+    else exchanges.push(exchange);
+  } else if (known) {
+    exchanges[at] = { ...known, reply: event.text, status: "complete" };
+  } else {
+    exchanges.push({ id: event.id ?? `message-${Date.now()}-${exchanges.length}`, request: "", reply: event.text, at: new Date().toISOString(), status: "complete" });
+  }
+  return { ...state, exchanges };
 }
 
 /** Suggestions with the fixes for problems first, otherwise in the server's order. */

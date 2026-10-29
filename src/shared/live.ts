@@ -146,7 +146,7 @@ export interface LivePointer {
 
 /** Runs one of the extension's operations on the Set open in Live. */
 export interface LiveLink {
-  call<R = unknown>(op: string, args: unknown): Promise<R>;
+  call<R = unknown>(op: string, args: unknown, signal?: AbortSignal): Promise<R>;
 }
 
 export interface LiveConnections {

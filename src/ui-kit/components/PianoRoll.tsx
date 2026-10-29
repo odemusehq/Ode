@@ -8,7 +8,7 @@ export interface PianoRollProps {
   label: string;
   notes: readonly Note[];
   /** Quarter-note beats per bar, for the bar lines. */
-  beatsPerBar: number;
+  beatsPerBar: number | null;
   /** Length in beats; the roll is at least this long. Give two rolls the same length to compare them. */
   lengthBeats?: number;
   /** Rows to show; give two rolls the same range to compare them. Fits the notes when left out. */
@@ -37,13 +37,15 @@ const MAX_VELOCITY = 127;
 export function PianoRoll({ label, notes, beatsPerBar, lengthBeats = 0, pitchRange }: PianoRollProps) {
   const range = pitchRange ?? pitchRangeOf(notes);
   const rows = range.high - range.low + 1;
-  const bars = barCount(notes, beatsPerBar, lengthBeats);
-  const beats = bars * beatsPerBar;
+  const meter = beatsPerBar !== null && beatsPerBar > 0 ? beatsPerBar : null;
+  const grid = meter ?? 1;
+  const bars = barCount(notes, grid, lengthBeats);
+  const beats = bars * grid;
   const pitches = Array.from({ length: rows }, (_, row) => range.high - row);
   const style: CSSVariables = { "--roll-rows": rows };
 
   return (
-    <div className="ode-roll" role="img" aria-label={`${label}: ${describeNotes(notes, bars)}`} style={style}>
+    <div className="ode-roll" role="img" aria-label={`${label}: ${describeNotes(notes, bars, meter !== null)}`} style={style}>
       <div className="ode-roll__keys" aria-hidden="true">
         {pitches.map((pitch) => (
           <div key={pitch} className={cx("ode-roll__key", isBlackKey(pitch) && "ode-roll__key--black")}>
@@ -55,10 +57,10 @@ export function PianoRoll({ label, notes, beatsPerBar, lengthBeats = 0, pitchRan
         {pitches.map((pitch, row) => (
           <rect key={pitch} x={0} y={row} width={beats} height={1} className={cx("ode-roll__row", isBlackKey(pitch) && "ode-roll__row--black")} />
         ))}
-        {beatLines(beats, beatsPerBar).map((beat) => (
+        {beatLines(beats, meter).map((beat) => (
           <line key={`beat-${beat}`} x1={beat} x2={beat} y1={0} y2={rows} vectorEffect="non-scaling-stroke" className="ode-roll__beat-line" />
         ))}
-        {Array.from({ length: bars - 1 }, (_, index) => (index + 1) * beatsPerBar).map((beat) => (
+        {meter !== null && Array.from({ length: bars - 1 }, (_, index) => (index + 1) * meter).map((beat) => (
           <line key={`bar-${beat}`} x1={beat} x2={beat} y1={0} y2={rows} vectorEffect="non-scaling-stroke" className="ode-roll__bar-line" />
         ))}
         {notes.map((note, index) => (
@@ -97,10 +99,10 @@ function barCount(notes: readonly Note[], beatsPerBar: number, lengthBeats: numb
   return Math.max(1, Math.ceil(Math.max(lengthBeats, lastEnd) / beatsPerBar));
 }
 
-function beatLines(beats: number, beatsPerBar: number): number[] {
+function beatLines(beats: number, beatsPerBar: number | null): number[] {
   const lines: number[] = [];
   for (let beat = 1; beat < beats; beat += 1) {
-    if (beat % beatsPerBar !== 0) lines.push(beat);
+    if (beatsPerBar === null || beat % beatsPerBar !== 0) lines.push(beat);
   }
   return lines;
 }
@@ -113,10 +115,11 @@ function velocityStyle(note: Note): CSSVariables {
   return { "--note-velocity": (note.velocity ?? DEFAULT_VELOCITY) / MAX_VELOCITY };
 }
 
-function describeNotes(notes: readonly Note[], bars: number): string {
+function describeNotes(notes: readonly Note[], bars: number, meterKnown: boolean): string {
   if (notes.length === 0) return "an empty clip";
   const pitches = notes.map((note) => note.pitch);
   const low = noteName(Math.min(...pitches));
   const high = noteName(Math.max(...pitches));
-  return `${notes.length} notes from ${low} to ${high} over ${bars} ${bars === 1 ? "bar" : "bars"}`;
+  const unit = meterKnown ? (bars === 1 ? "bar" : "bars") : (bars === 1 ? "quarter-note beat" : "quarter-note beats");
+  return `${notes.length} notes from ${low} to ${high} over ${bars} ${unit}${meterKnown ? "" : "; time signature unavailable"}`;
 }

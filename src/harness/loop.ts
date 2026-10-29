@@ -66,6 +66,7 @@ export interface LoopRun {
   signal: AbortSignal;
   /** What the request may still spend; subagents share their parent's, and a top-level run starts a fresh one. */
   budget?: RequestBudget;
+  onMutation?: () => void;
 }
 
 /** How a run ended. */
@@ -83,6 +84,7 @@ export class RequestBudget {
   private turns = 0;
   private spent = 0;
   private subagents = 0;
+  private reserved = 0;
 
   constructor(private readonly limits: AgentLimits) {}
 
@@ -98,9 +100,21 @@ export class RequestBudget {
     return null;
   }
 
-  spend(tokens: number): void {
+  /** Admission happens synchronously, before any concurrent request starts. */
+  reserve(inputTokens: number): { maxTokens: number; settle: (tokens: number) => void } | null {
+    if (this.turns >= this.limits.turnsPerRequest) return null;
+    const maxTokens = Math.min(this.limits.tokensPerTurn, this.limits.tokensPerRequest - this.spent - this.reserved - inputTokens);
+    if (maxTokens < 1) return null;
+    const amount = inputTokens + maxTokens;
     this.turns += 1;
-    this.spent += tokens;
+    this.reserved += amount;
+    let settled = false;
+    return { maxTokens, settle: (tokens) => {
+      if (settled) return;
+      settled = true;
+      this.reserved -= amount;
+      this.spent += Math.max(0, tokens);
+    } };
   }
 
   /** True when the request may start one more subagent, which it then counts. */
@@ -130,6 +144,7 @@ export interface LoopResult {
 export class AgentLoop {
   /** Subagents running at once, counted per depth, so each depth has places of its own. */
   private readonly slots = new Map<number, Semaphore>();
+  private readonly reads = new Semaphore(6);
 
   constructor(private readonly deps: LoopDeps) {}
 
@@ -146,20 +161,28 @@ export class AgentLoop {
       if (run.signal.aborted) return result(said, LoopEnd.Cancelled);
       const limit = run.budget.reached;
       if (limit) return result(said, limit);
+      const tools = [...this.builtIns(run), ...registry.functions(loaded)];
+      // Providers count tokens differently. Reserve a conservative estimate of input plus the requested output;
+      // actual usage replaces it when known. Unknown tokenisation can still exceed an estimate, so no further calls
+      // are admitted once reported usage reaches the budget.
+      const admission = run.budget.reserve(Math.ceil(JSON.stringify({ messages, tools }).length / 2));
+      if (!admission) return result(said, run.budget.reached ?? LoopEnd.TokenLimit);
       let answer: ChatReply;
       try {
         answer = await model.complete({
           messages,
-          tools: [...this.builtIns(run), ...registry.functions(loaded)],
-          maxTokens: limits.tokensPerTurn,
+          tools,
+          maxTokens: admission.maxTokens,
           conversation: run.conversation,
           signal: run.signal,
         });
       } catch (error) {
+        admission.settle(0);
         if (run.signal.aborted) return result(said, LoopEnd.Cancelled);
         throw error;
       }
-      run.budget.spend(answer.tokens);
+      admission.settle(answer.tokens);
+      if (run.signal.aborted) return result(said, LoopEnd.Cancelled);
       if (answer.finishReason === "length") {
         messages.push({ role: "user", content: CUT_OFF });
         continue;
@@ -275,8 +298,14 @@ export class AgentLoop {
     if (!this.deps.registry.available(run.agent).includes(tool)) return "Subagents return material; the main agent applies it to the Set.";
     const refusal = await run.gate.check(tool, input, run.signal);
     if (refusal !== null) return refusal;
+    if (run.signal.aborted) return `${name} stays undone: the musician pressed Stop.`;
+    if (tool.changes !== "none") run.onMutation?.();
     run.events.toolStarted(call.id, name, this.deps.labels.for(name, input));
-    const outcome = await this.deps.registry.run(name, input);
+    const work = () => {
+      run.signal.throwIfAborted();
+      return this.deps.registry.run(name, input, run.signal);
+    };
+    const outcome = tool.changes === "none" ? await this.reads.use(work) : await work();
     run.events.toolFinished(call.id, outcome.ok);
     return this.capped(outcome.ok ? outcome.text : `${name} stopped: ${outcome.text}`);
   }
@@ -323,8 +352,9 @@ export class AgentLoop {
     }
     run.events.subagentStarted(id, AgentLoop.firstSentence(task));
     try {
-      const result = await slots.use(async () =>
-        this.run({
+      const result = await slots.use(async () => {
+        if (run.signal.aborted) return { reply: "", tokens: 0, end: LoopEnd.Cancelled };
+        return this.run({
           agent: "subagent",
           system: await this.deps.subagentPrompt(),
           history: [],
@@ -335,8 +365,8 @@ export class AgentLoop {
           events: QUIET,
           signal: run.signal,
           budget: run.budget,
-        }),
-      );
+        });
+      });
       if (result.end !== LoopEnd.Reply) return `The subagent stopped at its ${result.end} before finishing.${result.reply ? ` Its last words: ${result.reply}` : ""}`;
       return result.reply;
     } catch (error) {

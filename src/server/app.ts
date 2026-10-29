@@ -201,8 +201,7 @@ export class OdeApp {
   /** Sends the song's title to the dialogs when it changes. */
   private showTitle(sheetTitle: string): void {
     const title = SongTitle.of(sheetTitle);
-    if (title === this.title) return;
     this.title = title;
-    this.bus.emit({ type: "title", title });
+    this.bus.emit({ type: "title", title, songId: this.song.songId });
   }
 }

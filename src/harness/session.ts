@@ -1,6 +1,7 @@
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import type { ConversationLog } from "../mneme/conversations";
 import type { PreferencesStore } from "../mneme/preferences";
+import type { ConversationActivity } from "../shared/conversation";
 import type { UiEvent } from "../shared/events";
 import { Mode } from "../shared/personalisation";
 import type { AnyTool, SetReader } from "../tools/define";
@@ -14,6 +15,9 @@ export interface OdeRequest {
   text: string;
   /** Another take of Ode's last change: the Set has already been put back to the version before it. */
   again?: boolean;
+  /** The active task before a conversational correction interrupted it. */
+  continuing?: string;
+  exchangeId?: string;
   /** Why?: answer about the change with this version id in two or three sentences, leaving the Set as it is. */
   reply?: { versionId: string };
 }
@@ -26,12 +30,13 @@ export interface RequestLifecycle {
    * After the turn: saves Ode's change as a version and shows the result line. Stopped: the musician pressed Stop or
    * the request reached a limit, so the change is saved as cut short. A Why? reply shows only its answer.
    */
-  finish(request: OdeRequest, reply: string, stopped: boolean): Promise<void>;
+  finish(request: OdeRequest, reply: string, stopped: boolean, mutations?: number): Promise<void | { versionId: string | null }>;
 }
 
 /** Questions waiting for the musician; they end without an answer when the musician presses Stop. */
 export interface OpenQuestions {
   cancelAll(): void;
+  reply?(text: string): boolean;
 }
 
 /** Deletions beyond a restore's reach; they wait for Apply in every mode. */
@@ -78,6 +83,12 @@ export class OdeSession {
   private running: OdeRequest | null = null;
   /** Requests are being taken from the queue one after another. */
   private draining = false;
+  private accepting = 0;
+  private stopEpoch = 0;
+  private activity: ConversationActivity[] = [];
+  private rationale = "";
+  private acceptance: Promise<unknown> = Promise.resolve();
+  private drained: Promise<void> = Promise.resolve();
   /** Exclusive work on the Set is running; requests wait for it. */
   private working = false;
   /** What the UI was last told. */
@@ -86,11 +97,12 @@ export class OdeSession {
   constructor(
     private readonly deps: SessionDeps,
     private readonly conversation: ConversationLog,
+    readonly songId = conversation.id,
   ) {}
 
   /** A request or other work on the Set is running. */
   get isBusy(): boolean {
-    return this.draining || this.working;
+    return this.draining || this.working || this.accepting > 0;
   }
 
   /** Stop can interrupt what runs now: only an agent request; exclusive work such as Undo or a restore runs to the end. */
@@ -98,9 +110,69 @@ export class OdeSession {
     return this.draining && !this.working;
   }
 
+  /** Persist acceptance before replying to HTTP; execution continues independently. */
+  async accept(request: OdeRequest): Promise<void> {
+    const epoch = this.stopEpoch;
+    this.accepting += 1;
+    this.showBusy();
+    const accepted = this.acceptance.then(async () => {
+      const exchangeId = await this.conversation.begin(request.text);
+      if (epoch !== this.stopEpoch) {
+        await this.conversation.finish(exchangeId, "Stopped before starting.", "stopped");
+        await this.publishConversation();
+        return;
+      }
+      this.deps.emit({ type: "message", role: "user", text: request.text, id: exchangeId });
+      if (this.deps.questions.reply?.(request.text)) {
+        await this.conversation.finish(exchangeId, "", "complete");
+        await this.publishConversation();
+        return;
+      }
+      const next = { ...request, exchangeId };
+      if (this.running && !request.reply) {
+        next.continuing = this.running.continuing ?? this.running.text;
+        for (let index = this.waiting.length - 1; index >= 0; index--) {
+          const earlier = this.waiting[index]!;
+          if (earlier.reply) continue;
+          this.waiting.splice(index, 1);
+          next.continuing += `\nEarlier message: ${earlier.text}`;
+          if (earlier.exchangeId) await this.conversation.finish(earlier.exchangeId, "Continued with your later message.", "stopped");
+        }
+        this.controller?.abort();
+        this.deps.approvals.denyAll();
+        this.deps.questions.cancelAll();
+        this.deps.emit({ type: "progress", text: "Updating the work with your message" });
+      }
+      if (epoch !== this.stopEpoch) {
+        await this.conversation.finish(exchangeId, "Stopped before starting.", "stopped");
+      } else this.waiting.push(next);
+      await this.publishConversation();
+    });
+    this.acceptance = accepted.catch(() => undefined);
+    try { await accepted; }
+    finally {
+      this.accepting -= 1;
+      void this.drain().catch((error: unknown) => this.deps.emit({ type: "error", message: OdeSession.errorText(error) }));
+      this.showBusy();
+    }
+  }
+
   async send(request: OdeRequest): Promise<void> {
-    this.waiting.push(request);
-    await this.drain();
+    await this.accept(request);
+    await this.drained;
+  }
+
+  transcript() {
+    return this.conversation.all();
+  }
+
+  async recover(): Promise<void> {
+    await this.conversation.recover();
+    await this.publishConversation();
+  }
+
+  private async publishConversation(): Promise<void> {
+    this.deps.emit({ type: "conversation", songId: this.songId, exchanges: await this.transcript() });
   }
 
   /** Runs this request before any other waiting one (used by Again, from inside exclusive work). */
@@ -131,7 +203,10 @@ export class OdeSession {
   }
 
   stop(): void {
-    this.waiting.length = 0;
+    this.stopEpoch += 1;
+    for (const request of this.waiting.splice(0)) {
+      if (request.exchangeId) void this.conversation.finish(request.exchangeId, "Stopped before starting.", "stopped").then(() => this.publishConversation()).catch((error: unknown) => this.deps.emit({ type: "error", message: OdeSession.errorText(error) }));
+    }
     this.deps.approvals.denyAll();
     this.deps.questions.cancelAll();
     this.controller?.abort();
@@ -139,10 +214,16 @@ export class OdeSession {
   }
 
   /** Runs the waiting requests one at a time, whenever the session is free. */
-  private async drain(): Promise<void> {
-    if (this.draining || this.working || this.waiting.length === 0) return;
+  private drain(): Promise<void> {
+    if (this.draining) return this.drained;
+    if (this.working || this.waiting.length === 0) return Promise.resolve();
     this.draining = true;
     this.showBusy();
+    this.drained = this.runWaiting();
+    return this.drained;
+  }
+
+  private async runWaiting(): Promise<void> {
     try {
       let request = this.waiting.shift();
       while (request !== undefined) {
@@ -156,16 +237,25 @@ export class OdeSession {
   }
 
   private async runOnce(request: OdeRequest): Promise<void> {
-    this.deps.emit({ type: "message", role: "user", text: request.text });
+
     const controller = new AbortController();
     this.controller = controller;
     this.running = request;
+    const exchangeId = request.exchangeId ?? await this.conversation.begin(request.text);
+    request.exchangeId = exchangeId;
+    this.activity = [];
+    this.rationale = "";
+    let status: "complete" | "stopped" | "failed" = "failed";
+    let savedReply = "";
+    let mutations = 0;
+    let versionId: string | null = null;
     try {
       let hiddenContext: string;
       try {
         hiddenContext = (await this.deps.requests.prepare(request)).hiddenContext;
       } catch (error) {
-        this.deps.emit({ type: "error", message: OdeSession.errorText(error) });
+        savedReply = OdeSession.errorText(error);
+        this.deps.emit({ type: "error", message: savedReply });
         return;
       }
       let reply = "";
@@ -177,32 +267,42 @@ export class OdeSession {
             agent: "main",
             system: await this.deps.agents.systemPrompt(),
             history: await this.history(),
-            prompt: `${hiddenContext}\n\n${request.text}`,
+            prompt: `${hiddenContext}\n\n${request.continuing ? `Continue the task with the latest correction. Earlier work may have partially changed the Set; inspect it before editing. Original task: ${request.continuing}\nLatest message: ` : ""}${request.text}`,
             conversation: this.conversation.id,
             depth: 0,
             gate: this.gate,
             events: this.events,
             signal: controller.signal,
+            onMutation: () => { mutations += 1; },
           });
           reply = result.reply;
           tokens = result.tokens;
           cutShort = CUT_SHORT.has(result.end);
           const limit = LIMIT_MESSAGES[result.end];
           if (limit) this.deps.emit({ type: "error", message: limit });
-          if (result.end === LoopEnd.Reply) await this.conversation.add(request.text, reply);
+          status = result.end === LoopEnd.Reply ? "complete" : "stopped";
+          savedReply = reply || limit || (controller.signal.aborted ? "Stopped. Work already issued may have completed." : "The request ended before a complete answer.");
         } catch (error) {
-          if (!controller.signal.aborted) this.deps.emit({ type: "error", message: OdeSession.errorText(error) });
+          savedReply = OdeSession.errorText(error);
+          if (!controller.signal.aborted) this.deps.emit({ type: "error", message: savedReply });
         }
       }
       try {
-        await this.deps.requests.finish(request, reply, controller.signal.aborted || cutShort);
+        const receipt = await this.deps.requests.finish(request, reply, controller.signal.aborted || cutShort || status === "failed", mutations);
+        versionId = receipt?.versionId ?? null;
       } catch (error) {
         this.deps.emit({ type: "error", message: OdeSession.errorText(error) });
       }
       this.deps.emit({ type: "done", tokens });
     } finally {
-      this.controller = null;
-      this.running = null;
+      if (controller.signal.aborted) status = "stopped";
+      try {
+        await this.conversation.finish(exchangeId, savedReply || (status === "stopped" ? "Stopped." : "The request failed before completion."), status, versionId);
+        await this.publishConversation();
+      } finally {
+        this.controller = null;
+        this.running = null;
+      }
     }
   }
 
@@ -210,7 +310,9 @@ export class OdeSession {
   private async history(): Promise<ChatCompletionMessageParam[]> {
     return (await this.conversation.recent()).flatMap((exchange): ChatCompletionMessageParam[] => [
       { role: "user", content: exchange.request },
-      { role: "assistant", content: exchange.reply },
+      { role: "assistant", content: [exchange.reply || (exchange.status === "complete" ? "Understood." : "Interrupted; inspect the current Set before continuing."),
+        ...(exchange.status === "stopped" || exchange.status === "failed" ? ["Saved activity (not proof of the current Set):", ...(exchange.activity ?? []).map((step) => `${step.status}: ${step.label}`)] : []),
+      ].join("\n") },
     ]);
   }
 
@@ -229,18 +331,42 @@ export class OdeSession {
 
   /** Ode's work as the UI shows it: the excerpt of its thinking, a progress line per tool, and subagents. */
   private readonly events: LoopEvents = {
-    thought: (text) => this.deps.emit({ type: "thought", text }),
+    thought: (text) => {
+      this.rationale = text.trim().slice(0, 400);
+      this.checkpoint();
+      this.deps.emit({ type: "thought", text });
+    },
     toolStarted: (id, name, label) => {
+      this.activity.push({ id, label, status: "running", ...(this.rationale ? { reason: this.rationale } : {}) });
+      this.checkpoint();
       this.deps.emit({ type: "tool", id, name, status: "started", summary: label });
       this.deps.emit({ type: "progress", text: label });
     },
-    toolFinished: (id, ok) => this.deps.emit({ type: "tool", id, name: "", status: ok ? "done" : "error" }),
+    toolFinished: (id, ok) => {
+      this.activity = this.activity.map((step) => step.id === id ? { ...step, status: ok ? "done" : "error" } : step);
+      this.checkpoint();
+      this.deps.emit({ type: "tool", id, name: "", status: ok ? "done" : "error" });
+    },
     subagentStarted: (id, task) => {
+      this.activity.push({ id, label: task, status: "running" });
+      this.checkpoint();
       this.deps.emit({ type: "subagent", id, task, status: "started" });
       this.deps.emit({ type: "progress", text: task });
     },
-    subagentFinished: (id) => this.deps.emit({ type: "subagent", id, task: "", status: "done" }),
+    subagentFinished: (id) => {
+      this.activity = this.activity.map((step) => step.id === id ? { ...step, status: "done" } : step);
+      this.checkpoint();
+      this.deps.emit({ type: "subagent", id, task: "", status: "done" });
+    },
   };
+
+  /** Public activity doubles as a durable checkpoint when Live or the browser closes. */
+  private checkpoint(): void {
+    const id = this.running?.exchangeId;
+    if (id) void this.conversation.checkpoint(id, this.activity, this.rationale).catch((error: unknown) => {
+      this.deps.emit({ type: "error", message: `Could not save the activity: ${OdeSession.errorText(error)}` });
+    });
+  }
 
   /**
    * Using the singer's voice always waits for their consent; so does deleting a device or a track that only the

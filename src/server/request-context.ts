@@ -67,30 +67,37 @@ export class RequestContext implements RequestLifecycle {
    * version and the result line says what changed; when the request was stopped, what it changed so far is saved
    * too, so Undo works, and the line is "Stopped: …".
    */
-  async finish(request: OdeRequest, reply: string, stopped: boolean): Promise<void> {
+  async finish(request: OdeRequest, reply: string, stopped: boolean, mutations = 1): Promise<void | { versionId: string | null }> {
     if (request.reply) {
       const answer = reply.trim();
       if (!stopped && answer) this.deps.emit({ type: "answer", versionId: request.reply.versionId, text: answer });
       return;
     }
-    if (stopped) await this.finishStopped(request);
-    else await this.finishChange(request, reply.trim());
+    if (mutations === 0) {
+      await this.record(() => this.deps.recorder.handEdits());
+      if (reply.trim()) this.deps.emit({ type: "result", text: reply.trim(), versionId: null, kind: ResultKind.Reply });
+      return;
+    }
+    const versionId = stopped ? await this.finishStopped(request) : await this.finishChange(request, reply.trim());
     await this.deps.selection.refresh().catch(() => undefined);
+    return { versionId };
   }
 
-  private async finishChange(request: OdeRequest, reply: string): Promise<void> {
+  private async finishChange(request: OdeRequest, reply: string): Promise<string | null> {
     const recorded = await this.record(() => this.deps.recorder.odeChange(RequestContext.firstLine(reply), request.text));
     const version = recorded?.version ?? null;
     const text = reply || version?.summary || "";
     if (text) this.deps.emit({ type: "result", text, versionId: version?.id ?? null, kind: version ? ResultKind.Change : ResultKind.Reply });
+    return version?.id ?? null;
   }
 
-  private async finishStopped(request: OdeRequest): Promise<void> {
+  private async finishStopped(request: OdeRequest): Promise<string | null> {
     const { STOPPED } = VersionRecorder;
     const recorded = await this.record(() => this.deps.recorder.odeCutShort(STOPPED, request.text));
     const version = recorded?.version ?? null;
     const text = version ? version.summary : recorded ? `${STOPPED}: the Set stayed the same` : `${STOPPED}.`;
     this.deps.emit({ type: "result", text, versionId: version?.id ?? null, kind: ResultKind.Stopped });
+    return version?.id ?? null;
   }
 
   /** Saves a version; when that fails the musician sees why, and the result line goes on without it. */

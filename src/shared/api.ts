@@ -6,6 +6,8 @@ import type { RestoreResult, VersionDetail, VersionListItem } from "./versions";
 
 export const API = {
   chat: "/api/chat", // POST ChatRequest → { ok: true } (a typed line, spoken words or a tapped suggestion)
+  conversation: "/api/conversation", // GET complete saved transcript
+  audioImport: "/api/audio/import", // POST explicit multipart audio upload
   stop: "/api/stop", // POST → { ok: true }
   events: "/api/events", // GET server-sent events of UiEvent
   status: "/api/status", // GET → StatusResponse
@@ -68,7 +70,7 @@ export interface VersionRequest {
   versionId: string;
 }
 
-/** Restoring deletes the later versions, so the musician must have confirmed it. */
+/** Restoring changes the Set; later recovery versions remain available. */
 export interface RestoreRequest {
   confirmed: true;
 }

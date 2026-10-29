@@ -24,8 +24,11 @@ export class OperationRegistry {
   }
 
   /** Runs the operation once every operation before it has settled, so its references point where the Set is now. */
-  run(op: string, args: unknown): Promise<unknown> {
-    const next = this.queue.then(() => this.prepare(op, args, new DirectFollowUps(this.live))());
+  run(op: string, args: unknown, signal?: AbortSignal): Promise<unknown> {
+    const next = this.queue.then(() => {
+      signal?.throwIfAborted();
+      return this.prepare(op, args, new DirectFollowUps(this.live))();
+    });
     this.queue = next.catch(() => undefined);
     return next;
   }

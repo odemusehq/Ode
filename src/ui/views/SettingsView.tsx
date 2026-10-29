@@ -68,6 +68,11 @@ export function SettingsView() {
   const [problem, setProblem] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const backToChat = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("view", "ask");
+    window.location.assign(url.href);
+  };
 
   useEffect(() => {
     api.getSettings().then(
@@ -117,6 +122,7 @@ export function SettingsView() {
   if (!loaded || !services) {
     return (
       <div className="settings settings--reading">
+        {!LiveDialog.hosted && <Button variant={ButtonVariant.Quiet} onClick={backToChat}>Back to chat</Button>}
         {problem ? <Notice tone={Tone.Danger}>{problem}</Notice> : "Reading Settings…"}
         {LiveDialog.hosted && (
           <div className="settings__actions">
@@ -164,6 +170,7 @@ export function SettingsView() {
   /** A saved key belongs to the service's provider and address: changing either asks for the key again. */
   const editService = (role: OptionalRole, change: Partial<ServiceDraft>) => {
     const next = { ...services[role], ...change };
+    if (next.provider !== services[role].provider || next.baseUrl !== services[role].baseUrl) next.apiKey = "";
     const saved = loaded.settings.services[role];
     const keySet = saved !== undefined && saved.provider === next.provider && saved.baseUrl === next.baseUrl && saved.keySet;
     setServices({ ...services, [role]: { ...next, keySet } });
@@ -205,6 +212,7 @@ export function SettingsView() {
       }}
     >
       <h1 className="settings__title">Settings</h1>
+      {!LiveDialog.hosted && <Button variant={ButtonVariant.Quiet} onClick={backToChat}>Back to chat</Button>}
 
       <label className="settings__field">
         <span className="settings__label">Provider</span>
@@ -303,6 +311,7 @@ export function SettingsView() {
                 <InfoTip text={SERVICE_INFO[role]} />
               </legend>
               <Select
+                aria-label={`${SERVICE_LABELS[role]}: provider`}
                 value={draft.provider}
                 options={[{ value: "", label: "Off" }, ...offered.map((each) => ({ value: each.id, label: each.name }))]}
                 onChange={(id) => editService(role, { provider: id, baseUrl: offered.find((each) => each.id === id)?.baseUrl ?? "" })}

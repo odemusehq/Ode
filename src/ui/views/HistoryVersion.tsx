@@ -60,7 +60,7 @@ export interface HistoryVersionProps {
   kind: DateGroupKind;
   selected: boolean;
   onSelect: (id: string | null) => void;
-  /** How many versions are newer than this one; restoring it deletes them. */
+  /** How many versions are newer than this one; restoring keeps them in history. */
   newer: number;
   /** Says how a restore went. */
   onOutcome: (notes: VersionNote[]) => void;
@@ -86,7 +86,7 @@ export function HistoryVersion({ version, kind, selected, onSelect, newer, onOut
     try {
       notes.push(restoreNote(await client.restoreVersion(version.id), moment));
     } catch (error) {
-      notes.push({ tone: Tone.Danger, text: `The version stayed as it was: ${errorMessage(error)}` });
+      notes.push({ tone: Tone.Danger, text: `Restoring stopped: ${errorMessage(error)}. Check the current Set; saved history remains available.` });
     }
     onOutcome(notes);
     setTask(Task.None);
@@ -190,19 +190,19 @@ export function HistoryVersion({ version, kind, selected, onSelect, newer, onOut
   );
 }
 
-/** Restoring deletes the later versions and anything changed by hand since the last one. */
+/** A restore changes the current Set while keeping the saved history. */
 function confirmMessage(moment: string, newer: number): string {
-  if (newer === 0) return `Go back to ${moment}? Anything changed since then will be deleted.`;
-  return `Go back to ${moment}? Later versions, and anything changed since the last one, will be deleted.`;
+  const later = newer === 0 ? "Your saved history stays available." : `${newer} later ${newer === 1 ? "version stays" : "versions stay"} available in History.`;
+  return `Restore the supported changes from ${moment} to the current Set? ${later} Automation and hidden plugin state cannot be restored.`;
 }
 
 /** How the restore went, under the version: back, back with what stayed as it is, or stopped and why. */
 function restoreNote(outcome: RestoreResult, moment: string): VersionNote {
   const skipped = outcome.skipped.join("; ");
   if (!outcome.restored) {
-    return { tone: Tone.Danger, text: skipped ? `Going back to ${moment} stopped: ${skipped}` : `Going back to ${moment} stopped.` };
+    return { tone: Tone.Danger, text: skipped ? `Restoring ${moment} was incomplete: ${skipped}. Saved history remains available.` : `Restoring ${moment} was incomplete. Saved history remains available.` };
   }
-  return skipped ? { tone: Tone.Warning, text: `Back to ${moment}. Left as it is: ${skipped}` } : { tone: Tone.Success, text: `Back to ${moment}.` };
+  return skipped ? { tone: Tone.Warning, text: `Restored supported changes from ${moment}. Left as it is: ${skipped}` } : { tone: Tone.Success, text: `Restored supported changes from ${moment}.` };
 }
 
 /** "You · 12 edits on Drums and Pad" under "You" reads as "12 edits on Drums and Pad". */

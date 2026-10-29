@@ -1,4 +1,3 @@
-import { SessionBusyError } from "../harness/session";
 import type { SessionManager } from "../harness/session-manager";
 import type { SongEntry, SongStore } from "../mneme/song-store";
 import type { SnapshotReader } from "./snapshot-reader";
@@ -26,25 +25,21 @@ export class SongSwitcher {
 
   open(id: string): Promise<SongEntry> {
     return this.deps.recorder.afterPending(async () => {
-      this.assertIdle();
-      return this.switched(await this.deps.song.open(id));
+      return this.deps.sessions.current.exclusive(async () => this.switched(await this.deps.song.open(id)));
     });
   }
 
   create(title: string): Promise<SongEntry> {
     return this.deps.recorder.afterPending(async () => {
-      this.assertIdle();
-      return this.switched(await this.deps.song.create(title));
+      return this.deps.sessions.current.exclusive(async () => this.switched(await this.deps.song.create(title)));
     });
   }
 
-  private switched(entry: SongEntry): SongEntry {
+  private async switched(entry: SongEntry): Promise<SongEntry> {
     this.deps.reader.forget();
     this.deps.sessions.switchTo(entry.id);
+    await this.deps.sessions.current.recover();
     return entry;
   }
 
-  private assertIdle(): void {
-    if (this.deps.sessions.current.isBusy) throw new SessionBusyError("Ode is still working on this song. Wait for it to finish, or press Stop.");
-  }
 }

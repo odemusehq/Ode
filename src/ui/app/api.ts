@@ -19,6 +19,10 @@ import type {
 import type { LyricsCheckRequest, LyricsCheckResponse, StrictRhymesRequest } from "../../shared/lyrics";
 import type { Mode } from "../../shared/personalisation";
 import type { ChatModelOption, ModelListRequest, SettingsResponse, SettingsUpdate, SettingsView } from "../../shared/settings";
+import type { ConversationExchange } from "../../shared/events";
+
+export type AudioScope = "sample" | "reference" | "processed-bounce";
+export interface AudioAttachment { path: string; name: string; scope: string }
 
 enum HttpMethod {
   Get = "GET",
@@ -54,6 +58,19 @@ export function errorMessage(error: unknown): string {
 
 /** Typed access to every route of the local server the window uses. */
 export class OdeApi {
+  getConversation(): Promise<{ songId: string; exchanges: ConversationExchange[] }> {
+    return this.request(HttpMethod.Get, API.conversation);
+  }
+
+  async importAudio(file: File, scope: AudioScope, sourceDescription: string): Promise<AudioAttachment> {
+    const body = new FormData();
+    body.set("file", file);
+    body.set("scope", scope);
+    body.set("sourceDescription", sourceDescription);
+    const response = await fetch(API.audioImport, { method: HttpMethod.Post, body });
+    if (!response.ok) throw new ApiError(response.status, await readError(response));
+    return await response.json() as AudioAttachment;
+  }
   chat(request: ChatRequest): Promise<OkResponse> {
     return this.request(HttpMethod.Post, API.chat, request);
   }
@@ -118,7 +135,7 @@ export class OdeApi {
     return this.request(HttpMethod.Get, API.version(id));
   }
 
-  /** Restoring deletes the versions after this one; call it only after the musician confirmed. */
+  /** Restores supported state and keeps later versions; call only after confirmation. */
   restoreVersion(id: string): Promise<RestoreResult> {
     const request: RestoreRequest = { confirmed: true };
     return this.request(HttpMethod.Post, API.versionRestore(id), request);

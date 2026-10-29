@@ -67,13 +67,16 @@ export class ToolRegistry {
   }
 
   /** Runs a tool with the model's input; a failure comes back as text for the model to read. */
-  async run(name: string, input: unknown): Promise<ToolOutcome> {
+  async run(name: string, input: unknown, signal?: AbortSignal): Promise<ToolOutcome> {
+    signal?.throwIfAborted();
     const definition = this.byName.get(name);
     if (!definition) return { ok: false, text: `Ode's tools are named in tool search; ${name} is unknown.` };
     const parsed = z.object(definition.input).safeParse(input);
     if (!parsed.success) return { ok: false, text: `The input for ${name} needs fixing: ${z.prettifyError(parsed.error)}` };
     try {
-      return { ok: true, text: JSON.stringify((await definition.run(parsed.data, this.ctx)) ?? { done: true }) };
+      const extension = this.ctx.live.extension;
+      const live = signal ? { extension: { call: <R>(op: string, args: unknown) => extension.call<R>(op, args, signal) } } : this.ctx.live;
+      return { ok: true, text: JSON.stringify((await definition.run(parsed.data, { ...this.ctx, live, signal })) ?? { done: true }) };
     } catch (error) {
       return { ok: false, text: error instanceof Error ? error.message : String(error) };
     }
@@ -90,6 +93,23 @@ export class ToolRegistry {
     if (!parsed.success) return undefined;
     const line = definition.describe(parsed.data, new RefNames(this.ctx.snapshots.latest)).trim();
     return line || undefined;
+  }
+
+  /** The validated target of a read whose definition has no custom progress line. */
+  target(name: string, input: unknown): string | undefined {
+    const definition = this.byName.get(name);
+    if (!definition) return undefined;
+    const parsed = z.object(definition.input).safeParse(input);
+    if (!parsed.success) return undefined;
+    const args = parsed.data as Record<string, unknown>;
+    const names = new RefNames(this.ctx.snapshots.latest);
+    if (args.parameter) return names.parameter(args.parameter as Parameters<RefNames["parameter"]>[0]);
+    if (args.device) return names.device(args.device as Parameters<RefNames["device"]>[0]);
+    if (args.clip) return names.clip(args.clip as Parameters<RefNames["clip"]>[0]);
+    if (args.track) return names.track(args.track as Parameters<RefNames["track"]>[0]);
+    if (args.slot) return names.slot(args.slot as Parameters<RefNames["slot"]>[0]);
+    if (args.scene) return names.scene(args.scene as Parameters<RefNames["scene"]>[0]);
+    return undefined;
   }
 
   private functionFor(definition: AnyTool): ChatCompletionTool {
