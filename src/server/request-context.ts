@@ -2,26 +2,20 @@ import type { OdeConfig } from "../shared/config";
 import type { LiveConnections } from "../shared/live";
 import { ResultKind, type UiEvent } from "../shared/events";
 import { Mode } from "../shared/personalisation";
-import { VersionAuthor, type Version } from "../shared/versions";
+import { VersionAuthor } from "../shared/versions";
 import { ProjectMap } from "../mneme/project-map";
 import type { PreferencesStore } from "../mneme/preferences";
-import type { SongVersions } from "../mneme/song-store";
+import type { SongStore, SongVersions } from "../mneme/song-store";
 import type { ContextSummary } from "../mneme/summary";
 import type { OdeRequest, RequestLifecycle } from "../harness/session";
 import type { SelectionState } from "./selection";
 import type { SnapshotReader } from "./snapshot-reader";
 import { VersionRecorder, type RecordedVersion } from "./version-recorder";
 
-export interface PreparedRequest {
-  /** What goes with the request for the agent only; it is never shown to the musician. */
-  hiddenContext: string;
-  /** The version that saved the musician's hand edits, or null when there were none. */
-  handEdits: Version | null;
-}
-
 export interface RequestContextDeps {
   config: OdeConfig;
   live: LiveConnections;
+  song: SongStore;
   reader: SnapshotReader;
   recorder: VersionRecorder;
   versions: SongVersions;
@@ -40,23 +34,24 @@ const MODE_NOTES: Record<Mode, string> = {
 /**
  * Everything around one request. Before it: read the Set, save the musician's hand edits as a version,
  * and build the hidden context (map, hand edits, mode, selection). After it: save Ode's change as a
- * version, show the result line and play the bars it touched. Why? is a reply request: it reads nothing
- * before and saves nothing after; its answer goes under the result line.
+ * version and show the result line. Why? is a reply request: it only explains, with the Set left unread and
+ * unsaved; its answer goes under the result line.
  */
 export class RequestContext implements RequestLifecycle {
-  /** When the previous request read the Set; hand edits saved after it belong to the next request. */
-  private lastRequestAt: string | null = null;
+  /** Per song, when its previous request read the Set; hand edits saved after it belong to the next request. */
+  private readonly lastRequestAt = new Map<string, string>();
 
   constructor(private readonly deps: RequestContextDeps) {}
 
   /** Throws "Ode can't read the Set: …" when the Set can't be read; no version is saved then. */
-  async prepare(request: OdeRequest): Promise<PreparedRequest> {
-    if (request.reply) return { hiddenContext: await this.replyContext(request.reply.versionId), handEdits: null };
+  async prepare(request: OdeRequest): Promise<{ hiddenContext: string }> {
+    if (request.reply) return { hiddenContext: await this.replyContext(request.reply.versionId) };
+    const song = this.deps.song.songId;
+    const since = this.lastRequestAt.get(song) ?? (await this.lastOdeVersionTime());
     const recorded: RecordedVersion = request.again
       ? { snapshot: await this.deps.reader.read(), version: null, changes: [] }
       : await this.deps.recorder.handEdits();
-    const since = this.lastRequestAt;
-    this.lastRequestAt = recorded.version?.time ?? new Date().toISOString();
+    this.lastRequestAt.set(song, recorded.version?.time ?? new Date().toISOString());
     const parts = [
       await this.deps.summary.build(),
       MODE_NOTES[await this.deps.prefs.mode()],
@@ -64,22 +59,21 @@ export class RequestContext implements RequestLifecycle {
       request.again ? await this.againPart() : await this.handEditsPart(recorded, since),
       `Project map:\n${ProjectMap.encode(recorded.snapshot, this.deps.config.memory.mapMaxChars)}`,
     ].filter(Boolean);
-    const handEdits = recorded.version && recorded.changes.length > 0 ? recorded.version : null;
-    return { hiddenContext: RequestContext.wrap(parts), handEdits };
+    return { hiddenContext: RequestContext.wrap(parts) };
   }
 
   /**
    * After the turn. A reply (Why?) emits its answer and nothing else. Otherwise what Ode changed is saved as a
-   * version and the result line says what changed and plays it; after Stop, what it changed so far is saved
-   * too, so Undo works, but the line is "Stopped: …" and nothing plays.
+   * version and the result line says what changed; when the request was stopped, what it changed so far is saved
+   * too, so Undo works, and the line is "Stopped: …".
    */
-  async finish(request: OdeRequest, reply: string, aborted: boolean): Promise<void> {
+  async finish(request: OdeRequest, reply: string, stopped: boolean): Promise<void> {
     if (request.reply) {
       const answer = reply.trim();
-      if (!aborted && answer) this.deps.emit({ type: "answer", versionId: request.reply.versionId, text: answer });
+      if (!stopped && answer) this.deps.emit({ type: "answer", versionId: request.reply.versionId, text: answer });
       return;
     }
-    if (aborted) await this.finishStopped(request);
+    if (stopped) await this.finishStopped(request);
     else await this.finishChange(request, reply.trim());
     await this.deps.selection.refresh().catch(() => undefined);
   }
@@ -109,7 +103,13 @@ export class RequestContext implements RequestLifecycle {
     }
   }
 
-  /** Why?: the change asked about, and how to answer. Nothing is read from Live. */
+  /** When Ode last changed the song, as its history keeps it: the first request after Live starts again reads from there. */
+  private async lastOdeVersionTime(): Promise<string | null> {
+    const versions = await this.deps.versions.history.list();
+    return versions.filter((version) => version.author === VersionAuthor.Ode).at(-1)?.time ?? null;
+  }
+
+  /** Why?: the change asked about, and how to answer. Live stays unread. */
   private async replyContext(versionId: string): Promise<string> {
     const version = await this.deps.versions.history.get(versionId);
     const asked = version.request ? ` The musician had asked: "${version.request}".` : "";

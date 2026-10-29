@@ -107,6 +107,7 @@ export class OdeApp {
     const requests = new RequestContext({
       config,
       live,
+      song: this.song,
       reader: this.reader,
       recorder: this.recorder,
       versions: this.versions,

@@ -137,6 +137,7 @@ class ScenarioRun {
     const requests = new RequestContext({
       config,
       live,
+      song,
       reader,
       recorder,
       versions,
