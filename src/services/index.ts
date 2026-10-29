@@ -1,4 +1,4 @@
-import { ROLES, type Role, type RoleConfig } from "../shared/config";
+import { OdeConfig, ROLES, type Role, type RoleConfig } from "../shared/config";
 import { AdapterRegistry } from "./adapter-registry";
 import { Capability, ROLE_CAPABILITY, type CapabilityAdapters, type SeparatedStems, type TextGenerator } from "./capabilities";
 import { isConfigured, notConfiguredMessage } from "./roles";
@@ -7,12 +7,7 @@ import type { DemoVocalInput, RoleSource, Services, Transcript } from "./types";
 
 /** Model-backed services: each role's capability, served by the adapter for the provider chosen in Settings. */
 export class ModelServices implements Services {
-  /** Speech models expect 16 or 24 kHz audio. */
-  private static readonly SPEECH_SAMPLE_RATE = 24_000;
-  private static readonly TEXT_MAX_TOKENS = 4000;
-  /** Release platforms ask for square artwork of at least 3000 × 3000 pixels. */
-  private static readonly COVER_SIZE = 3000;
-  private readonly registry = new AdapterRegistry(new SpeechAudio(ModelServices.SPEECH_SAMPLE_RATE));
+  private readonly registry = new AdapterRegistry(new SpeechAudio(OdeConfig.services.speechSampleRate));
   /** Adapters by role, rebuilt when the role's settings change. */
   private readonly cache = new Map<Role, { settings: string; adapter: unknown }>();
 
@@ -21,7 +16,7 @@ export class ModelServices implements Services {
   async text(role: "main" | "subagent", prompt: string, options: { system?: string; maxTokens?: number } = {}): Promise<string> {
     return (await this.chat(role)).ask(prompt, {
       system: options.system,
-      maxTokens: options.maxTokens ?? ModelServices.TEXT_MAX_TOKENS,
+      maxTokens: options.maxTokens ?? OdeConfig.services.textMaxTokens,
     });
   }
 
@@ -37,7 +32,7 @@ export class ModelServices implements Services {
     return (await this.adapter("transcription", Capability.Transcription)).transcribe(audioPath);
   }
 
-  async generateImage(prompt: string, outPath: string, size = ModelServices.COVER_SIZE): Promise<string> {
+  async generateImage(prompt: string, outPath: string, size = OdeConfig.services.coverSize): Promise<string> {
     return (await this.adapter("image_generation", Capability.ImageGeneration)).square(prompt, outPath, size);
   }
 

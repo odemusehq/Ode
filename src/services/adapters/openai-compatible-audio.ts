@@ -1,12 +1,10 @@
 import OpenAI from "openai";
-import type { RoleConfig } from "../../shared/config";
+import { OdeConfig, type RoleConfig } from "../../shared/config";
 import type { AudioUnderstander } from "../capabilities";
 import type { SpeechAudio } from "../speech-audio";
 
 /** Audio understanding over an OpenAI-compatible endpoint that accepts input_audio parts (Meta's included). */
 export class OpenAiCompatibleAudioUnderstander implements AudioUnderstander {
-  /** Reasoning shares the output budget, so too low a limit returns an empty answer. */
-  private static readonly MAX_OUTPUT_TOKENS = 4000;
   private readonly client: OpenAI;
 
   constructor(
@@ -20,7 +18,7 @@ export class OpenAiCompatibleAudioUnderstander implements AudioUnderstander {
     const data = await this.audio.base64Wav(audioPath);
     const response = await this.client.chat.completions.create({
       model: this.role.model,
-      max_tokens: OpenAiCompatibleAudioUnderstander.MAX_OUTPUT_TOKENS,
+      max_tokens: OdeConfig.services.audioMaxTokens,
       messages: [
         {
           role: "user",

@@ -64,6 +64,19 @@ export interface ReleaseSettings {
   coverChoices: number;
 }
 
+export interface ServiceSettings {
+  /** The sample rate speech models expect, in Hz (16 or 24 kHz). */
+  speechSampleRate: number;
+  /** The longest answer to a one-off text request, in tokens. */
+  textMaxTokens: number;
+  /** The longest answer about a recording, in tokens; reasoning shares it, so a low limit gives an empty answer. */
+  audioMaxTokens: number;
+  /** The size asked of the image model, before the image is scaled to the cover size. */
+  imageRequestSize: string;
+  /** The cover's side in pixels: release platforms ask for square artwork of at least 3000 × 3000. */
+  coverSize: number;
+}
+
 export interface ServerSettings {
   /** How often the event stream to an open dialog sends a keepalive, in milliseconds. */
   keepaliveMs: number;
@@ -95,6 +108,8 @@ export interface DialogSize {
 export class OdeConfig {
   /** The size of the small notice Ode shows when it has something to tell the musician, ready before the folders are known. */
   static readonly notice: DialogSize = { ...defaults.notice };
+  /** What the model services ask of each provider, the same for every copy of Ode. */
+  static readonly services: ServiceSettings = { ...defaults.services };
 
   readonly limits: AgentLimits = { ...defaults.agent };
   readonly memory: MemorySettings = { ...defaults.memory };
