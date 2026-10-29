@@ -2,6 +2,7 @@ import { copyFile, mkdir, readdir, rm, stat } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { z } from "zod";
 import { COVER_CHOICE, COVER_FILE } from "../../shared/api";
+import { LIVE_TEMPO } from "../../shared/live";
 import type { SongInfo } from "../../shared/live-ops";
 import { userPaths } from "../../mneme/paths";
 import { VoiceReference } from "../../mneme/voice-reference";
@@ -127,7 +128,7 @@ export const mediaTools: AnyTool[] = [
       "Sing lyrics on a melody in the artist's own voice, so they can hear a demo vocal before recording. Give each lyric line with the notes it is sung on (beats from the start of the demo, in order, one or more notes per syllable after set_lyrics_to_melody; lyrics_fit_melody gives each line's phrase). Needs a saved recording of the artist's voice (voice_reference_set). Returns a WAV file to import into the project and place on an audio track.",
     input: {
       lines: z.array(z.object({ text: z.string().min(1), notes: z.array(NoteSchema).min(1) })).min(1),
-      tempo: z.number().min(20).max(999).optional().describe("Default: the Set's tempo"),
+      tempo: z.number().min(LIVE_TEMPO.min).max(LIVE_TEMPO.max).optional().describe("Default: the Set's tempo"),
     },
     run: async ({ lines, tempo }, ctx) => {
       const voice = voiceReference(ctx);

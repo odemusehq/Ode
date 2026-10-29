@@ -1,11 +1,10 @@
 import { z } from "zod";
 import { SongFormPlanner } from "../../music/form/song-form-planner";
 import { Genre, parseGenre } from "../../music/rhythm/genre";
+import { LIVE_TEMPO } from "../../shared/live";
 import { defineTool } from "../define";
 import { DEFAULT_TEMPO, quarterBeatsPerBar, songDefaults } from "./song-defaults";
 
-const MIN_TEMPO = 40;
-const MAX_TEMPO = 300;
 const MAX_PHRASE_BARS = 16;
 /** Club genres are built in 8-bar phrases, most others in 4-bar phrases. */
 const EIGHT_BAR_GENRES: ReadonlySet<Genre> = new Set([Genre.House, Genre.Techno, Genre.DrumAndBass]);
@@ -28,7 +27,7 @@ export const songFormPlanTool = defineTool({
   ].join(" "),
   input: {
     genre: z.string().optional().describe("Genre name."),
-    tempo: z.number().min(MIN_TEMPO).max(MAX_TEMPO).optional().describe("Tempo in BPM."),
+    tempo: z.number().min(LIVE_TEMPO.min).max(LIVE_TEMPO.max).optional().describe("Tempo in BPM."),
     phraseBars: z.number().int().min(1).max(MAX_PHRASE_BARS).optional().describe("Bars per phrase."),
     beatsPerBar: z.number().positive().optional().describe("Quarter-note beats per bar (4 in 4/4, 3 in 3/4 or 6/8)."),
   },

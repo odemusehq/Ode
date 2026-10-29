@@ -1,6 +1,6 @@
 import type { DeviceRef } from "../../../shared/live";
 import { LiveError, NotFoundError } from "../errors";
-import { MIDI_MAX } from "../notes";
+import { MIDI_MAX } from "../../../shared/notes";
 import { deviceText } from "../refs";
 import { indexOfObject } from "../sdk";
 import { OperationGroup } from "./group";

@@ -4,10 +4,9 @@ import { drumGroove } from "../../music/rhythm/drum-groove-writer";
 import { ALL_GENRES, isKnownGenre, parseGenre } from "../../music/rhythm/genre";
 import { SECTION_KINDS } from "../../shared/song";
 import { defineTool } from "../define";
-import { SeedInput } from "./schemas";
+import { MAX_BARS, SeedInput } from "./schemas";
 import { songDefaults } from "./song-defaults";
 
-const MAX_BARS = 64;
 
 export const drumGrooveWriteTool = defineTool({
   name: "drum_groove_write",

@@ -1,8 +1,6 @@
 import type { NoteDescription } from "@ableton-extensions/sdk";
 import type { Note } from "../../shared/live";
-
-/** MIDI note numbers and velocities go up to 127. */
-export const MIDI_MAX = 127;
+import { MIDI_MAX } from "../../shared/notes";
 
 /** Checks Ode's notes and converts them for Live. Times are in beats from the clip start. */
 export function toLiveNotes(notes: readonly Note[]): NoteDescription[] {

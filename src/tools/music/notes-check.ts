@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { PartChecker } from "../../music/parts/part-checker";
 import { Meter } from "../../music/prosody/meter";
+import { MIDI_MAX } from "../../shared/notes";
 import { defineTool } from "../define";
 import { ChordsInput, KeyInput, NotesInput, RangeInput, TimeSignatureInput } from "./schemas";
 import { songDefaults } from "./song-defaults";
 
-const MIDI_MAX = 127;
 const MAX_LEAP = 48;
 
 export const notesCheckTool = defineTool({

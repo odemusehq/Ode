@@ -30,6 +30,9 @@ export interface TakeLaneRef {
 /** DeviceRef.index of the mixer of a track or chain; its parameters are volume (0), pan (1) and sends (2+). */
 export const MIXER_INDEX = -1;
 
+/** The tempos Live accepts, in BPM. */
+export const LIVE_TEMPO = { min: 20, max: 999 } as const;
+
 /** How far apart two positions in beats can be and still be the same place: Live's positions are floating point. */
 export const BEAT_TOLERANCE = 0.001;
 

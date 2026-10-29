@@ -1,7 +1,10 @@
 import { z } from "zod";
+import { MIDI_MAX } from "../../shared/notes";
 import { ChordEventSchema } from "../../shared/song";
+import { NoteSchema } from "../live/schemas";
 
-const MIDI_MAX = 127;
+/** The longest stretch the music tools write in one call, in bars. */
+export const MAX_BARS = 64;
 const PITCH_CLASS_MAX = 11;
 const MAX_NUMERATOR = 32;
 const DENOMINATORS = [1, 2, 4, 8, 16] as const;
@@ -11,13 +14,8 @@ export const AccentInput = z
   .optional()
   .describe('Pronunciation accent: "uk" or "us". Leave out to use the Pronunciation setting (song, then artist).');
 
-export const NoteInput = z.object({
-  pitch: z.number().int().min(0).max(MIDI_MAX).describe("MIDI note number (60 = middle C)."),
-  start: z.number().min(0).describe("Start in beats (quarter notes) from the clip start."),
-  duration: z.number().positive().describe("Length in beats."),
-  velocity: z.number().min(0).max(MIDI_MAX).optional(),
-  muted: z.boolean().optional(),
-});
+/** A note as the Live tools read and write it, every field kept, so notes pass through the music tools whole. */
+export const NoteInput = NoteSchema;
 
 export const NotesInput = z.array(NoteInput);
 

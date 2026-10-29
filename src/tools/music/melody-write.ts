@@ -8,10 +8,9 @@ import type { Note } from "../../shared/live";
 import { TYPICAL_VOCAL_RANGE } from "../../shared/personalisation";
 import type { ChordEvent } from "../../shared/song";
 import { defineTool } from "../define";
-import { ChordsInput, KeyInput, RangeInput, SeedInput, TimeSignatureInput } from "./schemas";
+import { ChordsInput, KeyInput, MAX_BARS, RangeInput, SeedInput, TimeSignatureInput } from "./schemas";
 import { quarterBeatsPerBar, songDefaults } from "./song-defaults";
 
-const MAX_BARS = 64;
 const MAX_MOTIF_BARS = 8;
 
 /** The chords sounding inside a stretch of beats, moved so the stretch starts at beat 0. */
@@ -36,8 +35,8 @@ export const melodyWriteTool = defineTool({
     "the notes into a clip with the MIDI tools.",
     "Inputs: bars; contour (rising, falling, arch, valley, wave, static); register (low, mid, high within the range);",
     "density (notes per beat, 0.5–4); motifBars (optional length of the repeated motif); chords (optional chord events",
-    "to fit, from beat 0); lyrics (optional lines to set, each line gets an equal share of the bars and its syllables",
-    "decide the note count); range (optional MIDI low/high, defaults to the artist's vocal range); key (optional, defaults",
+    "to fit, from beat 0); lyrics (optional lines to set, at most one per bar: each line gets an equal share of the bars,",
+    "as equal as whole bars allow, and its syllables decide the note count); range (optional MIDI low/high, defaults to the artist's vocal range); key (optional, defaults",
     "to Live's key when Scale Mode is on, else the chords' key); timeSignature (optional, defaults to Live's); seed (same seed,",
     "same melody).",
     "Returns { notes, key, range, beatsPerBar }: notes start at beat 0 of the clip.",
@@ -77,15 +76,17 @@ export const melodyWriteTool = defineTool({
     if (lines.length === 0) {
       notes.push(...writeMelody(plan, chords, range));
     } else {
-      const barsPerLine = Math.max(1, Math.floor(input.bars / lines.length));
-      let barOffset = 0;
+      if (lines.length > input.bars) {
+        throw new Error(`${lines.length} lyric lines need at least ${lines.length} bars: give more bars, or set fewer lines at a time.`);
+      }
+      // Line i ends at bar ⌊(i + 1) · bars / lines⌋, so the bars spread as evenly as whole bars allow and add up to the length asked.
       lines.forEach((text, index) => {
-        const lineBars = index === lines.length - 1 ? Math.max(1, input.bars - barOffset) : barsPerLine;
-        const offset = barOffset * beatsPerBar;
+        const firstBar = Math.floor((index * input.bars) / lines.length);
+        const lineBars = Math.floor(((index + 1) * input.bars) / lines.length) - firstBar;
+        const offset = firstBar * beatsPerBar;
         const lineChords = chordsBetween(chords, offset, lineBars * beatsPerBar);
         const written = writeMelody({ ...plan, bars: lineBars }, lineChords, range, analyzeLine(text, defaults.accent));
         notes.push(...written.map((note) => ({ ...note, start: note.start + offset })));
-        barOffset += lineBars;
       });
     }
     return { notes, key: { ...key, name: MusicalKey.from(key).label }, range, beatsPerBar };

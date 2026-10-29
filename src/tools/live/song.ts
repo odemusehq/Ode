@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LIVE_TEMPO } from "../../shared/live";
 import { extensionTool } from "./extension-tool";
 import { LocatorRefSchema, SceneRefSchema, TrackRefSchema, nameFields } from "./schemas";
 
@@ -14,7 +15,7 @@ export const songTools = [
     op: "song_set_tempo",
     changes: "set",
     description: "Set the Set's tempo in BPM.",
-    input: { tempo: z.number().min(20).max(999).describe("Beats per minute") },
+    input: { tempo: z.number().min(LIVE_TEMPO.min).max(LIVE_TEMPO.max).describe("Beats per minute") },
     describe: ({ tempo }) => `Song · tempo to ${tempo} BPM`,
   }),
   extensionTool({
