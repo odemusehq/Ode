@@ -47,10 +47,10 @@ export class SharedLyrics {
   readonly getSnapshot = (): LyricsSnapshot => this.snapshot;
 
   /**
-   * Reads the stored lyrics, for what the event stream may have missed. When another Set may have opened, its
-   * lyrics replace the editor's text unless edits are waiting to be saved.
+   * Reads the stored lyrics, for what the event stream may have missed. When another song may be in use, its lyrics
+   * replace the editor's text unless edits are waiting to be saved.
    */
-  async load(anotherSet = false): Promise<void> {
+  async load(anotherSong = false): Promise<void> {
     const seen = this.received;
     let state: LyricsState;
     try {
@@ -60,7 +60,7 @@ export class SharedLyrics {
       return;
     }
     if (this.received !== seen) return;
-    if (anotherSet && !this.changed && !this.saving) this.adopt(state);
+    if (anotherSong && !this.changed && !this.saving) this.adopt(state);
     else this.take(state);
   }
 
@@ -91,9 +91,18 @@ export class SharedLyrics {
     void this.save();
   }
 
-  /** Stored lyrics newer than the ones known: shown at once unless the musician has edits on the way. False when older. */
+  /**
+   * Stored lyrics newer than the ones known: shown at once unless the musician has edits on the way. Another song's
+   * lyrics always replace these, since its revisions count from its own start. False when older.
+   */
   private take(state: LyricsState): boolean {
     const { stored } = this.snapshot;
+    if (stored && state.songId !== stored.songId) {
+      this.saver.cancel();
+      this.changed = false;
+      this.adopt(state);
+      return true;
+    }
     if (stored && state.revision <= stored.revision) return false;
     if (this.saving) {
       // The save's answer decides what the editor shows.
@@ -129,7 +138,8 @@ export class SharedLyrics {
 
   private async send(): Promise<void> {
     if (!this.changed) return;
-    const write: LyricsWrite = { text: this.snapshot.text, baseRevision: this.base };
+    const songId = this.snapshot.stored?.songId;
+    const write: LyricsWrite = { text: this.snapshot.text, baseRevision: this.base, ...(songId ? { songId } : {}) };
     this.changed = false;
     let saved: LyricsSaved;
     try {

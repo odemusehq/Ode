@@ -3,8 +3,8 @@ import { HistoryView } from "../views/HistoryView";
 import { LyricsPanel } from "../views/LyricsPanel";
 import { NowPanel } from "../views/NowPanel";
 import { DialogHeader } from "./DialogHeader";
-import { DialogResult, LiveDialog } from "./dialog";
-import { useAppState } from "./hooks";
+import { LiveDialog } from "./dialog";
+import { useAppState, useClient } from "./hooks";
 import { StatusBar } from "./StatusBar";
 
 /** Ask Ode: what the musician pointed at, the request, Ode's work as it goes, the result, and Close back to Live. */
@@ -54,13 +54,14 @@ export function HistoryDialog() {
  * waits behind the dialog for Ode too.
  */
 function DialogFooter() {
+  const client = useClient();
   const busy = useAppState((state) => state.busy);
   const credit = useAppState((state) => state.credit);
   return (
     <footer className="app-footer">
       {credit && <p className="app-footer__credit">{credit}</p>}
       {LiveDialog.hosted && (
-        <Button variant={ButtonVariant.Secondary} disabled={busy} onClick={() => LiveDialog.close(DialogResult.Done)}>
+        <Button variant={ButtonVariant.Secondary} disabled={busy} onClick={() => void client.close()}>
           Close
         </Button>
       )}

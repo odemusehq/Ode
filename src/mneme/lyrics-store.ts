@@ -80,6 +80,9 @@ class LineMerge {
   }
 }
 
+/** A save made in one song that arrived after the musician opened another. */
+export class LyricsForAnotherSongError extends Error {}
+
 /**
  * The song's lyrics, one text that the musician (from the window) and Ode both edit. Every save names the revision it
  * was edited from; when someone else saved in between, both changes are merged line by line, and where both changed the
@@ -98,9 +101,11 @@ export class LyricsStore {
 
   read(): Promise<LyricsState> {
     return this.enqueue(async () => {
+      const song = this.song.songId;
+      const texts = this.texts();
       const sheet = await this.song.read();
-      this.texts().set(sheet.lyricsRevision, sheet.lyrics);
-      return this.state(sheet);
+      texts.set(sheet.lyricsRevision, sheet.lyrics);
+      return this.state(sheet, song);
     });
   }
 
@@ -109,8 +114,12 @@ export class LyricsStore {
    * they save, the stored ones when Ode saves. When the base revision's text isn't known, a save by the musician is
    * stored as sent and a save by Ode is refused, so Ode reads the lyrics again first.
    */
-  write(text: string, baseRevision: number, author: VersionAuthor): Promise<LyricsSaved> {
+  write(text: string, baseRevision: number, author: VersionAuthor, songId?: string): Promise<LyricsSaved> {
     return this.enqueue(async () => {
+      const song = this.song.songId;
+      if (songId !== undefined && songId !== song) {
+        throw new LyricsForAnotherSongError("These lyrics belong to another song: open that song in the Lyrics dialog to save them.");
+      }
       const saved = LyricsText.normalize(text);
       const texts = this.texts();
       let conflicts: number[] = [];
@@ -129,26 +138,31 @@ export class LyricsStore {
         conflicts = merged.conflicts;
         return merged.lines.join("\n");
       });
-      return { ...(await this.stored(sheet)), conflicts };
+      return { ...(await this.stored(sheet, song, texts)), conflicts };
     });
   }
 
   /** Stores `text` as a new revision as it is, without merging (a restore puts back the lyrics of a version). */
   replace(text: string): Promise<LyricsState> {
-    return this.enqueue(async () => this.stored(await this.song.saveLyrics(() => LyricsText.normalize(text))));
+    return this.enqueue(async () => {
+      const song = this.song.songId;
+      const texts = this.texts();
+      return this.stored(await this.song.saveLyrics(() => LyricsText.normalize(text)), song, texts);
+    });
   }
 
-  private async stored(sheet: LeadSheet): Promise<LyricsState> {
-    this.texts().set(sheet.lyricsRevision, sheet.lyrics);
-    const state = await this.state(sheet);
-    this.onChange(state);
+  /** Keeps the saved text among the song's known revisions and tells the windows, while that song is still in use. */
+  private async stored(sheet: LeadSheet, song: string, texts: Map<number, string>): Promise<LyricsState> {
+    texts.set(sheet.lyricsRevision, sheet.lyrics);
+    const state = await this.state(sheet, song);
+    if (song === this.song.songId) this.onChange(state);
     return state;
   }
 
   /** The text with its analysis in the song's pronunciation; blank and label lines are analysed as empty lines. */
-  private async state(sheet: LeadSheet): Promise<LyricsState> {
+  private async state(sheet: LeadSheet, song: string): Promise<LyricsState> {
     const accent = (await this.prefs.effective(sheet)).pronunciation;
-    return { text: sheet.lyrics, revision: sheet.lyricsRevision, analysis: analyzeLyrics(LyricsText.forAnalysis(sheet.lyrics), accent) };
+    return { songId: song, text: sheet.lyrics, revision: sheet.lyricsRevision, analysis: analyzeLyrics(LyricsText.forAnalysis(sheet.lyrics), accent) };
   }
 
   /** The known texts of the open song; another song's revisions start again. */

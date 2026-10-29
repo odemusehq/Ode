@@ -3,6 +3,7 @@ import type { RestoreResult, SongsResponse } from "../../shared/api";
 import type { Suggestion, UiEvent } from "../../shared/events";
 import type { Mode } from "../../shared/personalisation";
 import { OdeApi, errorMessage } from "./api";
+import { DialogResult, LiveDialog } from "./dialog";
 import { EventStream } from "./events";
 import { Layout } from "./layout";
 import type { Decision } from "./model";
@@ -53,16 +54,24 @@ export class OdeClient {
     return this.api.getSongs();
   }
 
-  /** Switches Ode to another song, then reads that song's title, lyrics or history. Throws when it fails. */
+  /** Saves the lyrics waiting to be saved, then switches Ode to another song and reads its title, lyrics or history. Throws when it fails. */
   async openSong(id: string): Promise<void> {
+    await this.lyrics.flush();
     await this.api.openSong(id);
     await this.refresh();
   }
 
-  /** Starts a new song and switches to it. Throws when it fails. */
+  /** Saves the lyrics waiting to be saved, then starts a new song and switches to it. Throws when it fails. */
   async createSong(title: string): Promise<void> {
+    await this.lyrics.flush();
     await this.api.createSong(title);
     await this.refresh();
+  }
+
+  /** Saves the lyrics waiting to be saved, then closes the dialog back to Live. */
+  async close(): Promise<void> {
+    await this.lyrics.flush();
+    LiveDialog.close(DialogResult.Done);
   }
 
   async refreshStatus(): Promise<void> {

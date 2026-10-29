@@ -46,13 +46,19 @@ export interface LyricsAnalysis {
  * and [label] lines have no words.
  */
 export interface LyricsState {
+  /** The song the lyrics belong to. */
+  songId: string;
   text: string;
   revision: number;
   analysis: LyricsAnalysis;
 }
 
-/** A save of the lyrics from the window or from Ode: the whole new text and the revision it was edited from. */
+/**
+ * A save of the lyrics from the window or from Ode: the whole new text, the revision it was edited from, and the song
+ * it was edited in, so a save that arrives after the musician opened another song stays with its own.
+ */
 export interface LyricsWrite {
+  songId?: string;
   text: string;
   baseRevision: number;
 }

@@ -11,7 +11,7 @@ import type { UiEvent } from "../shared/events";
 import type { DialogView, OdeConfig } from "../shared/config";
 import { Mode } from "../shared/personalisation";
 import { VersionAuthor, type RestoreResult } from "../shared/versions";
-import type { LyricsStore } from "../mneme/lyrics-store";
+import { LyricsForAnotherSongError, type LyricsStore } from "../mneme/lyrics-store";
 import { VersionNotFoundError } from "../mneme/version-history";
 import type { PreferencesStore } from "../mneme/preferences";
 import type { SettingsStore } from "../mneme/settings-store";
@@ -55,7 +55,7 @@ const DecisionSchema = z.object({ decision: z.enum(["allow", "deny"]) });
 const ChoiceSchema = z.object({ choice: z.string() });
 const NameSchema = z.object({ name: z.string() });
 const ModeSchema = z.object({ mode: z.enum(Mode) });
-const LyricsWriteSchema = z.object({ text: z.string(), baseRevision: z.number().int().min(0) });
+const LyricsWriteSchema = z.object({ songId: z.string().min(1).optional(), text: z.string(), baseRevision: z.number().int().min(0) });
 const VersionRequestSchema = z.object({ versionId: z.string().min(1) });
 const SongOpenSchema = z.object({ id: z.string().min(1) });
 const SongCreateSchema = z.object({ title: z.string() });
@@ -251,7 +251,12 @@ export class OdeServer {
     app.put(API.lyrics, async (c) => {
       const parsed = LyricsWriteSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: "Send { text, baseRevision } with the whole lyrics and the revision they were edited from." }, 400);
-      return c.json(await lyrics.write(parsed.data.text, parsed.data.baseRevision, VersionAuthor.Musician));
+      try {
+        return c.json(await lyrics.write(parsed.data.text, parsed.data.baseRevision, VersionAuthor.Musician, parsed.data.songId));
+      } catch (error) {
+        if (error instanceof LyricsForAnotherSongError) return c.json({ error: error.message }, 409);
+        throw error;
+      }
     });
 
     app.get("/api/release/file/:name", async (c) => {
