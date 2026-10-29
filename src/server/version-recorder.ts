@@ -3,6 +3,7 @@ import type { SetSnapshot } from "../shared/set-snapshot";
 import { VersionAuthor, type SetChange, type Version, type VersionListItem } from "../shared/versions";
 import { SetDiff } from "../mneme/set-diff";
 import type { SongVersions } from "../mneme/song-store";
+import { VersionHistory } from "../mneme/version-history";
 import type { SnapshotReader } from "./snapshot-reader";
 
 export interface RecordedVersion {
@@ -56,32 +57,29 @@ export class VersionRecorder {
     });
   }
 
-  /** How the History list shows a version. */
-  async listItem(version: Version): Promise<VersionListItem> {
-    const items = await this.versions.history.items();
-    return items.find((item) => item.id === version.id) ?? VersionRecorder.fallbackItem(version);
+  /**
+   * Runs the task once every version waiting to be saved is saved, and before the next one starts. Switching songs
+   * runs this way, so each version holds one song's Set and sheet and lands in that song's history.
+   */
+  afterPending<R>(task: () => Promise<R>): Promise<R> {
+    return this.enqueue(task);
   }
 
-  /** The first version of a song is where its history starts: the Set as Ode first found it, saved as the musician's. */
+  /** How the History list shows a version. */
+  listItem(version: Version): VersionListItem {
+    return VersionHistory.item(version);
+  }
+
+  /** Saves the version; the history compares it with the one before and works out its summary from the changes. */
   private async record(
     snapshot: SetSnapshot,
     author: VersionAuthor,
     summarize: (changes: SetChange[]) => string,
     request?: string,
   ): Promise<RecordedVersion> {
-    const history = this.versions.history;
-    const previous = await history.latest();
-    const changes = previous ? SetDiff.between(previous, snapshot) : [];
-    const version = previous
-      ? await history.record(snapshot, author, summarize(changes), request)
-      : await history.record(snapshot, VersionAuthor.Musician, summarize(changes));
-    if (version) this.emit({ type: "version", version: await this.listItem(version) });
-    return { snapshot, version, changes: version ? changes : [] };
-  }
-
-  private static fallbackItem({ changes, ...version }: Version): VersionListItem {
-    const tracks = [...new Set(changes.flatMap((change) => ("track" in change.target ? [change.target.track.name] : [])))];
-    return { ...version, tracks, changeCount: changes.length };
+    const version = await this.versions.history.record(snapshot, author, summarize, request);
+    if (version) this.emit({ type: "version", version: this.listItem(version) });
+    return { snapshot, version, changes: version ? version.changes : [] };
   }
 
   private enqueue<R>(task: () => Promise<R>): Promise<R> {

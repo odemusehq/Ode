@@ -2,11 +2,13 @@ import { SessionBusyError } from "../harness/session";
 import type { SessionManager } from "../harness/session-manager";
 import type { SongEntry, SongStore } from "../mneme/song-store";
 import type { SnapshotReader } from "./snapshot-reader";
+import type { VersionRecorder } from "./version-recorder";
 
 export interface SongSwitcherDeps {
   song: SongStore;
   sessions: SessionManager;
   reader: SnapshotReader;
+  recorder: VersionRecorder;
 }
 
 /** The songs the musician works on with Ode, and moving between them: the lead sheet, history and conversation go together. */
@@ -22,14 +24,18 @@ export class SongSwitcher {
     return this.switched(await this.deps.song.openLast());
   }
 
-  async open(id: string): Promise<SongEntry> {
-    this.assertIdle();
-    return this.switched(await this.deps.song.open(id));
+  open(id: string): Promise<SongEntry> {
+    return this.deps.recorder.afterPending(async () => {
+      this.assertIdle();
+      return this.switched(await this.deps.song.open(id));
+    });
   }
 
-  async create(title: string): Promise<SongEntry> {
-    this.assertIdle();
-    return this.switched(await this.deps.song.create(title));
+  create(title: string): Promise<SongEntry> {
+    return this.deps.recorder.afterPending(async () => {
+      this.assertIdle();
+      return this.switched(await this.deps.song.create(title));
+    });
   }
 
   private switched(entry: SongEntry): SongEntry {

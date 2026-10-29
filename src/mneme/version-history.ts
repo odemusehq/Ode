@@ -8,6 +8,7 @@ import {
   VersionAuthor,
   type ClipField,
   type DeviceField,
+  type SetChange,
   type SheetField,
   type SongField,
   type TrackField,
@@ -105,10 +106,11 @@ export class VersionHistory {
   }
 
   /**
-   * Saves what changed since the latest version, or returns null when nothing did.
-   * The first version is where the history starts: no changes, and the whole snapshot.
+   * Saves what changed since the latest version, and returns null when the Set is the same. The summary can be worked
+   * out from the changes. The first version is where the history starts: the whole snapshot, with an empty list of
+   * changes, saved as the musician's.
    */
-  record(snapshot: SetSnapshot, author: VersionAuthor, summary: string, request?: string): Promise<Version | null> {
+  record(snapshot: SetSnapshot, author: VersionAuthor, summary: string | ((changes: SetChange[]) => string), request?: string): Promise<Version | null> {
     return this.enqueue(() => this.recordNow(snapshot, author, summary, request));
   }
 
@@ -186,7 +188,12 @@ export class VersionHistory {
     });
   }
 
-  private async recordNow(snapshot: SetSnapshot, author: VersionAuthor, summary: string, request?: string): Promise<Version | null> {
+  private async recordNow(
+    snapshot: SetSnapshot,
+    author: VersionAuthor,
+    summary: string | ((changes: SetChange[]) => string),
+    request?: string,
+  ): Promise<Version | null> {
     const entries = await this.entries();
     const previous = entries.length > 0 ? await this.newestSnapshot(entries) : null;
     const changes = previous ? SetDiff.between(previous, snapshot) : [];
@@ -194,8 +201,8 @@ export class VersionHistory {
     const version: Version = {
       id: this.nextId(entries),
       time: new Date().toISOString(),
-      author,
-      summary: previous ? summary : VersionHistory.BASE_SUMMARY,
+      author: previous ? author : VersionAuthor.Musician,
+      summary: previous ? (typeof summary === "string" ? summary : summary(changes)) : VersionHistory.BASE_SUMMARY,
       changes,
     };
     if (request !== undefined) version.request = request;
@@ -304,7 +311,8 @@ export class VersionHistory {
     return { entry, index };
   }
 
-  private static item(version: Version): VersionListItem {
+  /** How the History list shows a version. */
+  static item(version: Version): VersionListItem {
     const { changes, ...rest } = version;
     return { ...rest, tracks: TouchedTracks.names(changes), changeCount: changes.length };
   }

@@ -141,7 +141,7 @@ export class OdeApp {
       },
       new ConversationStore(join(this.paths.workspace, "conversations"), config.limits.historyExchanges),
     );
-    this.songs = new SongSwitcher({ song: this.song, sessions: this.sessions, reader: this.reader });
+    this.songs = new SongSwitcher({ song: this.song, sessions: this.sessions, reader: this.reader, recorder: this.recorder });
     this.versionActions = new VersionActions({
       live,
       song: this.song,
