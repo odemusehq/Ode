@@ -128,8 +128,3 @@ export class PitchTracker {
     });
   }
 }
-
-/** Pitch of a monophonic recording (voice, a hummed or sung line), one frame every hopMs milliseconds. */
-export function pitchTrack(audio: AudioData, hopMs: number = DEFAULT_PITCH_TRACKER_OPTIONS.hopMs): PitchFrame[] {
-  return new PitchTracker(audio.sampleRate, { hopMs }).track(audio);
-}

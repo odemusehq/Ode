@@ -123,8 +123,3 @@ export class SyllableSpeller {
     return leftEnd + 1;
   }
 }
-
-/** The spelling of a word split into `count` syllables, in UK or US hyphenation. */
-export function spellSyllables(word: string, count: number, accent: Accent): string[] {
-  return SyllableSpeller.for(accent).spell(word, count);
-}

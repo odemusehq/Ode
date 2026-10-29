@@ -1,4 +1,3 @@
-import { decode } from "./decode";
 import { KeySnapper } from "./key";
 import { OnsetDetector } from "./onsets";
 import { PitchTracker } from "./pitch";
@@ -166,9 +165,4 @@ export class HumTranscriber {
     const velocity = Math.round(this.options.referenceVelocity + (level - reference) * this.options.velocityPerDb);
     return Math.max(this.options.minVelocity, Math.min(HIGHEST_VELOCITY, velocity));
   }
-}
-
-/** Reads a recording of a hummed or sung line and returns its notes in beats from the start of the audio. */
-export async function humToMidi(path: string, tempo: number, key?: MusicalKey): Promise<Note[]> {
-  return new HumTranscriber(tempo, key).transcribe(await decode(path));
 }

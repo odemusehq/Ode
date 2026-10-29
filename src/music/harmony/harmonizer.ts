@@ -5,7 +5,7 @@ import { melodyLine } from "../prosody/melody-line";
 import { Meter } from "../prosody/meter";
 import { ChordVocabulary, type ChordCandidate } from "./chord-vocabulary";
 import { harmonyStyle, styleProfile } from "./harmony-style";
-import { MusicalKey, type KeySpec } from "./musical-key";
+import type { MusicalKey } from "./musical-key";
 import { ProgressionScorer, type SlotNote } from "./progression-scorer";
 
 export interface HarmonizeOptions {
@@ -143,9 +143,4 @@ export class Harmonizer {
     });
     return { chords, romans };
   }
-}
-
-/** The k best chord progressions for a melody in a key, best first. */
-export function harmonize(melody: Note[], key: KeySpec, opts: HarmonizeOptions = {}): ChordEvent[][] {
-  return new Harmonizer(MusicalKey.from(key), opts).progressions(melody).map((progression) => progression.chords);
 }

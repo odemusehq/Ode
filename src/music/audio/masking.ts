@@ -3,7 +3,7 @@ import { TrackRole, roleFromName } from "./track-role";
 
 export interface TrackSpectrum {
   name: string;
-  /** Band levels in dB, as returned by spectrum(). */
+  /** Band levels in dB, as SpectrumAnalyzer gives them. */
   spectrum: number[];
 }
 

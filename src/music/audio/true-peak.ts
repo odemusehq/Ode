@@ -100,10 +100,6 @@ function absoluteMax(samples: Float32Array, start: number, end: number): number 
   return peak;
 }
 
-/** True peak of a recording, dBTP (four-times oversampled). */
-export function truePeak(audio: AudioData): number {
-  return new TruePeakMeter().measure(audio);
-}
 
 /** Highest absolute sample value over all channels, dBFS. */
 export function samplePeak(audio: AudioData): number {

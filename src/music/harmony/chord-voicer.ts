@@ -253,8 +253,3 @@ export class ChordVoicer {
     return options.length > 0 ? options : [{ pitch: fitByOctaves(chord.bass, range), cost: 0 }];
   }
 }
-
-/** Voices chords with smooth voice leading: notes for a MIDI clip (bass plus 3–4 upper voices per chord). */
-export function voiceChords(chords: ChordEvent[], register: PitchRange = DEFAULT_VOICING_REGISTER, options: VoicingOptions = {}): Note[] {
-  return new ChordVoicer(register, options).voice(chords).notes;
-}

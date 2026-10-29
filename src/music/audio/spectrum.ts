@@ -1,5 +1,5 @@
 import FFT from "fft.js";
-import { FrequencyBands, THIRD_OCTAVE_BAND_COUNT } from "./bands";
+import { FrequencyBands } from "./bands";
 import { frameCount } from "./types";
 import { powerToDb } from "./units";
 import { hannWindow } from "./window";
@@ -112,9 +112,4 @@ function frameMeanSquare(audio: AudioData, start: number, windowLength: number):
     for (let n = start; n < start + windowLength; n++) sum += samples[n]! * samples[n]!;
   }
   return sum / (windowLength * audio.channels.length);
-}
-
-/** Band levels in dB, averaged over time; 31 bands are the third-octave bands from 20 Hz to 20 kHz. */
-export function spectrum(audio: AudioData, bands: number = THIRD_OCTAVE_BAND_COUNT): number[] {
-  return new SpectrumAnalyzer(audio.sampleRate, new FrequencyBands(bands)).analyze(audio);
 }

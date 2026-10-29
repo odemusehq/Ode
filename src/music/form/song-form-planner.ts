@@ -1,5 +1,5 @@
 import type { Section, SectionKind } from "../../shared/song";
-import { parseGenre, type Genre } from "../rhythm/genre";
+import type { Genre } from "../rhythm/genre";
 import { FORM_TEMPLATES, type SectionTemplate } from "./form-templates";
 
 const DEFAULT_BEATS_PER_BAR = 4;
@@ -95,9 +95,4 @@ export class SongFormPlanner {
   private baseName(item: SectionTemplate): string {
     return item.label ?? SECTION_NAMES[item.kind];
   }
-}
-
-/** Sections (kind, name, start beat, length) for a typical song in the genre at the tempo. */
-export function planSongForm(genre: string, tempo: number, phraseBars: number, beatsPerBar = DEFAULT_BEATS_PER_BAR): Section[] {
-  return new SongFormPlanner().plan(parseGenre(genre), tempo, phraseBars, beatsPerBar).sections;
 }
