@@ -30,11 +30,16 @@ async function tempDir(): Promise<string> {
   return mkdtemp(join(tmpdir(), "ode-harness-"));
 }
 
+/** An answer the model stopped at the turn's length limit. */
+interface CutOff {
+  cutOff: ChatCompletionMessage;
+}
+
 /** A model that answers from a script, one message per turn, and keeps every turn it was sent. */
 class ScriptedModel implements TextGenerator {
   readonly turns: ChatTurn[] = [];
 
-  constructor(private readonly script: ChatCompletionMessage[]) {}
+  constructor(private readonly script: (ChatCompletionMessage | CutOff)[]) {}
 
   async ask(): Promise<string> {
     return "";
@@ -46,9 +51,9 @@ class ScriptedModel implements TextGenerator {
 
   async complete(turn: ChatTurn): Promise<ChatReply> {
     this.turns.push({ ...turn, messages: [...turn.messages] });
-    const message = this.script.shift();
-    if (!message) throw new Error("The script has no more answers.");
-    return { message, tokens: 10, finishReason: "stop" };
+    const next = this.script.shift();
+    if (!next) throw new Error("The script has no more answers.");
+    return "cutOff" in next ? { message: next.cutOff, tokens: 10, finishReason: "length" } : { message: next, tokens: 10, finishReason: "stop" };
   }
 }
 
@@ -171,4 +176,15 @@ test("a song's conversation keeps its latest exchanges", async () => {
     (await log.recent()).map((exchange) => exchange.request),
     ["Lock the bass to the kick", "Bigger chorus"],
   );
+});
+
+test("an answer cut at the length limit is set aside, and the model is asked for a smaller step", async () => {
+  const model = new ScriptedModel([{ cutOff: answer("Writing every note", [{ id: "call-1", name: "song_get" }]) }, answer("Done in two smaller steps.")]);
+  const { loop, seen, run } = await rig(model);
+  const result = await loop.run(run());
+  assert.equal(result.reply, "Done in two smaller steps.");
+  assert.ok(!seen.includes("started: song_get"));
+  const note = model.turns[1]?.messages.at(-1);
+  assert.equal(note?.role, "user");
+  assert.match(String(note?.content), /length limit/);
 });

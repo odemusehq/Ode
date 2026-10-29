@@ -7,9 +7,12 @@ import { LyricsStore } from "../mneme/lyrics-store";
 import { userPaths } from "../mneme/paths";
 import { PreferencesStore } from "../mneme/preferences";
 import { SongStore, SongVersions } from "../mneme/song-store";
+import { SetDiff } from "../mneme/set-diff";
+import { RestorePlanner } from "../server/restore-planner";
 import { RestoreRunner } from "../server/restore-runner";
 import { SetReadError, SnapshotReader } from "../server/snapshot-reader";
 import { VersionRecorder } from "../server/version-recorder";
+import type { DeviceSnapshot, SetSnapshot } from "../shared/set-snapshot";
 import type { LeadSheet } from "../shared/song";
 import { VersionAuthor } from "../shared/versions";
 import { FakeSetLive } from "./fake-set-live";
@@ -93,4 +96,36 @@ test("when Live can't answer, the Set isn't read and no version is written", asy
   live.extension.call = () => Promise.reject(new Error("Live is busy"));
   await assert.rejects(recorder.handEdits(), (error) => error instanceof SetReadError && error.message === "Ode can't read the Set: Live is busy");
   assert.deepEqual(await versions.history.list(), []);
+});
+
+/** The small test Set with these devices on the Bass track. */
+function bassWith(devices: DeviceSnapshot[]): SetSnapshot {
+  const set = TestSets.small();
+  at(set.tracks, 1).devices = devices;
+  return set;
+}
+
+const parameter = TestSets.parameter;
+const operator = (index: number) => TestSets.device(index, "Operator", "Operator", [parameter(0, "Volume", 0, 1, 0.7)]);
+const eq = (index: number) => TestSets.device(index, "EQ Eight", "Eq8", [parameter(0, "1 Gain A", -15, 15, 0)]);
+const reverb = (index: number, decay: number) => TestSets.device(index, "Reverb", "Reverb", [parameter(0, "Decay Time", 200, 60000, decay)]);
+const rack = (index: number, inner: DeviceSnapshot[]): DeviceSnapshot => ({
+  index,
+  name: "Audio Effect Rack",
+  className: "AudioEffectGroupDevice",
+  isRack: true,
+  parameters: [parameter(0, "Macro 1", 0, 127, 0)],
+  chains: [{ index: 0, devices: inner }],
+});
+
+test("a restore puts back a change inside a rack that an added device moved, and inserts in an order Live can follow", () => {
+  const plan = (current: SetSnapshot, target: SetSnapshot) => new RestorePlanner(current).plan(SetDiff.between(current, target)).steps;
+  const calls = (steps: ReturnType<typeof plan>) => steps.map((step) => step.map((call) => `${call.op} ${JSON.stringify(call.args)}`));
+
+  const reverbBack = calls(plan(bassWith([operator(0), rack(1, [reverb(0, 20)])]), bassWith([operator(0), eq(1), rack(2, [reverb(0, 50)])])));
+  assert.ok(reverbBack.flat().some((call) => call.startsWith("parameter_set") && call.includes('"chain":[1,0],"index":0') && call.includes('"value":50')), reverbBack.flat().join("\n"));
+
+  const inserted = calls(plan(bassWith([operator(0), rack(1, [reverb(0, 20)])]), bassWith([operator(0), eq(1), rack(2, [reverb(0, 20), eq(1)])])));
+  const stepOf = (op: string) => inserted.findIndex((step) => step.some((call) => call.startsWith(op)));
+  assert.ok(stepOf("track_insert_device") >= 0 && stepOf("track_insert_device") < stepOf("chain_insert_device"), inserted.flat().join("\n"));
 });

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readdir } from "node:fs/promises";
+import { appendFile, mkdtemp, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -116,4 +116,15 @@ test("the map of a big Set drops detail to fit its limit and still names every t
   assert.ok(map.length <= 8000, `${map.length} characters`);
   for (const track of set.tracks) assert.ok(map.includes(`${track.name}:`), track.name);
   assert.match(map, /read tools/);
+});
+
+test("a damaged line ends the history there, and the versions before it carry on", async () => {
+  const dir = await tempDir();
+  const history = new VersionHistory(dir, 20);
+  await history.record(TestSets.small(), VersionAuthor.Musician, "Opened");
+  await history.record(edited(), VersionAuthor.Ode, "Lead added", "add a lead");
+  await appendFile(join(dir, "versions.jsonl"), '{"id": "cut short\n');
+  const reopened = new VersionHistory(dir, 20);
+  assert.deepEqual((await reopened.list()).map((version) => version.summary), ["Where the history starts", "Lead added"]);
+  assert.ok((await readdir(dir)).some((name) => name.startsWith("versions.jsonl.unreadable-")));
 });

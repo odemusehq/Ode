@@ -3,7 +3,7 @@ import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { LyricsStore } from "../mneme/lyrics-store";
+import { LyricsForAnotherSongError, LyricsStore } from "../mneme/lyrics-store";
 import { userPaths } from "../mneme/paths";
 import { PreferencesStore } from "../mneme/preferences";
 import { SongStore, SongVersions } from "../mneme/song-store";
@@ -53,4 +53,13 @@ test("two songs keep their own versions", async () => {
   assert.deepEqual(await versions.history.list(), []);
   await song.open(band.id);
   assert.equal((await versions.history.list()).length, 1);
+});
+
+test("a lyrics save made in one song stays out of the song opened after it", async () => {
+  const { song, lyrics } = await songWithLyrics();
+  const first = song.songId;
+  await lyrics.write("Night bus, lights out", 0, VersionAuthor.Musician, first);
+  await song.create("Night Bus, acoustic");
+  await assert.rejects(lyrics.write("Night bus, lights out\nA line typed late", 1, VersionAuthor.Musician, first), LyricsForAnotherSongError);
+  assert.equal((await lyrics.read()).text, "");
 });

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { ChordSymbol } from "../music/harmony/chord-symbol";
 import { analyzeLine } from "../music/phonetics/line-analyzer";
 import { prosodyCheck } from "../music/prosody/prosody-checker";
 import { compareRhyme } from "../music/rhyme/rhyme-comparer";
@@ -39,4 +40,17 @@ test("a stressed syllable on an off-beat after an unstressed downbeat is flagged
   const natural = prosodyCheck(line, [note(0.5, 0.5), note(1, 1)]);
   assert.ok(inverted.issues.length > 0, "the inverted setting has an issue");
   assert.ok(inverted.score < natural.score, `inverted ${inverted.score}, natural ${natural.score}`);
+});
+
+test("half-diminished, diminished and minus chord signs give their own notes", () => {
+  const names = (symbol: string) => ChordSymbol.parse(symbol)?.tones.map((tone) => tone.name).join(" ");
+  assert.equal(names("Bø7"), "B D F A");
+  assert.equal(names("C°7"), names("Cdim7"));
+  assert.equal(names("C-7"), "C Eb G Bb");
+});
+
+test("a year is sung in pairs first: 1975 as nineteen seventy-five", () => {
+  const year = analyzeLine("back in 1975", "us").words[2];
+  assert.equal(year?.options[0]?.syllables.length, 6);
+  assert.equal(year?.certain, false);
 });
