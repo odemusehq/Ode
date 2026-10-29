@@ -55,6 +55,8 @@ export interface VersionSettings {
   snapshotEvery: number;
   /** History groups consecutive versions by the same author made within this many minutes. */
   groupMinutes: number;
+  /** How many versions version_list gives when the agent asks for no particular number, newest first. */
+  listLimit: number;
 }
 
 export interface ReleaseSettings {

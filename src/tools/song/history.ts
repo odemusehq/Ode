@@ -45,7 +45,7 @@ export const historyTools: AnyTool[] = [
     name: "project_map_get",
     changes: "none",
     description:
-      "Read the compact map of the whole project as it is now: every track with its mixer, devices and clips, the return tracks and the Main track, scenes, locators, tempo, time signature, key and scale, what is selected, the playhead and the loop. Every request to Ode already carries this map; use it when you start without it (as a subagent) or to see the Set again after big changes. The details behind the map come from the read tools (track_get, midi_clip_get_notes, device_get…). Returns { map }.",
+      "Read the compact map of the whole project as it is now: every track with its mixer, devices and clips, the return tracks and the Main track, scenes, locators, tempo, time signature, key and scale. Every request to Ode already carries this map; use it when you start without it (as a subagent) or to see the Set again after big changes. The details behind the map come from the read tools (track_get, midi_clip_get_notes, device_get…). Returns { map }.",
     input: {},
     run: async (_input, ctx) => ({ map: ProjectMap.encode(await ctx.snapshots.read(), ctx.config.memory.mapMaxChars) }),
   }),
@@ -53,12 +53,9 @@ export const historyTools: AnyTool[] = [
     name: "version_list",
     changes: "none",
     description:
-      "List the song's versions of the whole Set, newest first: when each was made, who made it (the musician by hand, or Ode), its name if it has one, a one-line summary, the tracks it touched and how many changes it holds. A version is saved before every request (what the musician changed by hand since the last one) and after every change Ode makes. Use it to work out what the musician did and when, for example whether a track was muted sessions ago and left alone, or a minute ago while another track was soloed. limit: how many to return, newest first (all when left out). Open one with version_get.",
+      "List the song's versions of the whole Set, newest first: when each was made, who made it (the musician by hand, or Ode), its name if it has one, a one-line summary, the tracks it touched and how many changes it holds. A version is saved before every request (what the musician changed by hand since the last one) and after every change Ode makes. Use it to work out what the musician did and when, for example whether a track was muted sessions ago and left alone, or a minute ago while another track was soloed. limit: how many to return, newest first (the most recent few by default; ask for more to look further back). Open one with version_get.",
     input: { limit: z.number().int().min(1).optional() },
-    run: async ({ limit }, ctx) => {
-      const items = await ctx.versions.history.items();
-      return limit === undefined ? items : items.slice(0, limit);
-    },
+    run: async ({ limit }, ctx) => (await ctx.versions.history.items()).slice(0, limit ?? ctx.config.versions.listLimit),
   }),
   defineTool({
     name: "version_get",

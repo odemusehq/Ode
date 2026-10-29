@@ -14,7 +14,7 @@ import type { RefNames } from "./live/ref-names";
 /** What a tool changes: nothing, the Live Set, or Mneme (the lyrics, the lead sheet, memory, settings, release files). */
 export type ToolChange = "none" | "set" | "memory";
 
-/** Reads the whole Set: every track, device and clip, plus the transport and the selection. */
+/** Reads the whole Set: every track, device and clip, the song's tempo, key, scale, scenes and locators, and the lead sheet. */
 export interface SetReader {
   /** Throws "Ode can't read the Set: …" with the fix when Live isn't reachable. */
   read(): Promise<SetSnapshot>;

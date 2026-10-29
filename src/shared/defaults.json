@@ -17,7 +17,8 @@
   },
   "versions": {
     "snapshotEvery": 20,
-    "groupMinutes": 10
+    "groupMinutes": 10,
+    "listLimit": 30
   },
   "release": {
     "coverChoices": 4
