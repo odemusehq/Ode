@@ -235,7 +235,7 @@ export class ReferenceResolver {
     return { clip, location: { place: ClipPlace.Session, track, slot: index, clipSlot } };
   }
 
-  /** The take lane the reference names; without a lane, the track's main lane first, then its take lanes. */
+  /** Without an explicit take-lane index, only the main Arrangement lane is addressed. */
   private arrangementClip(ref: ArrangementClipRef): FoundClip {
     const track = this.track(ref.track);
     const startsThere = (clip: Clip<Version>) => Math.abs(clip.startTime - ref.start) <= BEAT_TOLERANCE;
@@ -246,10 +246,6 @@ export class ReferenceResolver {
     }
     const clip = track.arrangementClips.find(startsThere);
     if (clip) return { clip, location: { place: ClipPlace.Arrangement, track, lane: null } };
-    for (const [lane, takeLane] of track.takeLanes.entries()) {
-      const take = takeLane.clips.find(startsThere);
-      if (take) return { clip: take, location: { place: ClipPlace.Arrangement, track, lane } };
-    }
     throw new NotFoundError(clipText(ref));
   }
 

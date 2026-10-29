@@ -30,13 +30,12 @@ export class RestoreRunner {
   async putBack(current: SetSnapshot, target: SetSnapshot): Promise<PutBack> {
     const plan = new RestorePlanner(current).plan(SetDiff.between(current, target));
     const skipped = [...plan.skipped];
+    if (plan.blocked?.length) return { complete: false, skipped: [...skipped, ...plan.blocked] };
     for (const step of plan.steps) {
       const failed = await this.runStep(step);
       if (failed.length === 0) continue;
       skipped.push(...failed);
-      if (!step.every((call) => RestorePlanner.isEdit(call.op))) {
-        return { complete: false, skipped: [...skipped, "The rest of the restore was skipped."] };
-      }
+      return { complete: false, skipped: [...skipped, "The rest of the restore was skipped. Your recovery history is retained."] };
     }
     if (target.sheet) await this.writeSheet(target.sheet);
     return { complete: true, skipped };

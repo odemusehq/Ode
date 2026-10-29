@@ -7,16 +7,16 @@ import type { Version } from "./sdk";
 export class Notice {
   constructor(private readonly ui: Ui<Version>) {}
 
-  async show(title: string, message: string): Promise<void> {
+  async show(title: string, message: string, url?: string): Promise<void> {
     try {
-      const page = `data:text/html,${encodeURIComponent(Notice.page(title, message))}`;
+      const page = `data:text/html,${encodeURIComponent(Notice.page(title, message, url))}`;
       await this.ui.showModalDialog(page, OdeConfig.notice.width, OdeConfig.notice.height);
     } catch (error) {
       console.error(`Showing "${title}" failed: ${describeError(error)}`);
     }
   }
 
-  private static page(title: string, message: string): string {
+  private static page(title: string, message: string, url?: string): string {
     return `<!doctype html>
 <html lang="en">
 <head>
@@ -27,6 +27,7 @@ export class Notice {
          background: #2f2f2f; color: #e6e6e6; font: 13px/1.45 -apple-system, "Segoe UI", sans-serif; }
   h1 { margin: 0; font-size: 14px; font-weight: 600; }
   p { margin: 0; flex: 1; color: #cfcfcf; }
+  input { width: 100%; box-sizing: border-box; color: #e6e6e6; background: #222; border: 1px solid #777; padding: 6px; }
   button { align-self: flex-end; min-width: 80px; padding: 5px 14px; border: 0; border-radius: 3px;
            background: #f2b233; color: #1c1c1c; font: inherit; cursor: pointer; }
   button:focus-visible { outline: 2px solid #8fc8ff; outline-offset: 2px; }
@@ -35,6 +36,7 @@ export class Notice {
 <body>
 <h1>${Notice.escape(title)}</h1>
 <p>${Notice.escape(message)}</p>
+${url ? `<input aria-label="Ode address" readonly value="${Notice.escape(url)}" onclick="this.select()">` : ""}
 <button id="close" autofocus>Close</button>
 <script>
   function closeDialog() {

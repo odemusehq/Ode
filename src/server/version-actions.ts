@@ -1,3 +1,5 @@
+import { SetDiff } from "../mneme/set-diff";
+import type { SetSnapshot } from "../shared/set-snapshot";
 import type { LiveConnections } from "../shared/live";
 import { ResultKind, type UiEvent } from "../shared/events";
 import { VersionAuthor, type RestoreResult, type Version, type VersionDetail, type VersionListItem } from "../shared/versions";
@@ -100,7 +102,7 @@ export class VersionActions {
 
   /**
    * Goes back to a version the musician confirmed: saves their hand edits, puts the Set back from how it
-   * is now, then deletes the versions after it. Throws when Ode is working or the Set is unreadable.
+   * is now, keeps the later recovery versions and records the actual restored state. Throws when Ode is working or the Set is unreadable.
    */
   restore(id: string): Promise<RestoreResult> {
     return this.restoreTo(id, (version) => `Restored the version from ${VersionActions.clock(version.time)}`);
@@ -115,10 +117,11 @@ export class VersionActions {
       const recorded = await this.deps.recorder.handEdits();
       const { latest, previous } = await this.changeToActOn(versionId, OdeAction.Undo);
       this.deps.emit({ type: "progress", text: `Undoing: ${latest.summary}` });
-      const outcome = await this.runner.putBack(recorded.snapshot, await this.history.snapshotAt(previous.id));
-      if (!outcome.complete) return this.stoppedPartWay(outcome);
-      await this.history.truncateAfter(previous.id);
-      this.deps.emit({ type: "versions-truncated", afterId: previous.id });
+      const target = await this.history.snapshotAt(previous.id);
+      const outcome = await this.runner.putBack(recorded.snapshot, target);
+      if (!outcome.complete || outcome.skipped.length > 0) return this.stoppedPartWay(outcome);
+      const verified = await this.verifyRestore(target, `Undone: ${latest.summary}`, `Undo ${latest.id}`);
+      if (!verified.complete) return { restored: false, skipped: verified.skipped };
       this.deps.emit({ type: "result", text: `Undone: ${latest.summary}${VersionActions.notRestored(outcome.skipped)}`, versionId: null, kind: ResultKind.Undo });
       return { restored: true, skipped: outcome.skipped };
     });
@@ -138,7 +141,7 @@ export class VersionActions {
       if (!latest.request) throw new RefusedError("Again needs the request behind Ode's last change, and this change was saved without it.");
       this.deps.emit({ type: "progress", text: "Going back to before the last take" });
       const outcome = await this.runner.putBack(recorded.snapshot, await this.history.snapshotAt(previous.id));
-      if (!outcome.complete) {
+      if (!outcome.complete || outcome.skipped.length > 0) {
         await this.stoppedPartWay(outcome);
         throw new RefusedError(outcome.skipped.join(" "));
       }
@@ -165,15 +168,29 @@ export class VersionActions {
       const version = await this.history.get(id);
       this.deps.emit({ type: "progress", text: `Going back to the version from ${VersionActions.clock(version.time)}` });
       const recorded = await this.deps.recorder.handEdits();
-      const outcome = await this.runner.putBack(recorded.snapshot, await this.history.snapshotAt(id));
-      if (!outcome.complete) return this.stoppedPartWay(outcome);
-      await this.history.truncateAfter(id);
-      this.deps.emit({ type: "versions-truncated", afterId: id });
+      const target = await this.history.snapshotAt(id);
+      const outcome = await this.runner.putBack(recorded.snapshot, target);
+      if (!outcome.complete || outcome.skipped.length > 0) return this.stoppedPartWay(outcome);
+      const verified = await this.verifyRestore(target, resultLine(version), `Restore ${id}`);
+      if (!verified.complete) return { restored: false, skipped: verified.skipped };
       this.deps.emit({ type: "result", text: `${resultLine(version)}${VersionActions.notRestored(outcome.skipped)}`, versionId: null, kind: ResultKind.Restore });
       return { restored: true, skipped: outcome.skipped };
     });
     await this.refreshSuggestions();
     return result;
+  }
+
+  /** Verify the supported snapshot fields and keep the actual outcome as a new recovery version. */
+  private async verifyRestore(target: SetSnapshot, summary: string, request: string): Promise<PutBack> {
+    const actual = await this.deps.recorder.odeChange(summary, request);
+    const expected = structuredClone(target);
+    // Artist/song settings intentionally survive restoring musical material.
+    if (expected.sheet && actual.snapshot.sheet) expected.sheet.settings = actual.snapshot.sheet.settings;
+    const remaining = SetDiff.between(actual.snapshot, expected);
+    if (remaining.length === 0) return { complete: true, skipped: [] };
+    const skipped = remaining.map((change) => change.label);
+    this.deps.emit({ type: "error", message: `The restore did not reach the requested state: ${skipped.join("; ")}. Recovery versions are retained.` });
+    return { complete: false, skipped };
   }
 
   /**

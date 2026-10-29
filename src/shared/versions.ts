@@ -85,7 +85,7 @@ export interface VersionDetail {
   tracks: { track: string; changes: SetChange[] }[];
   song: SetChange[];
   /** Quarter-note beats per bar in the Set at this version, for drawing its notes. */
-  beatsPerBar: number;
+  beatsPerBar: number | null;
 }
 
 export interface RestoreResult {

@@ -14,7 +14,7 @@ import {
 
 type Call = OpArgs<"apply_as_one_undo_step">["calls"][number];
 
-/** apply_as_one_undo_step: several operations as one undo step in Live. */
+/** Batches existing changes; asynchronous creation/setup needs a second native Live undo step. */
 export class UndoOperations {
   private readonly operations: ReadonlyMap<string, AnyOperation>;
 
@@ -41,7 +41,7 @@ export class UndoOperations {
     const runs = calls.map((call, index) => this.prepareCall(call, index, followUps));
     return async () => {
       const settled = this.live.withinTransaction(() => Promise.allSettled(runs.map((run) => run())));
-      await followUps.flush();
+      const setupTransaction = await followUps.flush();
       const outcomes = await settled;
       const applied = outcomes.filter((outcome) => outcome.status === "fulfilled").length;
       for (const [index, outcome] of outcomes.entries()) {
@@ -51,7 +51,10 @@ export class UndoOperations {
           );
         }
       }
-      return { results: outcomes.map((outcome) => (outcome.status === "fulfilled" ? outcome.value : undefined)) };
+      return {
+        results: outcomes.map((outcome) => (outcome.status === "fulfilled" ? outcome.value : undefined)),
+        nativeTransactions: setupTransaction ? 2 : 1,
+      };
     };
   }
 

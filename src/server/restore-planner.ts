@@ -20,6 +20,8 @@ export interface RestorePlan {
   steps: PlannedCall[][];
   /** What the restore skips, in plain words. */
   skipped: string[];
+  /** Unsupported reconstruction detected before any current material may be removed. */
+  blocked?: string[];
 }
 
 /**
@@ -145,6 +147,7 @@ interface Removal {
 export class RestorePlanner {
   private readonly staged = new StagedCalls();
   private readonly skipped: string[] = [];
+  private readonly blocked: string[] = [];
   private readonly trackFields = new Map<string, MergedFields<TrackRef>>();
   private readonly clipFields = new Map<string, MergedFields<ClipRef>>();
   private readonly removals: Removal[] = [];
@@ -182,7 +185,8 @@ export class RestorePlanner {
   /** True when a restore can create the track again with all its devices: a MIDI or audio track. */
   static canAddBackTrack(track: TrackSnapshot): boolean {
     const creatable = track.kind === "midi" || track.kind === "audio";
-    return creatable && track.devices.every((device) => RestorePlanner.canAddBack(device));
+    return creatable && track.devices.every((device) => RestorePlanner.canAddBack(device)) && SetLookup.clipsOf(track).every((clip) =>
+      clip.kind !== "midi" || RestorePlanner.canRecreateMidi(clip, "slot" in clip.ref ? Math.max(clip.loopEnd, clip.endMarker) : clip.endTime - clip.startTime));
   }
 
   plan(changes: SetChange[]): RestorePlan {
@@ -230,6 +234,7 @@ export class RestorePlanner {
     this.planNewReturnTracks(RestorePlanner.presence(changes, "track", ChangeKind.Added));
     for (const addition of RestorePlanner.inInsertOrder(additions)) this.planDeviceAddition(addition);
     this.planNewRegularTracks(RestorePlanner.presence(changes, "track", ChangeKind.Added));
+    if (this.blocked.length > 0) return { steps: [], skipped: this.skipped, blocked: this.blocked };
     return { steps: this.staged.steps(), skipped: this.skipped };
   }
 
@@ -374,12 +379,12 @@ export class RestorePlanner {
     }
   }
 
-  private planMixer(track: TrackRef, mixer: MixerInfo, stage: number, owner: string): void {
+  private planMixer(track: TrackRef, mixer: MixerInfo, stage: number, owner: string, chain: number[] = []): void {
     [mixer.volume, mixer.panning, ...mixer.sends].forEach((parameter, index) => {
       if (typeof parameter.value !== "number") return;
       this.staged.add(stage, {
         op: "parameter_set",
-        args: { parameter: { device: { track, index: MIXER_INDEX }, parameter: index }, value: parameter.value },
+        args: { parameter: { device: { track, ...(chain.length > 0 ? { chain } : {}), index: MIXER_INDEX }, parameter: index }, value: parameter.value },
         label: `${owner} · mixer`,
       });
     });
@@ -425,6 +430,12 @@ export class RestorePlanner {
       this.skipped.push(label);
       return;
     }
+    if (!audio && !RestorePlanner.canRecreateMidi(clip, length)) {
+      const reason = `${label} · this SDK cannot recreate its MIDI markers, loop boundaries and Arrangement span together`;
+      this.blocked.push(reason);
+      this.skipped.push(reason);
+      return;
+    }
     if (audio) {
       const loop: LoopSettings = {
         looping: clip.looping,
@@ -443,7 +454,6 @@ export class RestorePlanner {
       if ("slot" in key) this.staged.add(stage, { op: "clip_slot_create_midi_clip", args: { slot: { track, slot: key.slot }, length, notes, ...named }, label });
       else if (key.lane !== undefined) this.staged.add(stage, { op: "take_lane_create_midi_clip", args: { lane: { track, lane: key.lane }, start: key.start, length, notes, ...named }, label });
       else this.staged.add(stage, { op: "track_create_midi_clip", args: { track, start: key.start, length, notes, ...named }, label });
-      if (clip.startMarker > BEAT_TOLERANCE || clip.loopStart > BEAT_TOLERANCE) this.skipped.push(`${label} · start and loop positions`);
     }
     const ref: ClipRef = clip.tag ? { tag: clip.tag } : "slot" in key ? { track, slot: key.slot } : RestorePlanner.arrangedRef(track, key);
     const canLoop = !audio || audio.warping;
@@ -569,6 +579,7 @@ export class RestorePlanner {
       if (inner.receivingNote !== undefined) {
         this.staged.add(chainStage + 1, { op: "drum_pad_set_note", args: { device: ref, chain: position, note: inner.receivingNote }, label: `${label} · pad ${position + 1}` });
       }
+      if (inner.mixer) this.planMixer(track, inner.mixer, chainStage + 1, `${label} · chain ${position + 1}`, [...chain, index, position]);
       for (const nested of inner.devices) this.insertDevice(track, [...chain, index, position], nested.index, nested, chainStage + NEXT_CREATING_STEP, owner);
     });
   }
@@ -661,7 +672,17 @@ export class RestorePlanner {
   private static chainsChanged(before: DeviceSnapshot, after: DeviceSnapshot): boolean {
     const earlier = before.chains ?? [];
     const later = after.chains ?? [];
-    return earlier.length !== later.length || earlier.some((chain, position) => chain.receivingNote !== later[position]?.receivingNote);
+    return earlier.length !== later.length || earlier.some((chain, position) =>
+      chain.receivingNote !== later[position]?.receivingNote ||
+      Boolean(chain.mixer) !== Boolean(later[position]?.mixer) ||
+      chain.mixer?.sends.length !== later[position]?.mixer?.sends.length);
+  }
+
+  /** MIDI creation exposes one length but no source-marker setters. Preserve every boundary or refuse recreation. */
+  private static canRecreateMidi(clip: ClipInfo, length: number): boolean {
+    const equal = (value: number, expected: number) => Number.isFinite(value) && Math.abs(value - expected) <= BEAT_TOLERANCE;
+    return length > 0 && Number.isFinite(length) && equal(clip.startMarker, 0) && equal(clip.loopStart, 0) &&
+      equal(clip.endMarker, length) && equal(clip.loopEnd, length) && equal(clip.duration, length);
   }
 
   /** The name Live adds a device back by, or null for a plug-in or a preset. */

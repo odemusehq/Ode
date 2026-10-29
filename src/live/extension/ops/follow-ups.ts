@@ -34,14 +34,15 @@ export class GroupedFollowUps implements FollowUps {
     });
   }
 
-  async flush(): Promise<void> {
+  async flush(): Promise<boolean> {
     this.flushed = true;
     const waiting = this.waiting.splice(0);
-    if (waiting.length === 0) return;
+    if (waiting.length === 0) return false;
     const outcomes = await Promise.allSettled(waiting.map((entry) => entry.started));
     this.live.withinTransaction(() => {
       waiting.forEach((entry, index) => GroupedFollowUps.settle(entry, outcomes[index]));
     });
+    return true;
   }
 
   private static settle(entry: Waiting, outcome: PromiseSettledResult<unknown> | undefined): void {

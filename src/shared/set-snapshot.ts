@@ -9,6 +9,8 @@ export interface DeviceSnapshot extends Omit<DeviceInfo, "chains"> {
 
 export interface ChainSnapshot extends Omit<ChainInfo, "devices"> {
   devices: DeviceSnapshot[];
+  /** Absent in histories recorded before chain mixers were captured. */
+  mixer?: MixerInfo;
 }
 
 /** A track with its mixer and full devices. Its clips carry their notes (MIDI) or are AudioClipInfo (audio). */
@@ -20,7 +22,8 @@ export interface TrackSnapshot extends Omit<TrackInfo, "devices"> {
 /** What the extension reads in one pass. */
 export interface SetContents {
   song: Omit<SongInfo, "tracks" | "returnTracks">;
-  signature: TimeSignature;
+  /** null: the installed SDK cannot read the current global meter. Scene overrides are separate. */
+  signature: TimeSignature | null;
   tracks: TrackSnapshot[];
   returnTracks: TrackSnapshot[];
   main: TrackSnapshot;

@@ -1,7 +1,7 @@
 import { basename } from "node:path";
 import { diffIndices } from "node-diff3";
 import { MIXER_INDEX, TAG_SEPARATOR, type Note, type TrackRef } from "../shared/live";
-import type { AudioClipInfo, ClipInfo, LocatorInfo, ParameterInfo, SceneInfo, TimeSignature } from "../shared/live-ops";
+import type { AudioClipInfo, ClipInfo, LocatorInfo, MixerInfo, ParameterInfo, SceneInfo, TimeSignature } from "../shared/live-ops";
 import { NOTE_NAMES, noteName } from "../shared/notes";
 import type { ChainSnapshot, DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
 import type { LeadSheet, Section } from "../shared/song";
@@ -94,7 +94,8 @@ interface DevicePlace {
 /** Plain words for what is in the Set, shared by change labels and the project map. */
 export class SetWording {
   /** Quarter-note beats in one bar. */
-  static beatsPerBar(signature: TimeSignature): number {
+  static beatsPerBar(signature: TimeSignature | null): number | null {
+    if (!signature || !(signature.numerator > 0 && signature.denominator > 0)) return null;
     return (signature.numerator * QUARTER_NOTES_PER_WHOLE_NOTE) / signature.denominator;
   }
 
@@ -104,15 +105,17 @@ export class SetWording {
   }
 
   /** "9–16" for the bars from `start` up to `end` (exclusive), or "9" when they stay in one bar. */
-  static barSpan(start: number, end: number, beatsPerBar: number): string {
+  static barSpan(start: number, end: number, beatsPerBar: number | null): string {
+    if (beatsPerBar === null) return `${SetWording.number(start)}–${SetWording.number(end)}`;
     const first = SetWording.bar(start, beatsPerBar);
     const last = Math.max(first, Math.ceil(end / beatsPerBar));
     return first === last ? `${first}` : `${first}–${last}`;
   }
 
   /** "bars 9–16" or "bar 9". */
-  static bars(start: number, end: number, beatsPerBar: number): string {
+  static bars(start: number, end: number, beatsPerBar: number | null): string {
     const span = SetWording.barSpan(start, end, beatsPerBar);
+    if (beatsPerBar === null) return `beats ${span}`;
     return span.includes("–") ? `bars ${span}` : `bar ${span}`;
   }
 
@@ -125,8 +128,12 @@ export class SetWording {
   }
 
   /** "4/4". */
-  static signature(signature: TimeSignature): string {
-    return `${signature.numerator}/${signature.denominator}`;
+  static signature(signature: TimeSignature | null): string {
+    return signature ? `${signature.numerator}/${signature.denominator}` : "meter unknown (SDK cannot read Song meter)";
+  }
+
+  static position(beat: number, beatsPerBar: number | null): string {
+    return beatsPerBar === null ? `beat ${SetWording.number(beat)}` : `bar ${SetWording.bar(beat, beatsPerBar)}`;
   }
 
   /** A number as short as it stays readable: 2400, 12.5, 0.85. */
@@ -571,7 +578,7 @@ class Sends {
 /** Works out the changes from one snapshot to the next, each with its label. */
 class DiffBuilder {
   private readonly changes: SetChange[] = [];
-  private readonly beatsPerBar: number;
+  private readonly beatsPerBar: number | null;
   /** The return tracks in both snapshots, which also pair up every track's sends. */
   private readonly returns: Pairing;
 
@@ -621,7 +628,7 @@ class DiffBuilder {
     }
     const signatureBefore = this.from.signature;
     const signatureAfter = this.to.signature;
-    if (signatureBefore.numerator !== signatureAfter.numerator || signatureBefore.denominator !== signatureAfter.denominator) {
+    if (!Values.same(signatureBefore, signatureAfter)) {
       const label = `Song · time signature ${SetWording.signature(signatureBefore)} → ${SetWording.signature(signatureAfter)}`;
       this.add(ChangeKind.Changed, { scope: "song", field: "signature" }, label, signatureBefore, signatureAfter);
     }
@@ -664,12 +671,12 @@ class DiffBuilder {
       added.splice(index, 1);
       parts.push(
         match.name === old.name
-          ? `locator ${this.locatorName(old)} moved to bar ${this.barAt(match.time)}`
+          ? `locator ${this.locatorName(old)} moved to ${this.barAt(match.time)}`
           : `locator ${this.locatorName(old)} ${match.name ? `renamed ${match.name}` : "name cleared"}`,
       );
     }
     for (const locator of added) {
-      parts.push(`${locator.name ? `locator ${locator.name}` : "locator"} added at bar ${this.barAt(locator.time)}`);
+      parts.push(`${locator.name ? `locator ${locator.name}` : "locator"} added at ${this.barAt(locator.time)}`);
     }
     return parts.join(", ") || "locators changed";
   }
@@ -679,11 +686,11 @@ class DiffBuilder {
   }
 
   private locatorName(locator: LocatorInfo): string {
-    return locator.name || `at bar ${this.barAt(locator.time)}`;
+    return locator.name || `at ${this.barAt(locator.time)}`;
   }
 
-  private barAt(beat: number): number {
-    return SetWording.bar(beat, this.beatsPerBar);
+  private barAt(beat: number): string {
+    return SetWording.position(beat, this.beatsPerBar);
   }
 
   /** "scene Bridge added", "2 scenes removed", "scene 3 renamed Chorus", "scene Chorus tempo 120 → 128 BPM". */
@@ -967,10 +974,12 @@ class DiffBuilder {
     if (before.looping !== after.looping) return after.looping ? "loop on" : "loop off";
     if (before.loopStart !== after.loopStart || before.loopEnd !== after.loopEnd) {
       const was = SetWording.barSpan(before.loopStart, before.loopEnd, this.beatsPerBar);
-      return `loop bars ${was} → ${SetWording.barSpan(after.loopStart, after.loopEnd, this.beatsPerBar)}`;
+      return `loop ${this.beatsPerBar === null ? "beats" : "bars"} ${was} → ${SetWording.barSpan(after.loopStart, after.loopEnd, this.beatsPerBar)}`;
     }
     if (before.duration !== after.duration) {
-      return `length ${SetWording.number(before.duration / this.beatsPerBar)} → ${SetWording.number(after.duration / this.beatsPerBar)} bars`;
+      const unit = this.beatsPerBar === null ? "beats" : "bars";
+      const divisor = this.beatsPerBar ?? 1;
+      return `length ${SetWording.number(before.duration / divisor)} → ${SetWording.number(after.duration / divisor)} ${unit}`;
     }
     return "start and end changed";
   }
@@ -1032,12 +1041,16 @@ class DiffBuilder {
     const chainsAfter = after.chains ?? [];
     for (let index = 0; index < Math.min(chainsBefore.length, chainsAfter.length); index++) {
       const chain = itemAt(chainsAfter, index);
+      const previous = itemAt(chainsBefore, index);
+      const chainPath = [...place.from, place.fromIndex, index];
+      const chainContext = [...context, before.name, DiffBuilder.chainName(chain, index)];
+      if (previous.mixer && chain.mixer) this.chainMixer(previous.mixer, chain.mixer, track, chainPath, chainContext);
       this.devices(
         track,
-        itemAt(chainsBefore, index).devices,
+        previous.devices,
         chain.devices,
         { from: [...place.from, place.fromIndex, index], to: [...place.to, place.toIndex, index] },
-        [...context, before.name, DiffBuilder.chainName(chain, index)],
+        chainContext,
       );
     }
   }
@@ -1054,7 +1067,24 @@ class DiffBuilder {
     const noun = [...chainsBefore, ...chainsAfter].some((chain) => chain.receivingNote !== undefined) ? "pads" : "chains";
     if (chainsBefore.length !== chainsAfter.length) parts.push(`${noun} ${chainsBefore.length} → ${chainsAfter.length}`);
     else if (chainsBefore.some((chain, index) => chain.receivingNote !== chainsAfter[index]?.receivingNote)) parts.push(`${noun} changed`);
+    if (chainsBefore.some((chain, index) => Boolean(chain.mixer) !== Boolean(chainsAfter[index]?.mixer))) parts.push("chain mixer data availability changed");
+    else if (chainsBefore.some((chain, index) => chain.mixer?.sends.length !== chainsAfter[index]?.mixer?.sends.length)) parts.push("chain mixer layout changed");
     return parts;
+  }
+
+  /** Chain sends belong to their rack, so compare them by chain-local index, not the Song's return-track order. */
+  private chainMixer(before: MixerInfo, after: MixerInfo, track: TrackKey, chain: number[], context: readonly string[]): void {
+    const previous = [before.volume, before.panning, ...before.sends];
+    const current = [after.volume, after.panning, ...after.sends];
+    previous.forEach((parameter, index) => {
+      const was = parameter.value;
+      const now = current[index]?.value;
+      if (typeof was !== "number" || typeof now !== "number" || was === now) return;
+      const what = index === 0 ? "volume" : index === 1 ? "pan" : `send ${index - 1}`;
+      const wording = (value: number) => index === 1 ? SetWording.pan(value) : SetWording.value(parameter, value);
+      this.add(ChangeKind.Changed, { scope: "device", track, chain, index: MIXER_INDEX, field: "parameter", parameter: index },
+        DiffBuilder.words(track, context, `${what} ${wording(was)} → ${wording(now)}`), was, now);
+    });
   }
 
   private static parameterWords(
@@ -1207,8 +1237,10 @@ class SnapshotPatcher {
   private static setDeviceValue(track: TrackSnapshot, target: DeviceTarget, value: unknown): void {
     if (target.field === "parameter") {
       const index = target.parameter ?? -1;
-      const parameter =
-        target.index === MIXER_INDEX ? Sends.parameter(track, index) : SnapshotPatcher.findDevice(track, target.chain, target.index)?.parameters[index];
+      const mixer = target.index === MIXER_INDEX ? SnapshotPatcher.mixerAt(track, target.chain) : undefined;
+      const parameter = target.index === MIXER_INDEX
+        ? mixer && [mixer.volume, mixer.panning, ...mixer.sends][index]
+        : SnapshotPatcher.findDevice(track, target.chain, target.index)?.parameters[index];
       if (parameter && typeof value === "number") parameter.value = value;
       return;
     }
@@ -1231,6 +1263,8 @@ class SnapshotPatcher {
       const next: ChainSnapshot = existing ? { ...existing, index } : structuredClone(chain);
       if (chain.receivingNote === undefined) delete next.receivingNote;
       else next.receivingNote = chain.receivingNote;
+      if (chain.mixer === undefined) delete next.mixer;
+      else next.mixer = structuredClone(chain.mixer);
       return next;
     });
   }
@@ -1258,6 +1292,12 @@ class SnapshotPatcher {
 
   private static findDevice(track: TrackSnapshot, chain: readonly number[], index: number): DeviceSnapshot | undefined {
     return SnapshotPatcher.deviceList(track, chain)?.[index];
+  }
+
+  private static mixerAt(track: TrackSnapshot, path: readonly number[]): MixerInfo | undefined {
+    if (path.length === 0) return track.mixer;
+    const outer = SnapshotPatcher.deviceList(track, path.slice(0, -2));
+    return outer?.[path[path.length - 2] ?? -1]?.chains?.[path[path.length - 1] ?? -1]?.mixer;
   }
 
   private static renumberDevices(devices: readonly DeviceSnapshot[]): void {
@@ -1340,9 +1380,9 @@ class SnapshotPatcher {
       song.scaleName = key.scaleName;
       song.scaleMode = key.scaleMode;
       song.scaleIntervals = [...key.scaleIntervals];
-    } else if (target.field === "signature" && isRecord(value)) {
-      const signature = value as unknown as TimeSignature;
-      this.set.signature = { numerator: signature.numerator, denominator: signature.denominator };
+    } else if (target.field === "signature" && (value === null || isRecord(value))) {
+      const signature = value as TimeSignature | null;
+      this.set.signature = signature === null ? null : { numerator: signature.numerator, denominator: signature.denominator };
     } else if (target.field === "locators" && Array.isArray(value)) {
       song.locators = structuredClone(value) as LocatorInfo[];
     } else if (target.field === "scenes" && Array.isArray(value)) {

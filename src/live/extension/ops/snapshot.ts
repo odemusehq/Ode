@@ -150,7 +150,11 @@ export class SnapshotOperations extends OperationGroup<SnapshotOp> {
     const label = `chain ${index + 1} of ${rack}`;
     return UnreadableError.guardAsync(label, async () => {
       const receivingNote = chain instanceof DrumChain ? chain.receivingNote : undefined;
-      const info: ChainSnapshot = { index, devices: await this.devices(chain.devices, `in ${label}`) };
+      const [devices, mixer] = await Promise.all([
+        this.devices(chain.devices, `in ${label}`),
+        UnreadableError.guardAsync(`the mixer of ${label}`, () => this.describe.mixer(chain.mixer)),
+      ]);
+      const info: ChainSnapshot = { index, devices, mixer };
       if (receivingNote !== undefined) info.receivingNote = receivingNote;
       return info;
     });

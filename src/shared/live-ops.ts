@@ -166,7 +166,7 @@ export interface SelectionInfo {
   scene: number | null;
 }
 
-/** The Set's meter: the first scene's own time signature, or 4/4 when the scenes leave it to Live. */
+/** An explicitly known meter. The SDK's scene launch override is not the current Song meter. */
 export interface TimeSignature {
   numerator: number;
   denominator: number;
@@ -290,6 +290,6 @@ export interface ExtensionOpResults {
   scene_rename: SceneInfo;
   render_track_audio: { path: string };
   import_into_project: { path: string };
-  apply_as_one_undo_step: { results: unknown[] };
+  apply_as_one_undo_step: { results: unknown[]; nativeTransactions: 1 | 2 };
   set_snapshot: SetContents;
 }

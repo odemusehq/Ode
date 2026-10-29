@@ -33,7 +33,6 @@ import type {
   TrackInfo,
   TrackSummary,
 } from "../../shared/live-ops";
-import { LIVE_DEFAULT_SIGNATURE } from "../../shared/live-ops";
 import type { LiveSet } from "./live-set";
 import { ClipPlace, clipReference, type ClipLocation } from "./locations";
 import { fromLiveNotes } from "./notes";
@@ -61,11 +60,9 @@ export class Describer {
     };
   }
 
-  /** The Set's meter: the first scene's own time signature, or Live's default when the first scene leaves it to Live. */
-  signature(): TimeSignature {
-    const scene = this.set.song.scenes[0];
-    const own = scene !== undefined && scene.signatureNumerator > 0 && scene.signatureDenominator > 0;
-    return own ? { numerator: scene.signatureNumerator, denominator: scene.signatureDenominator } : { ...LIVE_DEFAULT_SIGNATURE };
+  /** beta.1 has no current Song-meter getter; an inactive scene's override cannot supply it. */
+  signature(): TimeSignature | null {
+    return null;
   }
 
   /** Tempo, grid, key and scale, scenes and locators. */

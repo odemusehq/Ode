@@ -161,6 +161,21 @@ export class FakeSetLive implements LiveConnections {
         list.forEach((candidate, i) => (candidate.index = i));
         return { deleted: true };
       },
+      rack_insert_chain: ({ device, index }: ExtensionOpArgs["rack_insert_chain"]) => {
+        const rack = this.findDevice(device);
+        const chains = rack.chains ?? (rack.chains = []);
+        const position = index ?? chains.length;
+        const parameter = (at: number, name: string, min: number, max: number, value: number): ParameterInfo => ({ index: at, name, min, max, isQuantized: false, defaultValue: value, valueItems: [], value });
+        const chain: ChainSnapshot = { index: position, devices: [], mixer: { volume: parameter(0, "Chain Volume", 0, 1, 0.85), panning: parameter(1, "Chain Panning", -1, 1, 0), sends: [] } };
+        chains.splice(position, 0, chain);
+        chains.forEach((item, at) => (item.index = at));
+        return chain;
+      },
+      drum_pad_set_note: ({ device, chain, note }: ExtensionOpArgs["drum_pad_set_note"]) => {
+        const found = this.chain(this.findDevice(device), chain);
+        found.receivingNote = note;
+        return found;
+      },
       song_create_locator: ({ time, name }: ExtensionOpArgs["song_create_locator"]) => {
         const locator = { index: 0, name: name ?? "", time };
         this.state.song.locators = [...this.state.song.locators, locator].sort((a, b) => a.time - b.time).map((item, index) => ({ ...item, index }));
@@ -318,12 +333,21 @@ export class FakeSetLive implements LiveConnections {
   private parameter(ref: ParameterRef): ParameterInfo {
     const parameters =
       ref.device.index === MIXER_INDEX
-        ? FakeSetLive.mixerParameters(this.track(ref.device.track).mixer)
+        ? FakeSetLive.mixerParameters(this.mixer(ref.device))
         : this.findDevice(ref.device).parameters;
     const found =
       typeof ref.parameter === "number" ? parameters[ref.parameter] : parameters.find((parameter) => parameter.name === ref.parameter);
     if (!found) throw new Error(`not found: parameter ${String(ref.parameter)}`);
     return found;
+  }
+
+  private mixer(ref: DeviceRef): MixerInfo {
+    const path = ref.chain ?? [];
+    if (path.length === 0) return this.track(ref.track).mixer;
+    const rack = this.findDevice({ track: ref.track, chain: path.slice(0, -2), index: path[path.length - 2] ?? -1 });
+    const mixer = this.chain(rack, path[path.length - 1] ?? -1).mixer;
+    if (!mixer) throw new Error("the fake chain has no captured mixer");
+    return mixer;
   }
 
   private locator(ref: LocatorRef) {

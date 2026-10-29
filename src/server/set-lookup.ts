@@ -18,6 +18,7 @@ export class SetLookup {
 
   /** Beats (quarter notes) in one bar of the Set's time signature. */
   get beatsPerBar(): number {
+    if (!this.snapshot.signature) throw new Error("The current meter is unavailable from Live. Supply a time signature explicitly.");
     const { numerator, denominator } = this.snapshot.signature;
     return (numerator * QUARTER_NOTES_PER_WHOLE_NOTE) / denominator;
   }
@@ -58,7 +59,7 @@ export class SetLookup {
       const clip = track.clipSlots[ref.slot]?.clip;
       return clip ? { track, clip, arranged: false } : undefined;
     }
-    const candidates = ref.lane === undefined ? SetLookup.arrangedClips(track) : (track.takeLanes[ref.lane]?.clips ?? []);
+    const candidates = ref.lane === undefined ? track.arrangementClips : (track.takeLanes[ref.lane]?.clips ?? []);
     const clip = candidates.find((candidate) => Math.abs(candidate.startTime - ref.start) <= BEAT_TOLERANCE);
     return clip ? { track, clip, arranged: true } : undefined;
   }
@@ -93,6 +94,7 @@ export class SetLookup {
 
   /** "bars 9–16" for an Arrangement span in beats ("bar 9" when it fits in one). */
   barsLabel(start: number, end: number): string {
+    if (!this.snapshot.signature) return `beats ${start}–${end}`;
     const first = Math.floor(start / this.beatsPerBar + BEAT_TOLERANCE) + 1;
     const last = Math.max(first, Math.ceil(end / this.beatsPerBar - BEAT_TOLERANCE));
     return first === last ? `bar ${first}` : `bars ${first}–${last}`;
@@ -100,7 +102,7 @@ export class SetLookup {
 
   /** "4 bars" for a length of whole bars, "6 beats" for any other length. */
   lengthLabel(beats: number): string {
-    const bars = beats / this.beatsPerBar;
+    const bars = this.snapshot.signature ? beats / this.beatsPerBar : Number.NaN;
     if (Math.abs(bars - Math.round(bars)) <= BEAT_TOLERANCE && Math.round(bars) > 0) {
       const whole = Math.round(bars);
       return `${whole} ${whole === 1 ? "bar" : "bars"}`;

@@ -7,6 +7,7 @@ import { OdeApp } from "../../server/app";
 import { OdeConfig, type DialogView } from "../../shared/config";
 import type { LivePointer } from "../../shared/live";
 import { Describer } from "./describe";
+import { BrowserWindow } from "./browser-window";
 import { describeError } from "./errors";
 import { InProcessLive } from "./in-process-live";
 import { LiveSet } from "./live-set";
@@ -18,7 +19,7 @@ import { PointerBuilder } from "./pointer";
 import { ReferenceResolver } from "./refs";
 import { API_VERSION, type Live } from "./sdk";
 
-/** Ode inside Live: all of Ode in the extension's process, its dialogs on Live's right-click menus. */
+/** Ode runs in the extension process; its nonmodal chat page opens in the musician's browser. */
 class OdeExtension implements DialogHost {
   private app: OdeApp | null = null;
 
@@ -51,8 +52,9 @@ class OdeExtension implements DialogHost {
 
   async open(view: DialogView): Promise<void> {
     if (!this.app) return;
-    const { width, height } = this.app.config.dialogs[view];
-    await this.live.ui.showModalDialog(this.app.dialogUrl(view), width, height);
+    const url = this.app.dialogUrl(view);
+    if (await BrowserWindow.open(url).catch(() => false)) return;
+    await new Notice(this.live.ui).show("Open Ode in your browser", "Copy this address into your browser, then close this notice. Keep the chat open while working in Live.", url);
   }
 }
 

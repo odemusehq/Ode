@@ -93,7 +93,7 @@ export class ProjectMap {
 
 /** Writes the map of one snapshot at one level of detail. */
 class MapWriter {
-  private readonly beatsPerBar: number;
+  private readonly beatsPerBar: number | null;
 
   constructor(private readonly set: SetSnapshot) {
     this.beatsPerBar = SetWording.beatsPerBar(set.signature);
@@ -102,7 +102,7 @@ class MapWriter {
   write(detail: Detail): string {
     const { tracks, returnTracks, main } = this.set;
     const lines = [this.songLine()];
-    lines.push(tracks.length > 0 ? "Tracks (indexes count from 0, as in the tools; bars count from 1):" : "Tracks: 0");
+    lines.push(tracks.length > 0 ? `Tracks (indexes count from 0, as in the tools; ${this.beatsPerBar === null ? "positions use quarter-note beats" : "bars count from 1"}):` : "Tracks: 0");
     tracks.forEach((track, index) => lines.push(...this.trackLines(`${index} ${SetWording.name(track)}`, track, detail, true)));
     if (returnTracks.length > 0) lines.push("Return tracks:");
     returnTracks.forEach((track, index) => lines.push(...this.trackLines(`${index} ${SetWording.name(track)}`, track, detail, false)));
@@ -231,8 +231,9 @@ class MapWriter {
     const facts: string[] = clip.muted ? ["deactivated"] : [];
     if (detail.clips === ClipDetail.Full) {
       if (inSlot) {
-        const bars = clip.duration / this.beatsPerBar;
-        facts.push(`${SetWording.number(bars)} ${bars === 1 ? "bar" : "bars"}`);
+        const units = clip.duration / (this.beatsPerBar ?? 1);
+        const word = this.beatsPerBar === null ? "beat" : "bar";
+        facts.push(`${SetWording.number(units)} ${word}${units === 1 ? "" : "s"}`);
       }
       facts.push(clip.kind === "midi" ? MapWriter.notes(clip) : SetWording.fileName((clip as AudioClipInfo).filePath) || "audio");
       if (!inSlot) facts.push(`starts at beat ${SetWording.beat(clip.startTime)}`);
@@ -260,15 +261,15 @@ class MapWriter {
     if (scene.tempo > 0 && scene.tempo !== song.tempo) facts.push(`${SetWording.tempo(scene.tempo)} BPM`);
     const ownSignature =
       scene.signatureNumerator > 0 &&
-      (scene.signatureNumerator !== signature.numerator || scene.signatureDenominator !== signature.denominator);
-    if (ownSignature) facts.push(`${scene.signatureNumerator}/${scene.signatureDenominator}`);
+      (signature === null || scene.signatureNumerator !== signature.numerator || scene.signatureDenominator !== signature.denominator);
+    if (ownSignature) facts.push(`launch meter ${scene.signatureNumerator}/${scene.signatureDenominator}`);
     return `${index}${scene.name ? ` ${scene.name}` : ""}${facts.length > 0 ? ` (${facts.join(", ")})` : ""}`;
   }
 
   private locatorsLine(): string {
     const { locators } = this.set.song;
     if (locators.length === 0) return "";
-    const items = locators.map((locator) => `${locator.name || "(unnamed)"} at bar ${SetWording.bar(locator.time, this.beatsPerBar)}`);
+    const items = locators.map((locator) => `${locator.name || "(unnamed)"} at ${SetWording.position(locator.time, this.beatsPerBar)}`);
     return `Locators: ${items.join(" · ")}`;
   }
 }
