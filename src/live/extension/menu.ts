@@ -10,7 +10,8 @@ type Scope = ContextMenuScope<Version>;
 
 /** What the menu needs from Ode: to hear what the musician pointed at, and to open its dialogs. */
 export interface DialogHost {
-  point(pointer: LivePointer): Promise<void>;
+  /** What the musician right-clicked with "Ask Ode", or null for the whole song. */
+  point(pointer: LivePointer | null): void;
   open(view: DialogView): Promise<void>;
 }
 
@@ -84,13 +85,18 @@ export class ContextMenu {
       .catch((error: unknown) => console.error(`Ode could not add "${title}" to the ${scope} menu: ${describeError(error)}`));
   }
 
-  /** Tells Ode what the musician right-clicked, then opens Ask Ode, where the musician can also describe it in words. */
+  /**
+   * Tells Ode what the musician right-clicked (the whole song when the click is unreadable), then opens Ask Ode at
+   * once, where the musician can also describe it in words.
+   */
   private async askOde(point: () => LivePointer): Promise<void> {
+    let pointer: LivePointer | null = null;
     try {
-      await this.host.point(point());
+      pointer = point();
     } catch (error) {
       console.error(`Ask Ode: ${describeError(error)}`);
     }
+    this.host.point(pointer);
     await this.show(DialogView.Ask);
   }
 

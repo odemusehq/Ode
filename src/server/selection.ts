@@ -42,10 +42,15 @@ export class SelectionState {
     return this.pointedAt;
   }
 
-  /** The musician right-clicked something in Live and chose "Ask Ode". */
-  async point(pointer: LivePointer): Promise<void> {
+  /**
+   * The musician right-clicked something in Live and chose "Ask Ode"; null when what they clicked was unreadable, so
+   * the whole song. The pointer is kept at once, so the dialog opens straight away, and the suggestions follow.
+   */
+  point(pointer: LivePointer | null): void {
     this.pointedAt = pointer;
-    await this.show(SelectionState.fromPointer(pointer, this.selection));
+    this.items = [];
+    const selection = pointer ? SelectionState.fromPointer(pointer, this.selection) : { track: null, clip: null, scene: this.selection?.scene ?? null };
+    void this.show(selection).catch(() => undefined);
   }
 
   /** Works the suggestions out again, for example after Ode changed the Set. */
@@ -75,14 +80,21 @@ export class SelectionState {
     return track ? track.name : SelectionState.WHOLE_SONG;
   }
 
+  /** Shows the selection in words (a pointer's own words at once), then its suggestions once the Set is at hand. */
   private async show(selection: SelectionInfo): Promise<void> {
     const shown = ++this.shown;
     this.selection = selection;
+    const pointer = this.pointer;
+    if (pointer) {
+      this.label = pointer.description;
+      this.deps.emit({ type: "selection", selection, label: this.label });
+    }
     const snapshot = await this.snapshotFor(selection);
     if (shown !== this.shown) return;
-    const pointer = this.pointer;
-    this.label = pointer ? pointer.description : snapshot ? SelectionState.describe(selection, snapshot) : SelectionState.roughLabel(selection);
-    this.deps.emit({ type: "selection", selection, label: this.label });
+    if (!pointer) {
+      this.label = snapshot ? SelectionState.describe(selection, snapshot) : SelectionState.roughLabel(selection);
+      this.deps.emit({ type: "selection", selection, label: this.label });
+    }
     const items = snapshot ? await this.deps.finder.for(selection, snapshot) : [];
     if (shown !== this.shown) return;
     this.items = items;

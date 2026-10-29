@@ -39,8 +39,8 @@ class OdeExtension implements DialogHost {
     new ContextMenu(this.live, new PointerBuilder(this.live, set, new LocationFinder(set)), this, notice).register();
   }
 
-  async point(pointer: LivePointer): Promise<void> {
-    await this.app?.selection.point(pointer);
+  point(pointer: LivePointer | null): void {
+    this.app?.selection.point(pointer);
   }
 
   async open(view: DialogView): Promise<void> {
