@@ -81,6 +81,7 @@ export const LibrarySearchSchema = z.object({
   tiltDbPerOctave: bounds.optional(),
   limit: z.number().int().min(1).max(100).optional(),
   offset: z.number().int().min(0).max(100000).optional(),
+  expectedSelectionFingerprint: z.string().regex(/^[0-9a-f]{64}$/).optional(),
 }).strict();
 export type LibrarySearch = z.infer<typeof LibrarySearchSchema>;
 export interface LibrarySearchCoverage {

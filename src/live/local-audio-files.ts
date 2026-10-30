@@ -40,6 +40,7 @@ export interface LibrarySearchResult {
   offset: number;
   nextOffset: number | null;
   coverage: LibrarySearchCoverage;
+  selectionFingerprint: string;
 }
 export interface AudioFileInput {
   name: string;
@@ -141,15 +142,34 @@ export class LocalAudioFiles {
     return (await this.searchRecords({ query, limit })).items;
   }
 
+  /** Read one observed metadata document, without opening, copying or hashing its audio bytes. */
+  async get(id: string, expectedMetadataFingerprint?: string): Promise<{ record: AudioFileRecord; metadataFingerprint: string }> {
+    if (expectedMetadataFingerprint !== undefined) z.string().regex(/^[0-9a-f]{64}$/).parse(expectedMetadataFingerprint);
+    const { record, metadataFingerprint } = await this.readStoredRecord(id);
+    if (expectedMetadataFingerprint !== undefined && expectedMetadataFingerprint !== metadataFingerprint) {
+      throw new Error("The selected audio metadata changed. Read this item again from offset 0 before continuing its detail pages.");
+    }
+    return { record, metadataFingerprint };
+  }
+
   /** Read only the known catalogue metadata. Numeric filters exclude unknown values explicitly. */
   async searchRecords(input: LibrarySearch): Promise<LibrarySearchResult> {
     const filters = LibrarySearchSchema.parse(input);
     const words = normal(filters.query ?? "").split(/\s+/).filter(Boolean);
     const limit = filters.limit ?? 20, offset = filters.offset ?? 0;
     const coverage: LibrarySearchCoverage = { catalogue: 0, matchedDeclarations: 0, profiled: 0, unprofiled: 0, excludedUnknown: 0, unreadable: 0 };
+    const result = (records: AudioFileRecord[]): LibrarySearchResult => {
+      const { limit: _limit, offset: _offset, expectedSelectionFingerprint: _expected, ...selection } = filters;
+      const selectionFingerprint = hash(Buffer.from(JSON.stringify({ filters: selection, ids: records.map((record) => record.id) })));
+      if (filters.expectedSelectionFingerprint !== undefined && filters.expectedSelectionFingerprint !== selectionFingerprint) {
+        throw new Error("The matching audio selection changed. Restart this search from offset 0 before continuing its pages.");
+      }
+      return { items: records.slice(offset, offset + limit), total: records.length, offset,
+        nextOffset: offset + limit < records.length ? offset + limit : null, coverage, selectionFingerprint };
+    };
     let entries: string[];
     try { entries = await readdir(await this.inside(this.root, true)); } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return { items: [], total: 0, offset, nextOffset: null, coverage };
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return result([]);
       throw error;
     }
     const found: AudioFileRecord[] = [];
@@ -195,8 +215,7 @@ export class LocalAudioFiles {
       found.push(visible);
     }
     found.sort((a, b) => b.importedAt.localeCompare(a.importedAt) || a.id.localeCompare(b.id));
-    return { items: found.slice(offset, offset + limit), total: found.length, offset,
-      nextOffset: offset + limit < found.length ? offset + limit : null, coverage };
+    return result(found);
   }
 
   /** Only declaration fields change here; the source identity and technical provenance remain immutable. */
@@ -276,9 +295,10 @@ export class LocalAudioFiles {
 
   private async readStoredRecord(id: string) {
     ID.parse(id);
-    const stored = storedRecord(JSON.parse(await readFile(await this.inside(this.metadata(id)), "utf8")));
+    const text = await readFile(await this.inside(this.metadata(id)), "utf8");
+    const stored = storedRecord(JSON.parse(text));
     if (stored.record.id !== id) throw new Error("The audio catalogue entry has the wrong identifier.");
-    return stored;
+    return { ...stored, metadataFingerprint: hash(Buffer.from(text)) };
   }
 
   private metadata(id: string): string { return join(this.root, `${id}.json`); }
