@@ -67,20 +67,20 @@ export class BasslineWriter {
     this.previousPitch = this.home;
   }
 
-  write(chords: ChordEvent[], kick: Note[]): Note[] {
+  write(chords: ChordEvent[], kick: Note[], kickPitch: number = DrumNote.Kick): Note[] {
     const events = new ChordTimeline(chords)
       .entries()
       .filter((entry): entry is TimedChord & { chord: ChordSymbol } => entry.chord !== null)
       .map((entry) => ({ start: entry.start, end: entry.end, chord: entry.chord }));
-    const kicks = this.kickTimes(kick);
+    const kicks = this.kickTimes(kick, kickPitch);
     const notes: Note[] = [];
     events.forEach((event, index) => notes.push(...this.forChord(event, events[index + 1], kicks)));
     return this.style === BassStyle.EightOhEight ? this.addSlides(notes) : notes;
   }
 
-  private kickTimes(kick: Note[]): number[] {
-    const kickNotes = kick.some((note) => note.pitch === DrumNote.Kick) ? kick.filter((note) => note.pitch === DrumNote.Kick) : kick;
-    return [...new Set(kickNotes.map((note) => Math.round(note.start / SIXTEENTH) * SIXTEENTH))].sort((a, b) => a - b);
+  private kickTimes(kick: Note[], pitch: number): number[] {
+    const kickNotes = kick.filter((note) => note.pitch === pitch && !note.muted && note.probability !== 0);
+    return [...new Set(kickNotes.map((note) => note.start))].sort((a, b) => a - b);
   }
 
   private forChord(event: BassEvent, next: BassEvent | undefined, kicks: number[]): Note[] {
@@ -180,9 +180,11 @@ export class BasslineWriter {
     const notes = this.onKicks(event, kicks, false);
     const anticipation = event.end - ANTICIPATION_BEATS;
     if (next && anticipation > event.start && !kicks.some((kick) => Math.abs(kick - anticipation) < EPSILON)) {
-      const last = notes.at(-1);
-      if (last && last.start + last.duration > anticipation) last.duration = Math.max(SIXTEENTH, anticipation - last.start);
-      notes.push({ pitch: this.nearest(next.chord.bass, this.previousPitch), start: anticipation, duration: ANTICIPATION_BEATS, velocity: ON_KICK_VELOCITY });
+      const previous = notes.findLast((note) => note.start < anticipation);
+      if (previous && previous.start + previous.duration > anticipation) previous.duration = anticipation - previous.start;
+      const following = notes.find((note) => note.start > anticipation);
+      notes.push({ pitch: this.nearest(next.chord.bass, this.previousPitch), start: anticipation,
+        duration: Math.min(event.end, following?.start ?? event.end) - anticipation, velocity: ON_KICK_VELOCITY });
     }
     for (const kick of kicks) {
       const ghost = kick + SIXTEENTH * 3;
@@ -252,6 +254,6 @@ export function parseBassStyle(name: string): BassStyle {
 }
 
 /** A bassline for chords that locks with the kick drum notes, in one of the bass styles. */
-export function bassline(chords: ChordEvent[], kick: Note[], style: BassStyle | string, seed: number = DEFAULT_SEED, barBeats: number = COMMON_BAR_BEATS): Note[] {
-  return new BasslineWriter(parseBassStyle(style), new SeededRandom(seed), barBeats).write(chords, kick);
+export function bassline(chords: ChordEvent[], kick: Note[], style: BassStyle | string, seed: number = DEFAULT_SEED, barBeats: number = COMMON_BAR_BEATS, kickPitch: number = DrumNote.Kick): Note[] {
+  return new BasslineWriter(parseBassStyle(style), new SeededRandom(seed), barBeats).write(chords, kick, kickPitch);
 }
