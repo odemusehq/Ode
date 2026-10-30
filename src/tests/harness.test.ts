@@ -174,10 +174,27 @@ test("an incomplete compaction does not discard history or execute its tool call
   const model = new ScriptedModel([
     answer("Earlier work. ".repeat(6_000), [{ id: "edit", name: "song_set_tempo", args: { tempo: 107 } }]),
     { cutOff: answer("Unfinished summary", [{ id: "bad", name: "song_set_tempo", args: { tempo: 200 } }]) },
+    { cutOff: answer("Still unfinished") },
   ]);
   const { loop, run, live } = await rig(model, 20_000);
   await assert.rejects(loop.run(run()), /compact|condens/i);
   assert.equal(live.snapshot().song.tempo, 107);
+  assert.equal(live.calls.filter((call) => call.op === "song_set_tempo").length, 1);
+});
+
+test("a truncated summary retries once with more room and then continues the same request", async () => {
+  const model = new ScriptedModel([
+    answer("Earlier work. ".repeat(6_000), [{ id: "edit", name: "song_set_tempo", args: { tempo: 107 } }]),
+    { cutOff: answer("The summary ran out of space.") },
+    answer("Tempo is 107. The existing chorus stays unchanged. Next: drums."),
+    answer("Done."),
+  ]);
+  const { loop, run, live } = await rig(model, 20_000);
+  const result = await loop.run(run());
+  assert.equal(result.reply, "Done.");
+  assert.equal(result.tokens, 40);
+  assert.ok(model.turns[2]!.maxTokens > model.turns[1]!.maxTokens);
+  assert.ok(!JSON.stringify(model.turns[3]!.messages).includes("ran out of space"));
   assert.equal(live.calls.filter((call) => call.op === "song_set_tempo").length, 1);
 });
 
