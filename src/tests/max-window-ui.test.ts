@@ -41,27 +41,34 @@ test("the real jweb bindInlet API recognises Max and acknowledges a mounted page
   assert.deepEqual(fake.messages.at(-1), ["ode_close"]);
 });
 
-test("opening the existing view preserves it, and a different view waits for draft saving", async (t) => {
+test("opening Lyrics in the chat saves first and acknowledges the pane after it mounts", async (t) => {
   const fake = page(t);
   let saved!: (value: boolean) => void, saves = 0;
-  const client = new MaxWindowClient(Layout.Ask, () => { saves++; return new Promise((resolve) => { saved = resolve; }); }, (message) => fake.errors.push(message));
+  const views: Layout[] = [];
+  const client = new MaxWindowClient(Layout.Ask, () => { saves++; return new Promise((resolve) => { saved = resolve; }); }, (message) => fake.errors.push(message), (view) => { views.push(view); });
   client.start();
   const open = fake.handlers.get("ode_open")!;
-  open("ask", fake.host.location.href, "same");
-  await settled();
-  assert.deepEqual(fake.messages, [["ode_opened", "same"]]);
-  assert.equal(saves, 0);
   open("lyrics", fake.host.location.href.replace("view=ask", "view=lyrics"), "lyrics");
   await settled();
   assert.equal(saves, 1);
+  assert.deepEqual(views, []);
   assert.deepEqual(fake.navigations, []);
   saved(true);
   await settled();
-  assert.equal(fake.navigations.length, 1);
-  const destination = new URL(fake.navigations[0]!);
-  assert.equal(destination.searchParams.get("view"), "lyrics");
-  assert.equal(destination.searchParams.get("odeWindowCommand"), "lyrics");
-  assert.deepEqual(fake.messages, [["ode_opened", "same"]], "Only the next mounted page can acknowledge this navigation");
+  assert.deepEqual(views, [Layout.Lyrics]);
+  assert.deepEqual(fake.navigations, []);
+  assert.deepEqual(fake.messages, [], "The existing page must commit the pane before acknowledging it");
+  client.ready();
+  client.ready();
+  assert.deepEqual(fake.messages, [["ode_opened", "lyrics"]]);
+  open("ask", fake.host.location.href, "chat");
+  await settled();
+  saved(true);
+  await settled();
+  assert.deepEqual(views, [Layout.Lyrics, Layout.Ask]);
+  client.ready();
+  assert.deepEqual(fake.messages.at(-1), ["ode_opened", "chat"]);
+  assert.deepEqual(fake.navigations, []);
 });
 
 test("untrusted navigation and failed draft saves leave the current Max page open", async (t) => {

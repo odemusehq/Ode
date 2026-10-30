@@ -1,19 +1,24 @@
-import { Button, ButtonVariant, Notice, Tone } from "../../ui-kit";
+import { Notice, Tone } from "../../ui-kit";
 import { HistoryView } from "../views/HistoryView";
 import { LyricsPanel } from "../views/LyricsPanel";
 import { NowPanel } from "../views/NowPanel";
 import { DialogHeader } from "./DialogHeader";
-import { LiveDialog } from "./dialog";
-import { useAppState, useClient } from "./hooks";
+import { useAppState } from "./hooks";
 import { StatusBar } from "./StatusBar";
 
-/** Ask Ode: what the musician pointed at, the request, Ode's work as it goes, the result, and Close back to Live. */
+/** The persistent conversation and Ode's work in the open Set. */
 export function AskDialog() {
+  const lyricsOpen = useAppState((state) => state.lyricsOpen);
+  const [lyricsSeen, setLyricsSeen] = useState(lyricsOpen);
+  useEffect(() => { if (lyricsOpen) setLyricsSeen(true); }, [lyricsOpen]);
   return (
-    <div className="app">
+    <div className={lyricsOpen ? "app app--lyrics" : "app"}>
       <DialogHeader withMode />
       <div className="app-body">
         <NowPanel />
+        <div className="app-lyrics" hidden={!lyricsOpen}>
+          {(lyricsOpen || lyricsSeen) && <LyricsPanel />}
+        </div>
       </div>
       <DialogFooter />
       <StatusBar />
@@ -23,16 +28,7 @@ export function AskDialog() {
 
 /** Ode: Lyrics, the song's lyrics that the musician and Ode both edit. */
 export function LyricsDialog() {
-  return (
-    <div className="app">
-      <DialogHeader />
-      <div className="app-body">
-        <LyricsPanel />
-      </div>
-      <DialogFooter showsErrors />
-      <StatusBar />
-    </div>
-  );
+  return <AskDialog />;
 }
 
 /** Ode: History, the song's versions, to look back through and restore. */
@@ -49,25 +45,16 @@ export function HistoryDialog() {
   );
 }
 
-/**
- * The model's credit where its licence asks for one, and Close back to Live; while Ode works Close waits, since Live
- * waits behind the dialog for Ode too. Lyrics and History show here why a song switch went wrong (Ask Ode shows it
- * under its result line).
- */
+/** Required model credit and view errors appear only when present. */
 function DialogFooter({ showsErrors = false }: { showsErrors?: boolean }) {
-  const client = useClient();
-  const busy = useAppState((state) => state.busy);
   const credit = useAppState((state) => state.credit);
   const error = useAppState((state) => state.error);
+  if (!credit && !(showsErrors && error)) return null;
   return (
     <footer className="app-footer">
       {showsErrors && error && <Notice tone={Tone.Danger}>{error}</Notice>}
       {credit && <p className="app-footer__credit">{credit}</p>}
-      {LiveDialog.hosted && (
-        <Button variant={ButtonVariant.Secondary} disabled={busy && LiveDialog.modal} onClick={() => void client.close()}>
-          Close
-        </Button>
-      )}
     </footer>
   );
 }
+import { useEffect, useState } from "react";

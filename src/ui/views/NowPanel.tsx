@@ -37,7 +37,6 @@ export function NowPanel() {
         const node = conversation.current;
         if (node) atEnd.current = node.scrollHeight - node.scrollTop - node.clientHeight < 60;
       }}>
-        {exchanges.length === 0 && <p className="now__empty">Talk through an idea, ask about the song, or tell Ode what to change.</p>}
         <div role="log" aria-label="Saved conversation" aria-live="polite" aria-relevant="additions text">
           {exchanges.map((exchange) => <article className="now__exchange" key={exchange.id}>
             {exchange.request && <div className="now__message now__message--user"><h2>You</h2><p>{exchange.request.replace(/^Managed path: .*$/gm, "").trim()}</p></div>}

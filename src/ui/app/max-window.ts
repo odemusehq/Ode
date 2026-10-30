@@ -7,8 +7,10 @@ const validId = (value: unknown): value is string => typeof value === "string" &
 /** Max owns the floating window. The page owns saving before a requested view change. */
 export class MaxWindowClient {
   private opening = false;
+  private pending: string | null = null;
 
-  constructor(private readonly layout: Layout, private readonly save: () => Promise<boolean>, private readonly fail: (message: string) => void) {}
+  constructor(private readonly layout: Layout, private readonly save: () => Promise<boolean>, private readonly fail: (message: string) => void,
+    private readonly showWorkspace?: (view: Layout.Ask | Layout.Lyrics) => void) {}
 
   start(): void {
     LiveDialog.max?.bindInlet("ode_open", (view, url, id) => { void this.open(view, url, id); });
@@ -17,8 +19,10 @@ export class MaxWindowClient {
   /** Called after React mounts, so Max never acknowledges an unloaded page as an open chat. */
   ready(): void {
     if (!LiveDialog.max) return;
-    const url = new URL(window.location.href), id = url.searchParams.get(COMMAND);
+    const url = new URL(window.location.href), id = this.pending ?? url.searchParams.get(COMMAND);
     if (!validId(id)) return;
+    this.pending = null;
+    this.opening = false;
     url.searchParams.delete(COMMAND);
     window.history.replaceState(null, "", url.href);
     LiveDialog.max.outlet("ode_opened", id);
@@ -35,12 +39,19 @@ export class MaxWindowClient {
       if (url.origin !== current.origin || url.protocol !== "http:" || url.pathname !== "/" || url.username || url.password || url.searchParams.get("view") !== view) {
         throw new Error("Unsupported Ode view address.");
       }
+      if (this.showWorkspace && (view === Layout.Ask || view === Layout.Lyrics)) {
+        if (!await this.save()) { failed("Your draft could not be saved. Resolve the save notice before changing views."); return; }
+        this.pending = id;
+        this.showWorkspace(view);
+        return;
+      }
       if (view === this.layout) { LiveDialog.max?.outlet("ode_opened", id); return; }
       if (!await this.save()) { failed("Your draft could not be saved. Resolve the save notice before changing views."); return; }
       url.searchParams.set(COMMAND, id);
       window.location.assign(url.href);
     } catch {
+      this.pending = null;
       failed("Ode could not change views. Your current window stayed open.");
-    } finally { this.opening = false; }
+    } finally { if (!this.pending) this.opening = false; }
   }
 }

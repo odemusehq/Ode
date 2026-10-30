@@ -2,7 +2,7 @@ import { ModePicker } from "../views/ModePicker";
 import { SongMenu } from "../views/SongMenu";
 import { LogoLockup } from "./Logo";
 import { Button, ButtonVariant } from "../../ui-kit";
-import { useClient } from "./hooks";
+import { useAppState, useClient } from "./hooks";
 import { Layout } from "./layout";
 
 export interface DialogHeaderProps {
@@ -13,6 +13,8 @@ export interface DialogHeaderProps {
 /** The top of every Ode dialog: the logo, the song Ode is working on, and the mode where it matters. */
 export function DialogHeader({ withMode = false }: DialogHeaderProps) {
   const client = useClient();
+  const lyricsOpen = useAppState((state) => state.lyricsOpen);
+  const workspace = client.layout === Layout.Ask || client.layout === Layout.Lyrics;
   const navigate = async (view: Layout) => {
     await client.navigate(view);
   };
@@ -27,8 +29,10 @@ export function DialogHeader({ withMode = false }: DialogHeaderProps) {
       {withMode && <ModePicker />}
       <nav className="app-header__nav" aria-label="Ode views">
         {([[Layout.Ask, "Chat"], [Layout.Lyrics, "Lyrics"], [Layout.History, "History"], [Layout.Settings, "Settings"]] as const)
-          .filter(([view]) => view !== client.layout)
-          .map(([view, label]) => <Button key={view} variant={ButtonVariant.Quiet} onClick={() => void navigate(view)}>{label}</Button>)}
+          .filter(([view]) => workspace ? view !== Layout.Ask : view !== client.layout)
+          .map(([view, label]) => <Button key={view} variant={ButtonVariant.Quiet}
+            aria-pressed={view === Layout.Lyrics && workspace ? lyricsOpen : undefined}
+            onClick={() => void navigate(view === Layout.Lyrics && workspace && lyricsOpen ? Layout.Ask : view)}>{label}</Button>)}
       </nav>
     </header>
   );

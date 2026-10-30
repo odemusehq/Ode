@@ -18,7 +18,7 @@ export class OdeClient {
   readonly store = new Store();
   readonly api = new OdeApi();
   readonly composer = new Composer(this.api);
-  /** The lyrics the musician and Ode both edit; the Lyrics dialog keeps them in step. */
+  /** The lyrics the musician and Ode both edit; the side pane keeps them in step. */
   readonly lyrics = new SharedLyrics(this.api);
   private readonly stream: EventStream;
   /** An Undo is on its way; a second press meanwhile is ignored, so each Undo goes back one version. */
@@ -29,10 +29,14 @@ export class OdeClient {
   private readonly sending = new Set<AbortController>();
   private readonly pendingIds = new Map<string, string>();
   private readonly maxWindow: MaxWindowClient;
+  private readonly workspace: boolean;
   private leaveCheck: (() => boolean) | null = null;
 
   constructor(readonly layout: Layout) {
-    this.maxWindow = new MaxWindowClient(layout, () => this.flushWindow(), (message) => this.store.setError(message));
+    this.workspace = layout === Layout.Ask || layout === Layout.Lyrics;
+    this.store.setLyricsOpen(layout === Layout.Lyrics);
+    this.maxWindow = new MaxWindowClient(layout, () => this.flushWindow(), (message) => this.store.setError(message),
+      this.workspace ? (view) => this.showWorkspace(view) : undefined);
     this.stream = new EventStream(API.events, {
       onEvent: (event) => this.receive(event),
       onState: (state) => this.store.setStream(state),
@@ -45,19 +49,19 @@ export class OdeClient {
     this.maxWindow.start();
     if (this.layout === Layout.Settings) return;
     this.stream.start();
-    if (this.layout === Layout.Ask) window.addEventListener("pagehide", () => this.composer.pagehide());
+    if (this.workspace) window.addEventListener("pagehide", () => this.composer.pagehide());
     if (this.layout === Layout.History) void this.checkVersions();
   }
 
   /**
-   * Reads again what events may have missed: the status, the lyrics in the Lyrics dialog and the history in History.
+   * Reads again what events may have missed: the status, lyrics and conversation in the workspace, or the history in History.
    * The server sends the conversation and anything waiting for the musician when the stream opens.
    */
   async refresh(): Promise<void> {
     const reads = [this.refreshStatus()];
-    if (this.layout === Layout.Lyrics) reads.push(this.lyrics.load(true));
+    if (this.workspace) reads.push(this.lyrics.load(true));
     if (this.layout === Layout.History) reads.push(this.loadVersions());
-    if (this.layout === Layout.Ask) reads.push(this.loadConversation().then(() => this.loadVersions()));
+    if (this.workspace) reads.push(this.loadConversation().then(() => this.loadVersions()));
     await Promise.allSettled(reads);
   }
 
@@ -97,10 +101,26 @@ export class OdeClient {
 
   async navigate(view: Layout): Promise<void> {
     if (!await this.flushWindow()) return;
+    if (this.workspace && (view === Layout.Ask || view === Layout.Lyrics)) {
+      this.showWorkspace(view);
+      return;
+    }
     const url = new URL(window.location.href);
     url.searchParams.set("view", view);
     url.searchParams.delete("odeWindowCommand");
     window.location.assign(url.href);
+  }
+
+  private showWorkspace(view: Layout.Ask | Layout.Lyrics): void {
+    const lyricsOpen = view === Layout.Lyrics;
+    const unchanged = this.store.getSnapshot().lyricsOpen === lyricsOpen;
+    this.store.setLyricsOpen(lyricsOpen);
+    const url = new URL(window.location.href);
+    url.searchParams.set("view", view);
+    url.searchParams.delete("odeWindowCommand");
+    window.history.replaceState(null, "", url.href);
+    if (lyricsOpen) void this.lyrics.load(true);
+    if (unchanged) this.maxWindow.ready();
   }
 
   /** A view change never abandons typing that arrived while the other editor was saving. */
@@ -317,7 +337,7 @@ export class OdeClient {
   private receive(event: UiEvent): void {
     if (event.type === "conversation" || event.type === "title") this.conversationRead += 1;
     this.store.apply(event);
-    if (event.type === "lyrics" && this.layout === Layout.Lyrics) this.lyrics.receive(event.lyrics);
+    if (event.type === "lyrics" && this.workspace) this.lyrics.receive(event.lyrics);
     // Another song is in use: its lyrics and history replace these.
     if (event.type === "title") void this.refresh();
   }
@@ -327,7 +347,7 @@ export class OdeClient {
     try {
       const conversation = await this.api.getConversation();
       if (read === this.conversationRead) this.store.setConversation(conversation.songId, conversation.exchanges);
-      if (read === this.conversationRead && this.layout === Layout.Ask) await this.composer.open(conversation.songId, true);
+      if (read === this.conversationRead && this.workspace) await this.composer.open(conversation.songId, true);
     } catch (error) {
       if (read === this.conversationRead) this.store.setError(`Reading the conversation stopped: ${errorMessage(error)}`);
     }

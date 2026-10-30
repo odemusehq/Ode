@@ -18,10 +18,17 @@ export function App() {
   const client = useClient();
   const { layout } = client;
   const busy = useAppState((state) => state.busy);
+  const lyricsOpen = useAppState((state) => state.lyricsOpen);
   useEffect(() => {
     document.title = TITLES[layout];
     client.windowReady();
-  }, [layout]);
+  }, [layout, lyricsOpen]);
+  useEffect(() => {
+    if (layout !== Layout.Ask && layout !== Layout.Lyrics) return;
+    const screen = window.screen as Screen & { availLeft?: number; availTop?: number };
+    LiveDialog.max?.outlet("ode_layout", lyricsOpen ? "lyrics" : "ask",
+      screen.availLeft ?? 0, screen.availTop ?? 0, screen.availWidth, screen.availHeight);
+  }, [layout, lyricsOpen]);
   // Escape closes the dialog like its Close or Cancel button, once a menu, a confirmation or a name field has had its turn.
   useEffect(() => {
     if (!LiveDialog.hosted) return;

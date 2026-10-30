@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import type { FormEvent } from "react";
-import { Button, ButtonVariant } from "../../ui-kit";
-import type { AudioScope } from "../app/api";
+import { Button, ButtonVariant, IconButton, IconName } from "../../ui-kit";
 import { errorMessage } from "../app/api";
 import { useAppState, useClient } from "../app/hooks";
 import { DictationRecorder, dictationSupported } from "../app/dictation";
@@ -25,9 +24,6 @@ export function NowInput() {
   const composer = useSyncExternalStore(client.composer.subscribe, client.composer.getSnapshot);
   const { text, attachments } = composer.draft;
   const [sending, setSending] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [scope, setScope] = useState<AudioScope>("reference");
-  const [source, setSource] = useState("");
   const [voicePhase, setVoicePhase] = useState<DictationPhase>("idle");
   const [supportsDictation] = useState(dictationSupported);
   const inputId = useId();
@@ -117,7 +113,7 @@ export function NowInput() {
 
   const startDictation = async () => {
     const intendedSong = currentSong.current;
-    if (voice.current || !intendedSong || !composer.loaded || !dictationReady || !supportsDictation || sending || uploading) return;
+    if (voice.current || !intendedSong || !composer.loaded || !dictationReady || !supportsDictation || sending) return;
     const active: ActiveDictation = {
       songId: intendedSong,
       epoch: ++voiceEpoch.current,
@@ -146,7 +142,7 @@ export function NowInput() {
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if ((!text.trim() && attachments.length === 0) || sending || uploading || voice.current) return;
+    if ((!text.trim() && attachments.length === 0) || sending || voice.current) return;
     setSending(true);
     try {
       await client.sendDraft();
@@ -156,35 +152,18 @@ export function NowInput() {
     }
   };
 
-  const attach = async (files: FileList | null) => {
-    if (!files?.length || voice.current) return;
-    setUploading(true);
-    const attachedSong = currentSong.current;
-    if (!attachedSong) { setUploading(false); return; }
-    try {
-      for (const file of Array.from(files)) {
-        await client.attachAudio(file, scope, source, attachedSong);
-        if (currentSong.current !== attachedSong) return;
-      }
-    } catch (error) {
-      client.store.setError(`Attaching audio stopped: ${errorMessage(error)}`);
-    } finally {
-      setUploading(false);
-    }
-  };
-
   return (
     <form className="now__composer" onSubmit={(event) => void submit(event)}>
       {attachments.length > 0 && <ul className="now__attachments" aria-label="Attached audio">
         {attachments.map((file) => <li key={file.entryId}>
           <span>{file.name}</span>
-          <Button variant={ButtonVariant.Quiet} aria-label={`Remove ${file.name}`} onClick={() => client.composer.removeAttachment(file.entryId)}>Remove</Button>
+          <IconButton icon={IconName.Close} label={`Remove ${file.name}`} onClick={() => client.composer.removeAttachment(file.entryId)} />
         </li>)}
       </ul>}
       <label htmlFor={inputId} className="ode-visually-hidden">Message Ode</label>
       <textarea ref={field} id={inputId} className="ode-input now__field" value={text} rows={2} disabled={!composer.loaded || composer.songId !== songId}
         placeholder={busy ? "Add a detail or change direction…" : "Tell Ode what you want…"}
-        aria-describedby={`${inputId}-hint`} autoComplete="off"
+        autoComplete="off"
         onChange={(event) => client.composer.editText(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
@@ -193,32 +172,21 @@ export function NowInput() {
           }
         }} />
       <div className="now__composer-actions">
-        <details className="now__attach">
-          <summary>Attach audio</summary>
-          <div className="now__attach-fields">
-            <label>Audio role <select value={scope} onChange={(event) => setScope(event.target.value as AudioScope)}>
-              <option value="reference">Reference</option><option value="sample">Sample</option><option value="processed-bounce">Processed bounce</option>
-            </select></label>
-            <label>Source or bounce details <input className="ode-input" value={source} onChange={(event) => setSource(event.target.value)} placeholder="For example, Main export, bars 1–33, effects included" /></label>
-            <label>WAV or AIFF files <input type="file" accept=".wav,.aif,.aiff" multiple disabled={uploading || !composer.loaded || voicePhase !== "idle"} onChange={(event) => { void attach(event.target.files); event.target.value = ""; }} /></label>
-            <p className="small muted">A supplied bounce is a snapshot. Export a new bounce after changing the sound in Live.</p>
-          </div>
-        </details>
-        <Button variant={ButtonVariant.Quiet}
-          disabled={voicePhase === "permission" || voicePhase === "transcribing" || (voicePhase === "idle" && (!supportsDictation || !dictationReady || !songId || !composer.loaded || sending || uploading))}
-          aria-pressed={voicePhase === "recording"} aria-label={voicePhase === "recording" ? "Finish dictation" : "Dictate message"}
-          title={!supportsDictation ? "Microphone recording is unavailable in this browser. You can type your message." : !dictationReady ? "Add a Meta key in Ode: Settings to transcribe dictated messages." : "Record a message into the draft; Send submits it."}
-          onClick={() => { if (voicePhase === "recording") void finishDictation(); else void startDictation(); }}>
-          {voicePhase === "recording" ? "Finish" : voicePhase === "permission" ? "Microphone…" : voicePhase === "transcribing" ? "Transcribing…" : "Dictate"}
-        </Button>
-        {voicePhase !== "idle" && <Button variant={ButtonVariant.Quiet} onClick={() => { cancelDictation(); field.current?.focus(); }}>Cancel dictation</Button>}
-        <span id={`${inputId}-hint`} className="now__input-hint">{uploading ? "Attaching audio…" : "Shift+Enter for a new line"}</span>
-        {((busy && stoppable) || sending || composer.pending) && <Button variant={ButtonVariant.Secondary} onClick={() => { cancelDictation(); void client.stopRequest(); }}>Stop</Button>}
-        <Button type="submit" variant={ButtonVariant.Primary} disabled={sending || uploading || !composer.loaded || !composer.valid || composer.conflicts.length > 0 || voicePhase !== "idle" || (!text.trim() && attachments.length === 0)}>{sending ? "Sending…" : "Send"}</Button>
+        <IconButton icon={voicePhase === "recording" ? IconName.Stop : IconName.Microphone}
+          className="now__voice"
+          disabled={voicePhase === "permission" || voicePhase === "transcribing" || (voicePhase === "idle" && (!supportsDictation || !dictationReady || !songId || !composer.loaded || sending))}
+          aria-pressed={voicePhase === "recording"} aria-busy={voicePhase === "permission" || voicePhase === "transcribing"}
+          label={voicePhase === "recording" ? "Finish dictation" : "Dictate message"}
+          title={!supportsDictation ? "Microphone recording is unavailable." : !dictationReady ? "Add your Meta key in Settings to use dictation." : voicePhase === "recording" ? "Finish dictation" : "Dictate message"}
+          onClick={() => { if (voicePhase === "recording") void finishDictation(); else void startDictation(); }} />
+        {voicePhase !== "idle" && <IconButton icon={IconName.Close} label="Cancel dictation" onClick={() => { cancelDictation(); field.current?.focus(); }} />}
+        {((busy && stoppable) || sending || composer.pending) && <IconButton icon={IconName.Stop} label="Stop Ode" onClick={() => { cancelDictation(); void client.stopRequest(); }} />}
+        <IconButton type="submit" className="now__send" icon={IconName.Send} label="Send message" aria-busy={sending}
+          disabled={sending || !composer.loaded || !composer.valid || composer.conflicts.length > 0 || voicePhase !== "idle" || (!text.trim() && attachments.length === 0)} />
       </div>
       {composer.error && <p className="small" role="status">{composer.error} {composer.conflicts.length === 0 && <Button variant={ButtonVariant.Quiet} onClick={() => { void (composer.loaded ? client.composer.flush() : client.composer.open(songId, true)); }}>Retry</Button>}</p>}
       {composer.conflicts.length > 0 && <p className="small" role="status">Another draft was saved. <Button variant={ButtonVariant.Quiet} disabled={composer.saving} onClick={() => { void client.composer.resolve("local").catch((error: unknown) => client.store.setError(errorMessage(error))); }}>Keep this draft</Button> <Button variant={ButtonVariant.Quiet} disabled={composer.saving} onClick={() => { void client.composer.resolve("saved").catch((error: unknown) => client.store.setError(errorMessage(error))); }}>Use saved draft</Button></p>}
-      {voicePhase !== "idle" && <p className="small muted" role="status">{voicePhase === "permission" ? "Waiting for microphone permission…" : voicePhase === "recording" ? "Recording · up to 60 seconds · Escape cancels" : "Transcribing…"}</p>}
+      {voicePhase !== "idle" && <p className="small muted" role="status">{voicePhase === "permission" ? "Waiting for microphone permission…" : voicePhase === "recording" ? "Recording…" : "Transcribing…"}</p>}
     </form>
   );
 }

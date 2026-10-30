@@ -6,19 +6,20 @@ export interface LyricsView {
   counts: boolean;
   stress: boolean;
   rhymes: boolean;
+  details: boolean;
 }
 
 /** The View menu's choice, kept in the window's storage for the rest of the Live session. */
 export class LyricsViewStore {
-  private static readonly ALL_ON: LyricsView = { syllables: true, counts: true, stress: true, rhymes: true };
+  private static readonly DEFAULT: LyricsView = { syllables: true, counts: true, stress: true, rhymes: true, details: false };
 
   /** The musician's last choice, or every mark when the window holds none. */
   static load(): LyricsView {
     try {
       const saved = JSON.parse(window.localStorage.getItem(UI_CONFIG.lyricsViewStorageKey) ?? "null") as Partial<LyricsView> | null;
-      return { ...LyricsViewStore.ALL_ON, ...saved };
+      return { ...LyricsViewStore.DEFAULT, ...saved };
     } catch {
-      return { ...LyricsViewStore.ALL_ON };
+      return { ...LyricsViewStore.DEFAULT };
     }
   }
 

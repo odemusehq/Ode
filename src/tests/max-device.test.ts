@@ -51,6 +51,53 @@ test("the window subpatcher exposes a native inlet for its pcontrol connection",
   assert.ok(nativeInlets.length > connection.destination[1], "Max deletes pcontrol's patchcord when the child has no native inlet");
 });
 
+test("opening lyrics widens the existing window once and closing restores chat width at its current height", async () => {
+  const { MaxDevice } = await import("../live/max/device");
+  const { patcher } = JSON.parse((await MaxDevice.build()).subarray(32, -1).toString());
+  const code = patcher.boxes.find(({ box }: { box: Record<string, unknown> }) => box.maxclass === "v8.codebox").box.code;
+  let rect = [180, 100, 620, 840];
+  const messages: unknown[][] = [];
+  const browser = { rect: [0, 0, 440, 740], message() {} };
+  const control = { message(...args: unknown[]) {
+    messages.push(args);
+    if (args[0] === "window" && args[1] === "size") rect = args.slice(2).map(Number);
+  } };
+  const child = {
+    wind: { visible: true, get location() { return rect.slice(); }, get size() { return [rect[2]! - rect[0]!, rect[3]! - rect[1]!]; } },
+    getnamed: (name: string) => name === "odeBrowser" ? browser : control,
+  };
+  const context = createContext({ patcher: { getnamed: () => ({ subpatcher: () => child }) } });
+  new Script(code).runInContext(context);
+  context.ode_layout("ask");
+  assert.equal(messages.length, 0, "The initial chat mount must preserve the user's window");
+  context.ode_layout("lyrics");
+  assert.deepEqual(rect.slice(0, 2), [180, 100]);
+  assert.ok(rect[2]! - rect[0]! >= 1000, "The right editor needs room beside the existing chat");
+  assert.equal(rect[3], 840);
+  assert.deepEqual(Array.from(browser.rect), [0, 0, rect[2]! - rect[0]!, 740]);
+  const expanded = rect.slice();
+  context.ode_layout("lyrics");
+  assert.deepEqual(rect, expanded, "Duplicate pane signals must not keep enlarging the window");
+  rect = [210, 80, 1410, 980]; // The musician moves and resizes the expanded window.
+  context.ode_layout("lyrics");
+  assert.deepEqual(rect, [210, 80, 1410, 980]);
+  context.ode_layout("ask");
+  assert.deepEqual(rect, [210, 80, 650, 980], "Closing lyrics restores only the remembered chat width");
+  const count = messages.length;
+  context.ode_layout("settings");
+  context.ode_layout("ask");
+  assert.equal(messages.length, count, "Unsupported or duplicate signals must not change native geometry");
+  context.ode_layout("lyrics", 0, 24, 1024, 700);
+  assert.deepEqual(rect, [0, 24, 1024, 724], "Expansion must fit the current display's available rectangle");
+  context.ode_layout("ask", 0, 24, 1024, 700);
+  assert.deepEqual(rect, [0, 24, 440, 724]);
+  context.ode_layout("lyrics", Number.NaN, 0, 1024, 700);
+  assert.equal(rect[0], 0, "Invalid screen bounds must use the position-preserving fallback");
+  assert.equal(rect[1], 24);
+  assert.equal(rect[3], 724);
+  assert.ok(rect[2]! <= 1240);
+});
+
 test("embedded Max client consumes bootstrap once and waits for page readiness before acknowledging open", async () => {
   const { MaxDevice } = await import("../live/max/device");
   const { patcher } = JSON.parse((await MaxDevice.build()).subarray(32, -1).toString());

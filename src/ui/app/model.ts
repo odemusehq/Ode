@@ -62,6 +62,8 @@ export interface WhyAnswer {
 export interface AppState {
   songId: string | null;
   exchanges: readonly ConversationExchange[];
+  /** The lyrics editor is open beside the chat. */
+  lyricsOpen: boolean;
   stream: StreamState;
   busy: boolean;
   /** Stop can interrupt what Ode is doing now. */
@@ -98,6 +100,7 @@ export function initialState(): AppState {
   return {
     songId: null,
     exchanges: [],
+    lyricsOpen: false,
     stream: StreamState.Connecting,
     busy: false,
     stoppable: false,

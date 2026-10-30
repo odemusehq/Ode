@@ -38,8 +38,8 @@
 .lyrics-editor__toolbar {
   display: flex;
   flex: none;
-  justify-content: flex-end;
-  padding: var(--space-3) var(--space-6) 0;
+  justify-content: flex-start;
+  padding: var(--space-6) var(--lyrics-gutter) var(--space-3);
 }
 
 .lyrics-editor__sections {
@@ -96,7 +96,7 @@
   display: grid;
   grid-template-columns: var(--lyrics-rail-width) minmax(0, 1fr);
   gap: var(--space-5);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-6);
   padding: var(--space-3) var(--space-4) var(--space-4) 0;
   border-radius: var(--radius-md);
 }
@@ -380,6 +380,14 @@
 .lyrics-notice > .ode-icon {
   color: var(--color-warning);
 }
+
+.lyrics-notice--setup {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+
+.lyrics-notice--setup > .ode-icon { color: inherit; }
 
 .lyrics-notice__text {
   flex: 1;

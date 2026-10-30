@@ -154,7 +154,6 @@
 /* The conversation scrolls; decisions, feedback and the composer remain available. */
 .now { min-width: 0; min-height: 0; gap: var(--space-3); overflow: hidden; }
 .now__conversation { flex: 1; min-height: 0; overflow-y: auto; padding-right: var(--space-2); }
-.now__empty { color: var(--color-text-muted); padding-block: var(--space-5); }
 .now__exchange { display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-5); }
 .now__message { min-width: 0; overflow-wrap: anywhere; }
 .now__message h2 { font: inherit; font-weight: var(--font-weight-medium); margin-bottom: var(--space-1); }
@@ -173,16 +172,14 @@
 .now__waiting { flex: none; min-height: 0; }
 .now__waiting > p { font-size: var(--font-size-sm); }
 .now__decisions { display: flex; flex-direction: column; gap: var(--space-3); max-height: 32vh; overflow-y: auto; }
-.now__composer { display: flex; flex: none; flex-direction: column; gap: var(--space-2); min-width: 0; border-top: var(--border-width) solid var(--color-border); padding-top: var(--space-3); }
-.now__field { resize: vertical; max-height: 180px; min-height: 60px; overflow-y: auto; }
-.now__composer-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); }
-.now__input-hint { flex: 1; color: var(--color-text-muted); font-size: var(--font-size-sm); }
-.now__attach { min-width: 0; }
-.now__attach summary { cursor: pointer; font-size: var(--font-size-sm); padding-block: var(--space-2); }
-.now__attach[open] { flex-basis: 100%; }
-.now__attach-fields { display: flex; flex-direction: column; gap: var(--space-3); padding-block: var(--space-3); max-height: 28vh; overflow-y: auto; }
-.now__attach-fields label { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
-.now__attach-fields input { max-width: 100%; }
+.now__composer { display: flex; flex: none; flex-direction: column; gap: var(--space-2); min-width: 0; padding: var(--space-4); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-lg); background: var(--color-surface-raised); }
+.now__composer:focus-within { border-color: var(--color-highlight); }
+.now__field.ode-input { resize: none; max-height: 180px; min-height: 48px; overflow-y: auto; padding: var(--space-2); border: 0; outline: none; box-shadow: none; background: transparent; }
+.now__composer-actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2); }
+.now__composer-actions .ode-icon-button { border-radius: var(--radius-round); }
+.now__voice[aria-pressed="true"] { color: var(--color-danger); }
+.now__send.ode-button { background: var(--color-accent); color: var(--color-on-accent); }
+.now__send.ode-button:hover:not(:disabled) { background: var(--color-accent-hover); }
 .now__attachments { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); max-height: 10vh; overflow-y: auto; }
 .now__attachments li { display: flex; align-items: center; gap: var(--space-2); max-width: 100%; font-size: var(--font-size-sm); }
 .now__attachments li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -209,13 +206,10 @@
 .activity__step--error { color: var(--color-danger); }
 @media (max-width: 480px) {
   .now { padding: var(--space-3); }
-  .now__input-hint { flex-basis: 100%; order: 1; }
   .app-header { gap: var(--space-2); padding-inline: var(--space-3); }
   .app-header__nav { flex-basis: 100%; }
 }
 @media (max-width: 380px) {
-  .now__input-hint { display: none; }
   .now__message--user { max-width: 96%; }
   .now__composer-actions { justify-content: flex-end; }
-  .now__attach { margin-right: auto; }
 }

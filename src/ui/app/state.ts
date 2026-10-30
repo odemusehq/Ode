@@ -20,6 +20,10 @@ export class Store {
 
   readonly getSnapshot = (): AppState => this.state;
 
+  setLyricsOpen(lyricsOpen: boolean): void {
+    if (lyricsOpen !== this.state.lyricsOpen) this.update({ ...this.state, lyricsOpen });
+  }
+
   apply(event: UiEvent): void {
     this.update(reduceEvent(this.state, event));
   }

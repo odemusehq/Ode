@@ -15,12 +15,13 @@ const VIEW_ITEMS: readonly { id: keyof LyricsView; label: string; description: s
   { id: "syllables", label: "Syllables", description: "Light bars between syllables" },
   { id: "counts", label: "Syllable counts", description: "The count at the end of each line" },
   { id: "stress", label: "Stress", description: "A dot under each stressed syllable" },
+  { id: "details", label: "Line details", description: "Written analysis beneath each section" },
   { id: "rhymes", label: "Rhymes", description: "Rhyming letters in colour, stronger on near rhymes" },
 ];
 
 /** What the notice says while Lyrics support is quiet. */
 const SUPPORT_MESSAGES: Readonly<Record<SupportStatus.Setup | SupportStatus.Unreachable, string>> = {
-  [SupportStatus.Setup]: "Syllables and rhymes appear once Lyrics support has a provider and a key in Ode: Settings.",
+  [SupportStatus.Setup]: "Add your Meta key in Settings to enable lyric checks.",
   [SupportStatus.Unreachable]: "Lyrics support is out of reach right now, so syllables and rhymes are paused.",
 };
 
@@ -290,7 +291,7 @@ function LyricsEditor({ text, strictRhymes }: LyricsEditorProps) {
             onLinkTo={(to) => link(index, to)}
             onPartners={(show) => setPartners(show ? section.name : null)}
             renderMarks={marksBehind(section.name !== null && strictRhymes.includes(section.name))}
-            analysis={<details className="section__analysis"><summary>Line analysis</summary><ol>
+            analysis={view.details && <details className="section__analysis"><summary>Line analysis</summary><ol>
               {section.lines.filter(LyricsSections.isSung).map((line, lineIndex) => {
                 const check = marks.marksFor(section.lines.filter(LyricsSections.isSung))[lineIndex];
                 return <li key={lineIndex}><p>{line}</p>{check ? <p>
@@ -358,13 +359,14 @@ interface SupportNoticeProps {
 
 /** A bar along the bottom of the editor while Lyrics support is quiet, saying why, with a way to ask again. */
 function SupportNotice({ status, detail, onRetry }: SupportNoticeProps) {
+  const setup = status === SupportStatus.Setup;
   return (
-    <div className="lyrics-notice" role="status" title={detail || undefined}>
-      <Icon name={IconName.Alert} />
+    <div className={cx("lyrics-notice", setup && "lyrics-notice--setup")} role="status" title={detail || undefined}>
+      <Icon name={setup ? IconName.Info : IconName.Alert} />
       <p className="lyrics-notice__text">{SUPPORT_MESSAGES[status]}</p>
-      <Button variant={ButtonVariant.Quiet} onClick={onRetry}>
+      {!setup && <Button variant={ButtonVariant.Quiet} onClick={onRetry}>
         Try again
-      </Button>
+      </Button>}
     </div>
   );
 }

@@ -38,7 +38,7 @@
   max-width: var(--song-menu-width);
 }
 
-/* Close, back to Live. */
+/* Only populated when a credit or an error needs to be shown. */
 .app-footer {
   display: flex;
   align-items: center;
@@ -185,3 +185,14 @@
   font-size: var(--font-size-sm);
 }
 
+
+/* Lyrics opens beside the continuing chat, like a document beside an editor sidebar. */
+.app--lyrics .app-body > .now { flex: 0 0 clamp(280px, 32%, 380px); border-right: var(--border-width) solid var(--color-border); }
+.app-lyrics { display: flex; flex: 1; min-width: 0; min-height: 0; }
+.app-lyrics[hidden] { display: none; }
+.app-header__nav .ode-button[aria-pressed="true"] { background: var(--color-accent-tint); color: var(--color-accent); }
+@media (max-width: 700px) {
+  .app--lyrics .app-body { overflow-x: auto; }
+  .app--lyrics .app-body > .now { flex-basis: 280px; }
+  .app--lyrics .app-body > .app-lyrics { min-width: 420px; }
+}
