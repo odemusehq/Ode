@@ -5,6 +5,9 @@ import type { LyricsStore } from "../mneme/lyrics-store";
 import { SetDiff } from "../mneme/set-diff";
 import type { SongStore } from "../mneme/song-store";
 import { RestorePlanner, type PlannedCall } from "./restore-planner";
+import { SetLookup } from "./set-lookup";
+import type { ExtensionOpArgs, ExtensionOpResults } from "../shared/live-ops";
+import { restoreStepExplains } from "./restore-change-scope";
 
 export interface PutBack {
   /** False when a step failed and the rest was skipped. */
@@ -19,8 +22,9 @@ export interface PutBack {
 export class RestoreRunner {
   constructor(
     private readonly live: LiveConnections,
-    private readonly song: Pick<SongStore, "update">,
-    private readonly lyrics: Pick<LyricsStore, "replace">,
+    private readonly song: Pick<SongStore, "update"> & Partial<Pick<SongStore, "restoreFields" | "songId">>,
+    private readonly lyrics: Pick<LyricsStore, "replace"> & Partial<Pick<LyricsStore, "revert">>,
+    private readonly readFresh?: () => Promise<SetSnapshot>,
   ) {}
 
   /**
@@ -31,13 +35,31 @@ export class RestoreRunner {
     const plan = new RestorePlanner(current).plan(SetDiff.between(current, target));
     const skipped = [...plan.skipped];
     if (plan.blocked?.length) return { complete: false, skipped: [...skipped, ...plan.blocked] };
+    let last = current;
     for (const step of plan.steps) {
-      const failed = await this.runStep(step);
-      if (failed.length === 0) continue;
+      if (this.readFresh) {
+        const fresh = await this.readFresh();
+        if (SetDiff.between(last, fresh).length) return { complete: false, skipped: [...skipped, "The Set changed while the restore was applying. The remaining steps were kept undone; review History before continuing."] };
+        last = fresh;
+      }
+      const failed = await this.runStep(step, last);
+      if (failed.length === 0) {
+        if (this.readFresh) {
+          const actual = await this.readFresh();
+          const unexpected = SetDiff.between(last, actual).filter((change) => !step.some((call) => restoreStepExplains(call, change, last)));
+          if (unexpected.length) return { complete: false, skipped: [...skipped,
+            `The Set changed outside the restore step: ${unexpected.map((change) => change.label).join("; ")}. The remaining steps were kept undone.`] };
+          last = actual;
+        }
+        continue;
+      }
       skipped.push(...failed);
       return { complete: false, skipped: [...skipped, "The rest of the restore was skipped. Your recovery history is retained."] };
     }
-    if (target.sheet) await this.writeSheet(target.sheet);
+    if (target.sheet && current.sheet) {
+      try { skipped.push(...await this.writeSheet(target.sheet, current.sheet)); }
+      catch (error) { return { complete: false, skipped: [...skipped, RestoreRunner.messageOf(error)] }; }
+    }
     return { complete: true, skipped };
   }
 
@@ -45,27 +67,48 @@ export class RestoreRunner {
    * The version's lead sheet without the musician's song settings (the store keeps the lyrics as they are), then its
    * lyrics when they differ from the lyrics now, as a new revision, so an open lyrics editor takes or merges them.
    */
-  private async writeSheet(sheet: LeadSheet): Promise<void> {
-    const { settings: _settings, version: _version, lyrics, lyricsRevision: _revision, ...rest } = sheet;
-    const stored = await this.song.update(rest);
-    if (stored.lyrics !== lyrics) await this.lyrics.replace(lyrics);
+  private async writeSheet(sheet: LeadSheet, base: LeadSheet): Promise<string[]> {
+    const expected: Partial<LeadSheet> = {}, replacement: Partial<LeadSheet> = {};
+    const fields = new Set([...Object.keys(base), ...Object.keys(sheet)] as (keyof LeadSheet)[]);
+    for (const field of fields) {
+      if (["settings", "version", "lyrics", "lyricsRevision"].includes(field) || JSON.stringify(base[field]) === JSON.stringify(sheet[field])) continue;
+      Object.assign(expected, { [field]: structuredClone(base[field]) });
+      Object.assign(replacement, { [field]: structuredClone(sheet[field]) });
+    }
+    if (Object.keys(replacement).length) {
+      if (!this.song.restoreFields) throw new Error("Guarded lead-sheet recovery is unavailable; the sheet was kept.");
+      await this.song.restoreFields(expected, replacement);
+    }
+    if (base.lyrics === sheet.lyrics) return [];
+    if (!this.lyrics.revert) throw new Error("Merging lyric recovery is unavailable; the lyrics were kept.");
+    // The inverse writer merges against the text seen before host work; later musician lines win.
+    const result = await this.lyrics.revert({ kind: "lyrics", songId: this.song.songId ?? "", before: sheet.lyrics, after: base.lyrics, beforeRevision: sheet.lyricsRevision, afterRevision: base.lyricsRevision });
+    return result.conflicts.length ? [`Later lyric edits were kept on lines ${result.conflicts.join(", ")}.`] : [];
   }
 
   /**
-   * Runs one step as one undo step. Returns what failed, in words. Edits that fail as a group are tried one by one,
-   * so one refused value leaves the rest to go ahead.
+   * Runs a planned step once. A failed group may have partially changed the host; replaying individual writes
+   * would use stale expectations and can overwrite intervening work.
    */
-  private async runStep(step: PlannedCall[]): Promise<string[]> {
-    const failed: string[] = [];
+  private async runStep(step: PlannedCall[], before: SetSnapshot): Promise<string[]> {
+    const guarded = structuredClone(step);
     try {
-      await this.run(step);
-    } catch (error) {
-      if (!step.every((call) => RestorePlanner.isEdit(call.op))) return [RestoreRunner.messageOf(error)];
-      for (const call of step) {
-        await this.run([call]).catch((single: unknown) => failed.push(`${call.label} (${RestoreRunner.messageOf(single)})`));
+      if (this.readFresh) for (const call of guarded) if (call.op === "midi_clip_set_notes") {
+        const args = call.args as ExtensionOpArgs["midi_clip_set_notes"];
+        const expected = new SetLookup(before).clip(args.clip)?.clip.notes;
+        const read = await this.live.extension.call<ExtensionOpResults["midi_clip_get_notes"]>("midi_clip_get_notes", { clip: args.clip });
+        if (!read.guardedRecovery || !read.recoveryToken || JSON.stringify(read.notes) !== JSON.stringify(expected)) return ["The MIDI clip changed or the extension cannot guard its replacement. Its notes were kept."];
+        args.expected = { token: read.recoveryToken, notes: read.notes };
       }
+    } catch (error) {
+      return [RestoreRunner.messageOf(error)];
     }
-    return failed;
+    try {
+      await this.run(guarded);
+    } catch (error) {
+      return [RestoreRunner.messageOf(error), "The failed step was not retried because it may have partially applied. Review its observed result in History."];
+    }
+    return [];
   }
 
   private async run(calls: PlannedCall[]): Promise<void> {

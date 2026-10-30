@@ -157,3 +157,28 @@ test("identifiable locked tracks and lyric sections cannot be changed through a 
   } as never);
   assert.equal((await registry.run("voice_reference_clear", {})).ok, true);
 });
+
+test("retrying an accepted request keeps one exchange, including after restart", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "ode-idempotent-"));
+  const log = new ConversationStore(folder, 12).log("song");
+  const id = crypto.randomUUID();
+  const attempts = await Promise.all([log.beginOnce("Keep the hook", id), log.beginOnce("Keep the hook", id)]);
+  assert.equal(attempts.filter((attempt) => attempt.created).length, 1);
+  const reopened = new ConversationStore(folder, 12).log("song");
+  assert.equal((await reopened.beginOnce("Keep the hook", id)).created, false);
+  await assert.rejects(reopened.beginOnce("Change the hook", id), /different words/);
+  assert.equal((await reopened.all()).length, 1);
+});
+
+test("Stop also cancels an identified request that arrives after the Stop response", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "ode-late-request-"));
+  const log = new ConversationStore(folder, 12).log("song");
+  let runs = 0;
+  const session = new OdeSession({ loop: { run: async () => { runs++; } }, emit() {},
+    approvals: { denyAll() {} }, questions: { cancelAll() {} } } as never, log);
+  const requestId = crypto.randomUUID();
+  session.stop([requestId]);
+  await session.accept({ requestId, text: "Replace the drums" });
+  assert.equal(runs, 0);
+  assert.equal((await log.all())[0]?.status, "stopped");
+});

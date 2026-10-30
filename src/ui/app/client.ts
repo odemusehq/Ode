@@ -20,6 +20,10 @@ export class OdeClient {
   /** An Undo is on its way; a second press meanwhile is ignored, so each Undo goes back one version. */
   private undoing = false;
   private conversationRead = 0;
+  private versionsRead = 0;
+  private sendEpoch = 0;
+  private readonly sending = new Set<AbortController>();
+  private readonly pendingIds = new Map<string, string>();
 
   constructor(readonly layout: Layout) {
     this.stream = new EventStream(API.events, {
@@ -44,7 +48,7 @@ export class OdeClient {
     const reads = [this.refreshStatus()];
     if (this.layout === Layout.Lyrics) reads.push(this.lyrics.load(true));
     if (this.layout === Layout.History) reads.push(this.loadVersions());
-    if (this.layout === Layout.Ask) reads.push(this.loadConversation());
+    if (this.layout === Layout.Ask) reads.push(this.loadConversation().then(() => this.loadVersions()));
     await Promise.allSettled(reads);
   }
 
@@ -77,10 +81,13 @@ export class OdeClient {
   }
 
   async loadVersions(): Promise<void> {
+    const read = ++this.versionsRead;
+    const songId = this.store.getSnapshot().songId;
     try {
-      this.store.setVersions(await this.api.getVersions());
+      const versions = await this.api.getVersions();
+      if (read === this.versionsRead && songId === this.store.getSnapshot().songId) this.store.setVersions(versions);
     } catch (error) {
-      this.store.setHistoryError(`Reading the history stopped: ${errorMessage(error)}`);
+      if (read === this.versionsRead && songId === this.store.getSnapshot().songId) this.store.setHistoryError(`Reading the history stopped: ${errorMessage(error)}`);
     }
   }
 
@@ -88,14 +95,27 @@ export class OdeClient {
   async send(text: string): Promise<boolean> {
     const request = text.trim();
     if (!request) return false;
+    const epoch = this.sendEpoch;
+    const songId = this.store.getSnapshot().songId;
+    const scope = `${songId ?? ""}\n${request}`;
+    const requestId = this.pendingIds.get(scope) ?? crypto.randomUUID();
+    this.pendingIds.set(scope, requestId);
+    if (this.pendingIds.size > 128) this.pendingIds.delete(this.pendingIds.keys().next().value!);
+    const controller = new AbortController();
+    this.sending.add(controller);
     this.store.startRequest();
     try {
       await this.saveLyrics();
-      await this.api.chat({ text: request });
+      if (epoch !== this.sendEpoch) return false;
+      if (!songId || songId !== this.store.getSnapshot().songId) throw new Error("The open song changed or is still loading. Send this message again in the intended song.");
+      await this.api.chat({ text: request, requestId, songId }, controller.signal);
+      this.pendingIds.delete(scope);
       return true;
     } catch (error) {
-      this.store.setError(`Your request stayed here: ${errorMessage(error)}`);
+      if (!controller.signal.aborted) this.store.setError(`Your request stayed here: ${errorMessage(error)}`);
       return false;
+    } finally {
+      this.sending.delete(controller);
     }
   }
 
@@ -105,9 +125,11 @@ export class OdeClient {
 
   /** Asks why Ode made the change with this version; the short answer goes under its result line. */
   async askWhy(versionId: string): Promise<void> {
+    const epoch = this.sendEpoch;
     this.store.startRequest();
     try {
       await this.saveLyrics();
+      if (epoch !== this.sendEpoch) return;
       await this.api.why({ versionId });
     } catch (error) {
       this.store.setError(`Ode's answer stopped: ${errorMessage(error)}`);
@@ -116,12 +138,16 @@ export class OdeClient {
 
   /** Another take of the change with this version, in place. */
   async again(versionId: string): Promise<void> {
+    const epoch = this.sendEpoch;
     this.store.startRequest();
     try {
       await this.saveLyrics();
+      if (epoch !== this.sendEpoch) return;
       await this.api.again({ versionId });
     } catch (error) {
       this.store.setError(`Another take stopped: ${errorMessage(error)}`);
+    } finally {
+      await this.loadVersions();
     }
   }
 
@@ -136,13 +162,19 @@ export class OdeClient {
     } catch (error) {
       this.store.setError(`Undo stopped: ${errorMessage(error)}`);
     } finally {
+      await this.loadVersions();
       this.undoing = false;
     }
   }
 
   async stopRequest(): Promise<void> {
+    this.sendEpoch += 1;
+    for (const controller of this.sending) controller.abort();
+    const cancelled = new Set(this.pendingIds.values());
     try {
-      await this.api.stop();
+      await this.api.stop([...cancelled]);
+      for (const [scope, id] of this.pendingIds) if (cancelled.has(id)) this.pendingIds.delete(scope);
+      await this.refreshStatus();
     } catch (error) {
       this.store.setError(`Stop stayed here: ${errorMessage(error)}`);
     }

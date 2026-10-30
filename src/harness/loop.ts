@@ -4,6 +4,9 @@ import type { Services } from "../services/types";
 import type { AgentLimits } from "../shared/config";
 import type { AgentKind, ToolRegistry } from "../tools";
 import type { AnyTool } from "../tools/define";
+import type { MutationReceipt } from "../shared/mutation-receipt";
+import type { ToolObservations } from "../mneme/tool-observations";
+import type { ProductionRun } from "./production-run";
 import { Semaphore } from "./semaphore";
 import type { SkillLibrary } from "./skills";
 import type { ToolLabels } from "./tool-labels";
@@ -13,6 +16,7 @@ export enum LoopTool {
   ToolSearch = "tool_search",
   SkillRead = "skill_read",
   Subagent = "subagent",
+  ProductionExecute = "production_execute",
 }
 
 /** Decides whether a call runs now. */
@@ -43,6 +47,7 @@ const QUIET: LoopEvents = {
 export interface LoopDeps {
   /** Where the chat model for each kind of agent comes from. */
   services: Pick<Services, "chat">;
+  observations?: Pick<ToolObservations, "record">;
   registry: ToolRegistry;
   skills: SkillLibrary;
   labels: ToolLabels;
@@ -66,7 +71,10 @@ export interface LoopRun {
   signal: AbortSignal;
   /** What the request may still spend; subagents share their parent's, and a top-level run starts a fresh one. */
   budget?: RequestBudget;
+  exchangeId?: string;
+  production?: ProductionRun;
   onMutation?: () => void;
+  onReceipts?: (receipts: readonly MutationReceipt[]) => void;
 }
 
 /** How a run ended. */
@@ -192,7 +200,14 @@ export class AgentLoop {
       const calls = message.tool_calls ?? [];
       messages.push({ role: "assistant", content: message.content ?? null, ...(calls.length > 0 ? { tool_calls: calls } : {}) });
       if (text) said = text;
-      if (calls.length === 0) return result(text, text ? LoopEnd.Reply : LoopEnd.EmptyReply);
+      if (calls.length === 0) {
+        const continuation = text ? await run.production?.afterReply() : null;
+        if (!continuation) return result(text, text ? LoopEnd.Reply : LoopEnd.EmptyReply);
+        if (run.signal.aborted) return result(text, LoopEnd.Cancelled);
+        if (text) run.events.thought(text);
+        messages.push({ role: "system", content: continuation });
+        continue;
+      }
       if (text) run.events.thought(text);
       const answers = await this.answerAll(calls, run, loaded);
       calls.forEach((call, index) => messages.push({ role: "tool", tool_call_id: call.id, content: answers[index] ?? "" }));
@@ -230,6 +245,7 @@ export class AgentLoop {
   /** True for a call to a tool that changes the Set or Ode's memory. */
   private changesSomething(call: ChatCompletionMessageToolCall): boolean {
     if (call.type !== "function") return false;
+    if (call.function.name === LoopTool.ProductionExecute) return true;
     const tool = this.deps.registry.find(call.function.name);
     return tool !== undefined && tool.changes !== "none";
   }
@@ -259,6 +275,13 @@ export class AgentLoop {
         },
       },
     ];
+    if (run.agent === "main" && run.production) tools.push({
+      type: "function", function: {
+        name: LoopTool.ProductionExecute,
+        description: "Declare that this CURRENT musician request asks you to execute the reconciled production goal, rather than discuss/status/plan it. First save its working step with production_task_update. Give taskId and the full exact current user request that you interpreted as execution intent; the quote identifies the request, it does not prove semantic permission. This request-local declaration allows one continuation reminder if you reply while work remains; it never starts a new run or budget and is cleared by a question, Stop, steering or restart. Do not use for Why?, status, suggestions or planning-only conversation.",
+        parameters: { type: "object", properties: { taskId: { type: "string" }, quote: { type: "string" } }, required: ["taskId", "quote"] },
+      },
+    });
     if (run.depth < this.deps.limits.subagentDepth) {
       tools.push({
         type: "function",
@@ -293,21 +316,37 @@ export class AgentLoop {
       case LoopTool.Subagent:
         return this.subagent(call.id, input, run);
     }
+    if (name === LoopTool.ProductionExecute) return run.production?.execute(String(input.taskId ?? ""), String(input.quote ?? "")) ?? "Production execution is unavailable in this run.";
     const tool = this.deps.registry.find(name);
     if (!tool) return `Find Ode's tools with ${LoopTool.ToolSearch}; ${name} is unknown.`;
     if (!this.deps.registry.available(run.agent).includes(tool)) return "Subagents return material; the main agent applies it to the Set.";
     const refusal = await run.gate.check(tool, input, run.signal);
     if (refusal !== null) return refusal;
     if (run.signal.aborted) return `${name} stays undone: the musician pressed Stop.`;
-    if (tool.changes !== "none") run.onMutation?.();
+    if (tool.changes === "set" || name === "lyrics_write" || name === "lead_sheet_update" || name === "hook_retain") run.onMutation?.();
+    if (name === "ask_musician") run.production?.pause();
     run.events.toolStarted(call.id, name, this.deps.labels.for(name, input));
     const work = () => {
       run.signal.throwIfAborted();
-      return this.deps.registry.run(name, input, run.signal);
+      return this.deps.registry.run(name, input, run.signal, { exchangeId: run.exchangeId, toolCallId: call.id });
     };
     const outcome = tool.changes === "none" ? await this.reads.use(work) : await work();
+    // Retain writer receipts even when saving an observation fails afterwards.
+    if (outcome.receipts?.length) {
+      run.onReceipts?.(outcome.receipts);
+      if (tool.changes === "memory") run.onMutation?.();
+    }
     run.events.toolFinished(call.id, outcome.ok);
-    return this.capped(outcome.ok ? outcome.text : `${name} stopped: ${outcome.text}`);
+    let citation = "";
+    if (run.agent === "main" && run.exchangeId && this.deps.observations) {
+      try {
+        const saved = await this.deps.observations.record({ exchangeId: run.exchangeId, toolCallId: call.id, name, input: outcome.input ?? {}, ok: outcome.ok, text: outcome.text });
+        citation = `\nSaved observation: ${JSON.stringify({ exchangeId: saved.exchangeId, toolCallId: saved.toolCallId, targets: saved.targets })}. This records the outcome, not artistic quality or later currentness.`;
+      } catch (error) {
+        citation = `\nObservation was not saved: ${error instanceof Error ? error.message : String(error)}. Do not cite this call as saved evidence.`;
+      }
+    }
+    return this.capped(outcome.ok ? outcome.text : `${name} stopped: ${outcome.text}`) + citation;
   }
 
   /** A result within the size the model reads; a longer one is cut, with a note to ask for less. */

@@ -6,6 +6,7 @@ import { JsonFile } from "./json-file";
 import { LyricsText } from "./lyrics-text";
 import type { UserPaths } from "./paths";
 import { VersionHistory } from "./version-history";
+import type { MutationReceipt } from "../shared/mutation-receipt";
 
 /** A song in Ode's list: its folder's id, and its title as its lead sheet has it. */
 export const SongEntrySchema = z.object({ id: z.string(), title: z.string(), updatedAt: z.string() });
@@ -100,6 +101,48 @@ export class SongStore {
   /** Replaces the fields given. The lyrics and their revision stay as stored: they change only through `saveLyrics`. */
   update(patch: Partial<LeadSheet>): Promise<LeadSheet> {
     return this.change((current) => LeadSheetSchema.parse({ ...current, ...patch, lyrics: current.lyrics, lyricsRevision: current.lyricsRevision }));
+  }
+
+  /** The exact changed fields are captured inside the same file update as the write. */
+  async updateWithReceipt(patch: Partial<LeadSheet>): Promise<LeadSheet & { __odeReceipts: MutationReceipt[] }> {
+    const songId = this.id;
+    const before: Partial<LeadSheet> = {};
+    const after: Partial<LeadSheet> = {};
+    const beforeAbsent: (keyof LeadSheet)[] = [], afterAbsent: (keyof LeadSheet)[] = [];
+    const sheet = await this.change((current) => {
+      const next = LeadSheetSchema.parse({ ...current, ...patch, lyrics: current.lyrics, lyricsRevision: current.lyricsRevision });
+      for (const field of Object.keys(patch) as (keyof LeadSheet)[]) {
+        if (field === "lyrics" || field === "lyricsRevision" || field === "version" || JSON.stringify(current[field]) === JSON.stringify(next[field])) continue;
+        if (current[field] === undefined) beforeAbsent.push(field);
+        else Object.assign(before, { [field]: structuredClone(current[field]) });
+        if (next[field] === undefined) afterAbsent.push(field);
+        else Object.assign(after, { [field]: structuredClone(next[field]) });
+      }
+      return next;
+    });
+    return { ...sheet, __odeReceipts: Object.keys(after).length || afterAbsent.length ? [{ kind: "sheet-fields", songId, before, after, beforeAbsent, afterAbsent }] : [] };
+  }
+
+  /** Compare and change only the named fields, inside their writer queue. */
+  async restoreFields(expected: Partial<LeadSheet>, replacement: Partial<LeadSheet>, songId = this.id,
+    expectedAbsent: readonly (keyof LeadSheet)[] = [], replacementAbsent: readonly (keyof LeadSheet)[] = []): Promise<LeadSheet & { __odeReceipts: MutationReceipt[] }> {
+    if (songId !== this.id) throw new Error("The lead-sheet change belongs to another song.");
+    let receipt: MutationReceipt | undefined;
+    const sheet = await this.change((current) => {
+      const fields = [...new Set([...(Object.keys(replacement) as (keyof LeadSheet)[]), ...replacementAbsent])];
+      for (const field of fields) {
+        if (field === "lyrics" || field === "lyricsRevision" || field === "version") throw new Error("Restore lyrics through the shared lyrics writer.");
+        if (expectedAbsent.includes(field) ? current[field] !== undefined : JSON.stringify(current[field]) !== JSON.stringify(expected[field])) throw new Error(`The musician changed the lead sheet's ${field}; that field was kept.`);
+      }
+      const patched = { ...current, ...replacement };
+      for (const field of replacementAbsent) delete patched[field];
+      const next = LeadSheetSchema.parse(patched);
+      const before = Object.fromEntries(fields.filter((field) => current[field] !== undefined).map((field) => [field, structuredClone(current[field])])) as Partial<LeadSheet>;
+      const after = Object.fromEntries(fields.filter((field) => next[field] !== undefined).map((field) => [field, structuredClone(next[field])])) as Partial<LeadSheet>;
+      receipt = { kind: "sheet-fields", songId, before, after, beforeAbsent: fields.filter((field) => current[field] === undefined), afterAbsent: fields.filter((field) => next[field] === undefined) };
+      return next;
+    });
+    return { ...sheet, __odeReceipts: receipt ? [receipt] : [] };
   }
 
   /**

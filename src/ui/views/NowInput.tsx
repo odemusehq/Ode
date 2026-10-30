@@ -106,7 +106,7 @@ export function NowInput() {
           </div>
         </details>
         <span id={`${inputId}-hint`} className="now__input-hint">{uploading ? "Attaching audio…" : "Shift+Enter for a new line"}</span>
-        {busy && stoppable && <Button variant={ButtonVariant.Secondary} onClick={() => void client.stopRequest()}>Stop</Button>}
+        {((busy && stoppable) || sending) && <Button variant={ButtonVariant.Secondary} onClick={() => void client.stopRequest()}>Stop</Button>}
         <Button type="submit" variant={ButtonVariant.Primary} disabled={sending || uploading || (!text.trim() && attachments.length === 0)}>{sending ? "Sending…" : "Send"}</Button>
       </div>
     </form>

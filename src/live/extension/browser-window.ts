@@ -1,4 +1,3 @@
-import { execFile } from "node:child_process";
 import { platform } from "node:os";
 
 interface BrowserCommand { file: string; args: string[] }
@@ -17,10 +16,16 @@ export class BrowserWindow {
 
   /** A failed or unavailable OS opener leaves a copyable URL instead of running chat in a modal webview. */
   static async open(url: string): Promise<boolean> {
-    const command = BrowserWindow.command(url);
-    if (!command) return false;
-    return new Promise((resolve) => {
-      execFile(command.file, command.args, { timeout: 5000, windowsHide: true }, (error) => resolve(error === null));
-    });
+    try {
+      const command = BrowserWindow.command(url);
+      if (!command) return false;
+      // A restricted runtime must still load Ode and show its copyable local address.
+      const { execFile } = await import("node:child_process");
+      return await new Promise((resolve) => {
+        execFile(command.file, command.args, { timeout: 5000, windowsHide: true }, (error) => resolve(error === null));
+      });
+    } catch {
+      return false;
+    }
   }
 }

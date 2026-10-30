@@ -14,6 +14,7 @@ import type {
   TrackRef,
 } from "./live";
 import type { SetContents } from "./set-snapshot";
+import type { MutationReceipt } from "./mutation-receipt";
 
 export type TrackKind = "midi" | "audio" | "group" | "return" | "main";
 
@@ -210,8 +211,8 @@ export interface ExtensionOpArgs {
   clip_slot_delete_clip: { slot: ClipSlotRef };
   clip_get: { clip: ClipRef };
   clip_set: { clip: ClipRef; name?: string; color?: number; muted?: boolean; looping?: boolean };
-  midi_clip_get_notes: { clip: ClipRef };
-  midi_clip_set_notes: { clip: ClipRef; notes: Note[] };
+  midi_clip_get_notes: { clip: ClipRef; recoveryToken?: string };
+  midi_clip_set_notes: { clip: ClipRef; notes: Note[]; expected?: { token: string; notes: Note[] } };
   audio_clip_get: { clip: ClipRef };
   audio_clip_set: { clip: ClipRef; warping?: boolean; warpMode?: number };
   device_get: { device: DeviceRef; withValues?: boolean };
@@ -270,8 +271,8 @@ export interface ExtensionOpResults {
   clip_slot_delete_clip: { deleted: true };
   clip_get: ClipInfo;
   clip_set: ClipInfo;
-  midi_clip_get_notes: { notes: Note[] };
-  midi_clip_set_notes: { count: number };
+  midi_clip_get_notes: { notes: Note[]; guardedRecovery?: true; recoveryToken?: string };
+  midi_clip_set_notes: { count: number; __odeReceipts?: MutationReceipt[] };
   audio_clip_get: AudioClipInfo;
   audio_clip_set: AudioClipInfo;
   device_get: DeviceInfo;

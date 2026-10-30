@@ -1,4 +1,6 @@
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
+import type { MutationReceipt } from "../shared/mutation-receipt";
+import type { ProductionTaskStore } from "../mneme/production-task";
 import type { ConversationLog } from "../mneme/conversations";
 import type { PreferencesStore } from "../mneme/preferences";
 import type { ConversationActivity } from "../shared/conversation";
@@ -6,12 +8,14 @@ import type { UiEvent } from "../shared/events";
 import { Mode } from "../shared/personalisation";
 import type { AnyTool, SetReader } from "../tools/define";
 import type { OdeAgents } from "../agents/agents";
+import { ProductionRun } from "./production-run";
 import { Decision, type Approvals } from "./approvals";
 import { LoopEnd, type AgentLoop, type LoopEvents, type ToolGate } from "./loop";
 import type { ToolLabels } from "./tool-labels";
 
 /** One request to Ode: a typed line, a tapped suggestion or spoken words. */
 export interface OdeRequest {
+  requestId?: string;
   text: string;
   /** Another take of Ode's last change: the Set has already been put back to the version before it. */
   again?: boolean;
@@ -25,12 +29,13 @@ export interface OdeRequest {
 /** The server's work around each agent turn. */
 export interface RequestLifecycle {
   /** Before the turn: reads the Set, saves the hand edits and builds the hidden context. Throws when the Set is unreadable. */
+  recover?(interruptedRequests: readonly string[]): Promise<void>;
   prepare(request: OdeRequest): Promise<{ hiddenContext: string }>;
   /**
    * After the turn: saves Ode's change as a version and shows the result line. Stopped: the musician pressed Stop or
    * the request reached a limit, so the change is saved as cut short. A Why? reply shows only its answer.
    */
-  finish(request: OdeRequest, reply: string, stopped: boolean, mutations?: number): Promise<void | { versionId: string | null }>;
+  finish(request: OdeRequest, reply: string, stopped: boolean, mutations?: number, receipts?: readonly MutationReceipt[]): Promise<void | { versionId: string | null }>;
 }
 
 /** Questions waiting for the musician; they end without an answer when the musician presses Stop. */
@@ -53,6 +58,7 @@ export interface SessionDeps {
   questions: OpenQuestions;
   prefs: PreferencesStore;
   requests: RequestLifecycle;
+  production?: Pick<ProductionTaskStore, "read" | "interrupt" | "recover">;
   deletions: DeletionCheck;
   /** Read again before a change waits for Apply, so its card names what the change touches now. */
   snapshots: SetReader;
@@ -85,6 +91,7 @@ export class OdeSession {
   private draining = false;
   private accepting = 0;
   private stopEpoch = 0;
+  private readonly cancelledRequests = new Set<string>();
   private retired = false;
   private activity: ConversationActivity[] = [];
   private rationale = "";
@@ -118,8 +125,10 @@ export class OdeSession {
     this.accepting += 1;
     this.showBusy();
     const accepted = this.acceptance.then(async () => {
-      const exchangeId = await this.conversation.begin(request.text);
-      if (epoch !== this.stopEpoch) {
+      const accepted = await this.conversation.beginOnce(request.text, request.requestId);
+      const exchangeId = accepted.id;
+      if (!accepted.created) { await this.publishConversation(); return; }
+      if (epoch !== this.stopEpoch || (request.requestId && this.cancelledRequests.has(request.requestId))) {
         await this.conversation.finish(exchangeId, "Stopped before starting.", "stopped");
         await this.publishConversation();
         return;
@@ -141,11 +150,12 @@ export class OdeSession {
           if (earlier.exchangeId) await this.conversation.finish(earlier.exchangeId, "Continued with your later message.", "stopped");
         }
         this.controller?.abort();
+    if (!this.retired) void this.deps.production?.interrupt("The musician stopped Ode. Inspect any work already issued before continuing.").catch((error: unknown) => this.deps.emit({ type: "error", message: OdeSession.errorText(error) }));
         this.deps.approvals.denyAll();
         this.deps.questions.cancelAll();
         this.deps.emit({ type: "progress", text: "Updating the work with your message" });
       }
-      if (epoch !== this.stopEpoch) {
+      if (epoch !== this.stopEpoch || (request.requestId && this.cancelledRequests.has(request.requestId))) {
         await this.conversation.finish(exchangeId, "Stopped before starting.", "stopped");
       } else this.waiting.push(next);
       await this.publishConversation();
@@ -169,6 +179,9 @@ export class OdeSession {
   }
 
   async recover(): Promise<void> {
+    const interrupted = (await this.conversation.all()).filter((exchange) => exchange.status === "running");
+    await this.deps.requests.recover?.(interrupted.map((exchange) => exchange.request));
+    await this.deps.production?.recover();
     await this.conversation.recover();
     await this.publishConversation();
   }
@@ -211,7 +224,9 @@ export class OdeSession {
     }
   }
 
-  stop(): void {
+  stop(requestIds: readonly string[] = []): void {
+    for (const id of requestIds) this.cancelledRequests.add(id);
+    while (this.cancelledRequests.size > 256) this.cancelledRequests.delete(this.cancelledRequests.values().next().value!);
     this.stopEpoch += 1;
     for (const request of this.waiting.splice(0)) {
       if (request.exchangeId) void this.conversation.finish(request.exchangeId, "Stopped before starting.", "stopped").then(() => this.publishConversation()).catch((error: unknown) => this.deps.emit({ type: "error", message: OdeSession.errorText(error) }));
@@ -219,6 +234,7 @@ export class OdeSession {
     this.deps.approvals.denyAll();
     this.deps.questions.cancelAll();
     this.controller?.abort();
+    if (!this.retired) void this.deps.production?.interrupt("The musician stopped Ode. Inspect any work already issued before continuing.").catch((error: unknown) => this.deps.emit({ type: "error", message: OdeSession.errorText(error) }));
     this.exclusiveController?.abort();
   }
 
@@ -258,6 +274,8 @@ export class OdeSession {
     let status: "complete" | "stopped" | "failed" = "failed";
     let savedReply = "";
     let mutations = 0;
+    const receipts: MutationReceipt[] = [];
+    const production = !request.reply && this.deps.production ? new ProductionRun(this.deps.production, exchangeId, request.text, controller.signal) : undefined;
     let versionId: string | null = null;
     try {
       if (beganHere) await this.publishConversation();
@@ -284,7 +302,10 @@ export class OdeSession {
             gate: this.gate,
             events: this.events,
             signal: controller.signal,
+            exchangeId,
+            production,
             onMutation: () => { mutations += 1; },
+            onReceipts: (saved) => { receipts.push(...saved); },
           });
           reply = result.reply;
           tokens = result.tokens;
@@ -299,7 +320,7 @@ export class OdeSession {
         }
       }
       try {
-        const receipt = await this.deps.requests.finish(request, reply, controller.signal.aborted || cutShort || status === "failed", mutations);
+        const receipt = await this.deps.requests.finish(request, reply, controller.signal.aborted || cutShort || status === "failed", mutations, receipts);
         versionId = receipt?.versionId ?? null;
       } catch (error) {
         status = "failed";
@@ -311,6 +332,12 @@ export class OdeSession {
     } finally {
       if (controller.signal.aborted) status = "stopped";
       try {
+        try { await production?.finish(status !== "complete"); }
+        catch (error) {
+          status = "failed";
+          savedReply = [savedReply, `Could not save the production checkpoint: ${OdeSession.errorText(error)}`].filter(Boolean).join("\n\n");
+          this.deps.emit({ type: "error", message: OdeSession.errorText(error) });
+        }
         await this.conversation.finish(exchangeId, savedReply || (status === "stopped" ? "Stopped." : "The request failed before completion."), status, versionId);
         await this.publishConversation();
       } finally {
@@ -397,7 +424,7 @@ export class OdeSession {
    */
   private async needsApproval(tool: AnyTool, input: Record<string, unknown>): Promise<boolean> {
     if (tool.consent) return true;
-    if (tool.changes === "none") return false;
+    if (tool.changes === "none" || tool.name === "production_task_update") return false;
     if (await this.deps.deletions.cantBeUndone(tool.name, input)) return true;
     return (await this.deps.prefs.mode()) === Mode.Manual;
   }

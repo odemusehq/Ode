@@ -11,6 +11,9 @@ import type { TextLibrary } from "../harness/texts";
 import { ToolLabels } from "../harness/tool-labels";
 import { Mneme } from "../mneme/artist";
 import { ConversationStore } from "../mneme/conversations";
+import { ProductionTaskStore } from "../mneme/production-task";
+import { ProductionEvidence } from "../mneme/production-evidence";
+import { ToolObservations } from "../mneme/tool-observations";
 import { LyricsStore } from "../mneme/lyrics-store";
 import { TempFolder, userPaths, type UserPaths } from "../mneme/paths";
 import { PreferencesStore } from "../mneme/preferences";
@@ -45,6 +48,9 @@ export class OdeApp {
   readonly mneme: Mneme;
   readonly song: SongStore;
   readonly lyrics: LyricsStore;
+  readonly conversations: ConversationStore;
+  readonly observations: ToolObservations;
+  readonly production: ProductionTaskStore;
   readonly versions: SongVersions;
   readonly settings: SettingsStore;
   readonly models: ModelRoles;
@@ -75,6 +81,9 @@ export class OdeApp {
     this.song = new SongStore(this.paths, (sheet) => this.onSongChanged(sheet));
     this.lyrics = new LyricsStore(this.song, this.prefs, (lyrics) => emit({ type: "lyrics", lyrics }));
     this.versions = new SongVersions(this.song, config.versions.snapshotEvery);
+    this.conversations = new ConversationStore(join(this.paths.workspace, "conversations"), config.limits.historyExchanges);
+    this.observations = new ToolObservations(this.song);
+    this.production = new ProductionTaskStore(this.song, new ProductionEvidence({ song: this.song, observations: this.observations, versions: this.versions, conversations: this.conversations, isRelevantTool: (name) => registry.find(name) !== undefined }).verify);
     this.settings = new SettingsStore(this.paths.root, ProviderCatalog.bundled);
     this.models = new ModelRoles(this.settings, ProviderCatalog.bundled);
     this.services = new ModelServices(this.models);
@@ -95,6 +104,7 @@ export class OdeApp {
       live,
       song: this.song,
       lyrics: this.lyrics,
+      production: this.production,
       versions: this.versions,
       snapshots: this.reader,
       questions: this.questions,
@@ -112,6 +122,7 @@ export class OdeApp {
       reader: this.reader,
       recorder: this.recorder,
       versions: this.versions,
+      production: this.production,
       summary: new ContextSummary(this.mneme, this.song, this.prefs, config.memory),
       prefs: this.prefs,
       selection: this.selection,
@@ -122,6 +133,7 @@ export class OdeApp {
     const labels = new ToolLabels(registry);
     const loop = new AgentLoop({
       services: this.services,
+      observations: this.observations,
       registry,
       skills,
       labels,
@@ -137,11 +149,12 @@ export class OdeApp {
         questions: this.questions,
         prefs: this.prefs,
         requests,
+        production: this.production,
         deletions: new DeletionChecker(this.reader),
         snapshots: this.reader,
         emit,
       },
-      new ConversationStore(join(this.paths.workspace, "conversations"), config.limits.historyExchanges),
+      this.conversations,
     );
     this.songs = new SongSwitcher({ song: this.song, sessions: this.sessions, reader: this.reader, recorder: this.recorder });
     this.versionActions = new VersionActions({

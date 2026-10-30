@@ -1,3 +1,4 @@
+import type { ProductionTaskStore } from "../mneme/production-task";
 import type { z } from "zod";
 import type { OdeConfig } from "../shared/config";
 import type { LiveConnections } from "../shared/live";
@@ -32,6 +33,9 @@ export interface MusicianQuestions {
 }
 
 export interface ToolContext {
+  production: ProductionTaskStore;
+  exchangeId?: string;
+  toolCallId?: string;
   /** Stops later stages of an interrupted request. */
   signal?: AbortSignal;
   config: OdeConfig;

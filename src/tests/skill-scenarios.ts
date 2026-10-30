@@ -10,6 +10,7 @@ import { FolderTexts } from "../harness/texts";
 import { ToolLabels } from "../harness/tool-labels";
 import { ConversationStore } from "../mneme/conversations";
 import { Mneme } from "../mneme/artist";
+import { ProductionTaskStore } from "../mneme/production-task";
 import { LyricsStore } from "../mneme/lyrics-store";
 import { TempFolder, userPaths } from "../mneme/paths";
 import { PreferencesStore } from "../mneme/preferences";
@@ -144,7 +145,7 @@ class ScenarioRun {
     const selection = new SelectionState({ reader, versions, finder: new SuggestionFinder(live, song, prefs, config.suggestions.perSelection), busy: () => false, emit });
     const services = new ModelServices(this.roles);
     const temp = new TempFolder(config.tempDir);
-    const registry = new ToolRegistry({ config, live, song, lyrics, versions, snapshots: reader, questions, mneme, prefs, services, temp, emit });
+    const registry = new ToolRegistry({ config, live, song, production: new ProductionTaskStore(song), lyrics, versions, snapshots: reader, questions, mneme, prefs, services, temp, emit });
     const requests = new RequestContext({
       config,
       live,

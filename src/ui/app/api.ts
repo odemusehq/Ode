@@ -76,12 +76,12 @@ export class OdeApi {
     if (!response.ok) throw new ApiError(response.status, await readError(response));
     return await response.json() as AudioAttachment;
   }
-  chat(request: ChatRequest): Promise<OkResponse> {
-    return this.request(HttpMethod.Post, API.chat, request);
+  chat(request: ChatRequest, signal?: AbortSignal): Promise<OkResponse> {
+    return this.request(HttpMethod.Post, API.chat, request, signal);
   }
 
-  stop(): Promise<OkResponse> {
-    return this.request(HttpMethod.Post, API.stop);
+  stop(requestIds: string[] = []): Promise<OkResponse> {
+    return this.request(HttpMethod.Post, API.stop, { requestIds });
   }
 
   decide(id: string, request: ApprovalRequest): Promise<OkResponse> {
@@ -186,10 +186,11 @@ export class OdeApi {
   }
 
   /** Sends every change as JSON, the only kind the server accepts for one. */
-  private async request<T>(method: HttpMethod, path: string, body?: unknown): Promise<T> {
+  private async request<T>(method: HttpMethod, path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
     const reads = method === HttpMethod.Get;
     const response = await fetch(path, {
       method,
+      signal,
       headers: reads ? undefined : { "Content-Type": JSON_TYPE },
       body: reads ? undefined : JSON.stringify(body ?? {}),
     });

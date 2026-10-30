@@ -1,9 +1,11 @@
 // The version history of the whole Set: what changed between two snapshots, and who changed it.
 import type { LeadSheet } from "./song";
+import type { RecoveryReceipt } from "./mutation-receipt";
 
 export enum VersionAuthor {
   Musician = "musician",
   Ode = "ode",
+  Observed = "observed",
 }
 
 export enum ChangeKind {
@@ -71,12 +73,16 @@ export interface Version {
   /** Ode's versions: what the musician asked for (a typed line or a tapped suggestion), so Again can retry it. */
   request?: string;
   changes: SetChange[];
+  /** Writer receipts support scoped recovery; the full snapshot delta may also contain hand edits. */
+  recovery?: RecoveryReceipt;
 }
 
 /** A version as the History list shows it. */
-export interface VersionListItem extends Omit<Version, "changes"> {
+export interface VersionListItem extends Omit<Version, "changes" | "recovery"> {
   tracks: string[];
   changeCount: number;
+  /** Full receipts remain in version detail, rather than copying note arrays into every list/event. */
+  scopedUndo: boolean;
 }
 
 /** A version opened in History: its changes by track, so the touched tracks can be highlighted with how they were. */

@@ -18,6 +18,7 @@ import {
 } from "../shared/versions";
 import { JsonFile } from "./json-file";
 import { SetDiff, SetWording, TouchedTracks } from "./set-diff";
+import { isMutationReceipt, type MutationReceipt, type RecoveryReceipt } from "../shared/mutation-receipt";
 
 const SONG_FIELDS = ["tempo", "key", "signature", "locators", "scenes"] as const satisfies readonly SongField[];
 const TRACK_FIELDS = ["present", "name", "mute", "solo", "arm", "color"] as const satisfies readonly TrackField[];
@@ -56,6 +57,7 @@ const VersionSchema = z.object({
   summary: z.string(),
   request: z.string().optional(),
   changes: z.array(SetChangeSchema),
+  recovery: z.object({ receipts: z.array(z.custom<MutationReceipt>(isMutationReceipt)), unverified: z.boolean(), used: z.boolean().optional() }).optional(),
 });
 const SNAPSHOT_PARTS = ["takenAt", "song", "signature", "tracks", "returnTracks", "main"];
 const SnapshotSchema = z.custom<SetSnapshot>((value) => looksLikeSnapshot(value), "expected a snapshot of the Set") as z.ZodType<SetSnapshot>;
@@ -106,8 +108,8 @@ export class VersionHistory {
    * out from the changes. The first version is where the history starts: the whole snapshot, with an empty list of
    * changes, saved as the musician's.
    */
-  record(snapshot: SetSnapshot, author: VersionAuthor, summary: string | ((changes: SetChange[]) => string), request?: string): Promise<Version | null> {
-    return this.enqueue(() => this.recordNow(snapshot, author, summary, request));
+  record(snapshot: SetSnapshot, author: VersionAuthor, summary: string | ((changes: SetChange[]) => string), request?: string, recovery?: RecoveryReceipt): Promise<Version | null> {
+    return this.enqueue(() => this.recordNow(snapshot, author, summary, request, recovery));
   }
 
   /** Every version, oldest first. */
@@ -195,6 +197,18 @@ export class VersionHistory {
     });
   }
 
+  /** Reserve an inverse before dispatch, so retrying a lost response cannot apply it a second time. */
+  claimRecovery(id: string): Promise<void> {
+    return this.enqueue(async () => {
+      const entries = [...await this.entries()];
+      const { entry, index } = VersionHistory.locate(entries, id);
+      if (!entry.version.recovery || entry.version.recovery.used) throw new Error("That scoped recovery was already attempted. Review the current material and History before doing more.");
+      const version: Version = { ...entry.version, recovery: { ...entry.version.recovery, used: true } };
+      entries[index] = { version, line: JSON.stringify(version) };
+      await this.write(entries);
+    });
+  }
+
   /** Drops every version after this one, with their snapshots. */
   truncateAfter(id: string): Promise<void> {
     return this.enqueue(async () => {
@@ -213,6 +227,7 @@ export class VersionHistory {
     author: VersionAuthor,
     summary: string | ((changes: SetChange[]) => string),
     request?: string,
+    recovery?: RecoveryReceipt,
   ): Promise<Version | null> {
     let entries = await this.entries();
     let previous: SetSnapshot | null = null;
@@ -234,6 +249,7 @@ export class VersionHistory {
       changes,
     };
     if (request !== undefined) version.request = request;
+    if (recovery !== undefined) version.recovery = structuredClone(recovery);
     const keepsSnapshot = !previous || (await this.snapshotDue(entries));
     if (keepsSnapshot) await this.snapshotFile(version.id).write(snapshot);
     await this.append(entries, { version, line: JSON.stringify(version) });
@@ -373,8 +389,9 @@ export class VersionHistory {
 
   /** How the History list shows a version. */
   static item(version: Version): VersionListItem {
-    const { changes, ...rest } = version;
-    return { ...rest, tracks: TouchedTracks.names(changes), changeCount: changes.length };
+    const { changes, recovery, ...rest } = version;
+    const scopedUndo = Boolean(recovery?.receipts.length && !recovery.used && !recovery.unverified && recovery.receipts.every((receipt) => receipt.kind !== "unverified"));
+    return { ...rest, tracks: TouchedTracks.names(changes), changeCount: changes.length, scopedUndo };
   }
 
   private enqueue<R>(task: () => Promise<R>): Promise<R> {

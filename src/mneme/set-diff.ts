@@ -49,6 +49,7 @@ const SHEET_DETAIL_WORDS: ReadonlyArray<readonly [Exclude<keyof SheetDetails, "t
   ["locked", "locked parts"],
   ["credits", "credits"],
   ["notes", "notes"],
+  ["composition", "musical plan"],
 ];
 
 /** The switch every Live device has for turning it on and off. */

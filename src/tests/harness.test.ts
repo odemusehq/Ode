@@ -10,6 +10,7 @@ import { FolderTexts } from "../harness/texts";
 import { ToolLabels } from "../harness/tool-labels";
 import { Mneme } from "../mneme/artist";
 import { ConversationStore } from "../mneme/conversations";
+import { ProductionTaskStore } from "../mneme/production-task";
 import { LyricsStore } from "../mneme/lyrics-store";
 import { TempFolder, userPaths } from "../mneme/paths";
 import { PreferencesStore } from "../mneme/preferences";
@@ -81,6 +82,7 @@ async function rig(model: ScriptedModel) {
     config,
     live,
     song,
+    production: new ProductionTaskStore(song),
     lyrics: new LyricsStore(song, prefs, () => undefined),
     versions: new SongVersions(song, config.versions.snapshotEvery),
     snapshots: new SnapshotReader(live, song),

@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { VersionAuthor } from "../../shared/versions";
 import { ResultKind } from "../../shared/events";
 import { Button, ButtonVariant, Icon, IconButton, IconName, toPlainText } from "../../ui-kit";
 import { useAppState, useClient, useRequest } from "../app/hooks";
@@ -12,10 +13,13 @@ export function ResultLine() {
   const exchanges = useAppState((state) => state.exchanges);
   const busy = useAppState((state) => state.busy);
   const stream = useAppState((state) => state.stream);
+  const versions = useAppState((state) => state.versions);
   if (!result) return null;
-  const versionId = result.overtaken ? null : result.versionId;
+  const versionId = result.versionId;
+  const version = versions?.find((item) => item.id === versionId);
   const changed = result.kind === ResultKind.Change;
-  const canUndo = versionId !== null && (changed || result.kind === ResultKind.Stopped);
+  const canUndo = versionId !== null && version?.scopedUndo === true;
+  const canAgain = canUndo && changed && Boolean(version?.request);
   const because = answer?.versionId === result.versionId ? answer?.text : null;
   const duplicate = exchanges.some((exchange) => exchange.reply === result.text);
   const disabled = busy || stream !== StreamState.Open;
@@ -24,7 +28,7 @@ export function ResultLine() {
     {result.versionId && !exchanges.some((exchange) => exchange.versionId === result.versionId) && <ActualChanges versionId={result.versionId} />}
     {versionId !== null && (canUndo || changed) && <div className="now__result-actions">
       {canUndo && <Button variant={ButtonVariant.Quiet} icon={IconName.Undo} disabled={disabled} onClick={() => void client.undo(versionId)}>Undo</Button>}
-      {changed && <Button variant={ButtonVariant.Quiet} icon={IconName.Again} disabled={disabled} onClick={() => void client.again(versionId)}>Again</Button>}
+      {canAgain && <Button variant={ButtonVariant.Quiet} icon={IconName.Again} disabled={disabled} onClick={() => void client.again(versionId)}>Again</Button>}
       {changed && !because && <Button variant={ButtonVariant.Quiet} icon={IconName.Help} disabled={disabled} onClick={() => void client.askWhy(versionId)}>Why?</Button>}
     </div>}
     {because && <p className="now__why">{toPlainText(because)}</p>}
@@ -47,7 +51,7 @@ function ChangeList({ versionId }: { versionId: string }) {
   if (!data) return <p className="small muted">Reading the changes…</p>;
   const changes = data.version.changes;
   if (!changes.length) return null;
-  return <ul>{changes.map((change, index) => <li key={index}>{change.label}</li>)}</ul>;
+  return <>{data.version.author === VersionAuthor.Observed && <p className="small muted">Observed during this request; this may include your edits.</p>}<ul>{changes.map((change, index) => <li key={index}>{change.label}</li>)}</ul></>;
 }
 
 /** Brief feedback stays beside the composer while the conversation above scrolls. */

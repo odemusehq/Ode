@@ -11,6 +11,9 @@ import type { OdeRequest, RequestLifecycle } from "../harness/session";
 import type { SelectionState } from "./selection";
 import type { SnapshotReader } from "./snapshot-reader";
 import { VersionRecorder, type RecordedVersion } from "./version-recorder";
+import type { MutationReceipt } from "../shared/mutation-receipt";
+import type { ProductionTaskStore } from "../mneme/production-task";
+import { markPendingObservation } from "../mneme/pending-observation";
 
 export interface RequestContextDeps {
   config: OdeConfig;
@@ -23,6 +26,7 @@ export interface RequestContextDeps {
   prefs: PreferencesStore;
   selection: SelectionState;
   emit: (event: UiEvent) => void;
+  production?: Pick<ProductionTaskStore, "read">;
 }
 
 const MODE_NOTES: Record<Mode, string> = {
@@ -43,9 +47,19 @@ export class RequestContext implements RequestLifecycle {
 
   constructor(private readonly deps: RequestContextDeps) {}
 
+  /** Persist uncertainty before capture, so a closed/disconnected host cannot turn it into claimed hand edits. */
+  async recover(interruptedRequests: readonly string[] = []): Promise<void> {
+    if (interruptedRequests.length) await markPendingObservation(this.deps.song.dataDir, interruptedRequests);
+    try { await this.flushPending(); }
+    catch (error) {
+      this.deps.emit({ type: "error", message: `Interrupted changes remain unverified. Ode will inspect them before the next request: ${error instanceof Error ? error.message : String(error)}` });
+    }
+  }
+
   /** Throws "Ode can't read the Set: …" when the Set is unreadable; the history then stays as it is. */
   async prepare(request: OdeRequest): Promise<{ hiddenContext: string }> {
     if (request.reply) return { hiddenContext: await this.replyContext(request.reply.versionId) };
+    await this.flushPending();
     const song = this.deps.song.songId;
     const since = this.lastRequestAt.get(song) ?? (await this.lastOdeVersionTime());
     const recorded: RecordedVersion = request.again
@@ -54,6 +68,7 @@ export class RequestContext implements RequestLifecycle {
     this.lastRequestAt.set(song, recorded.version?.time ?? new Date().toISOString());
     const parts = [
       await this.deps.summary.build(),
+      await this.productionPart(),
       MODE_NOTES[await this.deps.prefs.mode()],
       this.selectionPart(),
       request.again ? await this.againPart() : await this.handEditsPart(recorded, since),
@@ -62,12 +77,31 @@ export class RequestContext implements RequestLifecycle {
     return { hiddenContext: RequestContext.wrap(parts) };
   }
 
+  private async productionPart(): Promise<string> {
+    const task = await this.deps.production?.read();
+    if (!task) return "";
+    const short = (text: string, size: number) => size <= 0 ? "" : text.length > size ? `${text.slice(0, size - 1)}…` : text;
+    const limit = this.deps.config.memory.mapMaxChars;
+    const footer = "\nRead production_task_read for the complete plan and evidence. Inspect current targets; never replay saved operations.";
+    const header = `Saved production checkpoint (plan, not proof): ${task.id} · revision ${task.revision} · ${task.status}\nGoal: ${task.goal}\n`;
+    const brief = `Brief: ${short(task.brief, Math.min(1200, Math.max(0, Math.floor(limit / 6))))}\n`;
+    const stepLimit = Math.max(0, Math.floor((limit - header.length - brief.length - footer.length) / task.steps.length) - 1);
+    const steps = task.steps.map((step) => {
+      const refs = step.evidence.slice(0, 2).map((evidence) => evidence.kind === "version" ? `version:${evidence.versionId}` : `${evidence.kind}:${evidence.exchangeId}${evidence.kind === "tool" ? `/${evidence.toolCallId}` : ""}`)
+        .filter((ref) => ref.length <= 150);
+      return short(`${step.id} · ${step.status} · ${short(step.action, 120)}${step.blocker ? ` · blocked: ${short(step.blocker, 100)}` : ""}` +
+        `${step.targetTags.length ? ` · tags: ${step.targetTags.slice(0, 3).map((tag) => short(tag, 40)).join(", ")}` : ""}${refs.length ? ` · ${refs.join(", ")}` : ""}`, stepLimit);
+    }).join("\n");
+    const text = header + brief + steps;
+    return short(text, Math.max(0, limit - footer.length)) + footer.slice(0, limit);
+  }
+
   /**
    * After the turn. A reply (Why?) emits only its answer. Otherwise what Ode changed is saved as a
    * version and the result line says what changed; when the request was stopped, what it changed so far is saved
    * too, so Undo works, and the line is "Stopped: …".
    */
-  async finish(request: OdeRequest, reply: string, stopped: boolean, mutations = 1): Promise<void | { versionId: string | null }> {
+  async finish(request: OdeRequest, reply: string, stopped: boolean, mutations = 1, receipts: readonly MutationReceipt[] = []): Promise<void | { versionId: string | null }> {
     if (request.reply) {
       const answer = reply.trim();
       if (!stopped && answer) this.deps.emit({ type: "answer", versionId: request.reply.versionId, text: answer });
@@ -78,22 +112,24 @@ export class RequestContext implements RequestLifecycle {
       if (reply.trim()) this.deps.emit({ type: "result", text: reply.trim(), versionId: null, kind: ResultKind.Reply });
       return;
     }
-    const versionId = stopped ? await this.finishStopped(request) : await this.finishChange(request, reply.trim());
+    let versionId: string | null;
+    try { versionId = stopped ? await this.finishStopped(request, receipts) : await this.finishChange(request, reply.trim(), receipts); }
+    catch (error) { await markPendingObservation(this.deps.song.dataDir, [request.text]); throw error; }
     await this.deps.selection.refresh().catch(() => undefined);
     return { versionId };
   }
 
-  private async finishChange(request: OdeRequest, reply: string): Promise<string | null> {
-    const recorded = await this.record(() => this.deps.recorder.odeChange(RequestContext.firstLine(reply), request.text));
+  private async finishChange(request: OdeRequest, reply: string, receipts: readonly MutationReceipt[]): Promise<string | null> {
+    const recorded = await this.record(() => this.deps.recorder.odeChange(RequestContext.firstLine(reply), request.text, receipts));
     const version = recorded?.version ?? null;
     const text = reply || version?.summary || "";
     if (text) this.deps.emit({ type: "result", text, versionId: version?.id ?? null, kind: version ? ResultKind.Change : ResultKind.Reply });
     return version?.id ?? null;
   }
 
-  private async finishStopped(request: OdeRequest): Promise<string | null> {
+  private async finishStopped(request: OdeRequest, receipts: readonly MutationReceipt[]): Promise<string | null> {
     const { STOPPED } = VersionRecorder;
-    const recorded = await this.record(() => this.deps.recorder.odeCutShort(STOPPED, request.text));
+    const recorded = await this.record(() => this.deps.recorder.odeCutShort(STOPPED, request.text, receipts));
     const version = recorded?.version ?? null;
     const text = version ? version.summary : recorded ? `${STOPPED}: the Set stayed the same` : `${STOPPED}.`;
     this.deps.emit({ type: "result", text, versionId: version?.id ?? null, kind: ResultKind.Stopped });
@@ -103,6 +139,11 @@ export class RequestContext implements RequestLifecycle {
   /** Recording failures propagate so the saved conversation cannot claim a complete receipt. */
   private record(save: () => Promise<RecordedVersion>): Promise<RecordedVersion> {
     return save();
+  }
+
+  /** Before ordinary hand edits are captured, retain the uncertain interval under its actual provenance. */
+  private async flushPending(): Promise<void> {
+    await this.deps.recorder.recoverPending(this.deps.song.dataDir);
   }
 
   /** When Ode last changed the song, as its history keeps it: the first request after Live starts again reads from there. */
@@ -153,7 +194,7 @@ export class RequestContext implements RequestLifecycle {
   private async againPart(): Promise<string> {
     const last = await this.deps.versions.history.latestBy(VersionAuthor.Ode);
     const previous = last ? ` ("${last.summary}")` : "";
-    return `Again: the musician wants another take of this request. The Set is back to how it was before your last take${previous}. Make a clearly different take, in place.`;
+    return `Again: the musician wants another take of this request. The verified, scoped changes from your last take${previous} have been undone. Other edits remain; read the current material before making a clearly different take in place.`;
   }
 
   private static wrap(parts: string[]): string {

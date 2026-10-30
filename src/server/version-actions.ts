@@ -11,6 +11,9 @@ import { RestoreRunner, type PutBack } from "./restore-runner";
 import type { SelectionState } from "./selection";
 import { SetReadError } from "./snapshot-reader";
 import { VersionRecorder } from "./version-recorder";
+import type { MutationReceipt, VerifiedMutationReceipt } from "../shared/mutation-receipt";
+import type { ExtensionOpResults } from "../shared/live-ops";
+import { markPendingObservation, pendingObservationFile } from "../mneme/pending-observation";
 
 /** The musician's request is refused for now; the message says why and what to do. */
 export class RefusedError extends Error {}
@@ -18,7 +21,7 @@ export class RefusedError extends Error {}
 export interface VersionActionsDeps {
   live: LiveConnections;
   song: SongStore;
-  lyrics: Pick<LyricsStore, "replace">;
+  lyrics: Pick<LyricsStore, "replace"> & Partial<Pick<LyricsStore, "revert">>;
   versions: SongVersions;
   recorder: VersionRecorder;
   sessions: SessionManager;
@@ -26,7 +29,7 @@ export interface VersionActionsDeps {
   emit: (event: UiEvent) => void;
 }
 
-/** The actions on a change by Ode; each applies only while that change is the newest version. */
+/** Questions about a result; editing recovery uses scoped writer receipts. */
 enum OdeAction {
   Undo = "undo",
   Again = "again",
@@ -55,12 +58,12 @@ const STOPPED_PART_WAY = "Restore stopped part-way";
 /** What Ode is asked for Why?; the hidden context says which change and how to answer. */
 const WHY_REQUEST = "Why?";
 
-/** What History, Undo, Again and Why? do with the versions of the whole Set. */
+/** History restores observed state; Undo and Again invert only writes with guarded scoped receipts. */
 export class VersionActions {
   private readonly runner: RestoreRunner;
 
   constructor(private readonly deps: VersionActionsDeps) {
-    this.runner = new RestoreRunner(deps.live, deps.song, deps.lyrics);
+    this.runner = new RestoreRunner(deps.live, deps.song, deps.lyrics, () => deps.recorder.readCurrent());
   }
 
   private get history() {
@@ -83,6 +86,7 @@ export class VersionActions {
   async check(): Promise<VersionListItem | null> {
     if (this.session.isBusy) return null;
     try {
+      await this.deps.recorder.recoverPending(this.deps.song.dataDir);
       const recorded = await this.deps.recorder.handEdits();
       return recorded.version ? await this.deps.recorder.listItem(recorded.version) : null;
     } catch (error) {
@@ -109,49 +113,81 @@ export class VersionActions {
   }
 
   /**
-   * Back to the version before that change by Ode, without asking. The hand edits are saved first; RefusedError
-   * (without a result line) when a newer version has come since or the change is the musician's.
+   * Undo only this change's recorded writes. Later hand edits are saved and preserved by writer guards/merges;
+   * versions without scoped receipts are refused rather than rolling back the whole observed Set.
    */
   async undo(versionId: string): Promise<RestoreResult> {
     const result = await this.session.exclusive(async () => {
-      const recorded = await this.deps.recorder.handEdits();
-      const { latest, previous } = await this.changeToActOn(versionId, OdeAction.Undo);
+      await this.deps.recorder.recoverPending(this.deps.song.dataDir);
+      await this.deps.recorder.handEdits();
+      const latest = await this.scopedChange(versionId);
       this.deps.emit({ type: "progress", text: `Undoing: ${latest.summary}` });
-      const target = await this.history.snapshotAt(previous.id);
-      const outcome = await this.runner.putBack(recorded.snapshot, target);
-      if (!outcome.complete || outcome.skipped.length > 0) return this.stoppedPartWay(outcome);
-      const verified = await this.verifyRestore(target, `Undone: ${latest.summary}`, `Undo ${latest.id}`);
-      if (!verified.complete) return { restored: false, skipped: verified.skipped };
-      this.deps.emit({ type: "result", text: `Undone: ${latest.summary}${VersionActions.notRestored(outcome.skipped)}`, versionId: null, kind: ResultKind.Undo });
-      return { restored: true, skipped: outcome.skipped };
+      return this.undoScoped(latest);
     });
     await this.refreshSuggestions();
     return result;
   }
 
   /**
-   * Another take of that change by Ode: puts the Set back to the version before it (keeping the history),
-   * then runs the same request again. The put-back stays out of the hand edits, so Ode's next version
-   * shows the first take turning into the second. Stop pressed while the Set is put back cancels the retake.
+   * Another take after a successful scoped inverse. Other edits stay in place; a conflict or Stop cancels the retake.
    */
   async again(versionId: string): Promise<void> {
     await this.session.exclusive(async (stopped) => {
-      const recorded = await this.deps.recorder.handEdits();
-      const { latest, previous } = await this.changeToActOn(versionId, OdeAction.Again);
+      await this.deps.recorder.recoverPending(this.deps.song.dataDir);
+      await this.deps.recorder.handEdits();
+      const latest = await this.scopedChange(versionId);
       if (!latest.request) throw new RefusedError("Again needs the request behind Ode's last change, and this change was saved without it.");
-      this.deps.emit({ type: "progress", text: "Going back to before the last take" });
-      const outcome = await this.runner.putBack(recorded.snapshot, await this.history.snapshotAt(previous.id));
-      if (!outcome.complete || outcome.skipped.length > 0) {
-        await this.stoppedPartWay(outcome);
-        throw new RefusedError(outcome.skipped.join(" "));
-      }
-      if (stopped.aborted) {
-        await this.keepStoppedPutBack(latest.request);
-        return;
-      }
-      if (outcome.skipped.length > 0) this.deps.emit({ type: "progress", text: `Skipped while putting the Set back: ${outcome.skipped.join(", ")}` });
+      const outcome = await this.undoScoped(latest);
+      if (!outcome.restored) throw new RefusedError(outcome.skipped.join(" "));
+      if (stopped.aborted) return;
       this.session.sendFirst({ text: latest.request, again: true });
     });
+  }
+
+  /** Scope, identity and current-value guards replace whole-Set rollback, including after later hand edits. */
+  private async scopedChange(id: string): Promise<Version> {
+    const version = await this.history.get(id);
+    if (!version.recovery?.receipts.length || version.recovery.used || version.recovery.unverified || version.recovery.receipts.some((receipt) => receipt.kind === "unverified")) {
+      throw new RefusedError("This change includes operations without verified scoped recovery. Use History to review and explicitly restore a version; automatic Undo would risk your hand edits.");
+    }
+    return version;
+  }
+
+  private async undoScoped(version: Version): Promise<RestoreResult> {
+    await this.history.claimRecovery(version.id);
+    this.deps.emit({ type: "version", version: this.deps.recorder.listItem(await this.history.get(version.id)) });
+    await markPendingObservation(this.deps.song.dataDir, [`Undo ${version.id}`]);
+    const applied: MutationReceipt[] = [];
+    const skipped: string[] = [];
+    for (const receipt of [...version.recovery!.receipts].reverse() as VerifiedMutationReceipt[]) {
+      try {
+        if (receipt.kind === "midi-notes") {
+          const capability = await this.deps.live.extension.call<ExtensionOpResults["midi_clip_get_notes"]>("midi_clip_get_notes", { clip: receipt.clip, recoveryToken: receipt.token });
+          if (!capability.guardedRecovery) throw new Error("The installed extension does not support guarded MIDI recovery; its notes were kept.");
+          const result = await this.deps.live.extension.call<ExtensionOpResults["midi_clip_set_notes"]>("midi_clip_set_notes", {
+            clip: receipt.clip, notes: receipt.before, expected: { token: receipt.token, notes: receipt.after },
+          });
+          if (!result.__odeReceipts?.length) throw new Error("The installed extension did not return a guarded MIDI recovery receipt.");
+          applied.push(...result.__odeReceipts);
+        } else if (receipt.kind === "lyrics") {
+          if (!this.deps.lyrics.revert) throw new Error("Scoped lyric recovery is unavailable.");
+          const result = await this.deps.lyrics.revert(receipt);
+          applied.push(result.receipt);
+          if (result.conflicts.length) skipped.push(`The musician's later lyric edits were kept on lines ${result.conflicts.join(", ")}.`);
+        } else {
+          const result = await this.deps.song.restoreFields(receipt.after, receipt.before, receipt.songId, receipt.afterAbsent, receipt.beforeAbsent);
+          applied.push(...result.__odeReceipts);
+        }
+      } catch (error) {
+        skipped.push(error instanceof Error ? error.message : String(error));
+      }
+      if (skipped.length) break;
+    }
+    const text = skipped.length ? `Undo kept your later edits: ${skipped.join(" ")}` : `Undone: ${version.summary}`;
+    const recorded = await this.deps.recorder.odeChange(text, `Undo ${version.id}`, applied);
+    await pendingObservationFile(this.deps.song.dataDir).write(null);
+    this.deps.emit({ type: "result", text, versionId: recorded.version?.id ?? null, kind: skipped.length ? ResultKind.Stopped : ResultKind.Undo });
+    return { restored: skipped.length === 0, skipped };
   }
 
   /**
@@ -166,10 +202,14 @@ export class VersionActions {
   private async restoreTo(id: string, resultLine: (version: Version) => string): Promise<RestoreResult> {
     const result = await this.session.exclusive(async () => {
       const version = await this.history.get(id);
-      this.deps.emit({ type: "progress", text: `Going back to the version from ${VersionActions.clock(version.time)}` });
+      this.deps.emit({ type: "progress", text: `Restoring the version from ${VersionActions.clock(version.time)}. Leave the Set and lyrics alone while it applies.` });
+      await this.deps.recorder.recoverPending(this.deps.song.dataDir);
       const recorded = await this.deps.recorder.handEdits();
       const target = await this.history.snapshotAt(id);
-      const outcome = await this.runner.putBack(recorded.snapshot, target);
+      await markPendingObservation(this.deps.song.dataDir, [`Restore ${id}`]);
+      let outcome: PutBack;
+      try { outcome = await this.runner.putBack(recorded.snapshot, target); }
+      catch (error) { return this.stoppedPartWay({ complete: false, skipped: [error instanceof Error ? error.message : String(error)] }); }
       if (!outcome.complete || outcome.skipped.length > 0) return this.stoppedPartWay(outcome);
       const verified = await this.verifyRestore(target, resultLine(version), `Restore ${id}`);
       if (!verified.complete) return { restored: false, skipped: verified.skipped };
@@ -183,6 +223,7 @@ export class VersionActions {
   /** Verify the supported snapshot fields and keep the actual outcome as a new recovery version. */
   private async verifyRestore(target: SetSnapshot, summary: string, request: string): Promise<PutBack> {
     const actual = await this.deps.recorder.odeChange(summary, request);
+    await pendingObservationFile(this.deps.song.dataDir).write(null);
     const expected = structuredClone(target);
     // Artist/song settings intentionally survive restoring musical material.
     if (expected.sheet && actual.snapshot.sheet) expected.sheet.settings = actual.snapshot.sheet.settings;
@@ -199,6 +240,7 @@ export class VersionActions {
    */
   private async stoppedPartWay(outcome: PutBack): Promise<RestoreResult> {
     const recorded = await this.deps.recorder.odeCutShort(STOPPED_PART_WAY).catch(() => null);
+    if (recorded) await pendingObservationFile(this.deps.song.dataDir).write(null);
     const version = recorded?.version;
     if (version) this.deps.emit({ type: "result", text: version.summary, versionId: version.id, kind: ResultKind.Stopped });
     return { restored: false, skipped: outcome.skipped };
@@ -224,7 +266,7 @@ export class VersionActions {
     const recent = await this.history.tail(2);
     const latest = recent.at(-1);
     const previous = recent.length === 2 ? recent[0] : undefined;
-    if (latest?.author === VersionAuthor.Ode && previous) {
+    if ((latest?.author === VersionAuthor.Ode || latest?.author === VersionAuthor.Observed && latest.recovery) && previous) {
       if (latest.id === versionId) return { latest, previous };
       throw new RefusedError(NEWER_CHANGE);
     }

@@ -8,6 +8,7 @@ import { musicTools } from "./music";
 import { audioTools } from "./audio";
 import { mediaTools } from "./media";
 import { songTools } from "./song";
+import { isMutationReceipt, type MutationReceipt } from "../shared/mutation-receipt";
 
 /** Who a tool list is for: the main agent gets every tool, subagents the read-only ones. */
 export type AgentKind = "main" | "subagent";
@@ -16,6 +17,9 @@ export type AgentKind = "main" | "subagent";
 export interface ToolOutcome {
   ok: boolean;
   text: string;
+  receipts?: MutationReceipt[];
+  /** Canonical, schema-validated arguments actually executed; raw model extras are not evidence. */
+  input?: unknown;
 }
 
 const GROUPS: readonly (readonly AnyTool[])[] = [liveTools, musicTools, audioTools, mediaTools, songTools];
@@ -68,7 +72,7 @@ export class ToolRegistry {
   }
 
   /** Runs a tool with the model's input; a failure comes back as text for the model to read. */
-  async run(name: string, input: unknown, signal?: AbortSignal): Promise<ToolOutcome> {
+  async run(name: string, input: unknown, signal?: AbortSignal, execution: { exchangeId?: string; toolCallId?: string } = {}): Promise<ToolOutcome> {
     signal?.throwIfAborted();
     const definition = this.byName.get(name);
     if (!definition) return { ok: false, text: `Ode's tools are named in tool search; ${name} is unknown.` };
@@ -92,9 +96,30 @@ export class ToolRegistry {
       signal?.throwIfAborted();
       const extension = this.ctx.live.extension;
       const live = signal ? { extension: { call: <R>(op: string, args: unknown) => extension.call<R>(op, args, signal) } } : this.ctx.live;
-      return { ok: true, text: JSON.stringify((await definition.run(parsed.data, { ...this.ctx, live, signal })) ?? { done: true }) };
+      const result = (await definition.run(parsed.data, { ...this.ctx, live, signal, ...execution })) ?? { done: true };
+      const receipts: MutationReceipt[] = [];
+      const covered = new Set(["midi_clip_set_notes", "lyrics_write", "lead_sheet_update", "hook_retain", "release_prepare"]);
+      const clean = (value: unknown): unknown => {
+        if (Array.isArray(value)) return value.map(clean);
+        if (!value || typeof value !== "object") return value;
+        const object = value as Record<string, unknown>;
+        if ((covered.has(name) || name === "apply_as_one_undo_step") && Array.isArray(object.__odeReceipts)) receipts.push(...object.__odeReceipts.filter(isMutationReceipt));
+        return Object.fromEntries(Object.entries(object).filter(([key]) => key !== "__odeReceipts").map(([key, item]) => [key, clean(item)]));
+      };
+      const cleaned = clean(result);
+      const unverified = (tool: string) => receipts.push({ kind: "unverified", tool, reason: "The SDK operation has no scoped writer receipt." });
+      if (name === "apply_as_one_undo_step") {
+        const calls = (parsed.data as { calls: { op: string }[] }).calls;
+        for (const call of calls) if (this.byName.get(call.op)?.changes === "set" && !covered.has(call.op)) unverified(call.op);
+        const expectedReceipts = calls.filter((call) => covered.has(call.op)).length;
+        if (receipts.filter((receipt) => receipt.kind !== "unverified").length < expectedReceipts) unverified(name);
+      } else if (definition.changes === "set" && !covered.has(name)) unverified(name);
+      if (covered.has(name) && name !== "release_prepare" && !Array.isArray((result as Record<string, unknown>).__odeReceipts)) unverified(name);
+      return { ok: true, text: JSON.stringify(cleaned), input: parsed.data, ...(receipts.length ? { receipts } : {}) };
     } catch (error) {
-      return { ok: false, text: error instanceof Error ? error.message : String(error) };
+      return { ok: false, text: error instanceof Error ? error.message : String(error), input: parsed.data,
+        ...((definition.changes === "set" || name === "lyrics_write" || name === "lead_sheet_update" || name === "hook_retain" || name === "release_prepare" && Array.isArray((parsed.data as Record<string, unknown>).credits))
+          ? { receipts: [{ kind: "unverified" as const, tool: name, reason: "The operation failed; any partial write has unknown scope." }] } : {}) };
     }
   }
 

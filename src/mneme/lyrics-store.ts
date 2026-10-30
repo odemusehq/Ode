@@ -7,6 +7,7 @@ import { VersionAuthor } from "../shared/versions";
 import { LyricsText } from "./lyrics-text";
 import type { PreferencesStore } from "./preferences";
 import type { SongStore } from "./song-store";
+import type { MutationReceipt } from "../shared/mutation-receipt";
 
 /** Ode saved lyrics edited from a revision whose text is gone from the store, so the merge is missing its base. */
 export class StaleLyricsError extends Error {}
@@ -115,7 +116,7 @@ export class LyricsStore {
    * they save, the stored ones when Ode saves. When the base revision's text is unknown, a save by the musician is
    * stored as sent and a save by Ode is refused, so Ode reads the lyrics again first.
    */
-  write(text: string, baseRevision: number, author: VersionAuthor, songId?: string): Promise<LyricsSaved> {
+  write(text: string, baseRevision: number, author: VersionAuthor, songId?: string): Promise<LyricsSaved & { receipt?: MutationReceipt }> {
     return this.enqueue(async () => {
       const song = this.song.songId;
       if (songId !== undefined && songId !== song) {
@@ -124,8 +125,12 @@ export class LyricsStore {
       const saved = LyricsText.normalize(text);
       const texts = this.texts();
       let conflicts: number[] = [];
+      let before = "";
+      let beforeRevision = 0;
       // Linked copies (sections that share a name) stay identical: the copy the save changed reaches the others.
       const sheet = await this.song.saveLyrics((current) => {
+        before = current.lyrics;
+        beforeRevision = current.lyricsRevision;
         texts.set(current.lyricsRevision, current.lyrics);
         if (baseRevision === current.lyricsRevision) return LyricsSections.unifyLinked(current.lyrics, saved);
         const base = texts.get(baseRevision);
@@ -140,7 +145,9 @@ export class LyricsStore {
         conflicts = merged.conflicts;
         return LyricsSections.unifyLinked(base, merged.lines.join("\n"));
       });
-      return { ...(await this.stored(sheet, song, texts)), conflicts };
+      return { ...(await this.stored(sheet, song, texts)), conflicts, ...(author === VersionAuthor.Ode ? {
+        receipt: { kind: "lyrics" as const, songId: song, before, after: sheet.lyrics, beforeRevision, afterRevision: sheet.lyricsRevision },
+      } : {}) };
     });
   }
 
@@ -160,6 +167,27 @@ export class LyricsStore {
       const song = this.song.songId;
       const texts = this.texts();
       return this.stored(await this.song.saveLyrics(() => LyricsText.normalize(text)), song, texts);
+    });
+  }
+
+  /** Invert only this write; later musician lines win when they overlap the change. */
+  revert(receipt: Extract<MutationReceipt, { kind: "lyrics" }>): Promise<LyricsSaved & { receipt: MutationReceipt }> {
+    return this.enqueue(async () => {
+      const songId = this.song.songId;
+      if (receipt.songId !== songId) throw new LyricsForAnotherSongError("The lyric change belongs to another song.");
+      const texts = this.texts();
+      let before = "";
+      let beforeRevision = 0;
+      let conflicts: number[] = [];
+      const sheet = await this.song.saveLyrics((current) => {
+        before = current.lyrics;
+        beforeRevision = current.lyricsRevision;
+        const merged = LineMerge.run(LyricsText.lines(receipt.after), LyricsText.lines(receipt.before), LyricsText.lines(current.lyrics), Keep.Stored);
+        conflicts = merged.conflicts;
+        return LyricsSections.unifyLinked(receipt.after, merged.lines.join("\n"));
+      });
+      return { ...(await this.stored(sheet, songId, texts)), conflicts,
+        receipt: { kind: "lyrics", songId, before, after: sheet.lyrics, beforeRevision, afterRevision: sheet.lyricsRevision } };
     });
   }
 

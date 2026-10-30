@@ -1,3 +1,4 @@
+import { RequestIdentityError } from "../mneme/conversations";
 import { ResultKind } from "../shared/events";
 import { bodyLimit } from "hono/body-limit";
 import { LocalAudioFiles, MAX_AUDIO_UPLOAD_BYTES } from "../live/local-audio-files";
@@ -56,7 +57,7 @@ export interface ServerDeps {
   ui: UiFiles;
 }
 
-const TextSchema = z.object({ text: z.string().trim().min(1) });
+const TextSchema = z.object({ text: z.string().trim().min(1), requestId: z.uuid().optional(), songId: z.string().min(1).optional() });
 const DecisionSchema = z.object({ decision: z.enum(["allow", "deny"]) });
 const ChoiceSchema = z.object({ choice: z.string() });
 const NameSchema = z.object({ name: z.string() });
@@ -235,7 +236,9 @@ export class OdeServer {
     app.post(API.chat, async (c) => {
       const parsed = TextSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: "Send { text } with what to ask Ode." }, 400);
-      await sessions.current.accept({ text: parsed.data.text });
+      if (parsed.data.songId && parsed.data.songId !== song.songId) return c.json({ error: "The open song changed. Your message stayed in the composer; send it again in the intended song." }, 409);
+      try { await sessions.current.accept(parsed.data); }
+      catch (error) { if (error instanceof RequestIdentityError) return c.json({ error: error.message }, 409); throw error; }
       return c.json({ ok: true });
     });
 
@@ -268,8 +271,10 @@ export class OdeServer {
       }
     });
 
-    app.post(API.stop, (c) => {
-      sessions.current.stop();
+    app.post(API.stop, async (c) => {
+      const parsed = z.object({ requestIds: z.array(z.uuid()).max(256).optional() }).safeParse(await OdeServer.body(c) ?? {});
+      if (!parsed.success) return c.json({ error: "Send requestIds as an optional list of request ids." }, 400);
+      sessions.current.stop(parsed.data.requestIds);
       return c.json({ ok: true });
     });
 

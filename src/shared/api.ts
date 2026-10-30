@@ -41,6 +41,8 @@ export const CREDITS_FILE = "credits.json";
 export const COVER_CHOICE = /^cover-(\d+)\.png$/;
 
 export interface ChatRequest {
+  songId?: string;
+  requestId?: string;
   text: string;
 }
 

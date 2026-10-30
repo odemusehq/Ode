@@ -13,6 +13,8 @@ export const ExchangeSchema = z.object({
 });
 export type Exchange = z.infer<typeof ExchangeSchema>;
 
+export class RequestIdentityError extends Error {}
+
 /** The complete song conversation on disk, with a bounded window for the model. */
 export class ConversationLog {
   constructor(readonly id: string, private readonly file: JsonFile<Exchange[]>, private readonly keep: number) {}
@@ -30,9 +32,22 @@ export class ConversationLog {
   }
 
   async begin(request: string): Promise<string> {
-    const id = randomUUID();
-    await this.file.update((entries) => [...entries, { id, request, reply: "", at: new Date().toISOString(), status: "running" }]);
-    return id;
+    return (await this.beginOnce(request)).id;
+  }
+
+  /** The same accepted request never starts twice, including after a lost HTTP acknowledgement or restart. */
+  async beginOnce(request: string, requestId: string = randomUUID()): Promise<{ id: string; created: boolean }> {
+    let created = false;
+    await this.file.update((entries) => {
+      const existing = entries.find((entry) => entry.id === requestId);
+      if (existing) {
+        if (existing.request !== request) throw new RequestIdentityError("This request id already belongs to different words. Send the edited request with a new id.");
+        return entries;
+      }
+      created = true;
+      return [...entries, { id: requestId, request, reply: "", at: new Date().toISOString(), status: "running" }];
+    });
+    return { id: requestId, created };
   }
 
   async finish(id: string, reply: string, status: ConversationExchange["status"], versionId?: string | null): Promise<void> {
@@ -60,9 +75,13 @@ export class ConversationLog {
 
 /** Every song keeps its own transcript; settings and artist memory are separate. */
 export class ConversationStore {
+  private readonly logs = new Map<string, ConversationLog>();
+
   constructor(private readonly folder: string, private readonly keep: number) {}
   log(key: string): ConversationLog {
     const id = createHash("sha256").update(key).digest("hex").slice(0, 32);
-    return new ConversationLog(id, new JsonFile(join(this.folder, `${id}.json`), z.array(ExchangeSchema), () => []), this.keep);
+    const log = this.logs.get(id) ?? new ConversationLog(id, new JsonFile(join(this.folder, `${id}.json`), z.array(ExchangeSchema), () => []), this.keep);
+    this.logs.set(id, log);
+    return log;
   }
 }

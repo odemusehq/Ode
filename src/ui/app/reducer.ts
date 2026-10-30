@@ -120,7 +120,7 @@ function setStep(state: AppState, id: string, status: Step["status"]): AppState 
  */
 function addVersion(state: AppState, version: VersionListItem): AppState {
   const known = state.versions?.some((item) => item.id === version.id) ?? false;
-  const versions = state.versions ? upsertVersion(state.versions, version) : null;
+  const versions = upsertVersion(state.versions ?? [], version);
   const { result } = state;
   const overtakes = !known && version.author === VersionAuthor.Musician && result !== null && result.versionId !== version.id;
   return { ...state, versions, result: overtakes && result ? { ...result, overtaken: true } : result };

@@ -45,12 +45,14 @@ const MENU_ITEMS: readonly MenuItem<VersionAction>[] = [
 const AUTHOR_LABELS: Record<VersionAuthor, string> = {
   [VersionAuthor.Musician]: "You",
   [VersionAuthor.Ode]: "Ode",
+  [VersionAuthor.Observed]: "Observed during Ode’s work",
 };
 
 /** Each author's colour from the brand: cyan for the musician, violet for Ode. */
 const AUTHOR_TONES: Record<VersionAuthor, Tone> = {
   [VersionAuthor.Musician]: Tone.Info,
   [VersionAuthor.Ode]: Tone.Accent,
+  [VersionAuthor.Observed]: Tone.Neutral,
 };
 
 const AUTHOR_SEPARATOR = " · ";
