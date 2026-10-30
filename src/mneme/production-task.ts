@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
-import { ProductionTaskSchema, ProductionTaskUpdateSchema, type ProductionEvidence, type ProductionStep, type ProductionTask, type ProductionTaskUpdate } from "../shared/production-task";
+import { ProductionTaskSchema, ProductionTaskUpdateSchema, ProductionTaskPatchSchema, type ProductionEvidence, type ProductionStep, type ProductionTask, type ProductionTaskUpdate, type ProductionTaskPatch } from "../shared/production-task";
 import { JsonFile } from "./json-file";
 import type { SongStore } from "./song-store";
 
@@ -32,8 +32,38 @@ export class ProductionTaskStore {
   update(input: ProductionTaskUpdate): Promise<ProductionTask> {
     const song = this.current();
     const update = ProductionTaskUpdateSchema.parse(input);
+    return this.revise(song, () => update);
+  }
+
+  /** Revise selected existing fields without copying the remaining plan or its evidence through the model. */
+  patch(input: ProductionTaskPatch): Promise<ProductionTask> {
+    const song = this.current();
+    const patch = ProductionTaskPatchSchema.parse(input);
+    return this.revise(song, (previous) => {
+      if (!previous) throw new Error("Read or create the production task before patching it.");
+      const changes = new Map((patch.steps ?? []).map((step) => [step.id, step]));
+      if (changes.size !== (patch.steps?.length ?? 0)) throw new Error("Patch each production step once.");
+      if ([...changes.keys()].some((id) => !previous.steps.some((step) => step.id === id))) throw new Error("That production step belongs to another plan. Read the current step ids.");
+      const steps = previous.steps.map((step) => {
+        const change = changes.get(step.id);
+        if (!change) return step;
+        const next = { ...step, ...change };
+        if (next.blocker === null) delete next.blocker;
+        return next;
+      });
+      return ProductionTaskUpdateSchema.parse({
+        taskId: patch.taskId, baseRevision: patch.baseRevision,
+        goal: patch.goal ?? previous.goal, brief: patch.brief ?? previous.brief, steps: [...steps, ...(patch.appendSteps ?? [])],
+        blocker: patch.blocker === undefined ? previous.blocker : patch.blocker,
+        exchangeId: patch.exchangeId, versionId: patch.versionId,
+      });
+    });
+  }
+
+  private revise(song: SongTask, makeUpdate: (previous: ProductionTask | null) => ReturnType<typeof ProductionTaskUpdateSchema.parse>): Promise<ProductionTask> {
     return this.enqueue(song, async () => {
       const previous = await song.file.read();
+      const update = makeUpdate(previous);
       if (update.baseRevision !== (previous?.revision ?? 0) || update.taskId !== previous?.id) {
         throw new Error("The production task or revision changed. Read production_task_read and revise the current plan.");
       }
@@ -43,6 +73,9 @@ export class ProductionTaskStore {
         if (step.id && !known.has(step.id)) throw new Error("That production step belongs to another plan. Leave id out for a new step.");
         return { ...step, id: step.id ?? randomUUID() };
       });
+      if (!replacing && previous?.steps.some((step) => step.status !== "complete" && !steps.some((next) => next.id === step.id))) {
+        throw new Error("Unfinished production steps must be retained. Keep their ids or explicitly replace the task to archive the previous scope.");
+      }
       if (new Set(steps.map((step) => step.id)).size !== steps.length) throw new Error("Each production step needs its own id.");
       if (steps.filter((step) => step.status === "working").length > 1) throw new Error("Keep one current production step; independent drafts can use read-only subagents.");
       if (update.blocker && steps.every((step) => step.status === "complete")) throw new Error("A production task with a blocker is unfinished. Keep the required action as an unfinished step, or remove the resolved blocker.");
@@ -53,11 +86,16 @@ export class ProductionTaskStore {
         if (step.evidence.length === 0) throw new Error("A completed production step needs cited evidence from the actual work, not a tool success flag.");
         const old = known.get(step.id);
         if (old?.status === "complete" && JSON.stringify(old) === JSON.stringify(step)) continue;
+        const covered = new Set<string>();
         for (const evidence of step.evidence) {
-          if (!this.verifyEvidence || !(await this.verifyEvidence(evidence, song.songId, step))) {
+          // Each citation must establish its own explicit subset; independent observations may then
+          // jointly cover a multi-track step. A model-written target is never coverage before verification.
+          if (!this.verifyEvidence || !(await this.verifyEvidence(evidence, song.songId, { ...step, targetTags: [] }))) {
             throw new Error("The completed step's evidence could not be verified for this song and target. Inspect the current material and cite a saved observation.");
           }
+          for (const target of evidence.targets) covered.add(target);
         }
+        if (!step.targetTags.every((target) => covered.has(target))) throw new Error("The completed step's verified evidence does not cover all its target tags. Cite each inspected target explicitly.");
       }
       const now = new Date().toISOString();
       const task = ProductionTaskSchema.parse({

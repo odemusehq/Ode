@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { mkdtemp } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -56,12 +56,38 @@ test("production evidence checks saved sources and target scope rather than inve
   assert.equal(await verify({ kind: "version", versionId: owned.id, summary: "Wrote the hook notes", targets: ["chorus-lead"] }, first.id, step), true);
   const production = new ProductionTaskStore(song);
   const update = productionTaskTools.find((tool) => tool.name === "production_task_update")!;
-  await update.run({ baseRevision: 0, goal: "Keep the hook", brief: "Retain the sung take", steps: [{ action: "Inspect the hook", status: "pending" }], exchangeId: "invented" }, { production, exchangeId } as unknown as ToolContext);
+  await update.run({ baseRevision: 0, goal: "Keep the hook", brief: "Retain the sung take", steps: [{ action: "Inspect the hook", status: "pending" }], exchangeId: "invented" }, { production, exchangeId, config: { limits: { toolResultMaxChars: 60000 } } } as unknown as ToolContext);
   assert.deepEqual((await production.read())?.exchangeIds, [exchangeId]);
   const pending = verify(citation, first.id, step);
   await song.create("Morning Train");
   assert.equal(await pending, true);
   assert.equal(await verify(citation, first.id, step), false);
+});
+
+test("a production step combines verified citation subsets while refusing forged or missing scope", async () => {
+  const root = await mkdtemp(join(tmpdir(), "ode-evidence-union-"));
+  try {
+    const song = new SongStore(userPaths(root), () => undefined);
+    const opened = await song.create("Rhythm section");
+    const conversations = new ConversationStore(join(root, "conversations"), 2);
+    const exchangeId = await conversations.log(opened.id).begin("Inspect bass and drums independently");
+    const observations = new ToolObservations(song);
+    for (const tag of ["bass", "drums"]) await observations.record({ exchangeId, toolCallId: `read-${tag}`, name: "track_get",
+      input: { track: { tag } }, targets: [tag], ok: true, text: JSON.stringify({ tag, kind: "midi" }) });
+    const verify = new ProductionEvidence({ song, observations, conversations, versions: new SongVersions(song, 10) }).verify;
+    const store = new ProductionTaskStore(song, verify);
+    const task = await store.update({ baseRevision: 0, goal: "Inspect the rhythm section", brief: "Independent reads, one combined checkpoint",
+      steps: [{ action: "Inspect bass and drums", status: "working", targetTags: ["bass", "drums"] }] });
+    const citations = ["bass", "drums"].map((tag) => ({ kind: "tool" as const, exchangeId, toolCallId: `read-${tag}`, summary: `Read ${tag}`, targets: [tag] }));
+    const complete = (evidence: typeof citations) => store.update({ taskId: task.id, baseRevision: task.revision, goal: task.goal, brief: task.brief,
+      steps: [{ ...task.steps[0]!, status: "complete", evidence }] });
+    await assert.rejects(complete([{ ...citations[0]!, targets: ["bass", "drums"] }]), /evidence|verified|scope/i);
+    await assert.rejects(complete([citations[0]!]), /target|cover|scope|evidence/i);
+    await assert.rejects(complete(citations.map((citation) => ({ ...citation, targets: [] }))), /target|cover|scope|evidence/i);
+    const finished = await complete(citations);
+    assert.equal(finished.status, "complete");
+    assert.deepEqual(finished.steps[0]!.evidence, citations);
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
 
 test("partial mix observations cover only measured sources, including calls selected by name", async () => {

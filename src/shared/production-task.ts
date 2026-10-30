@@ -56,3 +56,34 @@ export const ProductionTaskUpdateSchema = z.object({
   versionId: ShortText.optional(),
 });
 export type ProductionTaskUpdate = z.input<typeof ProductionTaskUpdateSchema>;
+
+/** Focused reads keep a large legal checkpoint within the tool result window. */
+export const ProductionTaskReadSchema = z.object({
+  detail: z.enum(["overview", "task", "step", "evidence"]).optional(),
+  stepId: z.uuid().optional(),
+  offset: z.number().int().min(0).max(100).optional(),
+  limit: z.number().int().min(1).max(24).optional(),
+});
+export type ProductionTaskRead = z.infer<typeof ProductionTaskReadSchema>;
+
+/** Patch named existing steps or append new work; omitted fields and steps remain on the server. */
+export const ProductionTaskPatchSchema = z.object({
+  taskId: z.uuid(),
+  baseRevision: z.number().int().min(1),
+  goal: ShortText.optional(),
+  brief: z.string().trim().min(1).max(6_000).optional(),
+  blocker: ShortText.nullable().optional(),
+  steps: z.array(z.object({
+    id: z.uuid(),
+    action: ShortText.optional(),
+    status: ProductionStepStatusSchema.optional(),
+    targetTags: Targets.removeDefault().optional(),
+    evidence: z.array(ProductionEvidenceSchema).max(8).optional(),
+    blocker: ShortText.nullable().optional(),
+  })).min(1).max(24).optional(),
+  appendSteps: z.array(ProductionStepInputSchema.omit({ id: true }).strict()).min(1).max(24).optional(),
+  exchangeId: ShortText.optional(),
+  versionId: ShortText.optional(),
+}).refine((patch) => patch.goal !== undefined || patch.brief !== undefined || patch.blocker !== undefined || patch.steps !== undefined || patch.appendSteps !== undefined,
+  "Give a task field or existing step to patch.");
+export type ProductionTaskPatch = z.input<typeof ProductionTaskPatchSchema>;

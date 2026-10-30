@@ -82,7 +82,7 @@ export class RequestContext implements RequestLifecycle {
     if (!task) return "";
     const short = (text: string, size: number) => size <= 0 ? "" : text.length > size ? `${text.slice(0, size - 1)}…` : text;
     const limit = this.deps.config.memory.mapMaxChars;
-    const footer = "\nRead production_task_read for the complete plan and evidence. Inspect current targets; never replay saved operations.";
+    const footer = "\nRead production_task_read overview pages, then detail task/step/evidence for exact fields. Use production_task_patch for focused progress. Inspect current targets; never replay saved operations.";
     const header = `Saved production checkpoint (plan, not proof): ${task.id} · revision ${task.revision} · ${task.status}\nGoal: ${task.goal}\n`;
     const brief = `Brief: ${short(task.brief, Math.min(1200, Math.max(0, Math.floor(limit / 6))))}\n`;
     const stepLimit = Math.max(0, Math.floor((limit - header.length - brief.length - footer.length) / task.steps.length) - 1);

@@ -424,7 +424,7 @@ export class OdeSession {
    */
   private async needsApproval(tool: AnyTool, input: Record<string, unknown>): Promise<boolean> {
     if (tool.consent) return true;
-    if (tool.changes === "none" || tool.name === "production_task_update") return false;
+    if (tool.changes === "none" || tool.name === "production_task_update" || tool.name === "production_task_patch") return false;
     if (await this.deps.deletions.cantBeUndone(tool.name, input)) return true;
     return (await this.deps.prefs.mode()) === Mode.Manual;
   }
