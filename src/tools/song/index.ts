@@ -13,6 +13,7 @@ import { hookRetainTool } from "./hooks";
 import { productionTaskTools } from "./production-task";
 import { audioDeliveryTools } from "./audio-delivery";
 import { SETTING_FIELDS, SettingValue } from "./settings";
+import { memoryTools } from "./memory";
 
 /**
  * The lead sheet as lead_sheet_update changes it: the format version and the lyrics stay outside it, and every field is
@@ -131,47 +132,7 @@ export const songTools: AnyTool[] = [
       return { ...result, __odeReceipts: saved.receipt ? [saved.receipt] : [] };
     },
   }),
-  defineTool({
-    name: "memory_recall",
-    changes: "none",
-    description:
-      "Recall what Ode knows about the artist (vocal range, keys, tempos, chord vocabulary, lyric voice, sounds and plug-ins they like, mix preferences, dislikes), strongest first, plus how often they kept each kind of suggestion. Filter by a topic word if you like.",
-    input: { topic: z.string().optional() },
-    run: async ({ topic }, ctx) => ({ facts: await ctx.mneme.recall(topic), habits: await ctx.mneme.habitStrengths() }),
-  }),
-  defineTool({
-    name: "memory_record",
-    changes: "memory",
-    description:
-      'Remember something about the artist. Use source "said" only when the musician told you; use "noticed" when their own material clearly shows it, with a confidence (0–1) and the evidence. Record only what the musician said or their material shows: leave a person\'s name, gender, age and nationality out of every inference. Their vocal range, accent, genre and loudness target are settings: store those with preferences_set.',
-    input: {
-      topic: z.string().min(1).describe('e.g. "rhyme taste", "chord vocabulary", "dislikes"'),
-      value: z.string().min(1),
-      source: z.enum(["said", "noticed"]),
-      confidence: z.number().min(0).max(1).optional(),
-      evidence: z.string().optional().describe("What in the artist's material shows this"),
-    },
-    describe: ({ topic, value }) => `Remember about you · ${topic}: ${value}`,
-    run: ({ evidence, ...fact }, ctx) =>
-      ctx.mneme.record({ ...fact, evidence: evidence ? { note: evidence, song: ctx.song.songId || undefined } : undefined }),
-  }),
-  defineTool({
-    name: "memory_forget",
-    changes: "memory",
-    description: "Forget one thing Ode knows about the artist, by its id from memory_recall.",
-    input: { id: z.string().min(1) },
-    describe: () => "Forget one thing Ode knows about you",
-    run: async ({ id }, ctx) => ({ forgotten: await ctx.mneme.forget(id) }),
-  }),
-  defineTool({
-    name: "memory_note_outcome",
-    changes: "memory",
-    description:
-      'Count whether the musician kept or rejected a kind of suggestion (for example "near rhymes", "borrowed chords", "sparse drums"), so Ode learns their taste. Use the same habit name each time.',
-    input: { habit: z.string().min(1), kept: z.boolean() },
-    describe: ({ habit, kept }) => `Note that you ${kept ? "kept" : "rejected"} ${habit}`,
-    run: ({ habit, kept }, ctx) => ctx.mneme.noteOutcome(habit, kept),
-  }),
+  ...memoryTools,
   defineTool({
     name: "preferences_get",
     changes: "none",

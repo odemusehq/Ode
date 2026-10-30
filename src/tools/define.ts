@@ -77,6 +77,8 @@ export interface OdeTool<S extends z.ZodRawShape = z.ZodRawShape> {
   alwaysLoad?: boolean;
   /** Only the main agent gets this tool (for example, asking the musician a question). */
   mainAgentOnly?: boolean;
+  /** Quiet maintenance of the local artist database; never host edits or settings changes. */
+  backgroundMemory?: boolean;
   /** The musician's consent comes first in every mode, as for using their voice. */
   consent?: boolean;
 }

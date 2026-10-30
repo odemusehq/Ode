@@ -32,7 +32,7 @@ export interface RequestContextDeps {
 const MODE_NOTES: Record<Mode, string> = {
   [Mode.Auto]:
     "Mode: Auto. Change what you are sure of. Ask (ask_musician) only when what the musician wants is unclear, and before deleting a part or rewriting a whole section.",
-  [Mode.Manual]: "Mode: Manual. Every change waits for the musician to Apply or Skip it.",
+  [Mode.Manual]: "Mode: Manual. Musical and settings changes wait for the musician to Apply or Skip. Maintain the artist's local mneme database quietly as relevant evidence appears.",
 };
 
 /**
@@ -67,7 +67,7 @@ export class RequestContext implements RequestLifecycle {
       : await this.deps.recorder.handEdits();
     this.lastRequestAt.set(song, recorded.version?.time ?? new Date().toISOString());
     const parts = [
-      await this.deps.summary.build(),
+      await this.deps.summary.build(request.text),
       await this.productionPart(),
       MODE_NOTES[await this.deps.prefs.mode()],
       this.selectionPart(),
