@@ -1,7 +1,7 @@
 import type { Role, RoleConfig } from "../shared/config";
 import type { Note } from "../shared/live";
 import type { AudioListeningResult, TextGenerator } from "./capabilities";
-import type { FrozenMusicAudio, MusicAudioSource } from "./music-audio";
+import type { AudioTimeRange, FrozenMusicAudio, MusicAudioSource } from "./music-audio";
 import type { SpeechPayload } from "./speech-audio";
 
 export interface Transcript {
@@ -41,8 +41,8 @@ export interface Services {
   /** The chat model of the main agent or of subagents, for the agent loop. */
   chat(role: "main" | "subagent"): Promise<TextGenerator>;
   /** Audio understanding: describe a recording or answer a question about it. */
-  describeAudio(audio: MusicAudioSource, question: string, signal?: AbortSignal): Promise<AudioListeningResult>;
-  compareAudio?(a: MusicAudioSource, b: MusicAudioSource, question: string, levelMatch: boolean, signal?: AbortSignal): Promise<AudioListeningResult & { comparison: unknown }>;
+  describeAudio(audio: MusicAudioSource, question: string, signal?: AbortSignal, range?: AudioTimeRange): Promise<AudioListeningResult>;
+  compareAudio?(a: MusicAudioSource, b: MusicAudioSource, question: string, levelMatch: boolean, signal?: AbortSignal, ranges?: { a?: AudioTimeRange; b?: AudioTimeRange }): Promise<AudioListeningResult & { comparison: unknown }>;
   /** Transcription: words from a vocal or spoken recording. */
   transcribe(audio: MusicAudioSource, signal?: AbortSignal): Promise<Transcript>;
   /** Image generation: writes a PNG to outPath and returns it. */

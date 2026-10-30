@@ -1,6 +1,8 @@
 import { amplitudeToDb } from "./units";
 import type { AudioData } from "./types";
 
+export interface AudioTimeRange { fromSeconds?: number; toSeconds?: number }
+
 /** Nearest source-sample boundaries, with an exclusive end. Never extend a requested range with silence. */
 export function audioExcerpt(source: AudioData, fromSeconds = 0, toSeconds?: number) {
   const frames = source.channels[0]?.length ?? 0;

@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { OdeConfig, type RoleConfig } from "../../shared/config";
 import type { AudioListeningResult, AudioUnderstander } from "../capabilities";
-import { MusicAudio, audioHash, type FrozenMusicAudio, type ListeningPayload, type MusicAudioSource } from "../music-audio";
+import { MusicAudio, audioHash, type AudioListeningSource, type AudioTimeRange, type ListeningPayload, type MusicAudioSource } from "../music-audio";
 
 /** Audio understanding over an OpenAI-compatible endpoint that accepts input_audio parts (Meta's included). */
 export class OpenAiCompatibleAudioUnderstander implements AudioUnderstander {
@@ -12,21 +12,21 @@ export class OpenAiCompatibleAudioUnderstander implements AudioUnderstander {
     this.client = new OpenAI({ baseURL: role.baseUrl, apiKey: role.apiKey, timeout: 120_000, maxRetries: 0 });
   }
 
-  async describe(audio: MusicAudioSource, question: string, signal?: AbortSignal): Promise<AudioListeningResult> {
-    const prepared = await this.music.prepare(audio);
+  async describe(audio: MusicAudioSource, question: string, signal?: AbortSignal, range?: AudioTimeRange): Promise<AudioListeningResult> {
+    const prepared = await this.music.prepare(audio, range);
     return this.ask(prepared, question, `${question}\nListening representation: ${JSON.stringify(prepared.payload.representation)}`, signal);
   }
 
-  async compare(a: MusicAudioSource, b: MusicAudioSource, question: string, levelMatch: boolean, signal?: AbortSignal) {
-    const prepared = await this.music.comparison(a, b, levelMatch);
+  async compare(a: MusicAudioSource, b: MusicAudioSource, question: string, levelMatch: boolean, signal?: AbortSignal, ranges?: { a?: AudioTimeRange; b?: AudioTimeRange }) {
+    const prepared = await this.music.comparison(a, b, levelMatch, ranges);
     const result = await this.ask(prepared, question, `${question}\nThe WAV contains A followed by B. Comparison layout: ${JSON.stringify(prepared.comparison)}. Compare both for the stated criterion; do not infer source currentness or a complete mix from these files.`, signal);
     return { ...result, comparison: prepared.comparison };
   }
 
-  private async ask(prepared: { bytes: Uint8Array; sources: FrozenMusicAudio["source"][]; payload: ListeningPayload }, criteria: string, question: string, signal?: AbortSignal): Promise<AudioListeningResult> {
+  private async ask(prepared: { bytes: Uint8Array; sources: AudioListeningSource[]; payload: ListeningPayload }, criteria: string, question: string, signal?: AbortSignal): Promise<AudioListeningResult> {
     signal?.throwIfAborted();
     const data = Buffer.from(prepared.bytes).toString("base64");
-    const prompt = `${question}\nAudio preparation: source channel count and sample rate preserved in PCM24 WAV; signals above full scale are uniformly attenuated to avoid conversion clipping. Stereo/full-band model judgement is not independently validated; use numerical metrics for technical claims.`;
+    const prompt = `${question}\nSource selections: ${JSON.stringify(prepared.sources.map((source) => source.selection))}. Each played excerpt starts at zero within its labelled playback segment; source-file times remain separate.\nAudio preparation: source channel count and sample rate preserved in PCM24 WAV; signals above full scale are uniformly attenuated to avoid conversion clipping. Stereo/full-band model judgement is not independently validated; use numerical metrics for technical claims.`;
     const requestHash = audioHash(Buffer.from(JSON.stringify({ model: this.role.model, prompt, maxTokens: OdeConfig.services.audioMaxTokens, payloadSha256: prepared.payload.sha256 })));
     const dispatchedAt = new Date().toISOString();
     const response = await this.client.chat.completions.create({

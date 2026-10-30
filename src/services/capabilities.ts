@@ -1,7 +1,7 @@
 import type { ChatCompletionMessage, ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/chat/completions";
 import type { Role } from "../shared/config";
 import type { DemoVocalInput, Transcript } from "./types";
-import type { FrozenMusicAudio, ListeningPayload, MusicAudioSource } from "./music-audio";
+import type { AudioListeningSource, AudioTimeRange, ListeningPayload, MusicAudioSource } from "./music-audio";
 
 /** One model call in a conversation: the messages so far, the tools on offer, and who it belongs to. */
 export interface ChatTurn {
@@ -79,7 +79,7 @@ export interface AudioListeningResult {
     prompt: string;
     provider: string;
     model: string;
-    sources: FrozenMusicAudio["source"][];
+    sources: AudioListeningSource[];
     payload: ListeningPayload;
     requestHash: string;
     dispatchedAt: string;
@@ -88,8 +88,8 @@ export interface AudioListeningResult {
 }
 
 export interface AudioUnderstander {
-  describe(audio: MusicAudioSource, question: string, signal?: AbortSignal): Promise<AudioListeningResult>;
-  compare?(a: MusicAudioSource, b: MusicAudioSource, question: string, levelMatch: boolean, signal?: AbortSignal): Promise<AudioListeningResult & { comparison: unknown }>;
+  describe(audio: MusicAudioSource, question: string, signal?: AbortSignal, range?: AudioTimeRange): Promise<AudioListeningResult>;
+  compare?(a: MusicAudioSource, b: MusicAudioSource, question: string, levelMatch: boolean, signal?: AbortSignal, ranges?: { a?: AudioTimeRange; b?: AudioTimeRange }): Promise<AudioListeningResult & { comparison: unknown }>;
 }
 
 export interface Transcriber {
