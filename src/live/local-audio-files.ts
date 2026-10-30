@@ -5,7 +5,7 @@ import { z } from "zod";
 import { JsonFile } from "../mneme/json-file";
 import { AudioFileDecoder } from "../music/audio/decode";
 import {
-  AudioProvenanceSchema, AudioExcerptFactsSchema, AudioExcerptDerivationSchema, AudioExcerptSelectionSchema,
+  AudioProvenanceSchema, MaxCaptureEvidenceSchema, AudioExcerptFactsSchema, AudioExcerptDerivationSchema, AudioExcerptSelectionSchema,
   LibraryAnnotationsPatchSchema, LibraryAnnotationsSchema, LibraryProfileSchema, LibrarySearchSchema,
   type AudioExcerptBuild, type AudioExcerptDerivation, type AudioExcerptSelection,
   type LibraryAnnotations, type LibraryAnnotationsPatch, type LibraryProfile, type LibraryProfileLevel, type LibrarySearch, type LibrarySearchCoverage,
@@ -26,9 +26,11 @@ const BaseRecordSchema = z.object({
   declaredSource: z.string().max(2000).optional(),
   range: z.object({ start: z.number().finite().min(0), end: z.number().finite().positive() }).optional(),
   provenance: AudioProvenanceSchema,
+  capture: MaxCaptureEvidenceSchema.optional(),
   currentness: z.literal("unknown"),
   analysisSupported: z.boolean(),
-});
+}).refine((record) => (record.provenance === "max-device-capture") === Boolean(record.capture),
+  "A Max capture needs its recorded routing and timing evidence.");
 
 export type AudioFileRecord = z.infer<typeof BaseRecordSchema> & {
   annotations?: LibraryAnnotations;
@@ -53,7 +55,8 @@ export interface AudioFileInput {
   purpose: AudioFileRecord["purpose"];
   source?: string;
   /** Only internal capture callers set this; browser uploads always use the user-supplied default. */
-  provenance?: "user-supplied" | "sdk-pre-fx-capture";
+  provenance?: "user-supplied" | "sdk-pre-fx-capture" | "max-device-capture";
+  capture?: AudioFileRecord["capture"];
   /** Beats declared by the musician, not inferred from the file or current tempo. */
   range?: { start: number; end: number };
 }
@@ -153,7 +156,8 @@ export class LocalAudioFiles {
     const record = BaseRecordSchema.parse({
       id: randomUUID(), name, purpose: input.purpose, sha256: hash(input.bytes), bytes: input.bytes.byteLength,
       importedAt: new Date().toISOString(), declaredSource: input.source?.trim() || undefined, range: input.range,
-      provenance: input.provenance ?? "user-supplied", currentness: "unknown", analysisSupported: ANALYSIS_SUFFIX.test(name),
+      provenance: input.provenance ?? "user-supplied", ...(input.capture ? { capture: input.capture } : {}),
+      currentness: "unknown", analysisSupported: ANALYSIS_SUFFIX.test(name),
     });
     await mkdir(this.root, { recursive: true });
     await this.inside(this.root, true);

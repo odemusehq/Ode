@@ -1,4 +1,5 @@
 import type { DialogView } from "./config";
+import type { MaxAudioCommand } from "./max-audio";
 
 /** The Max device's bootstrap controls and its authenticated loopback protocol. */
 export const MAX_WINDOW = {
@@ -53,6 +54,7 @@ export interface MaxWindowConnection {
 
 export interface MaxWindowPoll {
   readonly command: MaxWindowCommand | null;
+  readonly audio?: MaxAudioCommand | null;
 }
 
 export interface MaxWindowAcknowledgement {

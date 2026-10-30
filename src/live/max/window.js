@@ -8,6 +8,7 @@ var busy = false;
 var generation = 0;
 var requests = [];
 var session = "";
+var connectionNotice = "";
 var port = 0;
 var consumedLatch = 0;
 var consumedPort = 0;
@@ -68,6 +69,7 @@ function releaseTask(task) {
 }
 
 function stop() {
+  if (typeof ode_audio_stop === "function") ode_audio_stop();
   running = false;
   generation += 1;
   releaseTask(loop);
@@ -77,6 +79,7 @@ function stop() {
   for (var index = 0; index < active.length; index++) active[index].cancel();
   busy = false;
   session = "";
+  connectionNotice = "";
   pending = null;
   completedIds = [];
   wantsOpen = false;
@@ -119,11 +122,13 @@ function safeUrl(url) {
 }
 
 function disconnect() {
+  if (typeof ode_audio_stop === "function") ode_audio_stop();
   generation += 1;
   session = "";
   busy = false;
   pending = null;
-  status("Ode disconnected. Open Ode from Live to reconnect.");
+  connectionNotice = "Ode disconnected. Open Ode from Live to reconnect.";
+  status(connectionNotice);
 }
 
 function tick() {
@@ -151,15 +156,21 @@ function tick() {
       port = nextPort;
       generation += 1;
       session = "";
+      connectionNotice = "";
       busy = true;
       status("Connecting to Ode…");
-      http(ODE_WINDOW.api.connect, { capability: capability }, function (response, code) {
+      if (typeof ode_audio_stop === "function") ode_audio_stop();
+      var connectionBody = { capability: capability };
+      if (typeof LiveAPI === "function" && typeof Buffer === "function") connectionBody.audioVersion = 1;
+      http(ODE_WINDOW.api.connect, connectionBody, function (response, code) {
         busy = false;
         if (code !== 200 || !response || typeof response.session !== "string" || !response.session || !safeUrl(response.url)) {
-          status("Connection failed. Open Ode from Live, then retry.");
+          connectionNotice = code > 0 ? "Ode connection failed (HTTP " + code + "). Press Open Ode to retry." : "Ode could not connect. Open Ode from Live, then retry.";
+          status(connectionNotice);
           return;
         }
         session = response.session;
+        connectionNotice = "";
         pageUrl = response.url;
         if (connectedPageUrl !== pageUrl) loaded = false;
         connectedPageUrl = pageUrl;
@@ -170,7 +181,7 @@ function tick() {
     }
   }
   if (!session) {
-    status("Load the Ode extension, then choose Open Ode in Live.");
+    status(connectionNotice || "Load the Ode extension, then choose Open Ode in Live.");
     return;
   }
   busy = true;
@@ -178,6 +189,7 @@ function tick() {
     busy = false;
     if (code !== 200 || !response || !Object.prototype.hasOwnProperty.call(response, "command")) { disconnect(); return; }
     if (response.command && !pending) openCommand(response.command, false);
+    if (response.audio && typeof ode_audio_command === "function") ode_audio_command(response.audio);
   });
 }
 

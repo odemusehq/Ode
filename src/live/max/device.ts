@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { MAX_WINDOW } from "../../shared/max-window";
+import { MAX_AUDIO } from "../../shared/max-audio";
 
 type Box = Record<string, unknown> & { id: string };
 interface Line { patchline: { source: [string, number]; destination: [string, number] } }
@@ -8,7 +9,7 @@ interface Line { patchline: { source: [string, number]; destination: [string, nu
 export class MaxDevice {
   /** An unfrozen .amxd container, with the same ampf/meta/ptch structure as Max's own devices. */
   static async build(): Promise<Buffer> {
-    const script = `var ODE_WINDOW = ${JSON.stringify(MAX_WINDOW)};\n${await readFile(new URL("window.js", import.meta.url), "utf8")}`;
+    const script = `var ODE_WINDOW = ${JSON.stringify(MAX_WINDOW)};\nvar ODE_AUDIO = ${JSON.stringify(MAX_AUDIO)};\n${await readFile(new URL("window.js", import.meta.url), "utf8")}\n${await readFile(new URL("audio.js", import.meta.url), "utf8")}`;
     const patch = Buffer.from(`${JSON.stringify(MaxDevice.patch(script))}\n\0`, "utf8");
     const header = Buffer.alloc(32);
     header.write("ampf", 0, "ascii");
@@ -27,10 +28,33 @@ export class MaxDevice {
     const lines: Line[] = [];
     const box = (id: string, maxclass: string, attributes: Record<string, unknown>) => boxes.push({ box: { id, maxclass, ...attributes } });
     const line = (from: string, outlet: number, to: string, inlet = 0) => lines.push({ patchline: { source: [from, outlet], destination: [to, inlet] } });
-    box("audio-in", "newobj", { text: "plugin~", numinlets: 1, numoutlets: 2, outlettype: ["signal", "signal"], patching_rect: [20, 225, 60, 22] });
+    box("audio-in", "newobj", { text: "plugin~ 1 2 3 4", numinlets: 1, numoutlets: 4, outlettype: ["signal", "signal", "signal", "signal"], patching_rect: [20, 225, 120, 22] });
     box("audio-out", "newobj", { text: "plugout~", numinlets: 2, numoutlets: 0, patching_rect: [20, 265, 65, 22] });
     line("audio-in", 0, "audio-out", 0);
     line("audio-in", 1, "audio-out", 1);
+    for (const [channel, label] of ["Left", "Right"].entries()) {
+      box(`capture-${channel}`, "newobj", { text: "selector~ 2", varname: `odeCapture${label}`, numinlets: 3, numoutlets: 1, outlettype: ["signal"], patching_rect: [250 + channel * 110, 480, 90, 22] });
+      line("audio-in", channel, `capture-${channel}`, 1);
+      line("audio-in", channel + 2, `capture-${channel}`, 2);
+      line(`capture-${channel}`, 0, "capture-recorder", channel);
+    }
+    box("capture-buffer", "newobj", { text: "buffer~ #0-odeCapture 1 2", varname: "odeCaptureBuffer", numinlets: 1, numoutlets: 2, outlettype: ["float", "bang"], patching_rect: [470, 480, 180, 22] });
+    box("capture-buffer-name", "newobj", { text: "loadmess #0-odeCapture", numinlets: 1, numoutlets: 1, outlettype: [""], patching_rect: [470, 450, 180, 22] });
+    box("capture-buffer-bind", "newobj", { text: "prepend ode_audio_buffer", numinlets: 1, numoutlets: 1, outlettype: [""], patching_rect: [470, 420, 180, 22] });
+    line("capture-buffer-name", 0, "capture-buffer-bind");
+    line("capture-buffer-bind", 0, "client");
+    box("capture-recorder", "newobj", { text: "record~ #0-odeCapture 2", varname: "odeCaptureRecorder", numinlets: 4, numoutlets: 1, outlettype: ["signal"], patching_rect: [250, 520, 180, 22] });
+    box("capture-dsp", "newobj", { text: "dspstate~", numinlets: 1, numoutlets: 4, outlettype: ["int", "float", "int", "int"], patching_rect: [660, 480, 80, 22] });
+    box("capture-sync", "newobj", { text: "plugsync~", numinlets: 1, numoutlets: 9, patching_rect: [660, 520, 100, 22] });
+    for (const [id, source, index, method] of [
+      ["dsp", "capture-dsp", 0, "ode_audio_dsp"], ["rate", "capture-dsp", 1, "ode_audio_rate"],
+      ["beat", "capture-sync", 6, "ode_audio_beat"], ["sample", "capture-sync", 7, "ode_audio_sample"],
+      ["flags", "capture-sync", 8, "ode_audio_flags"],
+    ] as const) {
+      box(`capture-${id}-message`, "newobj", { text: `prepend ${method}`, numinlets: 1, numoutlets: 1, outlettype: [""], patching_rect: [450, 550, 180, 22] });
+      line(source, index, `capture-${id}-message`);
+      line(`capture-${id}-message`, 0, "client");
+    }
     box("name", "comment", { text: "Ode", fontsize: 18, textcolor: [0.94, 0.94, 0.94, 1], presentation: 1, presentation_rect: [12, 10, 180, 25], patching_rect: [20, 20, 180, 25] });
     box("open", "textbutton", { text: "Open Ode", texton: "Open Ode", mode: 0, parameter_enable: 0, numinlets: 1, numoutlets: 3, outlettype: ["", "int", ""], presentation: 1, presentation_rect: [12, 45, 180, 30], patching_rect: [20, 60, 180, 30] });
     box("open-message", "message", { text: "open_ode", numinlets: 2, numoutlets: 1, outlettype: [""], patching_rect: [20, 105, 75, 22] });
@@ -43,6 +67,8 @@ export class MaxDevice {
     line("open", 0, "open-message");
     line("open-message", 0, "client");
     line("ready", 0, "start");
+    line("ready", 0, "capture-dsp");
+    line("ready", 0, "capture-buffer-name");
     line("start", 0, "client");
     line("free", 0, "stop");
     line("stop", 0, "client");
@@ -54,6 +80,7 @@ export class MaxDevice {
         openinpresentation: 1, bglocked: 1, locked_bgcolor: [0.13, 0.13, 0.13, 1], bgcolor: [0.13, 0.13, 0.13, 1],
         toolbarvisible: 0, statusbarvisible: 0, enablehscroll: 0, enablevscroll: 0, title: "Ode",
         boxes: [
+          { box: { id: "in", maxclass: "inlet", numinlets: 0, numoutlets: 1, outlettype: [""], patching_rect: [20, 800, 30, 30] } },
           { box: { id: "browser", maxclass: "jweb", varname: "odeBrowser", numinlets: 1, numoutlets: 1, outlettype: [""], patching_rect: [0, 0, 440, 740], presentation: 1, presentation_rect: [0, 0, 440, 740], url: "about:blank", historysize: 0 } },
           { box: { id: "control", maxclass: "newobj", text: "thispatcher", varname: "odeWindowControl", numinlets: 1, numoutlets: 2, outlettype: ["", ""], patching_rect: [20, 760, 75, 22] } },
           { box: { id: "out", maxclass: "newobj", text: "outlet", numinlets: 1, numoutlets: 0, patching_rect: [110, 760, 45, 22] } },

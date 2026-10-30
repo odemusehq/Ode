@@ -105,13 +105,25 @@ test("bridge HTTP credentials stay isolated from UI auth and retain loopback req
   assert.equal((await send(MAX_WINDOW.api.connect, { capability: local.token })).status, 403);
   assert.equal((await send(MAX_WINDOW.api.connect, { capability: bootstrap.capability }, { origin: "https://example.org" })).status, 403);
   assert.equal((await send(MAX_WINDOW.api.connect, { capability: bootstrap.capability }, { host: "example.org:0" })).status, 403);
-  const connection = await send(MAX_WINDOW.api.connect, { capability: bootstrap.capability });
+  const legacy = { "content-type": "application/x-www-form-urlencoded" };
+  assert.equal((await send(MAX_WINDOW.api.connect, { capability: bootstrap.capability }, { ...legacy, origin: "https://example.org" })).status, 403);
+  assert.equal((await send(MAX_WINDOW.api.connect, { capability: bootstrap.capability }, { ...legacy, origin: "null" })).status, 403);
+  assert.equal((await send(MAX_WINDOW.api.connect, { capability: bootstrap.capability }, { ...legacy, origin: "http://localhost:0" })).status, 415);
+  assert.equal((await send(MAX_WINDOW.api.connect, { capability: bootstrap.capability }, { "content-type": "application/x-www-form-urlencoded; charset=UTF-8" })).status, 415);
+  assert.equal((await local.app.request(`http://localhost:0${MAX_WINDOW.api.connect}`, {
+    method: "POST", body: "not JSON", headers: { host: "localhost:0", ...legacy },
+  })).status, 403);
+  const connection = await send(MAX_WINDOW.api.connect, { capability: bootstrap.capability, audioVersion: 1 }, legacy);
   assert.equal(connection.status, 200);
   const { session } = await connection.json() as { session: string };
   assert.equal(local.modifyingRequests, 0);
   assert.equal((await send(MAX_WINDOW.api.poll, { session })).status, 200);
+  assert.equal((await send(MAX_WINDOW.api.poll, { session }, legacy)).status, 200);
+  assert.equal((await send(MAX_WINDOW.api.poll, { session: "0".repeat(48) }, legacy)).status, 403);
   assert.equal((await send(MAX_WINDOW.api.poll, { session }, { "content-type": "text/plain" })).status, 415);
   assert.equal((await send(MAX_WINDOW.api.poll, { session, extra: "x".repeat(5_000) })).status, 413);
+  assert.equal((await send(MAX_WINDOW.api.poll, { session, extra: "x".repeat(5_000) }, legacy)).status, 413);
+  assert.equal((await send("/ordinary", {}, legacy)).status, 415);
   assert.equal((await local.app.request(`http://localhost:0/ordinary?token=${session}`, { headers: { host: "localhost:0" } })).status, 403);
   assert.equal((await local.app.request(`http://localhost:0/ordinary?token=${local.token}`, { headers: { host: "localhost:0" } })).status, 200);
   assert.equal((await local.app.request(`http://localhost:0${MAX_WINDOW.api.poll}`, { headers: { host: "localhost:0" } })).status, 405);

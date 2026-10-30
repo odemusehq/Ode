@@ -1,6 +1,6 @@
 ---
 name: mastering
-description: Configure or tune the existing Main mastering chain for the artist's stated target, measure exact supplied processed bounces, compare retained audio and disclose missing audition/export. Use for mastering, LUFS, true peak, loudness, limiting or delivery requests. The installed SDK cannot capture Main output, export audio or save the project; limiter settings alone never establish a verified or delivered master.
+description: Configure or tune the existing Main mastering chain for the artist's stated target, capture available Main audio through Max or use supplied bounces, compare retained audio and disclose missing audition/export. Use for mastering, LUFS, true peak, loudness, limiting or delivery requests. Limiter settings alone never establish a verified or delivered master.
 ---
 
 # Mastering
@@ -12,11 +12,11 @@ Ode masters in place on the Main track: it builds the chain once and tunes its v
 ## The loop
 
 1. Read the request, reference, artist's target and existing Main chain. Preserve the approved mix and intentional processing. A default platform figure is a starting point, not a universal artistic target.
-2. Identify the actual audio available. The installed SDK renders only Arrangement audio before devices and fader. It cannot hear a MIDI instrument, group, return or Main output, save the Set or export a master. Ask for a processed bounce through the chat's file intake when that evidence is required; never substitute a source render.
-3. Measure the exact supplied file with `audio_analyze`, retaining its hash, format, frame count and declared signal stage. A supplied bounce's relationship to the current Set is unknown, even when exposed settings look unchanged.
+2. Identify the actual audio available with `processed_audio_sources`. The paired Max device can capture the Main post-mixer output only if that route is explicitly offered. Own-device input on Main is before its mixer/fader and cannot verify final output. Use `processed_audio_capture` for an available route, with an appropriate lead-in and duration, or ask for a supplied processed bounce when unavailable. Keep a full Main listening pass in context; do not solo its tracks. The SDK's source render is pre-FX audio only.
+3. Measure the exact retained file with `audio_analyze`, preserving its hash, format, frames, source stage and capture timing uncertainty. Retain before/after files for comparison. A real-time capture is not an offline export: check the intended Arrangement, audible lead-in/end, effect tails and any subsequent Set changes. A supplied bounce's relationship to the Set remains unknown.
 4. Make a justified, limited chain change through supported controls. Recipes below are optional starting points. Parameter values establish configuration only; they do not reveal actual gain reduction, pumping, tone or translation.
 5. Compare retained before/after or reference files with `audio_compare` for the artist's stated criterion. Match loudness for tone comparisons; retain levels when balance is the question. Both files must cover comparable musical material. Listening-model judgement is unvalidated and complements the artist's audition in Live.
-6. Report briefly what was configured, what exact file was measured, and what still needs a new bounce, audition or export. Use “chain configured” when that is the completed action. Use “delivered” only for an actual retained output file; the SDK cannot create the native export or save/collect the Live project.
+6. Report briefly what was configured, what exact file was measured, and what still needs a new capture, audition or export. Use “chain configured” when that is the completed action. Use “delivered” only for an actual retained output file with checked scope; the SDK cannot create the native offline export or save/collect the Live project.
 
 ## Checks
 

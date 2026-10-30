@@ -13,6 +13,7 @@ import type { LyricsStore } from "../mneme/lyrics-store";
 import type { PreferencesStore } from "../mneme/preferences";
 import type { TempFolder } from "../mneme/paths";
 import type { RefNames } from "./live/ref-names";
+import type { MaxAudioRequest, MaxAudioResult, MaxAudioSources } from "../shared/max-audio";
 
 /** What a tool changes: "none" (it only reads or computes), the Live Set, or Mneme (the lyrics, the lead sheet, memory, settings, release files). */
 export type ToolChange = "none" | "set" | "memory";
@@ -53,6 +54,11 @@ export interface ToolContext {
   mneme: Mneme;
   prefs: PreferencesStore;
   services: Services;
+  /** Actual audio through the paired Max device; unavailable before a capable device connects. */
+  maxAudio?: {
+    sources(signal?: AbortSignal): Promise<MaxAudioSources>;
+    capture(input: MaxAudioRequest, signal?: AbortSignal): Promise<MaxAudioResult>;
+  };
   /** Where generated and rendered files go. */
   temp: TempFolder;
   emit: (event: UiEvent) => void;

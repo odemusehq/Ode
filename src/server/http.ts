@@ -11,6 +11,8 @@ import { getCookie, setCookie } from "hono/cookie";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
 import { MAX_WINDOW } from "../shared/max-window";
+import { MAX_AUDIO } from "../shared/max-audio";
+import type { MaxAudioCapture } from "./max-audio";
 import { MaxWindowError, type MaxWindowBridge } from "./max-window";
 import { API, type SongsResponse, type StatusResponse } from "../shared/api";
 import type { UiEvent } from "../shared/events";
@@ -65,6 +67,7 @@ export interface ServerDeps {
   versions: VersionActions;
   ui: UiFiles;
   maxWindow?: MaxWindowBridge;
+  maxAudio?: MaxAudioCapture;
 }
 
 const TextSchema = z.object({ text: z.string().trim().min(1), requestId: z.uuid().optional(), songId: z.string().min(1).optional() });
@@ -79,10 +82,11 @@ const VersionRequestSchema = z.object({ versionId: z.string().min(1) });
 const SongOpenSchema = z.object({ id: z.string().min(1) });
 const SongCreateSchema = z.object({ title: z.string() });
 const RestoreRequestSchema = z.object({ confirmed: z.literal(true) });
-const MaxConnectSchema = z.object({ capability: z.string().regex(/^[a-f0-9]{32}$/) }).strict();
+const MaxConnectSchema = z.object({ capability: z.string().regex(/^[a-f0-9]{32}$/), audioVersion: z.literal(1).optional() }).strict();
 const MaxPollSchema = z.object({ session: z.string().regex(/^[a-f0-9]{48}$/) }).strict();
 const MaxAckSchema = z.object({ session: z.string().regex(/^[a-f0-9]{48}$/), id: z.uuid(), status: z.enum(["ready", "error"]), error: z.string().max(MAX_WINDOW.errorMaxChars).optional() }).strict();
-const MAX_WINDOW_PATHS: ReadonlySet<string> = new Set(Object.values(MAX_WINDOW.api));
+const MAX_WINDOW_PATHS: ReadonlySet<string> = new Set([...Object.values(MAX_WINDOW.api), MAX_AUDIO.messagePath]);
+const MaxAudioEnvelopeSchema = z.object({ session: z.string().regex(/^[a-f0-9]{48}$/), message: z.unknown() }).strict();
 
 const SEND_VERSION_ID = "Send { versionId } with the id of the change by Ode.";
 
@@ -159,6 +163,7 @@ export class OdeServer {
     this.app.use("*", (c, next) => this.guard(c, next));
     this.app.use("*", (c, next) => this.authorize(c, next));
     this.routeMaxWindow();
+    this.routeMaxAudio();
     this.routeApi();
     this.routeSongs();
     this.routeVersions();
@@ -194,8 +199,10 @@ export class OdeServer {
       if (origin !== undefined && !hosts.some((host) => origin === `http://${host}`)) return c.text(OPEN_FROM_LIVE, 403);
       const upload = c.req.path === API.audioImport || c.req.path === API.dictation;
       const contentType = c.req.header("content-type") ?? "";
+      // Max 9.1 sends its JSON body with this legacy media type despite setRequestHeader.
+      const legacyMax = MAX_WINDOW_PATHS.has(c.req.path) && origin === undefined && contentType === "application/x-www-form-urlencoded";
       if (upload && origin === undefined) return c.text(OPEN_FROM_LIVE, 403);
-      if (!(upload ? contentType.startsWith("multipart/form-data;") : contentType.startsWith(JSON_TYPE))) {
+      if (!(upload ? contentType.startsWith("multipart/form-data;") : contentType.startsWith(JSON_TYPE) || legacyMax)) {
         return c.json({ error: upload ? "Choose an audio file to attach." : "Send the request as JSON." }, 415);
       }
     }
@@ -240,7 +247,7 @@ export class OdeServer {
     return timingSafeEqual(Buffer.from(value), Buffer.from(this.token));
   }
 
-  /** Max transports window commands; its credential never authorizes the musical API or the UI itself. */
+  /** Max's private transport credential does not authorize the musical API or the UI itself. */
   private routeMaxWindow(): void {
     const limit = bodyLimit({ maxSize: 2_048 });
     const respond = (c: Context, work: (bridge: MaxWindowBridge) => object) => {
@@ -255,7 +262,7 @@ export class OdeServer {
     this.app.post(MAX_WINDOW.api.connect, limit, async (c) => {
       const parsed = MaxConnectSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: "Send the Max device's connection capability." }, 403);
-      return respond(c, (bridge) => bridge.connect(parsed.data.capability));
+      return respond(c, (bridge) => bridge.connect(parsed.data.capability, parsed.data.audioVersion));
     });
     this.app.post(MAX_WINDOW.api.poll, limit, async (c) => {
       const parsed = MaxPollSchema.safeParse(await OdeServer.body(c));
@@ -266,6 +273,22 @@ export class OdeServer {
       const parsed = MaxAckSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: "Send the Max window's command acknowledgement." }, 400);
       return respond(c, (bridge) => { bridge.acknowledge(parsed.data); return { ok: true }; });
+    });
+  }
+
+  private routeMaxAudio(): void {
+    this.app.post(MAX_AUDIO.messagePath, bodyLimit({ maxSize: MAX_AUDIO.maxBodyBytes }), async (c) => {
+      c.header("Cache-Control", "no-store");
+      if (!this.deps.maxAudio) return c.json({ error: "Ode's Max audio connection is unavailable." }, 503);
+      const parsed = MaxAudioEnvelopeSchema.safeParse(await OdeServer.body(c));
+      if (!parsed.success) return c.json({ error: "Send the Max device's private session and audio job message." }, 400);
+      try {
+        await this.deps.maxAudio.receive(parsed.data.session, parsed.data.message);
+        return c.json({ ok: true });
+      } catch (error) {
+        if (error instanceof MaxWindowError) return c.json({ error: error.message }, error.status);
+        throw error;
+      }
     });
   }
 

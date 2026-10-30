@@ -18,11 +18,13 @@ test("Max device packages its embedded client, transient controls and untouched 
   assert.equal(bytes.at(-1), 0);
   const { patcher } = JSON.parse(bytes.subarray(32, -1).toString());
   const objects = patcher.boxes.map(({ box }: { box: Record<string, unknown> }) => box);
-  const input = objects.find((box: Record<string, unknown>) => box.text === "plugin~");
+  const input = objects.find((box: Record<string, unknown>) => box.text === "plugin~ 1 2 3 4");
   const output = objects.find((box: Record<string, unknown>) => box.text === "plugout~");
   assert.ok(input && output);
   for (const channel of [0, 1]) assert.ok(patcher.lines.some(({ patchline }: { patchline: { source: unknown[]; destination: unknown[] } }) =>
     JSON.stringify(patchline.source) === JSON.stringify([input.id, channel]) && JSON.stringify(patchline.destination) === JSON.stringify([output.id, channel])));
+  assert.equal(patcher.lines.filter(({ patchline }: { patchline: { destination: unknown[] } }) => patchline.destination[0] === output.id).length, 2,
+    "Captured auxiliary inputs must never be mixed into the audible output");
   const controls = objects.filter((box: Record<string, unknown>) => box.maxclass === "live.numbox");
   assert.equal(controls.length, 11);
   for (const control of controls) {
@@ -38,6 +40,17 @@ test("Max device packages its embedded client, transient controls and untouched 
   assert.doesNotThrow(() => new Script(code));
 });
 
+test("the window subpatcher exposes a native inlet for its pcontrol connection", async () => {
+  const { MaxDevice } = await import("../live/max/device");
+  const { patcher } = JSON.parse((await MaxDevice.build()).subarray(32, -1).toString());
+  const objects = patcher.boxes.map(({ box }: { box: Record<string, any> }) => box);
+  const controller = objects.find((box: Record<string, any>) => box.text === "pcontrol");
+  const connection = patcher.lines.find(({ patchline }: { patchline: { source: unknown[] } }) => patchline.source[0] === controller.id).patchline;
+  const window = objects.find((box: Record<string, any>) => box.id === connection.destination[0]);
+  const nativeInlets = window.patcher.boxes.filter(({ box }: { box: Record<string, unknown> }) => box.maxclass === "inlet" || box.text === "inlet");
+  assert.ok(nativeInlets.length > connection.destination[1], "Max deletes pcontrol's patchcord when the child has no native inlet");
+});
+
 test("embedded Max client consumes bootstrap once and waits for page readiness before acknowledging open", async () => {
   const { MaxDevice } = await import("../live/max/device");
   const { patcher } = JSON.parse((await MaxDevice.build()).subarray(32, -1).toString());
@@ -49,6 +62,7 @@ test("embedded Max client consumes bootstrap once and waits for page readiness b
   ]);
   const page: unknown[][] = [];
   const window: unknown[][] = [];
+  const statuses: string[] = [];
   const requests: FakeRequest[] = [];
   class FakeRequest {
     readyState = 0;
@@ -78,7 +92,7 @@ test("embedded Max client consumes bootstrap once and waits for page readiness b
   const child = { wind: { visible: true, size: [440, 740] }, getnamed: (name: string) => name === "odeBrowser" ? browser : { message: (...args: unknown[]) => window.push(args) } };
   const context = createContext({
     Task, XMLHttpRequest: FakeRequest,
-    patcher: { getnamed: (name: string) => name === "odeWindow" ? { subpatcher: () => child } : { getvalueof: () => values.get(name), message: () => {} } },
+    patcher: { getnamed: (name: string) => name === "odeWindow" ? { subpatcher: () => child } : { getvalueof: () => values.get(name), message: (...args: unknown[]) => { if (name === "odeStatus") statuses.push(String(args[1])); } } },
     outlet: (...args: unknown[]) => window.push(args),
   });
   new Script(code).runInContext(context);
@@ -130,10 +144,17 @@ test("embedded Max client consumes bootstrap once and waits for page readiness b
   context.tick();
   assert.equal(requests[8]?.url, "http://127.0.0.1:43123/max-window/connect");
   const replacementUrl = url.replace("a".repeat(48), "d".repeat(48));
-  requests[8]!.reply({ session: "c".repeat(48), url: replacementUrl });
+  requests[8]!.reply({ error: "Unsupported media type" }, 415);
+  const failure = statuses.at(-1);
+  assert.match(failure!, /failed|could not connect/i);
   context.tick();
-  assert.deepEqual(requests[9]?.body, { session: "c".repeat(48) });
+  assert.equal(statuses.at(-1), failure, "A failed bootstrap must retain its actionable notice between polls");
+  context.open_ode();
+  assert.equal(requests[9]?.url, "http://127.0.0.1:43123/max-window/connect", "Open Ode retries the failed bootstrap");
+  requests[9]!.reply({ session: "c".repeat(48), url: replacementUrl });
+  context.tick();
+  assert.deepEqual(requests[10]?.body, { session: "c".repeat(48) });
   context.stop();
-  assert.equal(requests[9]!.aborted, true, "Removing the device must cancel its outstanding requests");
+  assert.equal(requests[10]!.aborted, true, "Removing the device must cancel its outstanding requests");
   assert.equal(tasks.every((task) => task.freed), true, "Removing the device must release its loop and request Tasks");
 });

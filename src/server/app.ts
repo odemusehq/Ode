@@ -41,6 +41,7 @@ import { SongTitle } from "./song-title";
 import { VersionActions } from "./version-actions";
 import { VersionRecorder } from "./version-recorder";
 import { MaxWindowBridge } from "./max-window";
+import { MaxAudioCapture } from "./max-audio";
 
 /** Builds every part of Ode inside the extension and connects them. */
 export class OdeApp {
@@ -69,6 +70,7 @@ export class OdeApp {
   readonly songs: SongSwitcher;
   readonly versionActions: VersionActions;
   readonly maxWindow: MaxWindowBridge;
+  readonly maxAudio: MaxAudioCapture;
   private readonly server: OdeServer;
   /** The song title the dialogs were last sent. */
   private title = "";
@@ -109,6 +111,8 @@ export class OdeApp {
     this.reader = new SnapshotReader(live, this.song);
     this.recorder = new VersionRecorder(this.reader, this.versions, emit);
     this.selection = new SelectionState();
+    this.maxWindow = new MaxWindowBridge((view) => this.server.url(view));
+    this.maxAudio = new MaxAudioCapture({ tempDir: config.tempDir, window: this.maxWindow });
 
     const context: ToolContext = {
       config,
@@ -123,6 +127,7 @@ export class OdeApp {
       mneme: this.mneme,
       prefs: this.prefs,
       services: this.services,
+      maxAudio: this.maxAudio,
       temp: this.temp,
       emit,
     };
@@ -179,7 +184,6 @@ export class OdeApp {
       sessions: this.sessions,
       emit,
     });
-    this.maxWindow = new MaxWindowBridge((view) => this.server.url(view));
     this.server = new OdeServer({
       config,
       bus: this.bus,
@@ -199,6 +203,7 @@ export class OdeApp {
       versions: this.versionActions,
       ui,
       maxWindow: this.maxWindow,
+      maxAudio: this.maxAudio,
     });
   }
 

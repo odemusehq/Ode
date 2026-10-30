@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { DialogView } from "../shared/config";
+import type { MaxAudioCommand } from "../shared/max-audio";
 import { MAX_WINDOW, type MaxWindowAcknowledgement, type MaxWindowBinding, type MaxWindowBootstrap, type MaxWindowCommand, type MaxWindowConnection, type MaxWindowPoll } from "../shared/max-window";
 
 const DISCONNECTED = "Ode's Max device is not connected. Load Ode.amxd on one track in this Set, then open Ode again.";
@@ -22,7 +23,7 @@ interface DeviceConnection {
   readonly binding: MaxWindowBinding;
   readonly isCurrent: () => boolean;
   bootstrap: { capability: string; expires: number } | null;
-  session: { credential: string; lastPoll: number } | null;
+  session: { credential: string; lastPoll: number; audioVersion?: number } | null;
 }
 
 /** One current-Set device, a consumed bootstrap, and bounded opens acknowledged by its actual web page. */
@@ -30,8 +31,19 @@ export class MaxWindowBridge {
   private device: DeviceConnection | null = null;
   private readonly pending = new Map<string, PendingOpen>();
   private latch = 0;
+  private audio: { poll(): MaxAudioCommand | null; invalidate(): void } | null = null;
 
   constructor(private readonly urlForView: (view: DialogView) => string) {}
+
+  attachAudio(audio: { poll(): MaxAudioCommand | null; invalidate(): void }): void { this.audio = audio; }
+
+  get supportsAudio(): boolean { return this.connected && this.device?.session?.audioVersion === 1; }
+
+  verifySession(session: string): MaxWindowBinding {
+    const device = this.authorized(session);
+    device.session!.lastPoll = Date.now();
+    return { ...device.binding };
+  }
 
   /** Native SDK discovery supplies these controls only to the device in its current Set. */
   prepare(binding: MaxWindowBinding, isCurrent: () => boolean = () => true): MaxWindowBootstrap {
@@ -43,7 +55,7 @@ export class MaxWindowBridge {
   }
 
   /** A bootstrap is usable once; later polling uses a separate credential held only in Max's memory. */
-  connect(capability: string): MaxWindowConnection {
+  connect(capability: string, audioVersion?: number): MaxWindowConnection {
     const device = this.current();
     const bootstrap = device?.bootstrap;
     if (!device || !bootstrap || Date.now() >= bootstrap.expires || !MaxWindowBridge.equal(capability, bootstrap.capability)) {
@@ -52,7 +64,7 @@ export class MaxWindowBridge {
     const url = this.localUrl(DialogView.Ask);
     device.bootstrap = null;
     const session = randomBytes(24).toString("hex");
-    device.session = { credential: session, lastPoll: Date.now() };
+    device.session = { credential: session, lastPoll: Date.now(), audioVersion };
     return { session, url };
   }
 
@@ -70,7 +82,8 @@ export class MaxWindowBridge {
   poll(session: string): MaxWindowPoll {
     const device = this.authorized(session);
     device.session!.lastPoll = Date.now();
-    return { command: this.pending.values().next().value?.command ?? null };
+    const command = this.pending.values().next().value?.command ?? null;
+    return device.session!.audioVersion === 1 ? { command, audio: this.audio?.poll() ?? null } : { command };
   }
 
   /** A native Open succeeds only after jweb reports that its page handled this exact command. */
@@ -101,6 +114,7 @@ export class MaxWindowBridge {
   /** Native Set/device replacement, removal, duplicate devices and expired leases revoke every credential. */
   invalidate(): void {
     this.device = null;
+    this.audio?.invalidate();
     for (const pending of this.pending.values()) {
       clearTimeout(pending.timer);
       pending.reject(new MaxWindowError(DISCONNECTED));
