@@ -36,6 +36,8 @@ export interface AgentLimits {
   tokensPerRequest: number;
   /** The longest answer a single model call may give, in tokens. */
   tokensPerTurn: number;
+  /** Estimated active context size that triggers a summary before the next model call. Includes tool definitions. */
+  compactAtTokens: number;
   /** Earlier requests and Ode's replies carried into each new request of the same song. */
   historyExchanges: number;
   /** How many tools one tool search offers. */

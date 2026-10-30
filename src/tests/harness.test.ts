@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import type { ChatCompletionMessage } from "openai/resources/chat/completions";
-import { AgentLoop, LoopEnd, LoopTool, type LoopEvents, type LoopRun } from "../harness/loop";
+import { AgentLoop, LoopEnd, LoopTool, RequestBudget, type LoopEvents, type LoopRun } from "../harness/loop";
 import { SkillLibrary } from "../harness/skills";
 import { FolderTexts } from "../harness/texts";
 import { ToolLabels } from "../harness/tool-labels";
@@ -73,8 +73,9 @@ function answer(content: string, calls: { id: string; name: string; args?: objec
 }
 
 /** The loop over the real tools and skills, against the test Set, with the model's answers scripted. */
-async function rig(model: ScriptedModel) {
+async function rig(model: ScriptedModel, compactAtTokens?: number) {
   const config = new OdeConfig(join(await tempDir(), "storage"), join(await tempDir(), "temp"));
+  if (compactAtTokens !== undefined) Object.assign(config.limits, { compactAtTokens });
   const paths = userPaths(config.userDir);
   const live = new FakeSetLive(TestSets.small());
   const song = new SongStore(paths, () => undefined);
@@ -127,8 +128,75 @@ async function rig(model: ScriptedModel) {
     signal: new AbortController().signal,
     ...overrides,
   });
-  return { loop, seen, run, registry, limits: config.limits };
+  return { loop, seen, run, registry, live, limits: config.limits };
 }
+
+test("a long run compacts and continues without replaying edits or losing the musician's request", async () => {
+  const summary = "Tempo is now 107. Keep the chorus melody; hook reference hook-123 is still available. Next: arrange drums.";
+  const model = new ScriptedModel([
+    answer("Find devices.", [{ id: "search", name: "tool_search", args: { query: "device_get" } }]),
+    answer("Find note tools.", [{ id: "notes", name: "tool_search", args: { query: "MIDI clip notes" } }]),
+    answer("Earlier work. ".repeat(6_000), [{ id: "edit", name: "song_set_tempo", args: { tempo: 107 } }]),
+    answer(summary),
+    answer("Done."),
+  ]);
+  const { loop, run, live } = await rig(model, 60_000);
+  const history = [{ role: "user" as const, content: "Keep the chorus melody exactly." }];
+  const result = await loop.run(run({ history, prompt: "Finish the arrangement." }));
+  assert.equal(result.reply, "Done.");
+  assert.equal(result.tokens, 50, "The summary call shares the request's accounting.");
+  assert.equal(live.snapshot().song.tempo, 107);
+  assert.equal(live.calls.filter((call) => call.op === "song_set_tempo").length, 1);
+  assert.ok(model.turns[1]!.tools.some((tool) => tool.type === "function" && tool.function.name === "device_get"));
+  assert.deepEqual(model.turns[3]!.tools, [], "Compaction cannot execute tools.");
+  const resumed = model.turns[4]!;
+  assert.ok(!resumed.tools.some((tool) => tool.type === "function" && tool.function.name === "device_get"));
+  assert.ok(resumed.tools.some((tool) => tool.type === "function" && tool.function.name === "midi_clip_set_notes"), "The newest discovered tools remain callable after compaction.");
+  assert.deepEqual(resumed.messages.filter((message) => message.role === "user").map((message) => message.content), ["Keep the chorus melody exactly.", "Finish the arrangement."]);
+  assert.ok(resumed.messages.some((message) => String(message.content).includes(summary)));
+  assert.ok(!resumed.messages.some((message) => message.role === "tool" || (message.role === "assistant" && message.tool_calls?.length)));
+  assert.ok(JSON.stringify(resumed.messages).length < JSON.stringify(model.turns[3]!.messages).length / 2);
+  assert.equal(history.length, 1, "Compaction must not rewrite the saved conversation.");
+});
+
+test("compaction keeps the shared call limit instead of starting a new budget", async () => {
+  const model = new ScriptedModel([
+    answer("Earlier work. ".repeat(6_000), [{ id: "edit", name: "song_set_tempo", args: { tempo: 107 } }]),
+    answer("Tempo is 107. Finish the drums next."),
+  ]);
+  const { loop, run, limits } = await rig(model, 20_000);
+  const result = await loop.run(run({ budget: new RequestBudget({ ...limits, turnsPerRequest: 2 }) }));
+  assert.equal(result.end, LoopEnd.TurnLimit);
+  assert.equal(result.tokens, 20);
+});
+
+test("an incomplete compaction does not discard history or execute its tool calls", async () => {
+  const model = new ScriptedModel([
+    answer("Earlier work. ".repeat(6_000), [{ id: "edit", name: "song_set_tempo", args: { tempo: 107 } }]),
+    { cutOff: answer("Unfinished summary", [{ id: "bad", name: "song_set_tempo", args: { tempo: 200 } }]) },
+  ]);
+  const { loop, run, live } = await rig(model, 20_000);
+  await assert.rejects(loop.run(run()), /compact|condens/i);
+  assert.equal(live.snapshot().song.tempo, 107);
+  assert.equal(live.calls.filter((call) => call.op === "song_set_tempo").length, 1);
+});
+
+test("Stop during compaction prevents the resumed model call", async () => {
+  const controller = new AbortController();
+  const model = new ScriptedModel([
+    answer("Earlier work. ".repeat(6_000), [{ id: "edit", name: "song_set_tempo", args: { tempo: 107 } }]),
+    answer("Tempo is 107. Finish the drums next."),
+  ]);
+  const complete = model.complete.bind(model);
+  model.complete = async (turn) => {
+    const reply = await complete(turn);
+    if (!turn.tools.length) controller.abort();
+    return reply;
+  };
+  const { loop, run } = await rig(model, 20_000);
+  assert.equal((await loop.run(run({ signal: controller.signal }))).end, LoopEnd.Cancelled);
+  assert.equal(model.turns.length, 2);
+});
 
 test("the loop runs the tools the model calls, shows its note and steps, and returns its reply", async () => {
   const model = new ScriptedModel([

@@ -14,6 +14,8 @@ test("parallel child reads keep actual scoped citations despite reused provider 
   const folder = await mkdtemp(join(tmpdir(), "ode-child-citations-"));
   try {
     const limits = new OdeConfig("unused", "unused").limits;
+    // This fixture deliberately returns huge prose to exercise citation bounds, separately from compaction.
+    limits.compactAtTokens = 1_000_000;
     const store = new ToolObservations({ songId: "song", dataDir: folder });
     const saved: ToolObservation[] = [], childAnswers: string[] = [];
     const rounds = new Map<string, number>();
