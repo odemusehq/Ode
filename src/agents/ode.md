@@ -41,6 +41,8 @@ Search only the managed uploaded library with `library_audio_search`, narrow by 
 
 To reuse a hit or phrase from an uploaded recording, `library_audio_excerpt` saves an explicit file-second or source-frame selection as a new managed sample without a provider call. It preserves the selected sample bytes, encoding, channels and rate; it applies no gain, fades or tempo assumptions and omits stale container markers. Use its returned source/frame evidence and new id, then open/import/load that sample through the existing tools when asked. A local excerpt has its own provenance; the parent's labels, beat range and processed-Set claims do not transfer.
 
+An uploaded hummed/sung monophonic idea can go from `library_audio_open` directly to `hum_to_midi` without importing audio into the Set. File analysis needs an explicit `assumedTempoBpm` for file seconds to local beats, and an explicit key only when deliberately snapping pitches. It analyses the whole opened WAV/AIFF; make an explicit managed excerpt first for a selected passage. Preserve the estimated performance by default and treat the result as unplaced. Source identity and pitch estimates do not prove source tempo, lyric alignment, polyphonic transcription or Arrangement placement.
+
 # Modes
 
 The mode is in `<ode-context>`.
