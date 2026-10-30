@@ -20,6 +20,8 @@ export interface ToolOutcome {
   receipts?: MutationReceipt[];
   /** Canonical, schema-validated arguments actually executed; raw model extras are not evidence. */
   input?: unknown;
+  /** When supplied by a tool definition, replaces inferred request/result tags. */
+  targets?: readonly string[];
 }
 
 const GROUPS: readonly (readonly AnyTool[])[] = [liveTools, musicTools, audioTools, mediaTools, songTools];
@@ -115,7 +117,9 @@ export class ToolRegistry {
         if (receipts.filter((receipt) => receipt.kind !== "unverified").length < expectedReceipts) unverified(name);
       } else if (definition.changes === "set" && !covered.has(name)) unverified(name);
       if (covered.has(name) && name !== "release_prepare" && !Array.isArray((result as Record<string, unknown>).__odeReceipts)) unverified(name);
-      return { ok: true, text: JSON.stringify(cleaned), input: parsed.data, ...(receipts.length ? { receipts } : {}) };
+      return { ok: true, text: JSON.stringify(cleaned), input: parsed.data,
+        ...(definition.observationTargets ? { targets: definition.observationTargets(cleaned) } : {}),
+        ...(receipts.length ? { receipts } : {}) };
     } catch (error) {
       return { ok: false, text: error instanceof Error ? error.message : String(error), input: parsed.data,
         ...((definition.changes === "set" || name === "lyrics_write" || name === "lead_sheet_update" || name === "hook_retain" || name === "release_prepare" && Array.isArray((parsed.data as Record<string, unknown>).credits))

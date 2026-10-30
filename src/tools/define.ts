@@ -61,6 +61,8 @@ export interface OdeTool<S extends z.ZodRawShape = z.ZodRawShape> {
   input: S;
   changes: ToolChange;
   run: (input: z.infer<z.ZodObject<S>>, ctx: ToolContext) => Promise<unknown>;
+  /** Actual covered tags for tools that may skip requested targets. Empty means no target was observed. */
+  observationTargets?: (result: unknown) => readonly string[];
   /**
    * One line describing a call, shown while Ode works and when asking the musician to apply it, with what it touches
    * named from the latest snapshot: "Bass · EQ Eight · 1 Frequency A to 200".

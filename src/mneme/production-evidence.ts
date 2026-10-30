@@ -38,6 +38,8 @@ export class ProductionEvidence {
         ]);
         if (!observation?.ok || observation.songId !== songId || !exchanges.some((exchange) => exchange.id === evidence.exchangeId)) return false;
         if (!this.relevant(observation.name)) return false;
+        // Older mix checks inferred every requested tag, including tracks they could not render.
+        if (observation.name === "mix_check" && observation.targetScope !== "explicit") return false;
         return ProductionEvidence.covers(observation.targets, targets);
       }
       case "version": {

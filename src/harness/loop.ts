@@ -340,7 +340,7 @@ export class AgentLoop {
     let citation = "";
     if (run.agent === "main" && run.exchangeId && this.deps.observations) {
       try {
-        const saved = await this.deps.observations.record({ exchangeId: run.exchangeId, toolCallId: call.id, name, input: outcome.input ?? {}, ok: outcome.ok, text: outcome.text });
+        const saved = await this.deps.observations.record({ exchangeId: run.exchangeId, toolCallId: call.id, name, input: outcome.input ?? {}, ok: outcome.ok, text: outcome.text, targets: outcome.targets });
         citation = `\nSaved observation: ${JSON.stringify({ exchangeId: saved.exchangeId, toolCallId: saved.toolCallId, targets: saved.targets })}. This records the outcome, not artistic quality or later currentness.`;
       } catch (error) {
         citation = `\nObservation was not saved: ${error instanceof Error ? error.message : String(error)}. Do not cite this call as saved evidence.`;

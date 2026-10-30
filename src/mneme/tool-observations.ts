@@ -16,6 +16,7 @@ const ToolObservationSchema = z.object({
   ok: z.boolean(),
   at: z.iso.datetime(),
   targets: z.array(z.string().min(1).max(200)).max(128),
+  targetScope: z.enum(["inferred", "explicit"]).default("inferred"),
   input: z.unknown().optional(),
   resultHash: z.string().regex(/^[a-f0-9]{64}$/),
   resultLength: z.number().int().min(0),
@@ -33,6 +34,7 @@ export interface ToolObservationInput {
   ok: boolean;
   /** The actual full tool result; only its hash, length and redacted excerpt are kept. */
   text: string;
+  /** Trusted tool-definition scope, replacing inference from requested/result tags when present. */
   targets?: readonly string[];
 }
 
@@ -50,9 +52,12 @@ export class ToolObservations {
     const redacted = ToolObservations.redact(parsedResult ?? input.text);
     const resultText = typeof redacted === "string" ? redacted : JSON.stringify(redacted);
     const targets = new Set<string>();
-    for (const target of input.targets ?? []) ToolObservations.addTarget(targets, target);
-    ToolObservations.targets(input.input, targets);
-    ToolObservations.targets(parsedResult, targets);
+    if (input.targets !== undefined) {
+      for (const target of input.targets) ToolObservations.addTarget(targets, target);
+    } else {
+      ToolObservations.targets(input.input, targets);
+      ToolObservations.targets(parsedResult, targets);
+    }
     const observation = ToolObservationSchema.parse({
       version: 1,
       songId: song.songId,
@@ -62,6 +67,7 @@ export class ToolObservations {
       ok: input.ok,
       at: new Date().toISOString(),
       targets: [...targets].sort(),
+      targetScope: input.targets === undefined ? "inferred" : "explicit",
       input: ToolObservations.redact(input.input),
       resultHash: createHash("sha256").update(input.text).digest("hex"),
       resultLength: input.text.length,
