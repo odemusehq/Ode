@@ -29,8 +29,9 @@ export class ReleaseNotes {
       "Ode runs inside Ableton Live 12 Suite on macOS and Windows. Live extensions are in the Live beta for now.",
       "",
       `1. In Live, open Settings → Extensions and drop \`${release.extension}\` on the page. Developer Mode stays off.`,
-      "2. Right-click a track and choose **Ode: Settings**: pick the provider and the model, and paste your key.",
-      "3. Right-click a clip, a track or a time selection and choose **Ask Ode**.",
+      `2. Download \`${Release.device}\` from the same release and drag it onto an audio track or the Main track. Keep one Ode device per Set.`,
+      "3. Click **Open Ode** on the device. In Settings, pick the provider and model, and enter your key.",
+      "4. Chat with Ode in its floating window, or right-click a clip, track or time selection and choose **Ask Ode**. Results appear in Live.",
       "",
     ].join("\n");
   }

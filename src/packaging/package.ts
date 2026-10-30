@@ -1,11 +1,12 @@
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import * as vite from "vite";
 import { ExtensionLauncher } from "../live/extension/run";
+import { MaxDevice } from "../live/max/device";
 import { DevConfig } from "../shared/dev-config";
 import { Release } from "./release";
 
-/** Builds a release of Ode in release/: the UI, then the extension with all of Ode inside it, as one .ablx file. */
+/** Builds the extension and its self-contained Max window device together in release/. */
 class ReleasePackage {
   static readonly outDir = join(DevConfig.repoDir, "release");
 
@@ -18,6 +19,7 @@ class ReleasePackage {
     await vite.build({ configFile: join(DevConfig.repoDir, "vite.config.ts"), logLevel: "warn" });
     const file = join(ReleasePackage.outDir, this.release.extension);
     await ExtensionLauncher.package(file);
+    await writeFile(join(ReleasePackage.outDir, Release.device), await MaxDevice.build());
     return file;
   }
 }

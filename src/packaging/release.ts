@@ -13,6 +13,7 @@ interface ExtensionManifest {
 
 /** A release of Ode: its version and tag, and the extension file it ships. */
 export class Release {
+  static readonly device = "Ode.amxd";
   static readonly packageFile = join(DevConfig.repoDir, "package.json");
   static readonly manifestFile = join(ExtensionBuild.directory, "manifest.json");
 

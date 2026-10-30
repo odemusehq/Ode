@@ -12,4 +12,6 @@ test("release notes list each change and say how to install that release's exten
   assert.match(notes, /^- Lyrics side panel$/m);
   assert.match(notes, /^- Safer Undo$/m);
   assert.ok(notes.includes("drop `Ode-1.2.0.ablx` on the page"), notes);
+  assert.ok(notes.includes("Download `Ode.amxd` from the same release"), notes);
+  assert.ok(notes.includes("Click **Open Ode** on the device"), notes);
 });
