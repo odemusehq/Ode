@@ -18,12 +18,12 @@ test("a fresh install starts on Meta's first model, and a saved key shows only a
   assert.equal(fresh.model, "muse-wonder-1.0");
   assert.equal(fresh.keySet, false);
 
-  const saved = await settings.update({ provider: "baseten", model: "meta-models/muse-spark-open", key: "sk-test", services: {} });
+  const saved = await settings.update({ provider: "baseten", model: "meta-models/muse-spark-open-1026", key: "sk-test", services: {} });
   assert.equal(saved.keySet, true);
   assert.equal(saved.credit, "Built with Muse Spark Open");
   assert.ok(!JSON.stringify(saved).includes("sk-test"));
 
-  const kept = await settings.update({ provider: "baseten", model: "meta-models/muse-spark-open", services: {} });
+  const kept = await settings.update({ provider: "baseten", model: "meta-models/muse-spark-open-1026", services: {} });
   assert.equal(kept.keySet, true);
 });
 
@@ -47,7 +47,7 @@ test("Settings lists each provider's models, and Modal lists its endpoints once 
   const roles = new ModelRoles(await freshSettings(), ProviderCatalog.bundled);
   assert.deepEqual(
     (await roles.models({ provider: "baseten" })).map((model) => model.id),
-    ["meta-models/muse-spark-open"],
+    ["meta-models/muse-spark-open-1026"],
   );
   assert.deepEqual(await roles.models({ provider: "modal" }), []);
 });

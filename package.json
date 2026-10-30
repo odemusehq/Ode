@@ -13,6 +13,7 @@
     "build:ui": "vite build",
     "build:extension": "node --import tsx src/live/extension/build.ts",
     "live:extension": "node --import tsx src/live/extension/run.ts",
+    "settings:import": "node --import tsx src/shared/dev-settings.ts",
     "typecheck": "tsc --noEmit",
     "test": "node --test --import tsx \"src/tests/**/*.test.ts\"",
     "test:skills": "node --import tsx src/tests/skill-scenarios.ts",
