@@ -15,7 +15,7 @@ test("a fresh install starts on Meta's first model, and a saved key shows only a
   const settings = await freshSettings();
   const fresh = await settings.view();
   assert.equal(fresh.provider, "meta");
-  assert.equal(fresh.model, "muse-wonder-1.0");
+  assert.equal(fresh.model, "muse-spark-1.3");
   assert.equal(fresh.keySet, false);
 
   const saved = await settings.update({ provider: "baseten", model: "meta-models/muse-spark-open-1026", key: "sk-test", services: {} });
