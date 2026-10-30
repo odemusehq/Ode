@@ -1,6 +1,5 @@
 import { t } from "../../shared/i18n";
 import { useCallback, useState } from "react";
-import { VersionAuthor } from "../../shared/versions";
 import { ResultKind } from "../../shared/events";
 import { Button, ButtonVariant, Icon, IconButton, IconName, toPlainText } from "../../ui-kit";
 import { useAppState, useClient, useRequest } from "../app/hooks";
@@ -52,7 +51,7 @@ function ChangeList({ versionId }: { versionId: string }) {
   if (!data) return <p className="small muted">{t("history.readingChanges")}</p>;
   const changes = data.version.changes;
   if (!changes.length) return null;
-  return <>{data.version.author === VersionAuthor.Observed && <p className="small muted">{t("chat.observedChanges")}</p>}<ul>{changes.map((change, index) => <li key={index}>{change.label}</li>)}</ul></>;
+  return <ul>{changes.map((change, index) => <li key={index}>{change.label}</li>)}</ul>;
 }
 
 /** Brief feedback stays beside the composer while the conversation above scrolls. */

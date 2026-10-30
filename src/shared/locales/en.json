@@ -129,7 +129,6 @@
     "why": "Why?",
     "whatChanged": "What changed",
     "changesUnavailable": "The change details could not be read. Open History to try again.",
-    "observedChanges": "Observed during this request; this may include your edits.",
     "connectionLost": "Connection lost. Ode may still be working; reconnecting…",
     "dismissError": "Dismiss error"
   },
