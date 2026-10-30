@@ -36,8 +36,8 @@ export class ModelServices implements Services {
     return adapter.compare(a, b, question, levelMatch, signal);
   }
 
-  async transcribe(audioPath: string, signal?: AbortSignal): Promise<Transcript> {
-    return (await this.adapter("transcription", Capability.Transcription)).transcribe(audioPath, signal);
+  async transcribe(audio: MusicAudioSource, signal?: AbortSignal): Promise<Transcript> {
+    return (await this.adapter("transcription", Capability.Transcription)).transcribe(audio, signal);
   }
 
   async generateImage(prompt: string, outPath: string, size = OdeConfig.services.coverSize, signal?: AbortSignal): Promise<string> {

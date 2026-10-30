@@ -112,16 +112,22 @@ export const mediaTools: AnyTool[] = [
     name: "vocal_transcribe",
     changes: "none",
     description:
-      "Transcribe the words of a sung or spoken recording, with the start and end time (seconds) of each phrase. Rendered from the Arrangement, each phrase also has startBeat and endBeat: where it sits in the Arrangement, in beats.",
-    input: { ...audioSource },
+      "Transcribe sung or spoken words with approximate speech-detection times in seconds, bound to the exact source and mono/resampled speech payload. Give path alone or an Arrangement audio track/start/end; captures hear pre-FX, pre-fader audio and are removed after transcription. Seconds remain canonical, not verified musical boundaries. Optional assumedTempoBpm gives separate constant-tempo beat estimates; tempo automation and current Set alignment are unknown, so these estimates do not authorise positioning notes or lyrics.",
+    input: { ...audioSource, assumedTempoBpm: z.number().min(LIVE_TEMPO.min).max(LIVE_TEMPO.max).optional().describe("Explicit constant tempo assumption for separate approximate beat estimates; omit to keep only detection seconds.") },
     run: (input, ctx) =>
       withAudio(input, ctx, async (path) => {
         const transcript = await ctx.services.transcribe(path, ctx.signal);
         const { start } = input;
-        if (input.path || start === undefined) return transcript;
-        const beatsPerSecond = (await tempoOf(ctx)) / 60;
-        const turns = transcript.turns.map((turn) => ({ ...turn, startBeat: start + turn.start * beatsPerSecond, endBeat: start + turn.end * beatsPerSecond }));
-        return { ...transcript, turns, alignment: "Approximate speech-detection times mapped using one constant tempo; these are not verified phrase or note boundaries." };
+        const source = input.path ? { kind: "supplied file", currentness: "unknown" } : { kind: "Arrangement capture", track: input.track,
+          range: { start, end: input.end }, signalStage: "pre-effects, pre-fader source audio", retained: false,
+          availability: "Temporary capture removed after transcription; no usable path is retained.", currentness: "captured during this call; later Set state unknown" };
+        if (input.assumedTempoBpm === undefined) return { ...transcript, source };
+        const beatsPerSecond = input.assumedTempoBpm / 60;
+        const origin = input.path ? 0 : start!;
+        return { ...transcript, source, beatEstimates: { assumedTempoBpm: input.assumedTempoBpm, tempoAutomation: "unknown",
+          origin: input.path ? "file start at beat zero" : "requested Arrangement start beat",
+          turns: transcript.turns.map((turn) => ({ ...turn, startBeat: origin + turn.start * beatsPerSecond, endBeat: origin + turn.end * beatsPerSecond })),
+          alignment: "Approximate speech-detection times under an explicit constant-tempo assumption. Tempo automation, current alignment, phrase and note boundaries are unverified; these estimates do not authorise edits." } };
       }),
   }),
   defineTool({
@@ -195,7 +201,7 @@ export const mediaTools: AnyTool[] = [
         catch (error) { ctx.signal?.throwIfAborted(); verification.listeningError = error instanceof Error ? error.message : String(error); }
       }
       if (available.transcription) {
-        try { verification.transcript = await ctx.services.transcribe(path, ctx.signal); }
+        try { verification.transcript = await ctx.services.transcribe(frozen, ctx.signal); }
         catch (error) { ctx.signal?.throwIfAborted(); verification.transcriptionError = error instanceof Error ? error.message : String(error); }
       }
       return { path, tempo: bpm, source, verification };

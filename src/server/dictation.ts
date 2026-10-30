@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { AudioFileDecoder } from "../music/audio/decode";
-import type { Services } from "../services/types";
+import type { Transcript } from "../services/types";
 
 export const MAX_DICTATION_BYTES = 16 * 1024 * 1024;
 export const MAX_DICTATION_SECONDS = 60.25;
@@ -12,7 +12,7 @@ export class DictationError extends Error {
 
 /** Dictation is temporary speech input, never a library asset or a submitted chat request. */
 export class Dictation {
-  constructor(private readonly services: Pick<Services, "transcribe">, private readonly tempDir: string) {}
+  constructor(private readonly services: { transcribe(path: string, signal?: AbortSignal): Promise<Transcript> }, private readonly tempDir: string) {}
 
   static validate(bytes: Uint8Array): void {
     if (bytes.byteLength === 0) throw new DictationError("The recording is empty. Dictate a short message and try again.", 400);

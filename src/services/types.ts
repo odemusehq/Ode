@@ -1,13 +1,26 @@
 import type { Role, RoleConfig } from "../shared/config";
 import type { Note } from "../shared/live";
 import type { AudioListeningResult, TextGenerator } from "./capabilities";
-import type { MusicAudioSource } from "./music-audio";
+import type { FrozenMusicAudio, MusicAudioSource } from "./music-audio";
+import type { SpeechPayload } from "./speech-audio";
 
 export interface Transcript {
   text: string;
   turns: { start: number; end: number; text: string }[];
   timing?: "speech-detection-approximate";
   providerMetadata?: Record<string, unknown>;
+  evidence?: {
+    criteria: string;
+    provider: string;
+    model: string;
+    source: FrozenMusicAudio["source"];
+    payload: SpeechPayload;
+    timing: "speech-detection-approximate";
+    requestHash: string;
+    transcriptHash: string;
+    dispatchedAt: string;
+    completedAt: string;
+  };
 }
 
 export interface DemoVocalInput {
@@ -31,7 +44,7 @@ export interface Services {
   describeAudio(audio: MusicAudioSource, question: string, signal?: AbortSignal): Promise<AudioListeningResult>;
   compareAudio?(a: MusicAudioSource, b: MusicAudioSource, question: string, levelMatch: boolean, signal?: AbortSignal): Promise<AudioListeningResult & { comparison: unknown }>;
   /** Transcription: words from a vocal or spoken recording. */
-  transcribe(audioPath: string, signal?: AbortSignal): Promise<Transcript>;
+  transcribe(audio: MusicAudioSource, signal?: AbortSignal): Promise<Transcript>;
   /** Image generation: writes a PNG to outPath and returns it. */
   generateImage(prompt: string, outPath: string, size?: number, signal?: AbortSignal): Promise<string>;
   /** Stem separation: isolates the described sound; writes target and rest as WAV files in outDir. */

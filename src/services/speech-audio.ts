@@ -1,4 +1,22 @@
-import { decode } from "../music/audio/decode";
+import { MusicAudio, audioHash, type MusicAudioSource } from "./music-audio";
+
+export interface SpeechPayload {
+  sha256: string;
+  bytes: number;
+  representation: {
+    encoding: "PCM16 WAV";
+    channels: 1;
+    sampleRate: number;
+    frames: number;
+    sourceChannels: number;
+    sourceSampleRate: number;
+    resamplingSourceRate: number;
+    mixing: "arithmetic mean of all source channels";
+    resampling: "Lanczos, eight lobes";
+    gainDb: 0;
+    clippedSamples: number;
+  };
+}
 
 /** Converts any audio file Live or a provider produces into the mono 16-bit WAV speech services expect. */
 export class SpeechAudio {
@@ -7,10 +25,30 @@ export class SpeechAudio {
 
   constructor(private readonly sampleRate: number) {}
 
-  async wav(path: string): Promise<Uint8Array<ArrayBuffer>> {
-    const audio = await decode(path);
+  async prepare(source: MusicAudioSource) {
+    const frozen = typeof source === "string" ? await MusicAudio.freeze(source) : source;
+    const captured = MusicAudio.decode(frozen);
+    const { audio } = captured;
+    if (!audio.channels[0]?.length) throw new Error("Transcription needs a nonempty recording; this file has zero sample frames.");
     const mono = SpeechAudio.mix(audio.channels);
-    return SpeechAudio.encodePcm16(this.resample(mono, audio.sampleRate), this.sampleRate);
+    const samples = this.resample(mono, audio.sampleRate);
+    if (!samples.length) throw new Error("Transcription needs a nonempty recording after speech resampling.");
+    let clippedSamples = 0;
+    for (const sample of samples) {
+      if (!Number.isFinite(sample)) throw new Error("Transcription contains a nonfinite resampled value; the service was not called.");
+      if (Math.abs(sample) > 1) clippedSamples++;
+    }
+    const bytes = SpeechAudio.encodePcm16(samples, this.sampleRate);
+    const payload: SpeechPayload = { sha256: audioHash(bytes), bytes: bytes.length, representation: {
+      encoding: "PCM16 WAV", channels: 1, sampleRate: this.sampleRate, frames: samples.length,
+      sourceChannels: audio.channels.length, sourceSampleRate: audio.sampleRate, resamplingSourceRate: Math.round(audio.sampleRate),
+      mixing: "arithmetic mean of all source channels", resampling: "Lanczos, eight lobes", gainDb: 0, clippedSamples,
+    } };
+    return { bytes, source: captured.source, payload };
+  }
+
+  async wav(path: string): Promise<Uint8Array<ArrayBuffer>> {
+    return (await this.prepare(path)).bytes;
   }
 
   async base64Wav(path: string): Promise<string> {

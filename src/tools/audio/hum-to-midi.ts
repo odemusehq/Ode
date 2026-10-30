@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { GridDivision, HumTranscriber, decode } from "../../music/audio";
+import { GridDivision, HumTranscriber } from "../../music/audio";
+import { MusicAudio, type MusicAudioSource } from "../../services/music-audio";
 import { RoleCheck } from "../../services/roles";
 import { defineTool } from "../define";
 import { TrackRefSchema } from "../live/schemas";
@@ -23,6 +24,8 @@ const GRID_NAMES: Readonly<Record<GridDivision, string>> = {
 
 interface SungWords {
   text: string;
+  detectionSeconds: Transcript["turns"];
+  evidence?: Transcript["evidence"];
   lines: { text: string; start: number | null; end: number | null; notes: number[] }[];
 }
 
@@ -56,7 +59,8 @@ export const humToMidiTool = defineTool({
     const key: MusicalKey | undefined = input.snapToKey && song.scaleMode ? { root: song.rootNote, intervals: song.scaleIntervals } : undefined;
     if (input.snapToKey && !key) throw new Error("Key snapping needs a known Set scale. Leave it off to preserve the recorded pitches.");
     return arrangement.withRender(lookup.track.ref, input.start, input.end, async (path) => {
-      const transcription = new HumTranscriber(song.tempo, key, { quantize: input.quantize ?? false, snapToKey: input.snapToKey ?? false, correctTuning: input.correctTuning ?? false, cleanFragments: input.cleanFragments ?? false }).analyze(await decode(path));
+      const frozen = await MusicAudio.freeze(path);
+      const transcription = new HumTranscriber(song.tempo, key, { quantize: input.quantize ?? false, snapToKey: input.snapToKey ?? false, correctTuning: input.correctTuning ?? false, cleanFragments: input.cleanFragments ?? false }).analyze(MusicAudio.decode(frozen).audio);
       const result = {
         notes: transcription.notes,
         suggestedClip: { start: input.start, length: input.end - input.start },
@@ -68,7 +72,7 @@ export const humToMidiTool = defineTool({
         transformations: transcription.transformations,
         tuningCorrected: input.correctTuning ?? false,
       };
-      return input.withWords ? { ...result, ...(await transcribeWords(ctx, path, transcription.notes, song.tempo)) } : result;
+      return input.withWords ? { ...result, ...(await transcribeWords(ctx, frozen, transcription.notes, song.tempo)) } : result;
     });
   },
 });
@@ -80,7 +84,7 @@ function keyName(song: SongInfo): string {
 
 async function transcribeWords(
   ctx: ToolContext,
-  path: string,
+  audio: MusicAudioSource,
   notes: Note[],
   tempo: number,
 ): Promise<{ words: SungWords } | { wordsNote: string }> {
@@ -88,7 +92,7 @@ async function transcribeWords(
     return { wordsNote: `The words stay untranscribed (${RoleCheck.setupMessage("transcription")}); the notes are complete.` };
   }
   try {
-    return { words: matchWords(await ctx.services.transcribe(path, ctx.signal), notes, tempo) };
+    return { words: matchWords(await ctx.services.transcribe(audio, ctx.signal), notes, tempo) };
   } catch (error) {
     ctx.signal?.throwIfAborted();
     const message = error instanceof Error ? error.message : String(error);
@@ -101,6 +105,8 @@ function matchWords(transcript: Transcript, notes: Note[], tempo: number): SungW
   const beatsPerSecond = tempo / SECONDS_PER_MINUTE;
   return {
     text: transcript.text,
+    detectionSeconds: transcript.turns,
+    ...(transcript.evidence ? { evidence: transcript.evidence } : {}),
     lines: transcript.turns.map((turn) => {
       const start = turn.start * beatsPerSecond;
       const end = turn.end * beatsPerSecond;

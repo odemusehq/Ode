@@ -93,7 +93,7 @@ export interface AudioUnderstander {
 }
 
 export interface Transcriber {
-  transcribe(audioPath: string, signal?: AbortSignal): Promise<Transcript>;
+  transcribe(audio: MusicAudioSource, signal?: AbortSignal): Promise<Transcript>;
 }
 
 export interface ImageGenerator {
