@@ -1,14 +1,19 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, readdir, realpath, rm, writeFile } from "node:fs/promises";
-import { basename, dirname, extname, join, sep } from "node:path";
+import { basename, dirname, extname, join, resolve, sep } from "node:path";
 import { z } from "zod";
+import { JsonFile } from "../mneme/json-file";
+import {
+  LibraryAnnotationsPatchSchema, LibraryAnnotationsSchema, LibraryProfileSchema, LibrarySearchSchema,
+  type LibraryAnnotations, type LibraryAnnotationsPatch, type LibraryProfile, type LibraryProfileLevel, type LibrarySearch, type LibrarySearchCoverage,
+} from "../shared/audio-library";
 
 /** Browser-selected bytes stay within the SDK's persistent storage and temporary folders. */
 export const MAX_AUDIO_UPLOAD_BYTES = 128 * 1024 * 1024;
 const AUDIO_SUFFIX = /\.(wav|wave|aif|aiff|aifc|flac|mp3|ogg|m4a)$/i;
 const ANALYSIS_SUFFIX = /\.(wav|wave|aif|aiff|aifc)$/i;
 const ID = z.string().uuid();
-const RecordSchema = z.object({
+const BaseRecordSchema = z.object({
   id: ID,
   name: z.string().min(1).max(255),
   purpose: z.enum(["library", "reference", "processed-bounce"]),
@@ -22,8 +27,20 @@ const RecordSchema = z.object({
   analysisSupported: z.boolean(),
 });
 
-export type AudioFileRecord = z.infer<typeof RecordSchema>;
+export type AudioFileRecord = z.infer<typeof BaseRecordSchema> & {
+  annotations?: LibraryAnnotations;
+  profile?: LibraryProfile;
+  annotationsStatus?: "invalid";
+  profileStatus?: "invalid-or-unsupported" | "stale";
+};
 export type ManagedAudio = AudioFileRecord & { path: string };
+export interface LibrarySearchResult {
+  items: AudioFileRecord[];
+  total: number;
+  offset: number;
+  nextOffset: number | null;
+  coverage: LibrarySearchCoverage;
+}
 export interface AudioFileInput {
   name: string;
   bytes: Uint8Array;
@@ -37,6 +54,41 @@ export interface AudioFileInput {
 
 function hash(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
+}
+
+const normal = (text: string) => text.trim().toLowerCase();
+const updates = new Map<string, Promise<unknown>>();
+
+/** Instances are created per tool call, so their updates must share the same per-file queue. */
+function updateAsset<T>(path: string, work: () => Promise<T>): Promise<T> {
+  const key = resolve(path), previous = updates.get(key) ?? Promise.resolve();
+  const run = previous.then(work, work);
+  updates.set(key, run);
+  void run.finally(() => { if (updates.get(key) === run) updates.delete(key); }).catch(() => undefined);
+  return run;
+}
+
+function validProfile(record: AudioFileRecord): LibraryProfile | undefined {
+  const profile = record.profile;
+  return profile?.sha256 === record.sha256 && profile.bytes === record.bytes ? profile : undefined;
+}
+
+/** Advisory data may be from a newer Ode version; it must not make valid original bytes inaccessible. */
+function storedRecord(input: unknown): { raw: Record<string, unknown>; record: AudioFileRecord } {
+  const raw = z.record(z.string(), z.unknown()).parse(input);
+  const record: AudioFileRecord = BaseRecordSchema.parse(raw);
+  if (raw.annotations !== undefined) {
+    const annotations = LibraryAnnotationsSchema.safeParse(raw.annotations);
+    if (annotations.success) record.annotations = annotations.data;
+    else record.annotationsStatus = "invalid";
+  } else if (raw.annotationsStatus === "invalid") record.annotationsStatus = "invalid";
+  if (raw.profile !== undefined) {
+    const profile = LibraryProfileSchema.safeParse(raw.profile);
+    if (!profile.success) record.profileStatus = "invalid-or-unsupported";
+    else if (profile.data.sha256 !== record.sha256 || profile.data.bytes !== record.bytes) record.profileStatus = "stale";
+    else record.profile = profile.data;
+  } else if (raw.profileStatus === "invalid-or-unsupported" || raw.profileStatus === "stale") record.profileStatus = raw.profileStatus;
+  return { raw, record };
 }
 
 /** Filename/MIME alone is insufficient: accept only a matching audio-container signature. Decoders validate codecs. */
@@ -66,7 +118,7 @@ export class LocalAudioFiles {
     }
     if (!hasAudioHeader(name, input.bytes)) throw new Error("The file's audio header does not match its filename; export a valid audio file and attach it again.");
     if (input.range && !(input.range.end > input.range.start)) throw new Error("The declared end beat must be after the start beat.");
-    const record = RecordSchema.parse({
+    const record = BaseRecordSchema.parse({
       id: randomUUID(), name, purpose: input.purpose, sha256: hash(input.bytes), bytes: input.bytes.byteLength,
       importedAt: new Date().toISOString(), declaredSource: input.source?.trim() || undefined, range: input.range,
       provenance: input.provenance ?? "user-supplied", currentness: "unknown", analysisSupported: ANALYSIS_SUFFIX.test(name),
@@ -84,24 +136,116 @@ export class LocalAudioFiles {
     return record;
   }
 
-  /** Search names and user declarations in already-uploaded files. No host Browser or Pack inventory is implied. */
+  /** Compatible array result for existing callers. Searches never decode or write managed assets. */
   async search(query: string, limit = 20): Promise<AudioFileRecord[]> {
-    const words = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
-    const count = z.number().int().min(1).max(100).parse(limit);
+    return (await this.searchRecords({ query, limit })).items;
+  }
+
+  /** Read only the known catalogue metadata. Numeric filters exclude unknown values explicitly. */
+  async searchRecords(input: LibrarySearch): Promise<LibrarySearchResult> {
+    const filters = LibrarySearchSchema.parse(input);
+    const words = normal(filters.query ?? "").split(/\s+/).filter(Boolean);
+    const limit = filters.limit ?? 20, offset = filters.offset ?? 0;
+    const coverage: LibrarySearchCoverage = { catalogue: 0, matchedDeclarations: 0, profiled: 0, unprofiled: 0, excludedUnknown: 0, unreadable: 0 };
     let entries: string[];
     try { entries = await readdir(await this.inside(this.root, true)); } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return { items: [], total: 0, offset, nextOffset: null, coverage };
       throw error;
     }
     const found: AudioFileRecord[] = [];
-    for (const entry of entries.sort()) {
+    const inBounds = (value: number | null | undefined, bounds: { min?: number; max?: number } | undefined): boolean | null => {
+      if (!bounds) return true;
+      if (value === null || value === undefined) return null;
+      return (bounds.min === undefined || value >= bounds.min) && (bounds.max === undefined || value <= bounds.max);
+    };
+    for (const entry of entries) {
       if (!entry.endsWith(".json") || !ID.safeParse(entry.slice(0, -5)).success) continue;
-      const record = RecordSchema.parse(JSON.parse(await readFile(await this.inside(join(this.root, entry)), "utf8")));
-      const text = `${record.name} ${record.declaredSource ?? ""} ${record.purpose}`.toLowerCase();
-      if (words.every((word) => text.includes(word))) found.push(record);
-      if (found.length >= count) break;
+      let record: AudioFileRecord;
+      try { record = await this.readRecord(entry.slice(0, -5)); } catch { coverage.unreadable++; continue; }
+      coverage.catalogue++;
+      const declaration = record.annotations;
+      const text = [record.name, record.declaredSource, record.purpose, declaration?.role, declaration?.kind, declaration?.notes,
+        declaration?.declaredKey, ...(declaration?.labels ?? [])].filter(Boolean).join(" ").toLowerCase();
+      if (!words.every((word) => text.includes(word)) || filters.purpose && record.purpose !== filters.purpose) continue;
+      const declarations = [
+        !filters.labels || filters.labels.every((label) => declaration?.labels?.some((saved) => normal(saved) === normal(label))),
+        !filters.role ? true : declaration?.role ? normal(declaration.role) === normal(filters.role) : null,
+        !filters.kind ? true : declaration?.kind ? declaration.kind === filters.kind : null,
+        !filters.declaredKey ? true : declaration?.declaredKey ? normal(declaration.declaredKey) === normal(filters.declaredKey) : null,
+        inBounds(declaration?.declaredBpm, filters.declaredBpm),
+      ];
+      if (declarations.includes(false)) continue;
+      if (declarations.includes(null)) { coverage.excludedUnknown++; continue; }
+      coverage.matchedDeclarations++;
+      const profile = validProfile(record);
+      if (profile) coverage.profiled++; else coverage.unprofiled++;
+      const measured = [
+        !filters.profileDetail ? true : profile ? filters.profileDetail === "metadata" || profile.level === "full" : null,
+        inBounds(profile ? profile.frames / profile.sampleRate : undefined, filters.durationSeconds),
+        filters.channels === undefined ? true : profile ? profile.channels === filters.channels : null,
+        inBounds(profile?.measurements?.integratedLufs, filters.integratedLufs),
+        inBounds(profile?.measurements?.truePeakDbtp, filters.truePeakDbtp),
+        inBounds(profile?.measurements?.tiltDbPerOctave, filters.tiltDbPerOctave),
+      ];
+      if (measured.includes(false)) continue;
+      if (measured.includes(null)) { coverage.excludedUnknown++; continue; }
+      // A stale cache is not exposed as a reading of this catalogue entry.
+      const visible = { ...record };
+      if (!profile) delete visible.profile;
+      found.push(visible);
     }
-    return found;
+    found.sort((a, b) => b.importedAt.localeCompare(a.importedAt) || a.id.localeCompare(b.id));
+    return { items: found.slice(offset, offset + limit), total: found.length, offset,
+      nextOffset: offset + limit < found.length ? offset + limit : null, coverage };
+  }
+
+  /** Only declaration fields change here; the source identity and technical provenance remain immutable. */
+  async annotate(id: string, expectedRevision: number, input: LibraryAnnotationsPatch, actor: { exchangeId?: string }, signal?: AbortSignal): Promise<AudioFileRecord> {
+    signal?.throwIfAborted();
+    ID.parse(id);
+    z.number().int().nonnegative().parse(expectedRevision);
+    const patch = LibraryAnnotationsPatchSchema.parse(input);
+    if (actor.exchangeId !== undefined) ID.parse(actor.exchangeId);
+    return updateAsset(await this.inside(this.metadata(id)), async () => {
+      signal?.throwIfAborted();
+      const { raw, record } = await this.readStoredRecord(id);
+      signal?.throwIfAborted();
+      if (record.annotationsStatus === "invalid") throw new Error("The saved audio declarations are invalid. Review the retained metadata before replacing them.");
+      if ((record.annotations?.revision ?? 0) !== expectedRevision) throw new Error("The audio declarations changed. Read the latest revision before editing them.");
+      const annotations = LibraryAnnotationsSchema.parse({ ...record.annotations, ...patch,
+        ...(patch.labels ? { labels: [...new Set(patch.labels.map(normal))] } : {}),
+        revision: expectedRevision + 1, enteredBy: "ode", exchangeId: actor.exchangeId, updatedAt: new Date().toISOString() });
+      const next = { ...raw, annotations };
+      const path = await this.inside(this.metadata(id));
+      signal?.throwIfAborted();
+      await JsonFile.writeAtomically(path, JSON.stringify(next));
+      return storedRecord(next).record;
+    });
+  }
+
+  /** Compute outside the update queue, then merge only a verified whole-file profile into the latest annotations. */
+  async profile(id: string, level: LibraryProfileLevel, build: (bytes: Uint8Array, level: LibraryProfileLevel) => LibraryProfile | Promise<LibraryProfile>, signal?: AbortSignal): Promise<AudioFileRecord> {
+    signal?.throwIfAborted();
+    const captured = await this.verified(id);
+    signal?.throwIfAborted();
+    const profile = LibraryProfileSchema.parse(await build(captured.bytes, level));
+    signal?.throwIfAborted();
+    if (profile.sha256 !== captured.record.sha256 || profile.bytes !== captured.record.bytes || profile.level !== level || hash(captured.bytes) !== profile.sha256) {
+      throw new Error("The profile does not match the captured audio bytes and requested detail.");
+    }
+    return updateAsset(await this.inside(this.metadata(id)), async () => {
+      signal?.throwIfAborted();
+      const current = await this.verified(id);
+      signal?.throwIfAborted();
+      if (current.record.sha256 !== profile.sha256 || current.record.bytes !== profile.bytes) throw new Error("The stored audio changed while it was profiled; profile the original again.");
+      const existing = validProfile(current.record);
+      // A later cheap inspection must not discard already measured levels for the same exact bytes.
+      const next = { ...current.raw, profile: existing?.level === "full" && profile.level === "metadata" ? existing : profile };
+      const path = await this.inside(this.metadata(id));
+      signal?.throwIfAborted();
+      await JsonFile.writeAtomically(path, JSON.stringify(next));
+      return storedRecord(next).record;
+    });
   }
 
   /** Validate a referenced asset without copying large recordings into the working folder. */
@@ -120,12 +264,21 @@ export class LocalAudioFiles {
   }
 
   private async verified(id: string) {
-    ID.parse(id);
-    const record = RecordSchema.parse(JSON.parse(await readFile(await this.inside(this.metadata(id)), "utf8")));
-    if (record.id !== id) throw new Error("The audio catalogue entry has the wrong identifier.");
+    const stored = await this.readStoredRecord(id), record = stored.record;
     const bytes = await readFile(await this.inside(this.file(record)));
     if (bytes.byteLength !== record.bytes || hash(bytes) !== record.sha256) throw new Error("The stored audio changed; attach the original file again.");
-    return { record, bytes };
+    return { ...stored, bytes };
+  }
+
+  private async readRecord(id: string): Promise<AudioFileRecord> {
+    return (await this.readStoredRecord(id)).record;
+  }
+
+  private async readStoredRecord(id: string) {
+    ID.parse(id);
+    const stored = storedRecord(JSON.parse(await readFile(await this.inside(this.metadata(id)), "utf8")));
+    if (stored.record.id !== id) throw new Error("The audio catalogue entry has the wrong identifier.");
+    return stored;
   }
 
   private metadata(id: string): string { return join(this.root, `${id}.json`); }
@@ -151,7 +304,7 @@ export async function audioProvenance(path: string, frozenBytes?: Uint8Array): P
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
     throw error;
   }
-  const record = RecordSchema.parse(JSON.parse(json));
+  const record = storedRecord(JSON.parse(json)).record;
   const bytes = frozenBytes ?? await readFile(path);
   if (bytes.byteLength !== record.bytes || hash(bytes) !== record.sha256) throw new Error("The attached audio changed; reopen the original from Ode's audio library.");
   return record;
