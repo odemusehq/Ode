@@ -1,4 +1,5 @@
 import type { Note } from "../../shared/live";
+import { MIDI_MAX } from "../../shared/notes";
 import { KeyFinder } from "../harmony/key-finder";
 import type { MusicalKey } from "../harmony/musical-key";
 import { melodyLine } from "../prosody/melody-line";
@@ -32,6 +33,14 @@ function copy(note: Note): Note {
   return { ...note };
 }
 
+export interface MelodyVariationResult {
+  /** Complete replacement for the supplied input, including every untouched source note. */
+  notes: Note[];
+  /** Zero-based positions in the original input, not the time-sorted output. */
+  selectedSourceIndices: number[];
+  preservedSourceIndices: number[];
+}
+
 /** Varies a melody while keeping its identity: rhythm, contour (inversion), ending, or ornaments. */
 export class MelodyVarier {
   constructor(
@@ -41,19 +50,44 @@ export class MelodyVarier {
     private readonly key?: MusicalKey,
   ) {}
 
-  vary(notes: Note[], how: MelodyVariation): Note[] {
-    const line = melodyLine(notes);
-    if (line.length === 0) return [];
+  vary(notes: Note[], how: MelodyVariation, sourceIndices?: readonly number[]): Note[] {
+    return this.varyWithSelection(notes, how, sourceIndices).notes;
+  }
+
+  varyWithSelection(notes: Note[], how: MelodyVariation, sourceIndices?: readonly number[]): MelodyVariationResult {
+    const selectedSourceIndices = sourceIndices === undefined
+      ? notes.flatMap((note, index) => note.muted ? [] : [index])
+      : [...sourceIndices];
+    if (sourceIndices !== undefined && sourceIndices.length === 0) throw new Error("Select at least one source note index.");
+    if (selectedSourceIndices.some((index) => !Number.isInteger(index) || index < 0 || index >= notes.length)) throw new Error("sourceIndices must be integer indices within the original input notes.");
+    const selected = new Set(selectedSourceIndices);
+    if (selected.size !== selectedSourceIndices.length) throw new Error("Each source note index must be selected once; duplicate indices are ambiguous.");
+    if (selectedSourceIndices.some((index) => notes[index]!.muted)) throw new Error("A selected source note is muted. Choose the intended unmuted line; muted notes are preserved unchanged.");
+    const selectedNotes = selectedSourceIndices.map((index) => notes[index]!);
+    if (selectedNotes.some((note) => !Number.isFinite(note.start) || !Number.isFinite(note.duration) || note.duration <= 0)) throw new Error("Selected melody notes need finite starts and positive finite durations.");
+    const line = melodyLine(selectedNotes);
+    if (line.length !== selectedNotes.length) throw new Error("The selected melody has simultaneous or near-simultaneous attacks. Choose one intended line with sourceIndices; no highest voice is inferred.");
+    const preservedSourceIndices = notes.flatMap((_note, index) => selected.has(index) ? [] : [index]);
+    const preserved = preservedSourceIndices.map((index) => copy(notes[index]!));
+    const result = (varied: Note[]): MelodyVariationResult => {
+      if (varied.some((note) => !Number.isFinite(note.pitch) || note.pitch < 0 || note.pitch > MIDI_MAX)) {
+        throw new Error(`This variation would produce a pitch outside MIDI range 0–${MIDI_MAX}. Choose another variation or explicitly transpose the source; the contour was not clamped.`);
+      }
+      return { notes: [...preserved, ...varied].sort((a, b) => a.start - b.start || a.pitch - b.pitch), selectedSourceIndices, preservedSourceIndices };
+    };
+    if (line.length === 0) return result([]);
     const key = this.key ?? new KeyFinder().find([], line);
     switch (how) {
       case MelodyVariation.Rhythm:
-        return this.varyRhythm(line);
+        return result(this.varyRhythm(line));
       case MelodyVariation.Contour:
-        return this.invert(line, key);
+        return result(this.invert(line, key));
       case MelodyVariation.Ending:
-        return this.newEnding(line, key);
+        return result(this.newEnding(line, key));
       case MelodyVariation.Ornament:
-        return this.ornament(line, key);
+        return result(this.ornament(line, key));
+      default:
+        throw new Error("Choose a supported melody variation.");
     }
   }
 
@@ -176,6 +210,11 @@ export class MelodyVarier {
 }
 
 /** A variation of a melody: "rhythm", "contour", "ending" or "ornament". */
-export function varyMelody(notes: Note[], how: MelodyVariation, seed: number = DEFAULT_SEED, meter: Meter = new Meter(), key?: MusicalKey): Note[] {
-  return new MelodyVarier(new SeededRandom(seed), meter, key).vary(notes, how);
+export function varyMelody(notes: Note[], how: MelodyVariation, seed: number = DEFAULT_SEED, meter: Meter = new Meter(), key?: MusicalKey, sourceIndices?: readonly number[]): Note[] {
+  return new MelodyVarier(new SeededRandom(seed), meter, key).vary(notes, how, sourceIndices);
+}
+
+/** Variation plus explicit source selection; all excluded material survives in the complete output. */
+export function varyMelodyWithSelection(notes: Note[], how: MelodyVariation, seed: number = DEFAULT_SEED, meter: Meter = new Meter(), key?: MusicalKey, sourceIndices?: readonly number[]): MelodyVariationResult {
+  return new MelodyVarier(new SeededRandom(seed), meter, key).varyWithSelection(notes, how, sourceIndices);
 }
