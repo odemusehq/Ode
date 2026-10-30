@@ -5,7 +5,7 @@ export const MAX_AUDIO = {
   maxBodyBytes: 128 * 1024,
   maxDurationSeconds: 300,
   maxFrames: 16_000_000,
-  chunkFrames: 2048,
+  chunkFrames: 512,
   maxSources: 512,
 } as const;
 

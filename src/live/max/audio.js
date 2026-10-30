@@ -27,7 +27,10 @@ function ode_audio_dictionary(value) {
   }
   throw new Error("Live did not expose its routing dictionary.");
 }
-function ode_audio_routing(api, key) { return ode_audio_dictionary(api.get(key)); }
+function ode_audio_routing(api, key) {
+  var value = ode_audio_dictionary(api.get(key));
+  return (key === "routing_type" || key === "routing_channel") && value[key] ? value[key] : value;
+}
 function ode_audio_set_routing(api, key, value) { api.set(key, JSON.stringify(value)); }
 function ode_audio_send(message, callback) {
   if (!running || !session) return;
@@ -148,11 +151,24 @@ function ode_audio_restore(job) {
   if (job.transport) {
     try {
       var song = job.transport.song;
-      if (job.transport.owned && Number(ode_audio_get(song, "is_playing")) === 1 && !Number(ode_audio_get(song, "record_mode")) && !Number(ode_audio_get(song, "session_record")) && Number(ode_audio_get(song, "loop")) === 0) {
-        song.call("stop_playing");
-        song.set("current_song_time", job.transport.position);
+      var playing = Number(ode_audio_get(song, "is_playing"));
+      var recording = Number(ode_audio_get(song, "record_mode")) || Number(ode_audio_get(song, "session_record"));
+      var loopState = Number(ode_audio_get(song, "loop"));
+      var position = Number(ode_audio_get(song, "current_song_time"));
+      var preparing = job.transport.phase === "preparing";
+      var pendingStart = job.transport.phase === "starting" && job.transport.startIssued;
+      if (!recording && pendingStart) song.call("stop_playing");
+      if (job.transport.owned && !recording) {
+        if (preparing && playing === 0 && (Math.abs(position - job.transport.position) < 0.001 || Math.abs(position - job.transport.seek) < 0.001)) {
+          // Compensate our queued seek even if Live has not applied it yet.
+          song.set("current_song_time", job.transport.position);
+        } else if (!preparing && loopState === 0 && (pendingStart || playing === 1)) {
+          // Pending starts need STOP even at is_playing = 0; an established manual Stop keeps its playhead.
+          if (job.transport.startIssued && !pendingStart) song.call("stop_playing");
+          song.set("current_song_time", job.transport.position);
+        }
       }
-      if (Number(ode_audio_get(song, "loop")) === 0 && job.transport.loop) song.set("loop", job.transport.loop);
+      if (!recording && (preparing || loopState === 0) && job.transport.loop) song.set("loop", job.transport.loop);
     } catch (_) {}
   }
   if (job.buffer) {
@@ -192,9 +208,42 @@ function ode_audio_monitor() {
       var song = job.transport.song;
       var now = Date.now();
       var beat = Number(ode_audio_get(song, "current_song_time"));
+      var playing = Number(ode_audio_get(song, "is_playing"));
+      var recording = Number(ode_audio_get(song, "record_mode")) || Number(ode_audio_get(song, "session_record"));
+      var loopState = Number(ode_audio_get(song, "loop"));
+      if (recording) { job.transport.owned = false; throw new Error("Recording started during Ode's capture; the take was cancelled."); }
+      if (job.transport.phase === "preparing") {
+        if (playing !== 0 || loopState !== 0 && loopState !== job.transport.loop || Math.abs(beat - job.transport.position) >= 0.001 && Math.abs(beat - job.transport.seek) >= 0.001) {
+          job.transport.owned = false;
+          throw new Error("The transport changed while Ode was preparing playback; the take was cancelled.");
+        }
+        if (loopState === 0 && Math.abs(beat - job.transport.seek) < 0.001) {
+          job.transport.phase = "starting";
+          job.transport.deadline = now + 2000;
+          job.transport.startTime = now;
+          job.transport.startIssued = true;
+          song.call("start_playing");
+        } else if (now >= job.transport.deadline) throw new Error("Live did not confirm the requested playback position in time.");
+        return;
+      }
+      if (job.transport.phase === "starting") {
+        var startupMaximum = (now - job.transport.startTime) / 1000 * 999 / 60 + 0.25;
+        if (loopState !== 0 || beat < job.transport.seek - 0.01 || beat > job.transport.seek + startupMaximum) {
+          job.transport.owned = false;
+          throw new Error("The transport changed while Ode was starting playback; the take was cancelled.");
+        }
+        if (playing === 0) {
+          if (now >= job.transport.deadline) throw new Error("Live did not start playback in time.");
+          return;
+        }
+        job.transport.phase = "playing";
+        job.transport.lastBeat = beat; job.transport.lastTime = now;
+        if (job.waiting && beat >= job.startBeat) ode_audio_start_recording(job);
+        return;
+      }
       var movement = beat - job.transport.lastBeat;
       var maximum = (now - job.transport.lastTime) / 1000 * 999 / 60 + 0.25;
-      if (Number(ode_audio_get(song, "is_playing")) !== 1 || Number(ode_audio_get(song, "record_mode")) || Number(ode_audio_get(song, "session_record")) || Number(ode_audio_get(song, "loop")) !== 0 || movement < -0.01 || movement > maximum) {
+      if (playing !== 1 || loopState !== 0 || movement < -0.01 || movement > maximum) {
         job.transport.owned = false;
         throw new Error("The transport changed during Ode's capture; the take was cancelled.");
       }
@@ -253,8 +302,9 @@ function ode_audio_capture(command) {
       if (Number(ode_audio_get(song, "is_playing")) || Number(ode_audio_get(song, "record_mode")) || Number(ode_audio_get(song, "session_record"))) throw new Error("Stop playback and recording before asking Ode to start a range capture.");
       if (Number(ode_audio_get(song, "back_to_arranger"))) throw new Error("Return to Arrangement playback before a range capture.");
       job.startBeat = start; job.prerollBeats = Math.min(start, preroll); job.waiting = true;
-      job.transport = { song: song, owned: true, position: Number(ode_audio_get(song, "current_song_time")), loop: Number(ode_audio_get(song, "loop")), lastBeat: start - job.prerollBeats, lastTime: Date.now() };
-      song.set("loop", 0); song.set("current_song_time", start - job.prerollBeats); song.call("start_playing");
+      job.transport = { song: song, owned: true, position: Number(ode_audio_get(song, "current_song_time")), loop: Number(ode_audio_get(song, "loop")), seek: start - job.prerollBeats,
+        phase: "preparing", deadline: Date.now() + 2000, startIssued: false, lastBeat: null, lastTime: Date.now() };
+      song.set("loop", 0); song.set("current_song_time", job.transport.seek);
       job.monitorTask = new Task(ode_audio_monitor, this); job.monitorTask.interval = 20; job.monitorTask.repeat();
       ode_audio_monitor();
     } else {
