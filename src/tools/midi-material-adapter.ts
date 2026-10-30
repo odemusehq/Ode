@@ -14,6 +14,7 @@ const INPUTS: Readonly<Record<string, readonly Pattern[]>> = {
   clip_slot_create_midi_clip: TOP_NOTES,
   melody_vary: TOP_NOTES,
   notes_edit: TOP_NOTES,
+  notes_transform: TOP_NOTES,
   set_lyrics_to_melody: TOP_NOTES,
   lyrics_fit_melody: TOP_NOTES,
   prosody_check: TOP_NOTES,
@@ -34,6 +35,7 @@ const OUTPUTS: Readonly<Record<string, readonly Pattern[]>> = {
   voice_chords: TOP_NOTES,
   melody_vary: TOP_NOTES,
   notes_edit: TOP_NOTES,
+  notes_transform: TOP_NOTES,
   melody_write: [["notes"], ["phrases", "*", "notes"], ["retainedHooks", "*", "notes"]],
   harmony_vocals_write: [["parts", "*", "notes"]],
   set_lyrics_to_melody: [["notes"], ["melody", "notes"]],
@@ -120,7 +122,7 @@ export function midiOutputPaths(name: string, result: unknown, input: Record<str
       const object = value as Record<string, unknown>;
       const tokens = tool === "midi_clip_get_notes" && typeof object.recoveryToken === "string"
         ? [object.recoveryToken]
-        : (tool === "melody_vary" || tool === "set_lyrics_to_melody" || tool === "notes_edit") && path.length === 1 && path[0] === "notes" ? inherited : [];
+        : (tool === "melody_vary" || tool === "set_lyrics_to_melody" || tool === "notes_edit" || tool === "notes_transform") && path.length === 1 && path[0] === "notes" ? inherited : [];
       outputs.push({ path: [...prefix, ...path], ...(tokens.length ? { originReadTokens: [...tokens] } : {}) });
     });
   };

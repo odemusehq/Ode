@@ -209,7 +209,7 @@ test("read-derived material keeps its original native guard while copies and rev
   } finally { r.close(); }
 });
 
-test("a child draft and precise edit are discoverable without prose references and expire after exact placement", async () => {
+test("a child draft, precise edit and whole-part transform remain exact through parent placement", async () => {
   const r = rig(); r.close();
   const input = { genre: "house", section: "chorus" as const, bars: 64, energy: 0.8, seed: 1, timeSignature: signature };
   const expected = await drumGrooveWriteTool.run(input, r.ctx) as { notes: Note[] };
@@ -222,11 +222,14 @@ test("a child draft and precise edit are discoverable without prose references a
       let message: unknown;
       if (agent === "subagent") {
         const round = childRound++;
-        if (round === 0) message = { tool_calls: [call("child-search", LoopTool.ToolSearch, { query: "drum_groove_write notes_edit" })] };
+        if (round === 0) message = { tool_calls: [call("child-search", LoopTool.ToolSearch, { query: "drum_groove_write notes_edit notes_transform" })] };
         else if (round === 1) message = { tool_calls: [call("draft", "drum_groove_write", input)] };
         else if (round === 2) {
           const draft = JSON.parse(messages.findLast((item) => item.tool_call_id === "draft")!.content!);
           message = { tool_calls: [call("precise", "notes_edit", { notes: draft.notes, updates: [{ index: 0, set: { velocity: 72 } }] })] };
+        } else if (round === 3) {
+          const precise = JSON.parse(messages.findLast((item) => item.tool_call_id === "precise")!.content!);
+          message = { tool_calls: [call("whole-part", "notes_transform", { notes: precise.notes, transposeSemitones: 12, timeScale: 0.5, timeOffsetBeats: 0.031 })] };
         } else message = { content: "The draft is ready." };
       } else {
         const round = mainRound++;
@@ -235,7 +238,7 @@ test("a child draft and precise edit are discoverable without prose references a
           call("writer-search", LoopTool.ToolSearch, { query: "track_create_midi_clip" })] };
         else if (round === 2) {
           const inventory = JSON.parse(messages.findLast((item) => item.tool_call_id === "inventory")!.content!);
-          discovered = inventory.items.find((item: any) => item.sourceTool === "notes_edit").ref;
+          discovered = inventory.items.find((item: any) => item.sourceTool === "notes_transform").ref;
           const args = { track: { index: 0 }, start: 32, length: 256, notes: discovered, name: "Child groove" };
           writerChars = JSON.stringify(args).length;
           message = { tool_calls: [call("place", "track_create_midi_clip", args)] };
@@ -252,7 +255,8 @@ test("a child draft and precise edit are discoverable without prose references a
   assert.equal(approvals, 1);
   assert.ok(discovered && writerChars < 1000);
   const placed = r.track.arrangementClips.find((clip) => clip.startTime === 32) as unknown as { notes: unknown };
-  assert.deepEqual(placed.notes, toLiveNotes(expected.notes.map((note, index) => index === 0 ? { ...note, velocity: 72 } : note)));
+  assert.deepEqual(placed.notes, toLiveNotes(expected.notes.map((note, index) => ({ ...note, ...(index === 0 ? { velocity: 72 } : {}),
+    pitch: note.pitch + 12, start: note.start * 0.5 + 0.031, duration: note.duration * 0.5 }))));
   assert.equal((await r.run("midi_material_read", { id: discovered.id, section: "notes" })).ok, false);
 });
 
@@ -271,17 +275,26 @@ test("a tiny dense-clip edit preserves all other notes and must reconcile interv
     assert.equal(r.registry.available("subagent").some((tool) => tool.name === "notes_edit"), true);
     const expected = dense.map((note, index) => index === 998 ? { ...note, pitch: 65, velocity: 72 } : note);
     assert.deepEqual(await r.exactNotes(draft.notes), clean(expected));
+    const transformation = { transposeSemitones: 2, timeScale: 0.5, timeOffsetBeats: 0.125 };
+    const transformInput = { notes: draft.notes, ...transformation };
+    assert.ok(JSON.stringify(transformInput).length < 1000);
+    const transformed = result(await r.run("notes_transform", transformInput));
+    const mapNote = (note: Note) => ({ ...note, pitch: note.pitch + 2, start: note.start * 0.5 + 0.125, duration: note.duration * 0.5 });
+    assert.deepEqual(await r.exactNotes(transformed.notes), clean(expected.map(mapNote)));
+    assert.equal(r.calls.length, beforeCalls);
+    assert.equal(r.registry.available("subagent").some((tool) => tool.name === "notes_transform"), true);
     const manual = { pitch: 79, startTime: 200.37, duration: 0.29, velocity: 101, probability: 0.6 };
     held.notes.push(manual);
     const fresh = result(await r.run("midi_clip_get_notes", { clip }));
-    const stale = await r.run("midi_clip_set_notes", { clip, notes: draft.notes, expected: { token: fresh.recoveryToken } });
-    assert.equal(stale.ok, false, "The inherited source guard must survive precise editing.");
+    const stale = await r.run("midi_clip_set_notes", { clip, notes: transformed.notes, expected: { token: fresh.recoveryToken } });
+    assert.equal(stale.ok, false, "The inherited source guard must survive precise editing and whole-part transformation.");
     assert.deepEqual(held.notes.at(-1), manual);
     const current = await r.exactNotes(fresh.notes);
     const reconciled = result(await r.run("notes_edit", { ...edit, notes: fresh.notes }));
-    const applied = await r.run("midi_clip_set_notes", { clip, notes: reconciled.notes, expected: { token: fresh.recoveryToken } });
+    const reconciledTransform = result(await r.run("notes_transform", { notes: reconciled.notes, ...transformation }));
+    const applied = await r.run("midi_clip_set_notes", { clip, notes: reconciledTransform.notes, expected: { token: fresh.recoveryToken } });
     assert.equal(applied.ok, true, applied.text);
-    assert.deepEqual(held.notes, toLiveNotes(current.map((note, index) => index === 998 ? { ...note, pitch: 65, velocity: 72 } : note)));
+    assert.deepEqual(held.notes, toLiveNotes(current.map((note, index) => mapNote(index === 998 ? { ...note, pitch: 65, velocity: 72 } : note))));
     assert.deepEqual(await r.exactNotes(read.notes), clean(dense), "The original captured material remains immutable after application.");
   } finally { r.close(); }
 });
