@@ -11,6 +11,7 @@ interface WaitingApproval {
   summary: string;
   input: unknown;
   resolve: (decision: Decision) => void;
+  release: () => void;
 }
 
 export interface ApprovalView {
@@ -34,8 +35,9 @@ export class Approvals {
     if (signal.aborted) return Promise.resolve(Decision.Deny);
     const id = randomUUID();
     return new Promise<Decision>((resolve) => {
-      this.waiting.set(id, { tool, summary, input, resolve });
-      signal.addEventListener("abort", () => this.settle(id, Decision.Deny), { once: true });
+      const abort = () => this.settle(id, Decision.Deny);
+      this.waiting.set(id, { tool, summary, input, resolve, release: () => signal.removeEventListener("abort", abort) });
+      signal.addEventListener("abort", abort, { once: true });
       this.emit({ type: "approval", id, tool, summary, input });
     });
   }
@@ -58,6 +60,7 @@ export class Approvals {
     const approval = this.waiting.get(id);
     if (!approval) return;
     this.waiting.delete(id);
+    approval.release();
     approval.resolve(decision);
     this.emit({ type: "approval-resolved", id, decision });
   }
