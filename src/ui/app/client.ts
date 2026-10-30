@@ -1,6 +1,6 @@
 import { API } from "../../shared/api";
 import type { RestoreResult, SongsResponse } from "../../shared/api";
-import type { Suggestion, UiEvent } from "../../shared/events";
+import type { UiEvent } from "../../shared/events";
 import type { Mode } from "../../shared/personalisation";
 import { ApiError, OdeApi, errorMessage } from "./api";
 import { DialogResult, LiveDialog } from "./dialog";
@@ -46,7 +46,7 @@ export class OdeClient {
 
   /**
    * Reads again what events may have missed: the status, the lyrics in the Lyrics dialog and the history in History.
-   * The server sends the selection, its suggestions and anything waiting for the musician when the stream opens.
+   * The server sends the conversation and anything waiting for the musician when the stream opens.
    */
   async refresh(): Promise<void> {
     const reads = [this.refreshStatus()];
@@ -124,10 +124,6 @@ export class OdeClient {
     } finally {
       this.sending.delete(controller);
     }
-  }
-
-  tap(suggestion: Suggestion): Promise<boolean> {
-    return this.send(suggestion.request);
   }
 
   /** The clicked draft and its durable request id are frozen before dispatch; later edits remain unsent. */

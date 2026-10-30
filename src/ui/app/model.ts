@@ -1,5 +1,5 @@
 import type { ApprovalRequest } from "../../shared/api";
-import type { ConversationExchange, ResultKind, Suggestion } from "../../shared/events";
+import type { ConversationExchange, ResultKind } from "../../shared/events";
 import type { Mode } from "../../shared/personalisation";
 import type { VersionListItem } from "../../shared/versions";
 
@@ -76,10 +76,6 @@ export interface AppState {
   versionGroupMinutes: number | null;
   /** The line the chosen model's licence asks Ode to show. */
   credit: string | null;
-  /** What the musician selected or pointed at in Live, in words; null means the whole song. */
-  focus: string | null;
-  /** One-tap actions for what is selected, fixes first. */
-  suggestions: readonly Suggestion[];
   /** The latest progress line while Ode works. */
   progress: string | null;
   /** Ode's latest note about its next step, while it works. */
@@ -110,8 +106,6 @@ export function initialState(): AppState {
     title: "",
     versionGroupMinutes: null,
     credit: null,
-    focus: null,
-    suggestions: [],
     progress: null,
     thought: null,
     steps: [],

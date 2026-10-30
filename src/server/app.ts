@@ -37,7 +37,6 @@ import { SelectionState } from "./selection";
 import { SnapshotReader } from "./snapshot-reader";
 import { SongSwitcher } from "./song-switcher";
 import { SongTitle } from "./song-title";
-import { SuggestionFinder } from "./suggestions";
 import { VersionActions } from "./version-actions";
 import { VersionRecorder } from "./version-recorder";
 
@@ -95,13 +94,7 @@ export class OdeApp {
     this.questions = new Questions(emit);
     this.reader = new SnapshotReader(live, this.song);
     this.recorder = new VersionRecorder(this.reader, this.versions, emit);
-    this.selection = new SelectionState({
-      reader: this.reader,
-      versions: this.versions,
-      finder: new SuggestionFinder(live, this.song, this.prefs, config.suggestions.perSelection),
-      busy: () => this.sessions.current.isBusy,
-      emit,
-    });
+    this.selection = new SelectionState();
 
     const context: ToolContext = {
       config,
@@ -168,7 +161,6 @@ export class OdeApp {
       versions: this.versions,
       recorder: this.recorder,
       sessions: this.sessions,
-      selection: this.selection,
       emit,
     });
     this.server = new OdeServer({
@@ -187,7 +179,6 @@ export class OdeApp {
       questions: this.questions,
       sessions: this.sessions,
       versions: this.versionActions,
-      selection: this.selection,
       ui,
     });
   }

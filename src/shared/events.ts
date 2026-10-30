@@ -1,18 +1,8 @@
 import type { ConversationExchange } from "./conversation";
 export type { ConversationExchange } from "./conversation";
-import type { SelectionInfo } from "./live-ops";
 import type { LyricsState } from "./lyrics";
 import type { Mode } from "./personalisation";
 import type { VersionListItem } from "./versions";
-
-export interface Suggestion {
-  id: string;
-  label: string;
-  /** What Ode is asked when the musician taps it. */
-  request: string;
-  /** A fix for a problem a check found; fixes come first. */
-  fix: boolean;
-}
 
 /** What a result line is about; it decides which actions the line offers. */
 export enum ResultKind {
@@ -46,9 +36,6 @@ export type UiEvent =
   /** A one-line question with two to four answers; images, when given, are release files shown as the answers. */
   | { type: "question"; id: string; text: string; options: string[]; images?: string[] }
   | { type: "question-resolved"; id: string; choice: string | null }
-  /** What the musician has selected in Live, in words: "Bass · clip Bass A · bars 9–16". */
-  | { type: "selection"; selection: SelectionInfo; label: string }
-  | { type: "suggestions"; items: Suggestion[] }
   | { type: "version"; version: VersionListItem }
   /** A restore deleted every version after this one. */
   | { type: "versions-truncated"; afterId: string }

@@ -115,7 +115,6 @@ export class RequestContext implements RequestLifecycle {
     let versionId: string | null;
     try { versionId = stopped ? await this.finishStopped(request, receipts) : await this.finishChange(request, reply.trim(), receipts); }
     catch (error) { await markPendingObservation(this.deps.song.dataDir, [request.text]); throw error; }
-    await this.deps.selection.refresh().catch(() => undefined);
     return { versionId };
   }
 
@@ -162,12 +161,12 @@ export class RequestContext implements RequestLifecycle {
     ]);
   }
 
-  /** What the musician right-clicked to ask, or the whole song. */
+  /** The last explicit right-click target is context, not a default scope for every later request. */
   private selectionPart(): string {
     const pointer = this.deps.selection.pointer;
     return pointer
-      ? `Pointed at with "Ask Ode": ${pointer.description} (${JSON.stringify(pointer.target)}).`
-      : "Pointed at: the whole song.";
+      ? `Last explicit "Ask Ode" target (may predate the current request): ${pointer.description} (${JSON.stringify(pointer.target)}). Infer its relevance from the conversation and inspect the current material.`
+      : "No explicit right-click target. Infer the intended scope from the current request, conversation and fresh Set context.";
   }
 
   /** The hand edits saved since the previous request, each with when it was saved. */

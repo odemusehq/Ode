@@ -8,7 +8,6 @@ import type { SongStore, SongVersions } from "../mneme/song-store";
 import type { OdeSession } from "../harness/session";
 import type { SessionManager } from "../harness/session-manager";
 import { RestoreRunner, type PutBack } from "./restore-runner";
-import type { SelectionState } from "./selection";
 import { SetReadError } from "./snapshot-reader";
 import { VersionRecorder } from "./version-recorder";
 import type { MutationReceipt, VerifiedMutationReceipt } from "../shared/mutation-receipt";
@@ -25,7 +24,6 @@ export interface VersionActionsDeps {
   versions: SongVersions;
   recorder: VersionRecorder;
   sessions: SessionManager;
-  selection: Pick<SelectionState, "refresh">;
   emit: (event: UiEvent) => void;
 }
 
@@ -124,7 +122,6 @@ export class VersionActions {
       this.deps.emit({ type: "progress", text: `Undoing: ${latest.summary}` });
       return this.undoScoped(latest);
     });
-    await this.refreshSuggestions();
     return result;
   }
 
@@ -216,7 +213,6 @@ export class VersionActions {
       this.deps.emit({ type: "result", text: `${resultLine(version)}${VersionActions.notRestored(outcome.skipped)}`, versionId: null, kind: ResultKind.Restore });
       return { restored: true, skipped: outcome.skipped };
     });
-    await this.refreshSuggestions();
     return result;
   }
 
@@ -251,11 +247,6 @@ export class VersionActions {
     const recorded = await this.deps.recorder.odeCutShort(VersionRecorder.STOPPED, request);
     const version = recorded.version;
     if (version) this.deps.emit({ type: "result", text: version.summary, versionId: version.id, kind: ResultKind.Stopped });
-    await this.refreshSuggestions();
-  }
-
-  private async refreshSuggestions(): Promise<void> {
-    await this.deps.selection.refresh().catch(() => undefined);
   }
 
   /**

@@ -1,4 +1,4 @@
-import type { ConversationExchange, Suggestion, UiEvent } from "../../shared/events";
+import type { ConversationExchange, UiEvent } from "../../shared/events";
 import { VersionAuthor } from "../../shared/versions";
 import type { VersionListItem } from "../../shared/versions";
 import type { AppState, Step } from "./model";
@@ -47,10 +47,6 @@ export function reduceEvent(state: AppState, event: UiEvent): AppState {
       return addQuestion(state, event);
     case "question-resolved":
       return { ...state, questions: state.questions.filter((question) => question.id !== event.id) };
-    case "selection":
-      return { ...state, focus: event.label.trim() || null };
-    case "suggestions":
-      return { ...state, suggestions: fixesFirst(event.items) };
     case "version":
       return addVersion(state, event.version);
     case "versions-truncated":
@@ -71,7 +67,7 @@ export function reduceEvent(state: AppState, event: UiEvent): AppState {
 
 /** A title may arrive before the new song's conversation. Never keep old action targets under it. */
 function clearSong(state: AppState): AppState {
-  return { ...state, exchanges: [], result: null, answer: null, steps: [], questions: [], approvals: [], suggestions: [], focus: null, versions: null, historyError: null, error: null };
+  return { ...state, exchanges: [], result: null, answer: null, steps: [], questions: [], approvals: [], versions: null, historyError: null, error: null };
 }
 
 function addMessage(state: AppState, event: Extract<UiEvent, { type: "message" }>): AppState {
@@ -89,11 +85,6 @@ function addMessage(state: AppState, event: Extract<UiEvent, { type: "message" }
     exchanges.push({ id: event.id ?? `message-${Date.now()}-${exchanges.length}`, request: "", reply: event.text, at: new Date().toISOString(), status: "complete" });
   }
   return { ...state, exchanges };
-}
-
-/** Suggestions with the fixes for problems first, otherwise in the server's order. */
-function fixesFirst(items: readonly Suggestion[]): Suggestion[] {
-  return [...items.filter((item) => item.fix), ...items.filter((item) => !item.fix)];
 }
 
 /** A new request: the old progress, steps and error go. */

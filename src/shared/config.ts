@@ -102,11 +102,6 @@ export interface ServerSettings {
   keepaliveMs: number;
 }
 
-export interface SuggestionSettings {
-  /** How many one-tap suggestions Ask Ode offers for what the musician pointed at. */
-  perSelection: number;
-}
-
 export interface LyricsSupportSettings {
   /** The longest answer Lyrics support may give for one section, reasoning included. */
   maxTokens: number;
@@ -145,7 +140,6 @@ export class OdeConfig {
   readonly versions: VersionSettings = { ...defaults.versions };
   readonly release: ReleaseSettings = { ...defaults.release };
   readonly server: ServerSettings = { ...defaults.server };
-  readonly suggestions: SuggestionSettings = { ...defaults.suggestions };
   readonly lyricsSupport: LyricsSupportSettings = { ...defaults.lyricsSupport };
   readonly dialogs: Record<DialogView, DialogSize> = { ...defaults.dialogs };
 

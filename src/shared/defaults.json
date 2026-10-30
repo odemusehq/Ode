@@ -30,9 +30,6 @@
   "server": {
     "keepaliveMs": 15000
   },
-  "suggestions": {
-    "perSelection": 6
-  },
   "lyricsSupport": {
     "maxTokens": 6000,
     "cacheSize": 400

@@ -30,7 +30,6 @@ import { SessionBusyError } from "../harness/session";
 import type { SessionManager } from "../harness/session-manager";
 import type { EventBus } from "./event-bus";
 import type { Questions } from "./questions";
-import type { SelectionState } from "./selection";
 import { SetReadError } from "./snapshot-reader";
 import type { SongSwitcher } from "./song-switcher";
 import { SongTitle } from "./song-title";
@@ -60,7 +59,6 @@ export interface ServerDeps {
   questions: Questions;
   sessions: SessionManager;
   versions: VersionActions;
-  selection: SelectionState;
   ui: UiFiles;
 }
 
@@ -241,7 +239,7 @@ export class OdeServer {
 
   private routeApi(): void {
     const { app } = this;
-    const { bus, song, lyrics, prefs, approvals, questions, sessions, selection, config } = this.deps;
+    const { bus, song, lyrics, prefs, approvals, questions, sessions, config } = this.deps;
 
     app.post(API.chat, async (c) => {
       const parsed = TextSchema.safeParse(await OdeServer.body(c));
@@ -551,7 +549,7 @@ export class OdeServer {
 
   /** Sends what is going on now to a window that just connected (questions and approvals still waiting included), then every event. */
   private eventStream(c: Context) {
-    const { bus, sessions, approvals, questions, selection, prefs } = this.deps;
+    const { bus, sessions, approvals, questions, prefs } = this.deps;
     return streamSSE(c, async (stream) => {
       const mode = await prefs.mode();
       // A window closed while the mode was read is done; from here on, state and events go out back to back, so each event reaches the window once.
@@ -570,7 +568,6 @@ export class OdeServer {
       send({ type: "mode", mode });
       for (const approval of approvals.pending()) send({ type: "approval", ...approval });
       for (const question of questions.pending()) send({ type: "question", ...question });
-      selection.replay(send);
       const last = [...exchanges].reverse().find((exchange) => exchange.status !== "running");
       if (session === sessions.current && last?.reply) send({ type: "result", text: last.reply,
         versionId: last.versionId ?? null,

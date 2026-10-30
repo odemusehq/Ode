@@ -1,11 +1,10 @@
 // HTTP API between the UI and the local server. All paths are relative to the server origin.
 import type { LyricsSaved, LyricsState, LyricsWrite } from "./lyrics";
 import type { Mode } from "./personalisation";
-import type { Suggestion } from "./events";
 import type { RestoreResult, VersionDetail, VersionListItem } from "./versions";
 
 export const API = {
-  chat: "/api/chat", // POST ChatRequest → { ok: true } (a typed line, spoken words or a tapped suggestion)
+  chat: "/api/chat", // POST ChatRequest → { ok: true } (a submitted conversation request)
   conversation: "/api/conversation", // GET complete saved transcript
   composer: "/api/composer", // GET ?songId&writerId; PUT ComposerWrite → ComposerState
   composerSend: "/api/composer/send", // POST ComposerPrepare freezes identity; never dispatches
@@ -103,4 +102,4 @@ export interface ModeRequest {
   mode: Mode;
 }
 
-export type { LyricsSaved, LyricsState, LyricsWrite, Suggestion, RestoreResult, VersionDetail, VersionListItem };
+export type { LyricsSaved, LyricsState, LyricsWrite, RestoreResult, VersionDetail, VersionListItem };

@@ -95,7 +95,7 @@ test("request-period hand edits remain observed and scoped Undo preserves them",
   assert.equal(recorded.version?.author, VersionAuthor.Observed);
   assert.ok(recorded.version?.recovery?.receipts.length);
   const sessions = { current: { exclusive: async <T>(work: (signal: AbortSignal) => Promise<T>) => work(new AbortController().signal) } } as unknown as SessionManager;
-  const actions = new VersionActions({ live, song, lyrics, versions, recorder, sessions, selection: { refresh: async () => undefined }, emit: () => undefined });
+  const actions = new VersionActions({ live, song, lyrics, versions, recorder, sessions, emit: () => undefined });
   assert.equal((await actions.undo(recorded.version!.id)).restored, true);
   assert.equal((await lyrics.read()).text, base.text);
   assert.equal(live.snapshot().tracks[0]?.mute, true);
@@ -194,7 +194,7 @@ test("failed Undo recording retains an observed-recovery marker across restart",
   assert.ok(written.receipt);
   const version = await recorder.odeChange("Changed a line", "Change a line", [written.receipt]);
   const sessions = { current: { exclusive: async <T>(work: (signal: AbortSignal) => Promise<T>) => work(new AbortController().signal) } } as unknown as SessionManager;
-  const actions = new VersionActions({ live, song, lyrics, versions, recorder, sessions, selection: { refresh: async () => undefined }, emit: () => undefined });
+  const actions = new VersionActions({ live, song, lyrics, versions, recorder, sessions, emit: () => undefined });
   const record = recorder.odeChange.bind(recorder);
   recorder.odeChange = async () => { throw new Error("Snapshot unavailable after inverse"); };
   await assert.rejects(actions.undo(version.version!.id), /Snapshot unavailable/);
