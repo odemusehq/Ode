@@ -196,7 +196,10 @@ export const mediaTools: AnyTool[] = [
         throw new Error("Demo vocals wait for a recording of the artist's voice with their consent. Ask them, then use voice_reference_set.");
       }
       const bpm = tempo ?? (await tempoOf(ctx));
-      const path = await ctx.services.singDemoVocal({ lines, tempo: bpm, voiceModel: voice.recording }, await ctx.temp.file("wav"), ctx.signal);
+      const rendered = await voice.withRecording(await ctx.temp.file("wav"), async (recording, reference, signal) => ({
+        path: await ctx.services.singDemoVocal({ lines, tempo: bpm, voiceModel: recording }, await ctx.temp.file("wav"), signal), reference,
+      }), ctx.signal);
+      const { path, reference } = rendered;
       const frozen = await MusicAudio.freeze(path);
       const source = await audioFileEvidence(path, frozen);
       const available = await ctx.services.available();
@@ -212,7 +215,7 @@ export const mediaTools: AnyTool[] = [
         try { verification.transcript = await ctx.services.transcribe(frozen, ctx.signal); }
         catch (error) { ctx.signal?.throwIfAborted(); verification.transcriptionError = error instanceof Error ? error.message : String(error); }
       }
-      return { path, tempo: bpm, source, verification };
+      return { path, tempo: bpm, source, voiceReference: reference, verification };
     },
   }),
   defineTool({
@@ -242,8 +245,11 @@ export const mediaTools: AnyTool[] = [
     describe: ({ track, start, end }, names) =>
       `Save your singing on ${names.track(track)} (${names.span(start, end)}) as the recording Ode uses to sing demo vocals in your voice`,
     run: async ({ track, start, end }, ctx) => {
-      await withAudio({ track, start, end }, ctx, (render) => voiceReference(ctx).save(render, { track, start, end }));
-      return { saved: true, note: "Demo vocals can now be sung in the artist's voice; voice_reference_clear removes the recording when they withdraw their consent." };
+      const arrangement = new ArrangementAudio(ctx);
+      const lookup = await arrangement.resolve(track);
+      if ("skipped" in lookup) throw new Error(`${lookup.skipped.track} stays unrecorded: ${lookup.skipped.reason}`);
+      const reference = await arrangement.withRender(lookup.track.ref, start, end, (render) => voiceReference(ctx).save(render, { track: lookup.track.ref, start, end }, ctx.signal));
+      return { saved: true, reference, note: "Demo vocals can now use this consent-associated reference; voice_reference_clear removes it and cancels local reference use when consent is withdrawn." };
     },
   }),
   defineTool({
