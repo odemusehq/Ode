@@ -173,6 +173,19 @@ test("repeated inspections get a continuation reminder without blocking fresh re
   assert.ok(model.turns[3]!.messages.some((message) => message.role === "system" && /repeated.*song_get/.test(String(message.content))));
 });
 
+test("a used tool stays defined for correcting its arguments on the next model call", async () => {
+  const model = new ScriptedModel([
+    answer("Set the tempo.", [{ id: "bad", name: "song_set_tempo", args: { tempo: "fast" } }]),
+    answer("Correct the input.", [{ id: "good", name: "song_set_tempo", args: { tempo: 107 } }]),
+    answer("Done."),
+  ]);
+  const { loop, run, live } = await rig(model);
+  assert.equal((await loop.run(run())).reply, "Done.");
+  assert.ok(model.turns[1]!.tools.some((tool) => tool.type === "function" && tool.function.name === "song_set_tempo"));
+  assert.equal(live.snapshot().song.tempo, 107);
+  assert.equal(live.calls.filter((call) => call.op === "song_set_tempo").length, 1);
+});
+
 test("compaction uses the provider's active input count when it exceeds the character estimate", async () => {
   const model = new ScriptedModel([
     answer("Read the song.", [{ id: "read", name: "song_get" }]),

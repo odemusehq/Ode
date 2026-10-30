@@ -49,7 +49,7 @@ export const DeviceRefSchema = z
 export const ParameterRefSchema = z.object({
   device: DeviceRefSchema,
   parameter: z.union([index, z.string().min(1)]).describe("Parameter index or exact name as shown in Live"),
-});
+}).describe('An object containing device and parameter, never a bare name or number. Example: {device:{track:{name:"Bass"},index:0},parameter:5}. For a device inside a rack, include device.chain as [rack device index, chain index, ...]. Read the actual parameter index/name and range from device_get or parameter_get.');
 
 export const SceneRefSchema = z.union([z.object({ index }), z.object({ name: z.string().min(1) })]).describe("A scene: {index} (0-based) or {name}.");
 

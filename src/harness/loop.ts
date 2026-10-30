@@ -453,6 +453,9 @@ export class AgentLoop {
     const tool = this.deps.registry.find(name);
     if (!tool) return `Find Ode's tools with ${LoopTool.ToolSearch}; ${name} is unknown.`;
     if (!this.deps.registry.available(run.agent).includes(tool)) return "Subagents return material; the main agent applies it to the Set.";
+    // A remembered tool name may outlive its definition after compaction. Keep its schema available for the next call.
+    loaded.delete(name);
+    loaded.add(name);
     const refusal = await run.gate.check(tool, input, run.signal);
     if (refusal !== null) return refusal;
     if (run.signal.aborted) return `${name} stays undone: the musician pressed Stop.`;
