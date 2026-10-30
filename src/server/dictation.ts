@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { AudioFileDecoder } from "../music/audio/decode";
@@ -15,20 +16,20 @@ export class Dictation {
   constructor(private readonly services: { transcribe(path: string, signal?: AbortSignal): Promise<Transcript> }, private readonly tempDir: string) {}
 
   static validate(bytes: Uint8Array): void {
-    if (bytes.byteLength === 0) throw new DictationError("The recording is empty. Dictate a short message and try again.", 400);
-    if (bytes.byteLength > MAX_DICTATION_BYTES) throw new DictationError("Dictation is limited to 16 MiB and one minute.", 413);
+    if (bytes.byteLength === 0) throw new DictationError(t("server.dictation.theRecordingIsEmptyDictateAShort"), 400);
+    if (bytes.byteLength > MAX_DICTATION_BYTES) throw new DictationError(t("server.dictation.dictationIsLimitedTo16MiBAnd"), 413);
     try {
       const decoder = new AudioFileDecoder();
-      const info = decoder.inspect(bytes, "Dictation");
+      const info = decoder.inspect(bytes, t("server.dictation.recording"));
       if (info.format !== "WAV" || info.encoding !== "signed int" || info.bitDepth < 16 || info.channels > 2 || info.sampleRate < 8000 || info.sampleRate > 192000) {
-        throw new Error("Use mono or stereo PCM WAV recorded at 8–192 kHz.");
+        throw new Error(t("server.dictation.useMonoOrStereoPCMWAVRecorded"));
       }
-      if (info.frames === 0) throw new Error("The recording has no audio frames.");
-      if (info.frames / info.sampleRate > MAX_DICTATION_SECONDS) throw new Error("Dictation is limited to one minute.");
+      if (info.frames === 0) throw new Error(t("server.dictation.theRecordingHasNoAudioFrames"));
+      if (info.frames / info.sampleRate > MAX_DICTATION_SECONDS) throw new Error(t("server.dictation.dictationIsLimitedToOneMinute"));
       // Validate sample data as well as container metadata before any service receives it.
-      decoder.decode(bytes, "Dictation");
+      decoder.decode(bytes, t("server.dictation.recording"));
     } catch (error) {
-      throw new DictationError(error instanceof Error ? error.message : "The recording is unreadable. Try dictating again.", 400);
+      throw new DictationError(error instanceof Error ? error.message : t("server.dictation.theRecordingIsUnreadableTryDictatingAgain"), 400);
     }
   }
 
@@ -41,15 +42,15 @@ export class Dictation {
       const path = join(directory, "speech.wav");
       await writeFile(path, bytes, { mode: 0o600 });
       signal?.throwIfAborted();
-      if (isCurrent && !isCurrent()) throw new DictationError("The open song changed. Dictate again in the intended song.", 409);
+      if (isCurrent && !isCurrent()) throw new DictationError(t("server.dictation.theOpenSongChangedDictateAgainIn"), 409);
       let text: string;
       try { text = (await this.services.transcribe(path, signal)).text.trim(); }
       catch (error) {
-        if (signal?.aborted) throw new DictationError("Dictation cancelled.", 408);
-        throw new DictationError("Transcription could not finish. Check the configured service and try again.", 502);
+        if (signal?.aborted) throw new DictationError(t("server.dictation.dictationCancelled"), 408);
+        throw new DictationError(t("server.dictation.transcriptionCouldNotFinishCheckTheConfigured"), 502);
       }
       signal?.throwIfAborted();
-      if (!text) throw new DictationError("No speech was recognised. Try dictating again.", 422);
+      if (!text) throw new DictationError(t("server.dictation.noSpeechWasRecognisedTryDictatingAgain"), 422);
       return text;
     } finally {
       await rm(directory, { recursive: true, force: true });

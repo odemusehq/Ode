@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { useId, useState } from "react";
 import { Button, ButtonVariant, Card, Tone } from "../../ui-kit";
 import { useClient } from "../app/hooks";
@@ -44,9 +45,9 @@ export function QuestionCard({ question }: QuestionCardProps) {
         event.preventDefault();
         if (answer.trim()) void client.answer(question.id, answer.trim());
       }}>
-        <label htmlFor={answerId} className="ode-visually-hidden">Your own answer</label>
-        <input id={answerId} className="ode-input" placeholder="Or answer in your own words" value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={question.answered} />
-        <Button type="submit" variant={ButtonVariant.Secondary} disabled={question.answered || !answer.trim()}>Answer</Button>
+        <label htmlFor={answerId} className="ode-visually-hidden">{t("decisions.ownAnswer")}</label>
+        <input id={answerId} className="ode-input" placeholder={t("decisions.answerPlaceholder")} value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={question.answered} />
+        <Button type="submit" variant={ButtonVariant.Secondary} disabled={question.answered || !answer.trim()}>{t("decisions.answer")}</Button>
       </form>
     </Card>
   );

@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { readFile, rm } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { z } from "zod";
@@ -17,7 +18,7 @@ export const processedAudioTools: AnyTool[] = [
     mainAgentOnly: true,
     description: "Discover the audio sources actually offered to the paired Ode Max device, with their routing stage and host track. This briefly selects auxiliary input routes to inspect their available stages, then restores them; it touches device routing and follows Manual Apply. Includes device input and available processed MIDI instruments, tracks, groups, returns or Main only when Live exposes those routes. No audio is captured here. sourceId is an opaque Max identity, never an SDK track reference. Use an id from this latest catalogue for processed_audio_capture. query optionally narrows by source/track/stage; results are bounded with an omitted count, so narrow the query when needed. Missing routes remain unavailable; device input on Main is before its mixer/fader and does not prove final Main output.",
     input: { query: z.string().max(512).optional(), limit: z.number().int().min(1).max(50).optional() },
-    describe: () => "Audio · find available listening sources",
+    describe: () => t("toolActivity.audioFindAvailableListeningSources"),
     run: async ({ query, limit }, ctx) => {
       const catalogue = await device(ctx).sources(ctx.signal);
       const words = query?.trim().toLowerCase().split(/\s+/).filter(Boolean) ?? [];
@@ -45,7 +46,7 @@ export const processedAudioTools: AnyTool[] = [
     ].join(" "),
     input: { sourceId: z.string().min(1).max(512), durationSeconds: z.number().positive().max(MAX_AUDIO.maxDurationSeconds),
       startBeat: z.number().min(0).optional(), prerollBeats: z.number().min(0).max(64).optional(), name: z.string().min(1).max(180).optional() },
-    describe: ({ startBeat, durationSeconds }) => `Audio · capture ${durationSeconds}s${startBeat === undefined ? " of current playback" : ` from beat ${startBeat}`}`,
+    describe: ({ startBeat, durationSeconds }) => t("toolActivity.captureAudio", { durationSeconds: durationSeconds, isStartBeat: Boolean(startBeat === undefined), startBeat: startBeat }),
     run: async ({ name, ...request }, ctx) => {
       const captured = await device(ctx).capture(request, ctx.signal);
       try {

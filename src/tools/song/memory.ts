@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { z } from "zod";
 import { defineTool, type AnyTool } from "../define";
 
@@ -51,7 +52,7 @@ export const memoryTools: AnyTool[] = [
       evidence: z.string().trim().min(1).max(2000).describe("The musician's actual statement, or specific inspected notes/lyrics/audio and their source. Do not invent listening or authorship."),
       authorship: z.enum(["artist", "ode", "mixed", "unknown"]).optional(),
     },
-    describe: ({ topic }) => `Artist memory · ${topic}`,
+    describe: ({ topic }) => t("toolActivity.artistMemory", { topic: topic }),
     run: ({ evidence, authorship, ...fact }, ctx) => {
       const targetScope = fact.scope ?? (fact.id ? undefined : "song");
       return ctx.mneme.record({ ...fact, scope: targetScope,
@@ -68,7 +69,7 @@ export const memoryTools: AnyTool[] = [
     mainAgentOnly: true,
     description: "Remove an obsolete or unwanted mneme record by id from memory_recall. For a correction prefer memory_record with that id so its useful evidence stays attached. Forgetting preferences never changes the song, Live or provider settings.",
     input: { id: z.string().min(1).max(200) },
-    describe: () => "Artist memory · forget",
+    describe: () => t("toolActivity.artistMemoryForget"),
     run: async ({ id }, ctx) => ({ forgotten: await ctx.mneme.forget(id, ctx.signal) }),
   }),
   defineTool({
@@ -78,7 +79,7 @@ export const memoryTools: AnyTool[] = [
     mainAgentOnly: true,
     description: "Record the musician's meaningful acceptance or rejection of a suggestion, with the actual feedback as evidence. Default scope song; use artist only when the feedback is enduring. Repeated calls for the same habit/context and accepted exchange count once. A tool succeeding, an Apply click alone or leaving an Ode draft unchanged is not enough to infer taste. Outcome counts are weak context, not rules; current instructions and explicit preferences take priority.",
     input: { habit: z.string().trim().min(1).max(200), kept: z.boolean(), scope: scope.optional(), context, evidence: z.string().trim().min(1).max(2000) },
-    describe: ({ habit }) => `Artist feedback · ${habit}`,
+    describe: ({ habit }) => t("toolActivity.artistFeedback", { habit: habit }),
     run: ({ habit, kept, scope: targetScope, context, evidence }, ctx) => {
       if (!ctx.exchangeId) throw new Error("Artist feedback needs the current accepted exchange.");
       return ctx.mneme.noteOutcome(habit, kept, { songId: targetScope === "artist" ? undefined : ctx.song.songId || undefined,

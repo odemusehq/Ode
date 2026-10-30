@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n";
 import { SetDiff } from "../mneme/set-diff";
 import type { SetSnapshot } from "../shared/set-snapshot";
 import type { LiveConnections } from "../shared/live";
@@ -37,22 +38,22 @@ enum OdeAction {
 /** Why an action is refused, as the history shows it: the musician changed the Set since, or Ode has yet to make a change. */
 const REFUSALS: Record<OdeAction, { editedSince: string; nothing: string }> = {
   [OdeAction.Undo]: {
-    editedSince: "You have changed the Set since Ode's last change. To go back further, restore a version in History.",
-    nothing: "Ode has yet to make a change to undo.",
+    editedSince: t("server.versionActions.youHaveChangedTheSetSinceOdeS"),
+    nothing: t("server.versionActions.odeHasYetToMakeAChange"),
   },
   [OdeAction.Again]: {
-    editedSince: "You have changed the Set since Ode's last change, so trying it again would undo your edits.",
-    nothing: "Ode has yet to make a change to try again.",
+    editedSince: t("server.versionActions.youHaveChangedTheSetSinceOdeS2"),
+    nothing: t("server.versionActions.odeHasYetToMakeAChange2"),
   },
   [OdeAction.Why]: {
-    editedSince: "You have changed the Set since Ode's last change.",
-    nothing: "Ode has yet to make a change to explain.",
+    editedSince: t("server.versionActions.youHaveChangedTheSetSinceOdeS3"),
+    nothing: t("server.versionActions.odeHasYetToMakeAChange3"),
   },
 };
 /** The change named is Ode's, and Ode has made a newer one since. */
-const NEWER_CHANGE = "Ode has made another change since.";
+const NEWER_CHANGE = t("server.versionActions.odeHasMadeAnotherChangeSince");
 /** A put-back that failed part-way is saved as Ode's version, so Undo goes back to before it. */
-const STOPPED_PART_WAY = "Restore stopped part-way";
+const STOPPED_PART_WAY = t("server.versionActions.restoreStoppedPartWay");
 /** What Ode is asked for Why?; the hidden context says which change and how to answer. */
 const WHY_REQUEST = "Why?";
 
@@ -107,7 +108,7 @@ export class VersionActions {
    * is now, keeps the later recovery versions and records the actual restored state. Throws when Ode is working or the Set is unreadable.
    */
   restore(id: string): Promise<RestoreResult> {
-    return this.restoreTo(id, (version) => `Restored the version from ${VersionActions.clock(version.time)}`);
+    return this.restoreTo(id, (version) => t("server.versionActions.restoredTheVersionFrom", { time: (VersionActions.clock(version.time)) }));
   }
 
   /**
@@ -119,7 +120,7 @@ export class VersionActions {
       await this.deps.recorder.recoverPending(this.deps.song.dataDir);
       await this.deps.recorder.handEdits();
       const latest = await this.scopedChange(versionId);
-      this.deps.emit({ type: "progress", text: `Undoing: ${latest.summary}` });
+      this.deps.emit({ type: "progress", text: t("server.versionActions.undoing", { summary: (latest.summary) }) });
       return this.undoScoped(latest);
     });
     return result;
@@ -133,7 +134,7 @@ export class VersionActions {
       await this.deps.recorder.recoverPending(this.deps.song.dataDir);
       await this.deps.recorder.handEdits();
       const latest = await this.scopedChange(versionId);
-      if (!latest.request) throw new RefusedError("Again needs the request behind Ode's last change, and this change was saved without it.");
+      if (!latest.request) throw new RefusedError(t("server.versionActions.againNeedsTheRequestBehindOdeSLast"));
       const outcome = await this.undoScoped(latest);
       if (!outcome.restored) throw new RefusedError(outcome.skipped.join(" "));
       if (stopped.aborted) return;
@@ -145,7 +146,7 @@ export class VersionActions {
   private async scopedChange(id: string): Promise<Version> {
     const version = await this.history.get(id);
     if (!version.recovery?.receipts.length || version.recovery.used || version.recovery.unverified || version.recovery.receipts.some((receipt) => receipt.kind === "unverified")) {
-      throw new RefusedError("This change includes operations without verified scoped recovery. Use History to review and explicitly restore a version; automatic Undo would risk your hand edits.");
+      throw new RefusedError(t("server.versionActions.thisChangeIncludesOperationsWithoutVerifiedScoped"));
     }
     return version;
   }
@@ -160,17 +161,17 @@ export class VersionActions {
       try {
         if (receipt.kind === "midi-notes") {
           const capability = await this.deps.live.extension.call<ExtensionOpResults["midi_clip_get_notes"]>("midi_clip_get_notes", { clip: receipt.clip, recoveryToken: receipt.token });
-          if (!capability.guardedRecovery) throw new Error("The installed extension does not support guarded MIDI recovery; its notes were kept.");
+          if (!capability.guardedRecovery) throw new Error(t("server.versionActions.theInstalledExtensionDoesNotSupportGuarded"));
           const result = await this.deps.live.extension.call<ExtensionOpResults["midi_clip_set_notes"]>("midi_clip_set_notes", {
             clip: receipt.clip, notes: receipt.before, expected: { token: receipt.token, notes: receipt.after },
           });
-          if (!result.__odeReceipts?.length) throw new Error("The installed extension did not return a guarded MIDI recovery receipt.");
+          if (!result.__odeReceipts?.length) throw new Error(t("server.versionActions.theInstalledExtensionDidNotReturnA"));
           applied.push(...result.__odeReceipts);
         } else if (receipt.kind === "lyrics") {
-          if (!this.deps.lyrics.revert) throw new Error("Scoped lyric recovery is unavailable.");
+          if (!this.deps.lyrics.revert) throw new Error(t("server.versionActions.scopedLyricRecoveryIsUnavailable"));
           const result = await this.deps.lyrics.revert(receipt);
           applied.push(result.receipt);
-          if (result.conflicts.length) skipped.push(`The musician's later lyric edits were kept on lines ${result.conflicts.join(", ")}.`);
+          if (result.conflicts.length) skipped.push(t("server.versionActions.theMusicianSLaterLyricEditsWereKept", { details: (result.conflicts.join(", ")) }));
         } else {
           const result = await this.deps.song.restoreFields(receipt.after, receipt.before, receipt.songId, receipt.afterAbsent, receipt.beforeAbsent);
           applied.push(...result.__odeReceipts);
@@ -180,7 +181,7 @@ export class VersionActions {
       }
       if (skipped.length) break;
     }
-    const text = skipped.length ? `Undo kept your later edits: ${skipped.join(" ")}` : `Undone: ${version.summary}`;
+    const text = skipped.length ? t("server.versionActions.undoKeptYourLaterEdits", { details: (skipped.join(" ")) }) : t("server.versionActions.undone", { summary: (version.summary) });
     const recorded = await this.deps.recorder.odeChange(text, `Undo ${version.id}`, applied);
     await pendingObservationFile(this.deps.song.dataDir).write(null);
     this.deps.emit({ type: "result", text, versionId: recorded.version?.id ?? null, kind: skipped.length ? ResultKind.Stopped : ResultKind.Undo });
@@ -199,7 +200,7 @@ export class VersionActions {
   private async restoreTo(id: string, resultLine: (version: Version) => string): Promise<RestoreResult> {
     const result = await this.session.exclusive(async () => {
       const version = await this.history.get(id);
-      this.deps.emit({ type: "progress", text: `Restoring the version from ${VersionActions.clock(version.time)}. Leave the Set and lyrics alone while it applies.` });
+      this.deps.emit({ type: "progress", text: t("server.versionActions.restoringTheVersionFromLeaveThe", { time: (VersionActions.clock(version.time)) }) });
       await this.deps.recorder.recoverPending(this.deps.song.dataDir);
       const recorded = await this.deps.recorder.handEdits();
       const target = await this.history.snapshotAt(id);
@@ -226,7 +227,7 @@ export class VersionActions {
     const remaining = SetDiff.between(actual.snapshot, expected);
     if (remaining.length === 0) return { complete: true, skipped: [] };
     const skipped = remaining.map((change) => change.label);
-    this.deps.emit({ type: "error", message: `The restore did not reach the requested state: ${skipped.join("; ")}. Recovery versions are retained.` });
+    this.deps.emit({ type: "error", message: t("server.versionActions.theRestoreDidNotReachTheRequested", { details: (skipped.join("; ")) }) });
     return { complete: false, skipped };
   }
 
@@ -266,7 +267,7 @@ export class VersionActions {
   }
 
   private static notRestored(skipped: string[]): string {
-    return skipped.length > 0 ? ` · skipped: ${skipped.join(", ")}` : "";
+    return skipped.length > 0 ? t("server.versionActions.skipped", { details: (skipped.join(", ")) }) : "";
   }
 
   private static clock(time: string): string {

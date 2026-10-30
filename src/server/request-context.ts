@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n";
 import type { OdeConfig } from "../shared/config";
 import type { LiveConnections } from "../shared/live";
 import { ResultKind, type UiEvent } from "../shared/events";
@@ -52,7 +53,7 @@ export class RequestContext implements RequestLifecycle {
     if (interruptedRequests.length) await markPendingObservation(this.deps.song.dataDir, interruptedRequests);
     try { await this.flushPending(); }
     catch (error) {
-      this.deps.emit({ type: "error", message: `Interrupted changes remain unverified. Ode will inspect them before the next request: ${error instanceof Error ? error.message : String(error)}` });
+      this.deps.emit({ type: "error", message: t("server.requestContext.interruptedChangesRemainUnverifiedOdeWillInspect", { message: (error instanceof Error ? error.message : String(error)) }) });
     }
   }
 
@@ -130,7 +131,7 @@ export class RequestContext implements RequestLifecycle {
     const { STOPPED } = VersionRecorder;
     const recorded = await this.record(() => this.deps.recorder.odeCutShort(STOPPED, request.text, receipts));
     const version = recorded?.version ?? null;
-    const text = version ? version.summary : recorded ? `${STOPPED}: the Set stayed the same` : `${STOPPED}.`;
+    const text = version ? version.summary : recorded ? t("server.requestContext.theSetStayedTheSame", { STOPPED: (STOPPED) }) : t("server.requestContext.message", { STOPPED: (STOPPED) });
     this.deps.emit({ type: "result", text, versionId: version?.id ?? null, kind: ResultKind.Stopped });
     return version?.id ?? null;
   }

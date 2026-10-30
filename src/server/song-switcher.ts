@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n";
 import { SessionBusyError } from "../harness/session";
 import type { SessionManager } from "../harness/session-manager";
 import type { SongEntry, SongStore } from "../mneme/song-store";
@@ -39,7 +40,7 @@ export class SongSwitcher {
   }
 
   private async changeSong(open: () => Promise<SongEntry>): Promise<SongEntry> {
-    if (this.switching) throw new SessionBusyError("Ode is switching songs. Wait for the song to open, then try again.");
+    if (this.switching) throw new SessionBusyError(t("server.songSwitcher.odeIsSwitchingSongsWaitForThe"));
     this.switching = true;
     try {
       // Finalise the old session's busy event before publishing the new session.

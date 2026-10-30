@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n";
 import type { UiEvent } from "../shared/events";
 import type { SetSnapshot } from "../shared/set-snapshot";
 import { VersionAuthor, type SetChange, type Version, type VersionListItem } from "../shared/versions";
@@ -24,7 +25,7 @@ export interface RecordedVersion {
  */
 export class VersionRecorder {
   /** How a version saved after the musician pressed Stop begins: "Stopped: 3 edits on Bass". */
-  static readonly STOPPED = "Stopped";
+  static readonly STOPPED = t("server.versionRecorder.stopped");
   private queue: Promise<unknown> = Promise.resolve();
 
   constructor(
@@ -37,7 +38,7 @@ export class VersionRecorder {
   handEdits(): Promise<RecordedVersion> {
     return this.enqueue(async () => {
       const snapshot = await this.reader.read();
-      return this.record(snapshot, VersionAuthor.Musician, (changes) => `You · ${SetDiff.summary(changes)}`);
+      return this.record(snapshot, VersionAuthor.Musician, (changes) => t("server.versionRecorder.you", { value: (SetDiff.summary(changes)) }));
     });
   }
 
@@ -68,8 +69,8 @@ export class VersionRecorder {
     const file = pendingObservationFile(dir);
     const pending = await file.read();
     if (!pending) return;
-    await this.odeCutShort("Interrupted work observed", pending.requests.join("\n"), [{
-      kind: "unverified", tool: "interrupted request or recovery", reason: `Work issued before ${pending.at} did not have a recorded outcome; manual edits may share this interval.`,
+    await this.odeCutShort(t("server.versionRecorder.interruptedWorkObserved"), pending.requests.join("\n"), [{
+      kind: "unverified", tool: "interrupted request or recovery", reason: t("server.versionRecorder.workIssuedBeforeDidNotHaveA", { at: (pending.at) }),
     }]);
     await file.write(null);
   }

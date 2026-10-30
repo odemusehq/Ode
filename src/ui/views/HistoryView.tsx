@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { VersionListItem } from "../../shared/versions";
 import { EmptyState, Notice, Toggle, Tone } from "../../ui-kit";
@@ -51,9 +52,9 @@ export function HistoryView() {
     <section className="history" aria-labelledby={titleId}>
       <div className="pane-header">
         <h2 id={titleId} className="pane-header__title">
-          History
+          {t("common.history")}
         </h2>
-        <Toggle label="Only named versions" checked={onlyNamed} onChange={setOnlyNamed} />
+        <Toggle label={t("history.onlyNamed")} checked={onlyNamed} onChange={setOnlyNamed} />
       </div>
       <div className="history__body">
         {outcome.length > 0 && (
@@ -66,8 +67,8 @@ export function HistoryView() {
           </div>
         )}
         {error && <Notice tone={Tone.Danger}>{error}</Notice>}
-        {!versions && !error && <p className="muted">Reading the history…</p>}
-        {versions && shown.length === 0 && <EmptyState title={onlyNamed ? "Named versions show here" : "Versions show here as you and Ode work"} />}
+        {!versions && !error && <p className="muted">{t("history.reading")}</p>}
+        {versions && shown.length === 0 && <EmptyState title={onlyNamed ? t("history.noNamedVersions") : t("history.noVersions")} />}
         {groups.map((group) => (
           <HistoryGroup
             key={group.key}

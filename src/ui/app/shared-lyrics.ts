@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import type { LyricsSaved, LyricsState, LyricsWrite } from "../../shared/lyrics";
 import { errorMessage } from "./api";
 import type { OdeApi } from "./api";
@@ -56,7 +57,7 @@ export class SharedLyrics {
     try {
       state = await this.api.getLyrics();
     } catch (error) {
-      if (!this.snapshot.stored) this.update({ loadError: `Reading the lyrics stopped: ${errorMessage(error)}` });
+      if (!this.snapshot.stored) this.update({ loadError: t("app.lyrics.readFailed", { reason: (errorMessage(error)) }) });
       return;
     }
     if (this.received !== seen) return;
@@ -113,7 +114,7 @@ export class SharedLyrics {
     const { stored } = this.snapshot;
     if (stored && state.songId !== stored.songId) {
       if (this.changed || this.saving) {
-        this.update({ saveError: "The song changed while these lyrics were unsaved. Your draft is still here; save it before leaving." });
+        this.update({ saveError: t("app.lyrics.songChanged") });
         return false;
       }
       this.saver.cancel();
@@ -167,7 +168,7 @@ export class SharedLyrics {
       saved = await this.api.saveLyrics(write);
     } catch (error) {
       this.changed = true;
-      this.update({ saveError: `Your lyrics are waiting to be saved: ${errorMessage(error)}` });
+      this.update({ saveError: t("app.lyrics.saveFailed", { reason: (errorMessage(error)) }) });
       return;
     }
     this.accept(saved, write.text);

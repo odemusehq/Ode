@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n";
 import type { LiveConnections } from "../shared/live";
 import type { SetSnapshot } from "../shared/set-snapshot";
 import type { LeadSheet } from "../shared/song";
@@ -39,7 +40,7 @@ export class RestoreRunner {
     for (const step of plan.steps) {
       if (this.readFresh) {
         const fresh = await this.readFresh();
-        if (SetDiff.between(last, fresh).length) return { complete: false, skipped: [...skipped, "The Set changed while the restore was applying. The remaining steps were kept undone; review History before continuing."] };
+        if (SetDiff.between(last, fresh).length) return { complete: false, skipped: [...skipped, t("server.restoreRunner.theSetChangedWhileTheRestoreWas")] };
         last = fresh;
       }
       const failed = await this.runStep(step, last);
@@ -48,13 +49,13 @@ export class RestoreRunner {
           const actual = await this.readFresh();
           const unexpected = SetDiff.between(last, actual).filter((change) => !step.some((call) => restoreStepExplains(call, change, last)));
           if (unexpected.length) return { complete: false, skipped: [...skipped,
-            `The Set changed outside the restore step: ${unexpected.map((change) => change.label).join("; ")}. The remaining steps were kept undone.`] };
+            t("server.restoreRunner.theSetChangedOutsideTheRestoreStep", { details: (unexpected.map((change) => change.label).join("; ")) })] };
           last = actual;
         }
         continue;
       }
       skipped.push(...failed);
-      return { complete: false, skipped: [...skipped, "The rest of the restore was skipped. Your recovery history is retained."] };
+      return { complete: false, skipped: [...skipped, t("server.restoreRunner.theRestOfTheRestoreWasSkipped")] };
     }
     if (target.sheet && current.sheet) {
       try { skipped.push(...await this.writeSheet(target.sheet, current.sheet)); }
@@ -76,14 +77,14 @@ export class RestoreRunner {
       Object.assign(replacement, { [field]: structuredClone(sheet[field]) });
     }
     if (Object.keys(replacement).length) {
-      if (!this.song.restoreFields) throw new Error("Guarded lead-sheet recovery is unavailable; the sheet was kept.");
+      if (!this.song.restoreFields) throw new Error(t("server.restoreRunner.guardedLeadSheetRecoveryIsUnavailableTheSheet"));
       await this.song.restoreFields(expected, replacement);
     }
     if (base.lyrics === sheet.lyrics) return [];
-    if (!this.lyrics.revert) throw new Error("Merging lyric recovery is unavailable; the lyrics were kept.");
+    if (!this.lyrics.revert) throw new Error(t("server.restoreRunner.mergingLyricRecoveryIsUnavailableTheLyrics"));
     // The inverse writer merges against the text seen before host work; later musician lines win.
     const result = await this.lyrics.revert({ kind: "lyrics", songId: this.song.songId ?? "", before: sheet.lyrics, after: base.lyrics, beforeRevision: sheet.lyricsRevision, afterRevision: base.lyricsRevision });
-    return result.conflicts.length ? [`Later lyric edits were kept on lines ${result.conflicts.join(", ")}.`] : [];
+    return result.conflicts.length ? [t("server.restoreRunner.laterLyricEditsWereKeptOnLines", { details: (result.conflicts.join(", ")) })] : [];
   }
 
   /**
@@ -97,7 +98,7 @@ export class RestoreRunner {
         const args = call.args as ExtensionOpArgs["midi_clip_set_notes"];
         const expected = new SetLookup(before).clip(args.clip)?.clip.notes;
         const read = await this.live.extension.call<ExtensionOpResults["midi_clip_get_notes"]>("midi_clip_get_notes", { clip: args.clip });
-        if (!read.guardedRecovery || !read.recoveryToken || JSON.stringify(read.notes) !== JSON.stringify(expected)) return ["The MIDI clip changed or the extension cannot guard its replacement. Its notes were kept."];
+        if (!read.guardedRecovery || !read.recoveryToken || JSON.stringify(read.notes) !== JSON.stringify(expected)) return [t("server.restoreRunner.theMIDIClipChangedOrTheExtension")];
         args.expected = { token: read.recoveryToken, notes: read.notes };
       }
     } catch (error) {
@@ -106,7 +107,7 @@ export class RestoreRunner {
     try {
       await this.run(guarded);
     } catch (error) {
-      return [RestoreRunner.messageOf(error), "The failed step was not retried because it may have partially applied. Review its observed result in History."];
+      return [RestoreRunner.messageOf(error), t("server.restoreRunner.theFailedStepWasNotRetriedBecause")];
     }
     return [];
   }

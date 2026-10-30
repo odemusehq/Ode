@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { useEffect, useState } from "react";
 import {
   OPTIONAL_ROLES,
@@ -14,25 +15,15 @@ import { useClient } from "../app/hooks";
 import { Layout } from "../app/layout";
 import "./SettingsView.css";
 
-const SERVICE_LABELS: Record<OptionalRole, string> = {
-  stem_separation: "Stem separation",
-  singing_voice: "Singing voice for demo vocals",
-  sound_generation: "Sound generation",
-};
+const SERVICE_LABELS: Record<OptionalRole, string> = { stem_separation: t("settings.serviceLabels.stem_separation"), singing_voice: t("settings.serviceLabels.singing_voice"), sound_generation: t("settings.serviceLabels.sound_generation") };
 
 /** Where Ode uses each model, shown by its (i). */
-const MODEL_INFO =
-  "Ode's main model. It does the work you ask for: writing and editing lyrics, chords, melodies, drums and sounds, arranging, mixing and answering your questions.";
-const LYRICS_INFO =
-  "The model that highlights syllables and rhymes in the Lyrics editor as you type. It marks the lyrics you write; the main model above writes and suggests them.";
-const META_INFO = "Meta's own models use this key: cover art, transcribing recordings and listening to audio.";
-const SAVING_NOTICE = "Wait for Settings to finish saving.";
-const CLOSE_NOTICE = "Save your Settings or choose Cancel before closing Ode.";
-const SERVICE_INFO: Record<OptionalRole, string> = {
-  stem_separation: "Splits a recording into the sound you describe and everything else, for samples and remixes.",
-  singing_voice: "Sings demo vocals in your own voice, once you agree to it.",
-  sound_generation: "Makes new one-shots and textures from a description.",
-};
+const MODEL_INFO = t("settings.modelInfo");
+const LYRICS_INFO = t("settings.lyricsInfo");
+const META_INFO = t("settings.metaInfo");
+const SAVING_NOTICE = t("settings.savingNotice");
+const CLOSE_NOTICE = t("settings.closeNotice");
+const SERVICE_INFO: Record<OptionalRole, string> = { stem_separation: t("settings.serviceInfo.stem_separation"), singing_voice: t("settings.serviceInfo.singing_voice"), sound_generation: t("settings.serviceInfo.sound_generation") };
 
 /** One optional service as the form edits it; a key typed here replaces the saved one. */
 interface ServiceDraft {
@@ -121,7 +112,7 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
     if (!saving && !dirty) return true;
     const message = saving ? SAVING_NOTICE : embedded
       ? CLOSE_NOTICE
-      : "Save your settings or choose Cancel before changing views.";
+      : t("settings.leaveNotice");
     setProblem(message);
     if (embedded && !active) client.store.setError(message);
     return false;
@@ -172,12 +163,12 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
   if (!loaded || !services) {
     return (
       <div className={`settings settings--reading${embedded ? " settings--embedded" : ""}`}>
-        {!embedded && !LiveDialog.hosted && <Button variant={ButtonVariant.Quiet} onClick={backToChat}>Back to chat</Button>}
-        {problem ? <Notice tone={Tone.Danger}>{problem}</Notice> : "Reading Settings…"}
+        {!embedded && !LiveDialog.hosted && <Button variant={ButtonVariant.Quiet} onClick={backToChat}>{t("settings.backToChat")}</Button>}
+        {problem ? <Notice tone={Tone.Danger}>{problem}</Notice> : t("settings.reading")}
         {(embedded || LiveDialog.hosted) && (
           <div className="settings__actions">
             <Button variant={ButtonVariant.Secondary} onClick={cancel}>
-              Cancel
+              {t("common.cancel")}
             </Button>
           </div>
         )}
@@ -195,12 +186,12 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
   const lyricsUsesMetaKey = lyricsProvider === metaProvider && !chosen?.servesMetaModels && (metaKey !== "" || loaded.settings.metaKeySet);
   const lyricsKeySaved = loaded.settings.lyrics.provider === lyricsProvider && loaded.settings.lyrics.keySet;
   const lyricsKeyPlaceholder = lyricsUsesMainKey
-    ? "Uses the key above"
+    ? t("settings.usesMainKey")
     : lyricsUsesMetaKey
-      ? "Uses the Meta key above"
+      ? t("settings.usesMetaKey")
       : lyricsKeySaved
-        ? "Saved"
-        : "Needed for this provider";
+        ? t("settings.savedKey")
+        : t("settings.keyRequired");
 
   const chooseProvider = (id: string) => {
     setProvider(id);
@@ -250,7 +241,7 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
       setLoaded(response);
       resetDraft(response);
       onSaved?.();
-      await client.refreshStatus().catch((error) => client.store.setError(`Settings were saved, but refreshing Ode stopped: ${errorMessage(error)}`));
+      await client.refreshStatus().catch((error) => client.store.setError(t("settings.refreshFailed", { error: (errorMessage(error)) })));
       if (!embedded && LiveDialog.hosted) finish(DialogResult.Done);
       else setSaved(true);
     } catch (error) {
@@ -263,42 +254,42 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
   return (
     <form
       className={`settings${embedded ? " settings--embedded" : ""}`}
-      aria-label={embedded ? "Settings" : undefined}
+      aria-label={embedded ? t("common.settings") : undefined}
       onSubmit={(event) => {
         event.preventDefault();
         void save();
       }}
     >
-      {!embedded && <h1 className="settings__title">Settings</h1>}
-      {!embedded && !LiveDialog.hosted && <Button variant={ButtonVariant.Quiet} onClick={backToChat}>Back to chat</Button>}
+      {!embedded && <h1 className="settings__title">{t("common.settings")}</h1>}
+      {!embedded && !LiveDialog.hosted && <Button variant={ButtonVariant.Quiet} onClick={backToChat}>{t("settings.backToChat")}</Button>}
 
-      <fieldset className="settings__fields" disabled={saving} aria-busy={saving} aria-label="Model and service settings">
+      <fieldset className="settings__fields" disabled={saving} aria-busy={saving} aria-label={t("settings.fieldsetLabel")}>
       <label className="settings__field">
-        <span className="settings__label">Provider</span>
+        <span className="settings__label">{t("settings.provider")}</span>
         <Select value={provider} options={loaded.providers.map((each) => ({ value: each.id, label: each.name }))} onChange={chooseProvider} />
       </label>
 
       <label className="settings__field">
         <span className="settings__label">
-          Model
+          {t("settings.model")}
           <InfoTip text={MODEL_INFO} />
         </span>
         <Select
           value={model}
           disabled={models.length === 0}
-          options={models.length > 0 ? models.map((each) => ({ value: each.id, label: each.name })) : [{ value: "", label: "Add the key to list your models" }]}
+          options={models.length > 0 ? models.map((each) => ({ value: each.id, label: each.name })) : [{ value: "", label: t("settings.addKeyToListModels") }]}
           onChange={setModel}
         />
         {chosen?.modelHint && <span className="settings__hint">{chosen.modelHint}</span>}
       </label>
 
       <label className="settings__field">
-        <span className="settings__label">Key</span>
+        <span className="settings__label">{t("settings.key")}</span>
         <TextInput
           type="password"
           autoComplete="off"
           value={key}
-          placeholder={savedKeyApplies ? "Saved" : "Needed for this provider"}
+          placeholder={savedKeyApplies ? t("settings.savedKey") : t("settings.keyRequired")}
           onChange={(event) => setKey(event.target.value.trim())}
         />
         {chosen && <span className="settings__hint">{chosen.keyHint}</span>}
@@ -307,14 +298,14 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
       {!chosen?.servesMetaModels && (
         <label className="settings__field">
           <span className="settings__label">
-            Meta key for cover art, transcription and listening
+            {t("settings.metaKey")}
             <InfoTip text={META_INFO} />
           </span>
           <TextInput
             type="password"
             autoComplete="off"
             value={metaKey}
-            placeholder={loaded.settings.metaKeySet ? "Saved" : "Optional"}
+            placeholder={loaded.settings.metaKeySet ? t("settings.savedKey") : t("settings.optional")}
             onChange={(event) => setMetaKey(event.target.value.trim())}
           />
         </label>
@@ -324,11 +315,11 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
 
       <fieldset className="settings__service">
         <legend className="settings__label">
-          Lyrics support
+          {t("settings.lyricsSupport")}
           <InfoTip text={LYRICS_INFO} />
         </legend>
         <label className="settings__field">
-          <span className="settings__label">Provider</span>
+          <span className="settings__label">{t("settings.provider")}</span>
           <Select
             value={lyricsProvider}
             options={loaded.lyricsProviders.map((each) => ({ value: each.id, label: each.name }))}
@@ -336,7 +327,7 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
           />
         </label>
         <label className="settings__field">
-          <span className="settings__label">Model</span>
+          <span className="settings__label">{t("settings.model")}</span>
           <Select
             value={lyricsModel}
             options={(lyricsChosen?.models ?? []).map((each) => ({ value: each.id, label: each.name }))}
@@ -344,7 +335,7 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
           />
         </label>
         <label className="settings__field">
-          <span className="settings__label">Key</span>
+          <span className="settings__label">{t("settings.key")}</span>
           <TextInput
             type="password"
             autoComplete="off"
@@ -357,7 +348,7 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
       </fieldset>
 
       <Button variant={ButtonVariant.Quiet} aria-expanded={moreOpen} onClick={() => setMoreOpen(!moreOpen)}>
-        More services
+        {t("settings.moreServices")}
       </Button>
       {moreOpen &&
         OPTIONAL_ROLES.map((role) => {
@@ -370,30 +361,30 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
                 <InfoTip text={SERVICE_INFO[role]} />
               </legend>
               <Select
-                aria-label={`${SERVICE_LABELS[role]}: provider`}
+                aria-label={t("settings.serviceProvider", { service: (SERVICE_LABELS[role]) })}
                 value={draft.provider}
-                options={[{ value: "", label: "Off" }, ...offered.map((each) => ({ value: each.id, label: each.name }))]}
+                options={[{ value: "", label: t("settings.off") }, ...offered.map((each) => ({ value: each.id, label: each.name }))]}
                 onChange={(id) => editService(role, { provider: id, baseUrl: offered.find((each) => each.id === id)?.baseUrl ?? "" })}
               />
               {draft.provider && (
                 <>
                   <TextInput
-                    aria-label={`${SERVICE_LABELS[role]}: address`}
-                    placeholder="Address"
+                    aria-label={t("settings.serviceAddress", { service: (SERVICE_LABELS[role]) })}
+                    placeholder={t("settings.address")}
                     value={draft.baseUrl}
                     onChange={(event) => editService(role, { baseUrl: event.target.value.trim() })}
                   />
                   <TextInput
-                    aria-label={`${SERVICE_LABELS[role]}: model`}
-                    placeholder="Model"
+                    aria-label={t("settings.serviceModel", { service: (SERVICE_LABELS[role]) })}
+                    placeholder={t("settings.model")}
                     value={draft.model}
                     onChange={(event) => editService(role, { model: event.target.value.trim() })}
                   />
                   <TextInput
-                    aria-label={`${SERVICE_LABELS[role]}: key`}
+                    aria-label={t("settings.serviceKey", { service: (SERVICE_LABELS[role]) })}
                     type="password"
                     autoComplete="off"
-                    placeholder={draft.keySet ? "Key saved" : "Key"}
+                    placeholder={draft.keySet ? t("settings.keySaved") : t("settings.key")}
                     value={draft.apiKey}
                     onChange={(event) => editService(role, { apiKey: event.target.value.trim() })}
                   />
@@ -405,14 +396,14 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
       </fieldset>
 
       {problem && <Notice tone={Tone.Danger}>{problem}</Notice>}
-      {saved && !dirty && <Notice tone={Tone.Success}>Saved. Ode uses these settings from the next request.</Notice>}
+      {saved && !dirty && <Notice tone={Tone.Success}>{t("settings.saved")}</Notice>}
 
       <div className="settings__actions">
         <Button variant={ButtonVariant.Secondary} disabled={saving} onClick={cancel}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button type="submit" variant={ButtonVariant.Primary} disabled={saving || !provider || !model || needsKey}>
-          Save
+          {t("common.save")}
         </Button>
       </div>
     </form>

@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 const MAX_SECONDS = 60;
 
 /** Feature detection only: permission and the browser's actual recording/decoding can still fail. */
@@ -11,9 +12,9 @@ export function encodeMonoWav(channels: readonly Float32Array[], sampleRate: num
   const first = channels[0];
   if (!first?.length || !Number.isInteger(sampleRate) || sampleRate < 1 || sampleRate > 192_000 ||
     channels.some((channel) => channel.length !== first.length || channel.some((sample) => !Number.isFinite(sample)))) {
-    throw new Error("The microphone returned unreadable audio. Record again or type your message.");
+    throw new Error(t("dictation.unreadableAudio"));
   }
-  if (first.length > Math.floor(sampleRate * (MAX_SECONDS + 0.25))) throw new Error("The recording exceeded 60 seconds. Record a shorter message so words are not lost.");
+  if (first.length > Math.floor(sampleRate * (MAX_SECONDS + 0.25))) throw new Error(t("dictation.tooLong"));
   const frames = first.length;
   const bytes = new Uint8Array(44 + frames * 2);
   const view = new DataView(bytes.buffer);
@@ -49,7 +50,7 @@ export class DictationRecorder {
   ) {}
 
   async start(): Promise<void> {
-    if (this.started) throw new Error("Start a new recording for each dictated message.");
+    if (this.started) throw new Error(t("dictation.newRecordingRequired"));
     this.started = true;
     const stream = await this.getMedia();
     if (this.cancelled) { stream.getTracks().forEach((track) => track.stop()); throw DictationRecorder.aborted(); }
@@ -63,7 +64,7 @@ export class DictationRecorder {
         recorder.ondataavailable = (event) => { if (!this.cancelled && event.data.size) chunks.push(event.data); };
         recorder.onstop = () => this.cancelled ? reject(DictationRecorder.aborted()) : resolve(new Blob(chunks, { type: recorder.mimeType }));
         recorder.onerror = () => {
-          const error = new Error("The browser could not record the microphone. Record again or type your message.");
+          const error = new Error(t("dictation.recordingFailed"));
           reject(error);
           this.cancel();
           this.onError(error);
@@ -78,7 +79,7 @@ export class DictationRecorder {
 
   async finish(): Promise<File> {
     if (this.cancelled) throw DictationRecorder.aborted();
-    if (!this.recorder || !this.capture || this.finishing) throw new Error("The microphone is not ready to finish recording.");
+    if (!this.recorder || !this.capture || this.finishing) throw new Error(t("dictation.notReady"));
     this.finishing = true;
     this.clearTimer();
     const capture = this.capture;
@@ -89,7 +90,7 @@ export class DictationRecorder {
       // stop fires after the final dataavailable event; a partial compressed chunk is not a complete recording.
       const blob = await capture;
       if (this.cancelled) throw DictationRecorder.aborted();
-      if (!blob.size) throw new Error("No microphone audio was recorded. Record again or type your message.");
+      if (!blob.size) throw new Error(t("dictation.emptyRecording"));
       try { context = new AudioContext({ sampleRate: 24_000 }); }
       catch { context = new AudioContext(); }
       this.context = context;
@@ -118,5 +119,5 @@ export class DictationRecorder {
 
   private clearTimer(): void { if (this.timer !== null) clearTimeout(this.timer); this.timer = null; }
   private releaseTracks(): void { this.stream?.getTracks().forEach((track) => track.stop()); this.stream = null; }
-  private static aborted(): DOMException { return new DOMException("Dictation cancelled.", "AbortError"); }
+  private static aborted(): DOMException { return new DOMException(t("dictation.cancelled"), "AbortError"); }
 }

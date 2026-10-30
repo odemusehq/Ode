@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import type { VersionListItem } from "../../shared/versions";
 
 export enum DateGroupKind {
@@ -26,16 +27,16 @@ const MS_PER_MINUTE = 60_000;
 const DAYS_IN_WEEK = 7;
 
 const GROUP_LABELS: Record<Exclude<DateGroupKind, DateGroupKind.Month>, string> = {
-  [DateGroupKind.Today]: "Today",
-  [DateGroupKind.Yesterday]: "Yesterday",
-  [DateGroupKind.ThisWeek]: "This week",
-  [DateGroupKind.ThisMonth]: "This month",
+  [DateGroupKind.Today]: t("history.today"),
+  [DateGroupKind.Yesterday]: t("history.yesterday"),
+  [DateGroupKind.ThisWeek]: t("history.thisWeek"),
+  [DateGroupKind.ThisMonth]: t("history.thisMonth"),
 };
 
-const MONTH = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" });
-const TIME = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" });
-const WEEKDAY_TIME = new Intl.DateTimeFormat(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" });
-const DATE_TIME = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+const MONTH = new Intl.DateTimeFormat(t("history.dateLocale"), { month: "long", year: "numeric" });
+const TIME = new Intl.DateTimeFormat(t("history.dateLocale"), { hour: "2-digit", minute: "2-digit" });
+const WEEKDAY_TIME = new Intl.DateTimeFormat(t("history.dateLocale"), { weekday: "short", hour: "2-digit", minute: "2-digit" });
+const DATE_TIME = new Intl.DateTimeFormat(t("history.dateLocale"), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 /**
  * Groups the history the way a document's version history does: by Today, Yesterday, This week, This month and
@@ -125,5 +126,5 @@ export function rowTime(iso: string, kind: DateGroupKind): string {
 
 /** The moment in a sentence: "22:38", "yesterday at 22:38", "Mon 22:38", "12 Oct, 22:38". */
 export function momentOf(iso: string, kind: DateGroupKind): string {
-  return kind === DateGroupKind.Yesterday ? `yesterday at ${rowTime(iso, kind)}` : rowTime(iso, kind);
+  return kind === DateGroupKind.Yesterday ? t("history.yesterdayAt", { time: (rowTime(iso, kind)) }) : rowTime(iso, kind);
 }

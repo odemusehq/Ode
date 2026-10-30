@@ -1,3 +1,4 @@
+import { t, nativeStrings } from "../../shared/i18n";
 import { readFile } from "node:fs/promises";
 import { MAX_WINDOW } from "../../shared/max-window";
 import { MAX_AUDIO } from "../../shared/max-audio";
@@ -9,7 +10,7 @@ interface Line { patchline: { source: [string, number]; destination: [string, nu
 export class MaxDevice {
   /** An unfrozen .amxd container, with the same ampf/meta/ptch structure as Max's own devices. */
   static async build(): Promise<Buffer> {
-    const script = `var ODE_WINDOW = ${JSON.stringify(MAX_WINDOW)};\nvar ODE_AUDIO = ${JSON.stringify(MAX_AUDIO)};\n${await readFile(new URL("window.js", import.meta.url), "utf8")}\n${await readFile(new URL("audio.js", import.meta.url), "utf8")}`;
+    const script = `var ODE_WINDOW = ${JSON.stringify(MAX_WINDOW)};\nvar ODE_AUDIO = ${JSON.stringify(MAX_AUDIO)};\nvar ODE_COPY = ${JSON.stringify(nativeStrings.max)};\nvar ODE_AUDIO_COPY = ${JSON.stringify(nativeStrings.maxAudio)};\n${await readFile(new URL("window.js", import.meta.url), "utf8")}\n${await readFile(new URL("audio.js", import.meta.url), "utf8")}`;
     const patch = Buffer.from(`${JSON.stringify(MaxDevice.patch(script))}\n\0`, "utf8");
     const header = Buffer.alloc(32);
     header.write("ampf", 0, "ascii");
@@ -55,10 +56,10 @@ export class MaxDevice {
       line(source, index, `capture-${id}-message`);
       line(`capture-${id}-message`, 0, "client");
     }
-    box("name", "comment", { text: "Ode", fontsize: 18, textcolor: [0.94, 0.94, 0.94, 1], presentation: 1, presentation_rect: [12, 10, 180, 25], patching_rect: [20, 20, 180, 25] });
-    box("open", "textbutton", { text: "Open Ode", texton: "Open Ode", mode: 0, parameter_enable: 0, numinlets: 1, numoutlets: 3, outlettype: ["", "int", ""], presentation: 1, presentation_rect: [12, 45, 180, 30], patching_rect: [20, 60, 180, 30] });
+    box("name", "comment", { text: t("common.ode"), fontsize: 18, textcolor: [0.94, 0.94, 0.94, 1], presentation: 1, presentation_rect: [12, 10, 180, 25], patching_rect: [20, 20, 180, 25] });
+    box("open", "textbutton", { text: t("live.menu.open"), texton: t("live.menu.open"), mode: 0, parameter_enable: 0, numinlets: 1, numoutlets: 3, outlettype: ["", "int", ""], presentation: 1, presentation_rect: [12, 45, 180, 30], patching_rect: [20, 60, 180, 30] });
     box("open-message", "message", { text: "open_ode", numinlets: 2, numoutlets: 1, outlettype: [""], patching_rect: [20, 105, 75, 22] });
-    box("status", "comment", { text: "Connecting to Ode…", varname: "odeStatus", linecount: 3, numinlets: 1, numoutlets: 0, presentation: 1, presentation_rect: [12, 87, 184, 58], patching_rect: [20, 145, 184, 58], textcolor: [0.74, 0.74, 0.74, 1], fontsize: 11 });
+    box("status", "comment", { text: t("max.connecting"), varname: "odeStatus", linecount: 3, numinlets: 1, numoutlets: 0, presentation: 1, presentation_rect: [12, 87, 184, 58], patching_rect: [20, 145, 184, 58], textcolor: [0.74, 0.74, 0.74, 1], fontsize: 11 });
     box("client", "v8.codebox", { code: script, filename: "none", numinlets: 2, numoutlets: 1, outlettype: [""], patching_rect: [250, 20, 500, 300], saved_object_attributes: { parameter_enable: 0 } });
     box("ready", "newobj", { text: "live.thisdevice", numinlets: 1, numoutlets: 3, outlettype: ["bang", "int", "int"], patching_rect: [20, 320, 100, 22] });
     box("start", "message", { text: "start", numinlets: 2, numoutlets: 1, outlettype: [""], patching_rect: [20, 355, 40, 22] });
@@ -78,7 +79,7 @@ export class MaxDevice {
       patcher: {
         fileversion: 1, appversion: MaxDevice.appVersion, classnamespace: "box", rect: [180, 100, 1080, 740],
         openinpresentation: 1, bglocked: 1, locked_bgcolor: [0.13, 0.13, 0.13, 1], bgcolor: [0.13, 0.13, 0.13, 1],
-        toolbarvisible: 0, statusbarvisible: 0, enablehscroll: 0, enablevscroll: 0, title: "Ode",
+        toolbarvisible: 0, statusbarvisible: 0, enablehscroll: 0, enablevscroll: 0, title: t("common.ode"),
         boxes: [
           { box: { id: "in", maxclass: "inlet", numinlets: 0, numoutlets: 1, outlettype: [""], patching_rect: [20, 800, 30, 30] } },
           { box: { id: "browser", maxclass: "jweb", varname: "odeBrowser", numinlets: 1, numoutlets: 1, outlettype: [""], patching_rect: [0, 0, 1080, 740], presentation: 1, presentation_rect: [0, 0, 1080, 740], url: "about:blank", historysize: 0 } },
@@ -113,7 +114,7 @@ export class MaxDevice {
         openrect: [0, 0, 208, 169], openinpresentation: 1, bglocked: 1, devicewidth: 208,
         bgcolor: [0.17, 0.17, 0.17, 1], locked_bgcolor: [0.17, 0.17, 0.17, 1],
         default_fontname: "Arial", default_fontsize: 12, toolbarvisible: 0, statusbarvisible: 0,
-        enablehscroll: 0, enablevscroll: 0, title: "Ode", latency: 0, boxes, lines,
+        enablehscroll: 0, enablevscroll: 0, title: t("common.ode"), latency: 0, boxes, lines,
         parameters: { ...Object.fromEntries([names.signature, names.port, ...names.words, names.latch].map((name, index) => [`connection-${index}`, [name, name, 0]])), inherited_shortname: 1 },
         dependency_cache: [],
         project: { version: 1, viewrect: [0, 0, 300, 500], autoorganize: 1, hideprojectwindow: 1, showdependencies: 1, autolocalize: 0, contents: { patchers: {} }, layout: {}, searchpath: {}, detailsvisible: 0 },

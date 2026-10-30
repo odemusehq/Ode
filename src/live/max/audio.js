@@ -25,7 +25,7 @@ function ode_audio_dictionary(value) {
     if (value.indexOf("dictionary ") === 0) return JSON.parse(new Dict(value.slice(11)).stringify());
     return JSON.parse(value);
   }
-  throw new Error("Live did not expose its routing dictionary.");
+  throw new Error(ODE_AUDIO_COPY.liveDidNotExposeItsRoutingDictionary);
 }
 function ode_audio_routing(api, key) {
   var value = ode_audio_dictionary(api.get(key));
@@ -48,7 +48,7 @@ function ode_audio_task(fn, delay) { var task = new Task(fn, this); task.schedul
 function ode_audio_host() {
   var device = new LiveAPI(null, "this_device");
   var current = device;
-  var trackName = "Unknown host track";
+  var trackName = ODE_AUDIO_COPY.unknownHostTrack;
   for (var depth = 0; depth < 12; depth++) {
     var ids = ode_audio_ids(current.get("canonical_parent"));
     if (!ids.length) break;
@@ -87,7 +87,7 @@ function ode_audio_tracks() {
   return tracks;
 }
 function ode_audio_sources(id) {
-  if (odeAudio.job) throw new Error("Wait for the current audio capture to finish.");
+  if (odeAudio.job) throw new Error(ODE_AUDIO_COPY.waitForTheCurrentAudioCaptureTo);
   var host = ode_audio_host();
   var catalogue = { catalogueId: "catalogue-" + Date.now() + "-" + (++odeAudio.serial), host: host, hostIdentity: ode_audio_host_identity(), sources: [], targets: {} };
   function add(source, target) {
@@ -95,7 +95,7 @@ function ode_audio_sources(id) {
     source.id = catalogue.catalogueId + ":" + catalogue.sources.length;
     catalogue.sources.push(source); catalogue.targets[source.id] = target;
   }
-  add({ name: host.trackName + " · at Ode's insertion point", kind: "device", stage: "device-input", trackName: host.trackName }, { local: true });
+  add({ name: ODE_AUDIO_COPY.insertionPoint.replace("{track}", function () { return host.trackName; }), kind: "device", stage: "device-input", trackName: host.trackName }, { local: true });
   var device = new LiveAPI(null, "this_device");
   var buses = ode_audio_ids(device.get("audio_inputs"));
   // Audio inputs 1/2 remain the device chain. Additional bus 1 is reserved for capture, never output.
@@ -194,10 +194,10 @@ function ode_audio_observed_beat() {
   catch (_) { return null; }
 }
 function ode_audio_check(job) {
-  if (!odeAudio.dsp) throw new Error("Live's audio engine stopped during capture.");
-  if (odeAudio.rate !== job.rate) throw new Error("Live's sample rate changed during capture; the take was cancelled.");
-  if (ode_audio_host_identity() !== job.hostIdentity) throw new Error("Ode's host track or device chain changed during capture.");
-  if (job.bus && (ode_audio_routing(job.bus, "routing_type").identifier !== job.target.type.identifier || ode_audio_routing(job.bus, "routing_channel").identifier !== job.target.channel.identifier)) throw new Error("The capture source or routing stage changed during the take.");
+  if (!odeAudio.dsp) throw new Error(ODE_AUDIO_COPY.liveSAudioEngineStoppedDuringCapture);
+  if (odeAudio.rate !== job.rate) throw new Error(ODE_AUDIO_COPY.liveSSampleRateChangedDuringCapture);
+  if (ode_audio_host_identity() !== job.hostIdentity) throw new Error(ODE_AUDIO_COPY.odeSHostTrackOrDeviceChain);
+  if (job.bus && (ode_audio_routing(job.bus, "routing_type").identifier !== job.target.type.identifier || ode_audio_routing(job.bus, "routing_channel").identifier !== job.target.channel.identifier)) throw new Error(ODE_AUDIO_COPY.theCaptureSourceOrRoutingStageChanged);
 }
 function ode_audio_monitor() {
   var job = odeAudio.job;
@@ -211,11 +211,11 @@ function ode_audio_monitor() {
       var playing = Number(ode_audio_get(song, "is_playing"));
       var recording = Number(ode_audio_get(song, "record_mode")) || Number(ode_audio_get(song, "session_record"));
       var loopState = Number(ode_audio_get(song, "loop"));
-      if (recording) { job.transport.owned = false; throw new Error("Recording started during Ode's capture; the take was cancelled."); }
+      if (recording) { job.transport.owned = false; throw new Error(ODE_AUDIO_COPY.recordingStartedDuringOdeSCaptureThe); }
       if (job.transport.phase === "preparing") {
         if (playing !== 0 || loopState !== 0 && loopState !== job.transport.loop || Math.abs(beat - job.transport.position) >= 0.001 && Math.abs(beat - job.transport.seek) >= 0.001) {
           job.transport.owned = false;
-          throw new Error("The transport changed while Ode was preparing playback; the take was cancelled.");
+          throw new Error(ODE_AUDIO_COPY.theTransportChangedWhileOdeWasPreparing);
         }
         if (loopState === 0 && Math.abs(beat - job.transport.seek) < 0.001) {
           job.transport.phase = "starting";
@@ -223,17 +223,17 @@ function ode_audio_monitor() {
           job.transport.startTime = now;
           job.transport.startIssued = true;
           song.call("start_playing");
-        } else if (now >= job.transport.deadline) throw new Error("Live did not confirm the requested playback position in time.");
+        } else if (now >= job.transport.deadline) throw new Error(ODE_AUDIO_COPY.liveDidNotConfirmTheRequestedPlayback);
         return;
       }
       if (job.transport.phase === "starting") {
         var startupMaximum = (now - job.transport.startTime) / 1000 * 999 / 60 + 0.25;
         if (loopState !== 0 || beat < job.transport.seek - 0.01 || beat > job.transport.seek + startupMaximum) {
           job.transport.owned = false;
-          throw new Error("The transport changed while Ode was starting playback; the take was cancelled.");
+          throw new Error(ODE_AUDIO_COPY.theTransportChangedWhileOdeWasStarting);
         }
         if (playing === 0) {
-          if (now >= job.transport.deadline) throw new Error("Live did not start playback in time.");
+          if (now >= job.transport.deadline) throw new Error(ODE_AUDIO_COPY.liveDidNotStartPlaybackInTime);
           return;
         }
         job.transport.phase = "playing";
@@ -245,7 +245,7 @@ function ode_audio_monitor() {
       var maximum = (now - job.transport.lastTime) / 1000 * 999 / 60 + 0.25;
       if (playing !== 1 || loopState !== 0 || movement < -0.01 || movement > maximum) {
         job.transport.owned = false;
-        throw new Error("The transport changed during Ode's capture; the take was cancelled.");
+        throw new Error(ODE_AUDIO_COPY.theTransportChangedDuringOdeSCapture);
       }
       job.transport.lastBeat = beat; job.transport.lastTime = now;
       if (job.waiting && beat >= job.startBeat) ode_audio_start_recording(job);
@@ -262,29 +262,29 @@ function ode_audio_start_recording(job) {
   job.finishTask = ode_audio_task(ode_audio_recorded, job.frames / job.rate * 1000 + 25);
 }
 function ode_audio_capture(command) {
-  if (odeAudio.job) throw new Error("Wait for the current audio capture to finish.");
+  if (odeAudio.job) throw new Error(ODE_AUDIO_COPY.waitForTheCurrentAudioCaptureTo);
   var catalogue = odeAudio.catalogue;
-  if (!catalogue || command.catalogueId !== catalogue.catalogueId || !catalogue.targets[command.sourceId]) throw new Error("Read the current audio sources again before capturing.");
-  if (ode_audio_host_identity() !== catalogue.hostIdentity) throw new Error("Ode moved or its host device chain changed. Read the audio sources again.");
+  if (!catalogue || command.catalogueId !== catalogue.catalogueId || !catalogue.targets[command.sourceId]) throw new Error(ODE_AUDIO_COPY.readTheCurrentAudioSourcesAgainBefore);
+  if (ode_audio_host_identity() !== catalogue.hostIdentity) throw new Error(ODE_AUDIO_COPY.odeMovedOrItsHostDeviceChain);
   var rate = odeAudio.rate;
   var duration = Number(command.durationSeconds);
   var frames = Math.ceil(duration * rate);
-  if (!odeAudio.dsp || !Number.isFinite(rate) || rate < 8000 || rate > 384000) throw new Error("Live's audio engine is not ready for capture.");
-  if (!Number.isFinite(duration) || duration <= 0 || duration > ODE_AUDIO.maxDurationSeconds || frames > ODE_AUDIO.maxFrames) throw new Error("Choose an audio duration within the bounded capture limit.");
+  if (!odeAudio.dsp || !Number.isFinite(rate) || rate < 8000 || rate > 384000) throw new Error(ODE_AUDIO_COPY.liveSAudioEngineIsNotReady);
+  if (!Number.isFinite(duration) || duration <= 0 || duration > ODE_AUDIO.maxDurationSeconds || frames > ODE_AUDIO.maxFrames) throw new Error(ODE_AUDIO_COPY.chooseAnAudioDurationWithinTheBounded);
   var job = { id: command.id, catalogueId: command.catalogueId, sourceId: command.sourceId, target: catalogue.targets[command.sourceId], hostIdentity: catalogue.hostIdentity, frames: frames, rate: rate, offset: 0, startedBeat: null, endedBeat: null, prerollBeats: 0 };
   odeAudio.job = job;
   try {
     if (!job.target.local) {
       job.bus = new LiveAPI(null, "id " + job.target.busId);
       var available = ode_audio_routing(job.bus, "available_routing_types").available_routing_types || [];
-      if (!available.some(function (item) { return item.identifier === job.target.type.identifier; })) throw new Error("The chosen track is no longer an available audio source.");
+      if (!available.some(function (item) { return item.identifier === job.target.type.identifier; })) throw new Error(ODE_AUDIO_COPY.theChosenTrackIsNoLongerAn);
       job.previousRouting = { type: ode_audio_routing(job.bus, "routing_type"), channel: ode_audio_routing(job.bus, "routing_channel") };
       ode_audio_set_routing(job.bus, "routing_type", job.target.type);
       var channels = ode_audio_routing(job.bus, "available_routing_channels").available_routing_channels || [];
-      if (!channels.some(function (item) { return item.identifier === job.target.channel.identifier; })) throw new Error("The chosen routing stage is no longer available.");
+      if (!channels.some(function (item) { return item.identifier === job.target.channel.identifier; })) throw new Error(ODE_AUDIO_COPY.theChosenRoutingStageIsNoLonger);
       ode_audio_set_routing(job.bus, "routing_channel", job.target.channel);
       job.channelSet = true;
-      if (ode_audio_routing(job.bus, "routing_type").identifier !== job.target.type.identifier || ode_audio_routing(job.bus, "routing_channel").identifier !== job.target.channel.identifier) throw new Error("Live did not accept the requested capture routing.");
+      if (ode_audio_routing(job.bus, "routing_type").identifier !== job.target.type.identifier || ode_audio_routing(job.bus, "routing_channel").identifier !== job.target.channel.identifier) throw new Error(ODE_AUDIO_COPY.liveDidNotAcceptTheRequestedCapture);
     }
     ode_audio_object("odeCaptureLeft", job.target.local ? 1 : 2);
     ode_audio_object("odeCaptureRight", job.target.local ? 1 : 2);
@@ -292,15 +292,15 @@ function ode_audio_capture(command) {
     ode_audio_object("odeCaptureRecorder", 0);
     bufferObject.message("sr", rate); bufferObject.message("sizeinsamps", frames); bufferObject.message("clear");
     odePatcher.getnamed("odeCaptureRecorder").message("reset");
-    if (!odeAudio.bufferName) throw new Error("Max's capture buffer is not initialised yet.");
+    if (!odeAudio.bufferName) throw new Error(ODE_AUDIO_COPY.maxSCaptureBufferIsNotInitialised);
     job.buffer = new Buffer(odeAudio.bufferName);
-    if (job.buffer.channelcount() !== 2 || job.buffer.framecount() !== frames) throw new Error("Max could not allocate the requested stereo capture buffer.");
+    if (job.buffer.channelcount() !== 2 || job.buffer.framecount() !== frames) throw new Error(ODE_AUDIO_COPY.maxCouldNotAllocateTheRequestedStereo);
     if (command.startBeat !== undefined) {
       var start = Number(command.startBeat), preroll = Number(command.prerollBeats || 0);
-      if (!Number.isFinite(start) || start < 0 || !Number.isFinite(preroll) || preroll < 0 || preroll > 64) throw new Error("Choose a nonnegative start beat and preroll of at most 64 beats.");
+      if (!Number.isFinite(start) || start < 0 || !Number.isFinite(preroll) || preroll < 0 || preroll > 64) throw new Error(ODE_AUDIO_COPY.chooseANonnegativeStartBeatAndPreroll);
       var song = new LiveAPI(null, "live_set");
-      if (Number(ode_audio_get(song, "is_playing")) || Number(ode_audio_get(song, "record_mode")) || Number(ode_audio_get(song, "session_record"))) throw new Error("Stop playback and recording before asking Ode to start a range capture.");
-      if (Number(ode_audio_get(song, "back_to_arranger"))) throw new Error("Return to Arrangement playback before a range capture.");
+      if (Number(ode_audio_get(song, "is_playing")) || Number(ode_audio_get(song, "record_mode")) || Number(ode_audio_get(song, "session_record"))) throw new Error(ODE_AUDIO_COPY.stopPlaybackAndRecordingBeforeAskingOde);
+      if (Number(ode_audio_get(song, "back_to_arranger"))) throw new Error(ODE_AUDIO_COPY.returnToArrangementPlaybackBeforeARange);
       job.startBeat = start; job.prerollBeats = Math.min(start, preroll); job.waiting = true;
       job.transport = { song: song, owned: true, position: Number(ode_audio_get(song, "current_song_time")), loop: Number(ode_audio_get(song, "loop")), seek: start - job.prerollBeats,
         phase: "preparing", deadline: Date.now() + 2000, startIssued: false, lastBeat: null, lastTime: Date.now() };
@@ -308,7 +308,7 @@ function ode_audio_capture(command) {
       job.monitorTask = new Task(ode_audio_monitor, this); job.monitorTask.interval = 20; job.monitorTask.repeat();
       ode_audio_monitor();
     } else {
-      if (command.prerollBeats) throw new Error("Preroll requires an explicit start beat.");
+      if (command.prerollBeats) throw new Error(ODE_AUDIO_COPY.prerollRequiresAnExplicitStartBeat);
       job.monitorTask = new Task(ode_audio_monitor, this); job.monitorTask.interval = 100; job.monitorTask.repeat();
       ode_audio_start_recording(job);
     }
@@ -348,7 +348,7 @@ function ode_audio_upload_next() {
     var count = Math.min(ODE_AUDIO.chunkFrames, job.frames - job.offset);
     var channels = [job.buffer.peek(1, job.offset, count), job.buffer.peek(2, job.offset, count)];
     channels = channels.map(function (samples) { return Array.isArray(samples) ? samples : [samples]; });
-    if (channels.some(function (samples) { return samples.length !== count || samples.some(function (sample) { return typeof sample !== "number" || !Number.isFinite(sample); }); })) throw new Error("Max returned incomplete or nonfinite captured samples.");
+    if (channels.some(function (samples) { return samples.length !== count || samples.some(function (sample) { return typeof sample !== "number" || !Number.isFinite(sample); }); })) throw new Error(ODE_AUDIO_COPY.maxReturnedIncompleteOrNonfiniteCapturedSamples);
     ode_audio_send({ kind: "chunk", id: job.id, offset: job.offset, channels: channels }, function (ok) {
       if (odeAudio.job !== job) return;
       if (!ok) { ode_audio_error(job.id, "Ode could not receive the captured samples."); return; }

@@ -1,21 +1,22 @@
+import { t } from "../shared/i18n";
 import type { ToolRegistry } from "../tools";
 
 /** Verbs for the last word of a tool's name, for a plain progress line for a tool without a description of its own. */
 const PROGRESS_VERBS: ReadonlyMap<string, string> = new Map([
-  ["get", "Reading"],
-  ["read", "Reading"],
-  ["list", "Reading"],
-  ["recall", "Recalling"],
-  ["check", "Checking"],
-  ["find", "Finding"],
-  ["write", "Writing"],
-  ["plan", "Planning"],
-  ["analyze", "Analysing"],
-  ["describe", "Listening to"],
-  ["transcribe", "Transcribing"],
-  ["measure", "Measuring"],
-  ["vary", "Varying"],
-  ["search", "Searching"],
+  ["get", t("runtime.verbs.get")],
+  ["read", t("runtime.verbs.read")],
+  ["list", t("runtime.verbs.list")],
+  ["recall", t("runtime.verbs.recall")],
+  ["check", t("runtime.verbs.check")],
+  ["find", t("runtime.verbs.find")],
+  ["write", t("runtime.verbs.write")],
+  ["plan", t("runtime.verbs.plan")],
+  ["analyze", t("runtime.verbs.analyze")],
+  ["describe", t("runtime.verbs.describe")],
+  ["transcribe", t("runtime.verbs.transcribe")],
+  ["measure", t("runtime.verbs.measure")],
+  ["vary", t("runtime.verbs.vary")],
+  ["search", t("runtime.verbs.search")],
 ]);
 
 /** Words written as musicians write them in a progress line. */
@@ -39,7 +40,7 @@ export class ToolLabels {
     const verbAt = words.findIndex((word) => PROGRESS_VERBS.has(word));
     if (verbAt > 0) {
       const rest = words.filter((_, index) => index !== verbAt);
-      return `${PROGRESS_VERBS.get(words[verbAt]!)} ${rest.join(" ")}`;
+      return t("runtime.toolAction", { verb: PROGRESS_VERBS.get(words[verbAt]!), target: rest.join(" ") });
     }
     const sentence = words.join(" ");
     return sentence.charAt(0).toUpperCase() + sentence.slice(1);

@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import type { ArrangementSelection, ClipSlotSelection, ContextMenuScope, Handle } from "@ableton-extensions/sdk";
 import { DialogView } from "../../shared/config";
 import type { LivePointer } from "../../shared/live";
@@ -42,13 +43,14 @@ enum CommandId {
   Settings = "ode.settings",
 }
 
-enum MenuTitle {
-  Open = "Open Ode",
-  AskOde = "Ask Ode",
-  Lyrics = "Ode: Lyrics",
-  History = "Ode: History",
-  Settings = "Ode: Settings",
-}
+const MenuTitle = {
+  Open: t("live.menu.open"),
+  AskOde: t("live.menu.ask"),
+  Lyrics: t("live.menu.lyrics"),
+  History: t("live.menu.history"),
+  Settings: t("live.menu.settings"),
+} as const;
+type MenuTitle = (typeof MenuTitle)[keyof typeof MenuTitle];
 
 /** Ode's entries in Live's right-click menus: Ask Ode on whatever the musician points at, and Ode's dialogs. */
 export class ContextMenu {
@@ -108,7 +110,7 @@ export class ContextMenu {
       await this.host.open(view);
     } catch (error) {
       console.error(`Ode's ${view} dialog: ${describeError(error)}`);
-      await this.notice.show("Ode's dialog stayed closed", describeError(error));
+      await this.notice.show(t("live.dialogClosedTitle"), describeError(error));
     }
   }
 }

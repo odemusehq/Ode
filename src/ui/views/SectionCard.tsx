@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
 import type { LyricsSection } from "../../shared/lyrics-sections";
@@ -5,7 +6,7 @@ import { Chip, ChipGroup, ConfirmCard, Icon, IconName, Menu, MenuAlign, TextInpu
 import { SectionText } from "./SectionText";
 
 /** The names offered while a section is renamed; Verse takes the next free number. */
-export const QUICK_NAMES = ["Verse", "Pre-chorus", "Chorus", "Bridge", "Intro", "Outro"] as const;
+export const QUICK_NAMES = [t("lyrics.quickNames.verse"), t("lyrics.quickNames.preChorus"), t("lyrics.quickNames.chorus"), t("lyrics.quickNames.bridge"), t("lyrics.quickNames.intro"), t("lyrics.quickNames.outro")];
 
 export enum SectionAction {
   Duplicate = "duplicate",
@@ -50,7 +51,7 @@ export interface SectionCardProps {
   onPartners: (show: boolean) => void;
 }
 
-const UNTITLED = "Untitled";
+const UNTITLED = t("lyrics.untitled");
 /** A name may hold anything a [label] can: square brackets and line breaks stay out. */
 const NAME_BREAKERS = /[[\]\r\n]/g;
 
@@ -61,9 +62,9 @@ export function SectionCard(props: SectionCardProps) {
   const linked = copies > 1;
 
   const actions = [
-    { id: SectionAction.Duplicate, label: "Duplicate", description: "A copy to change on its own" },
-    ...(section.name !== null ? [{ id: SectionAction.LinkedCopy, label: "Add a linked copy", description: "A copy that changes with this one" }] : []),
-    { id: SectionAction.Delete, label: "Delete" },
+    { id: SectionAction.Duplicate, label: t("lyrics.duplicate"), description: t("lyrics.duplicateDescription") },
+    ...(section.name !== null ? [{ id: SectionAction.LinkedCopy, label: t("lyrics.linkedCopy"), description: t("lyrics.linkedCopyDescription") }] : []),
+    { id: SectionAction.Delete, label: t("common.delete") },
   ];
 
   const step = (event: KeyboardEvent<HTMLButtonElement>) => {
@@ -76,12 +77,12 @@ export function SectionCard(props: SectionCardProps) {
   return (
     <div className={cx("section", linked && "section--linked", partner && "section--partner")} data-index={index}>
       <div className="section__rail">
-        <button type="button" className="section__grip" aria-label={`Move ${title}; use Up and Down arrow keys to reorder`} title="Drag to move, or use Up and Down arrow keys" onPointerDown={props.onGrip} onKeyDown={step}>
+        <button type="button" className="section__grip" aria-label={t("lyrics.moveSection", { title: (title) })} title={t("lyrics.moveHint")} onPointerDown={props.onGrip} onKeyDown={step}>
           <Icon name={IconName.Grip} />
         </button>
         <span className="section__bar" />
         {section.name !== null && (
-          <Menu label={`Copy ${title} into and link to another section`} icon={IconName.Link} items={props.linkTargets} disabled={props.linkTargets.length === 0} onSelect={(id) => props.onLinkTo(Number(id))} />
+          <Menu label={t("lyrics.linkSection", { title: (title) })} icon={IconName.Link} items={props.linkTargets} disabled={props.linkTargets.length === 0} onSelect={(id) => props.onLinkTo(Number(id))} />
         )}
       </div>
       <div className="section__body">
@@ -89,29 +90,29 @@ export function SectionCard(props: SectionCardProps) {
           {renaming ? (
             <NameField name={section.name ?? ""} onName={props.onName} onStop={props.onStopRenaming} />
           ) : (
-            <button type="button" className={cx("section__name", section.name === null && "section__name--untitled")} title="Rename" onClick={props.onRename}>
+            <button type="button" className={cx("section__name", section.name === null && "section__name--untitled")} title={t("lyrics.rename")} onClick={props.onRename}>
               {title}
             </button>
           )}
           {linked && (
             <span className="section__copies" onPointerEnter={() => props.onPartners(true)} onPointerLeave={() => props.onPartners(false)}>
               <Menu
-                label={`${title}, linked copies`}
+                label={t("lyrics.linkedCopies", { title: (title) })}
                 buttonText={String(copies)}
                 icon={IconName.Link}
-                items={[{ id: SectionAction.Unlink, label: "Unlink this copy", description: "It keeps its lines under a name of its own" }]}
+                items={[{ id: SectionAction.Unlink, label: t("lyrics.unlink"), description: t("lyrics.unlinkDescription") }]}
                 onSelect={props.onAction}
               />
             </span>
           )}
           <span className="section__spacer" />
           {extras}
-          <Menu label={`${title} actions`} icon={IconName.More} items={actions} onSelect={props.onAction} align={MenuAlign.End} />
+          <Menu label={t("lyrics.sectionActions", { title: (title) })} icon={IconName.More} items={actions} onSelect={props.onAction} align={MenuAlign.End} />
         </div>
         {renaming && (
           // The name field keeps focus through a click here, so its blur leaves a chip's choice in place.
           <div className="section__quick-names" onMouseDown={(event) => event.preventDefault()}>
-            <ChipGroup label="Quick names">
+            <ChipGroup label={t("lyrics.quickNamesLabel")}>
               {QUICK_NAMES.map((name) => (
                 <Chip key={name} onClick={() => props.onQuickName(name)}>
                   {name}
@@ -129,7 +130,7 @@ export function SectionCard(props: SectionCardProps) {
             onCancel={question.onCancel}
           />
         )}
-        <SectionText lines={section.lines} label={`${title} lyrics`} onLines={props.onLines} renderMarks={renderMarks} />
+        <SectionText lines={section.lines} label={t("lyrics.sectionLyrics", { title: (title) })} onLines={props.onLines} renderMarks={renderMarks} />
         {props.analysis}
       </div>
     </div>
@@ -164,7 +165,7 @@ function NameField({ name, onName, onStop }: NameFieldProps) {
     <TextInput
       ref={field}
       className="section__name-field"
-      aria-label="Section name"
+      aria-label={t("lyrics.sectionName")}
       value={value}
       onChange={(event) => setValue(event.target.value)}
       onKeyDown={(event) => {

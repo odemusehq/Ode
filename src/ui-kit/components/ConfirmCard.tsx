@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { useEffect, useId, useRef } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { Button, ButtonVariant } from "./Button";
@@ -17,7 +18,7 @@ export interface ConfirmCardProps {
 }
 
 /** Asks before an action that deletes something. Always inline, in the flow of the page; Escape or Cancel leaves it. */
-export function ConfirmCard({ message, confirmLabel, cancelLabel = "Cancel", onConfirm, onCancel, busy }: ConfirmCardProps) {
+export function ConfirmCard({ message, confirmLabel, cancelLabel = t("common.cancel"), onConfirm, onCancel, busy }: ConfirmCardProps) {
   const messageId = useId();
   const cancel = useRef<HTMLButtonElement>(null);
 

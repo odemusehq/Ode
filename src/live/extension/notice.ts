@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import type { Ui } from "@ableton-extensions/sdk";
 import { OdeConfig } from "../../shared/config";
 import { describeError } from "./errors";
@@ -36,8 +37,8 @@ export class Notice {
 <body>
 <h1>${Notice.escape(title)}</h1>
 <p>${Notice.escape(message)}</p>
-${url ? `<input aria-label="Ode address" readonly value="${Notice.escape(url)}" onclick="this.select()">` : ""}
-<button id="close" autofocus>Close</button>
+${url ? `<input aria-label="${Notice.escape(t("live.address"))}" readonly value="${Notice.escape(url)}" onclick="this.select()">` : ""}
+<button id="close" autofocus>${Notice.escape(t("common.close"))}</button>
 <script>
   function closeDialog() {
     const message = { method: "close_and_send", params: [""] };

@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -61,8 +62,8 @@ export class MaxAudioCapture {
   async capture(input: MaxAudioRequest, signal?: AbortSignal): Promise<MaxAudioResult> {
     this.ready(signal);
     const request = requestSchema.parse(input);
-    if (request.startBeat === undefined && request.prerollBeats) throw new Error("Pre-roll needs an Arrangement start beat.");
-    if (!this.catalogue?.sources.some((item) => item.id === request.sourceId)) throw new Error("Read the available Max audio sources before selecting a capture source.");
+    if (request.startBeat === undefined && request.prerollBeats) throw new Error(t("server.maxAudio.preRollNeedsAnArrangementStartBeat"));
+    if (!this.catalogue?.sources.some((item) => item.id === request.sourceId)) throw new Error(t("server.maxAudio.readTheAvailableMaxAudioSourcesBefore"));
     return this.queue({ kind: "capture", id: randomUUID(), catalogueId: this.catalogue.catalogueId, ...request },
       request.durationSeconds * 1000 + Math.min(request.prerollBeats ?? 0, request.startBeat ?? 0) * 3000 + 120_000,
       signal) as Promise<MaxAudioResult>;
@@ -79,49 +80,49 @@ export class MaxAudioCapture {
     const job = this.pending;
     const parsed = messageSchema.safeParse(input);
     if (!parsed.success) {
-      if (job && typeof input === "object" && input !== null && "id" in input && input.id === job.command.id) this.fail(new Error("Invalid Max audio message; the capture was cancelled."));
-      throw new MaxWindowError("Invalid Max audio message.", 409);
+      if (job && typeof input === "object" && input !== null && "id" in input && input.id === job.command.id) this.fail(new Error(t("server.maxAudio.invalidMaxAudioMessageTheCaptureWas")));
+      throw new MaxWindowError(t("server.maxAudio.invalidMaxAudioMessage"), 409);
     }
     const message: MaxAudioMessage = parsed.data;
-    if (!job || message.id !== job.command.id) throw new MaxWindowError("That Max audio job is no longer waiting.");
-    if (job.session && job.session !== session) throw new MaxWindowError("That Max audio job belongs to another session.", 403);
+    if (!job || message.id !== job.command.id) throw new MaxWindowError(t("server.maxAudio.thatMaxAudioJobIsNoLonger"));
+    if (job.session && job.session !== session) throw new MaxWindowError(t("server.maxAudio.thatMaxAudioJobBelongsToAnother"), 403);
     job.session = session;
     job.acknowledged = true;
     try {
       if (message.kind === "error") throw new Error(message.error);
-      if (job.finishing) throw new Error("The Max audio capture is already being completed.");
+      if (job.finishing) throw new Error(t("server.maxAudio.theMaxAudioCaptureIsAlreadyBeing"));
       if (job.command.kind === "sources") {
-        if (message.kind !== "sources") throw new Error("Max must return the requested source catalogue.");
-        if (new Set(message.sources.map((item) => item.id)).size !== message.sources.length) throw new Error("Max returned duplicate audio source identities.");
+        if (message.kind !== "sources") throw new Error(t("server.maxAudio.maxMustReturnTheRequestedSourceCatalogue"));
+        if (new Set(message.sources.map((item) => item.id)).size !== message.sources.length) throw new Error(t("server.maxAudio.maxReturnedDuplicateAudioSourceIdentities"));
         this.catalogue = { catalogueId: message.catalogueId, sources: message.sources, host: message.host };
         this.finish(job, this.catalogue);
         return;
       }
       if (message.kind === "begin") {
-        if (job.pcm || message.catalogueId !== job.command.catalogueId || message.sourceId !== job.command.sourceId) throw new Error("Max audio source identity changed before capture.");
-        if (message.frames > Math.ceil(job.command.durationSeconds * message.sampleRate) + MAX_AUDIO.chunkFrames) throw new Error("Max audio capture exceeds the requested duration.");
+        if (job.pcm || message.catalogueId !== job.command.catalogueId || message.sourceId !== job.command.sourceId) throw new Error(t("server.maxAudio.maxAudioSourceIdentityChangedBeforeCapture"));
+        if (message.frames > Math.ceil(job.command.durationSeconds * message.sampleRate) + MAX_AUDIO.chunkFrames) throw new Error(t("server.maxAudio.maxAudioCaptureExceedsTheRequestedDuration"));
         job.pcm = { sampleRate: message.sampleRate, frames: message.frames, offset: 0,
           channels: [new Float32Array(message.frames), new Float32Array(message.frames)] };
         return;
       }
       const pcm = job.pcm;
-      if (!pcm) throw new Error("Max must begin the PCM transfer before sending samples.");
+      if (!pcm) throw new Error(t("server.maxAudio.maxMustBeginThePCMTransferBefore"));
       if (message.kind === "chunk") {
         const count = message.channels[0].length;
-        if (message.offset !== pcm.offset || message.channels[1].length !== count || pcm.offset + count > pcm.frames) throw new Error("Max audio chunk offset, order or channel length is invalid.");
+        if (message.offset !== pcm.offset || message.channels[1].length !== count || pcm.offset + count > pcm.frames) throw new Error(t("server.maxAudio.maxAudioChunkOffsetOrderOrChannel"));
         for (let channel = 0; channel < 2; channel++) {
           // Finite doubles can still overflow float32; reject those rather than writing Infinity.
-          if (message.channels[channel]!.some((value) => !Number.isFinite(Math.fround(value)))) throw new Error("Max audio samples must be finite float32 values.");
+          if (message.channels[channel]!.some((value) => !Number.isFinite(Math.fround(value)))) throw new Error(t("server.maxAudio.maxAudioSamplesMustBeFiniteFloat32"));
           pcm.channels[channel]!.set(message.channels[channel]!, pcm.offset);
         }
         pcm.offset += count;
         return;
       }
-      if (message.kind !== "complete" || message.frames !== pcm.frames || pcm.offset !== pcm.frames) throw new Error("Max audio transfer is incomplete or has a different frame count.");
+      if (message.kind !== "complete" || message.frames !== pcm.frames || pcm.offset !== pcm.frames) throw new Error(t("server.maxAudio.maxAudioTransferIsIncompleteOrHas"));
       const catalogue = this.catalogue;
       const selectedId = job.command.sourceId;
       const selected = catalogue?.sources.find((item) => item.id === selectedId);
-      if (!catalogue || !selected || catalogue.catalogueId !== job.command.catalogueId) throw new Error("The Max audio catalogue changed during capture.");
+      if (!catalogue || !selected || catalogue.catalogueId !== job.command.catalogueId) throw new Error(t("server.maxAudio.theMaxAudioCatalogueChangedDuringCapture"));
       job.finishing = true;
       const bytes = encodeWav({ sampleRate: pcm.sampleRate, channels: pcm.channels }, WavBitDepth.Float32);
       const filePath = join(this.tempDir, `ode-max-${randomUUID()}.wav`);
@@ -129,11 +130,11 @@ export class MaxAudioCapture {
         await mkdir(this.tempDir, { recursive: true });
         await writeFile(filePath, bytes, { flag: "wx", mode: 0o600 });
         this.window.verifySession(session);
-        if (this.pending !== job || job.signal?.aborted) throw new Error("The Max audio capture was cancelled.");
+        if (this.pending !== job || job.signal?.aborted) throw new Error(t("server.maxAudio.theMaxAudioCaptureWasCancelled"));
         const written = await readFile(filePath);
         this.window.verifySession(session);
-        if (this.pending !== job || job.signal?.aborted) throw new Error("The Max audio capture was cancelled.");
-        if (!written.equals(bytes)) throw new Error("The completed Max audio file changed while it was published.");
+        if (this.pending !== job || job.signal?.aborted) throw new Error(t("server.maxAudio.theMaxAudioCaptureWasCancelled"));
+        if (!written.equals(bytes)) throw new Error(t("server.maxAudio.theCompletedMaxAudioFileChangedWhile"));
         const { kind: _kind, id: _id, catalogueId: _catalogueId, ...requested } = job.command;
         this.finish(job, { path: filePath, sha256: createHash("sha256").update(written).digest("hex"), bytes: written.length,
           frames: pcm.frames, sampleRate: pcm.sampleRate, channels: 2, durationSeconds: pcm.frames / pcm.sampleRate,
@@ -149,23 +150,23 @@ export class MaxAudioCapture {
   invalidate(): void {
     this.catalogue = null;
     this.cancellation = null;
-    this.fail(new Error("The Max device disconnected or changed; audio capture was cancelled."), false);
+    this.fail(new Error(t("server.maxAudio.theMaxDeviceDisconnectedOrChangedAudio")), false);
   }
 
   private ready(signal?: AbortSignal): void {
     signal?.throwIfAborted();
-    if (!this.window.supportsAudio) throw new Error("Load the updated Ode Max device to capture audio.");
-    if (this.pending) throw new Error("Ode is already capturing or reading Max audio sources. Wait for it to finish.");
+    if (!this.window.supportsAudio) throw new Error(t("server.maxAudio.loadTheUpdatedOdeMaxDeviceTo"));
+    if (this.pending) throw new Error(t("server.maxAudio.odeIsAlreadyCapturingOrReadingMax"));
   }
 
   private queue(command: Pending["command"], timeout: number, signal?: AbortSignal): Promise<MaxAudioSources | MaxAudioResult> {
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => this.fail(new Error("The Max audio request timed out; its partial capture was discarded.")), timeout);
+      const timer = setTimeout(() => this.fail(new Error(t("server.maxAudio.theMaxAudioRequestTimedOutIts"))), timeout);
       timer.unref?.();
       const job: Pending = { command, resolve, reject, timer, signal, acknowledged: false };
       this.pending = job;
       if (signal) {
-        job.abort = () => this.fail(new Error("The Max audio request was cancelled."));
+        job.abort = () => this.fail(new Error(t("server.maxAudio.theMaxAudioRequestWasCancelled")));
         signal.addEventListener("abort", job.abort, { once: true });
         if (signal.aborted) job.abort();
       }

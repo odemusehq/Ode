@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { RackDevice, type Device, type DeviceParameter } from "@ableton-extensions/sdk";
 import type { MaxWindowBridge } from "../../server/max-window";
 import type { DialogView } from "../../shared/config";
@@ -9,10 +10,10 @@ type MissingReason = "missing" | "multiple" | "unresponsive";
 export class MaxWindowMissingError extends Error {
   constructor(readonly reason: MissingReason) {
     const message = reason === "multiple"
-      ? "Keep one Ode Max device in this Set, then open Ode again."
+      ? t("live.oneDevice")
       : reason === "missing"
-        ? "Load Ode.amxd on one track in this Set, then click Open Ode on the device."
-        : "Ode's Max device did not respond. Click Open Ode on the device, or remove it and load Ode.amxd again.";
+        ? t("live.loadDevice")
+        : t("live.deviceUnresponsive");
     super(message);
     this.name = "MaxWindowMissingError";
   }
@@ -38,7 +39,7 @@ export class MaxWindow {
   private generation = 0;
 
   constructor(private readonly live: Live, private readonly bridge: MaxWindowBridge, private readonly port: number) {
-    if (!Number.isInteger(port) || port < 1 || port > 65535) throw new RangeError("Ode's local window port is unavailable.");
+    if (!Number.isInteger(port) || port < 1 || port > 65535) throw new RangeError(t("live.portUnavailable"));
   }
 
   start(): void {
@@ -121,7 +122,7 @@ export class MaxWindow {
       ];
       const deadline = Date.now() + MaxWindow.NATIVE_MS;
       for (const [name, value] of writes) {
-        if (this.stopped || generation !== this.generation || !this.isCurrent(next)) throw new Error("The Ode device changed.");
+        if (this.stopped || generation !== this.generation || !this.isCurrent(next)) throw new Error(t("live.deviceChanged"));
         await MaxWindow.bounded(next.parameters.get(name)!.setValue(value), deadline - Date.now());
       }
     } catch { await this.unpair("unresponsive"); }
@@ -195,7 +196,7 @@ export class MaxWindow {
 
   private static bounded<T>(work: Promise<T>, timeout = MaxWindow.NATIVE_MS): Promise<T> {
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error("Live did not answer the window connection request.")), Math.max(1, timeout));
+      const timer = setTimeout(() => reject(new Error(t("live.connectionTimeout"))), Math.max(1, timeout));
       work.then((value) => { clearTimeout(timer); resolve(value); }, (error: unknown) => { clearTimeout(timer); reject(error); });
     });
   }

@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n";
 import { mkdir, open, readdir, readFile, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
@@ -60,7 +61,7 @@ const VersionSchema = z.object({
   recovery: z.object({ receipts: z.array(z.custom<MutationReceipt>(isMutationReceipt)), unverified: z.boolean(), used: z.boolean().optional() }).optional(),
 });
 const SNAPSHOT_PARTS = ["takenAt", "song", "signature", "tracks", "returnTracks", "main"];
-const SnapshotSchema = z.custom<SetSnapshot>((value) => looksLikeSnapshot(value), "expected a snapshot of the Set") as z.ZodType<SetSnapshot>;
+const SnapshotSchema = z.custom<SetSnapshot>((value) => looksLikeSnapshot(value), t("versions.expectedASnapshotOfTheSet")) as z.ZodType<SetSnapshot>;
 
 /** A version as stored: the parsed version and its line in versions.jsonl. */
 interface Entry {
@@ -83,7 +84,7 @@ export class VersionNotFoundError extends Error {}
  * Every read and write waits its turn; files are written whole and then renamed into place.
  */
 export class VersionHistory {
-  private static readonly BASE_SUMMARY = "Where the history starts";
+  private static readonly BASE_SUMMARY = t("common.initialVersion");
   private static readonly SNAPSHOT_EXTENSION = ".json";
   /** Digits of the counter that keeps apart versions made in the same millisecond. */
   private static readonly ID_COUNTER_DIGITS = 3;
@@ -202,7 +203,7 @@ export class VersionHistory {
     return this.enqueue(async () => {
       const entries = [...await this.entries()];
       const { entry, index } = VersionHistory.locate(entries, id);
-      if (!entry.version.recovery || entry.version.recovery.used) throw new Error("That scoped recovery was already attempted. Review the current material and History before doing more.");
+      if (!entry.version.recovery || entry.version.recovery.used) throw new Error(t("versions.thatScopedRecoveryWasAlreadyAttemptedReviewThe"));
       const version: Version = { ...entry.version, recovery: { ...entry.version.recovery, used: true } };
       entries[index] = { version, line: JSON.stringify(version) };
       await this.write(entries);
@@ -279,7 +280,7 @@ export class VersionHistory {
     let start = index;
     while (start >= 0 && !stored.has(entries[start]?.version.id ?? "")) start -= 1;
     const base = entries[start];
-    if (!base) throw new Error("The version history is missing a full snapshot to start from");
+    if (!base) throw new Error(t("versions.theVersionHistoryIsMissingAFullSnapshot"));
     let snapshot = await this.snapshotFile(base.version.id).read();
     for (const entry of entries.slice(start + 1, index + 1)) snapshot = SetDiff.apply(snapshot, entry.version.changes);
     return snapshot;
@@ -303,7 +304,7 @@ export class VersionHistory {
 
   private snapshotFile(id: string): JsonFile<SetSnapshot> {
     return new JsonFile(this.snapshotPath(id), SnapshotSchema, () => {
-      throw new Error(`The full snapshot of version ${id} is missing`);
+      throw new Error(t("versions.theFullSnapshotOfVersionIsMissing", { id: id }));
     });
   }
 
@@ -383,7 +384,7 @@ export class VersionHistory {
   private static locate(entries: readonly Entry[], id: string): { entry: Entry; index: number } {
     const index = entries.findIndex((entry) => entry.version.id === id);
     const entry = entries[index];
-    if (!entry) throw new VersionNotFoundError(`Version ${id} is missing from the history`);
+    if (!entry) throw new VersionNotFoundError(t("versions.versionIsMissingFromTheHistory", { id: id }));
     return { entry, index };
   }
 

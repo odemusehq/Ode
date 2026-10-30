@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import type { MutationReceipt } from "../shared/mutation-receipt";
 import type { ProductionTaskStore } from "../mneme/production-task";
@@ -72,9 +73,9 @@ export class SessionBusyError extends Error {}
 
 /** Why each early end of a request is shown to the musician. */
 const LIMIT_MESSAGES: Partial<Record<LoopEnd, string>> = {
-  [LoopEnd.TurnLimit]: "Ode stopped: this request reached its limit of model calls. What it changed so far is saved.",
-  [LoopEnd.TokenLimit]: "Ode stopped: this request reached its limit of tokens. What it changed so far is saved.",
-  [LoopEnd.EmptyReply]: "Ode ended this request with an empty reply. What it changed is saved in History.",
+  [LoopEnd.TurnLimit]: t("runtime.modelCallLimit"),
+  [LoopEnd.TokenLimit]: t("runtime.tokenLimit"),
+  [LoopEnd.EmptyReply]: t("runtime.emptyReply"),
 };
 
 /** Ends that cut the work short, so the request is saved the way a Stop saves it. */
@@ -122,7 +123,7 @@ export class OdeSession {
 
   /** Persist acceptance before replying to HTTP; execution continues independently. */
   async accept(request: OdeRequest): Promise<void> {
-    if (this.retired) throw new SessionBusyError("That song is no longer active. Send the request to the open song.");
+    if (this.retired) throw new SessionBusyError(t("runtime.thatSongIsNoLongerActiveSendThe"));
     const epoch = this.stopEpoch;
     this.accepting += 1;
     this.showBusy();
@@ -131,7 +132,7 @@ export class OdeSession {
       const exchangeId = accepted.id;
       if (!accepted.created) { await this.publishConversation(); return; }
       if (epoch !== this.stopEpoch || (request.requestId && this.cancelledRequests.has(request.requestId))) {
-        await this.conversation.finish(exchangeId, "Stopped before starting.", "stopped");
+        await this.conversation.finish(exchangeId, t("runtime.stoppedBeforeStarting"), "stopped");
         await this.publishConversation();
         return;
       }
@@ -149,16 +150,16 @@ export class OdeSession {
           if (earlier.reply) continue;
           this.waiting.splice(index, 1);
           next.continuing += `\nEarlier message: ${earlier.text}`;
-          if (earlier.exchangeId) await this.conversation.finish(earlier.exchangeId, "Continued with your later message.", "stopped");
+          if (earlier.exchangeId) await this.conversation.finish(earlier.exchangeId, t("runtime.continuedWithYourLaterMessage"), "stopped");
         }
         this.controller?.abort();
     if (!this.retired) void this.deps.production?.interrupt("The musician stopped Ode. Inspect any work already issued before continuing.").catch((error: unknown) => this.deps.emit({ type: "error", message: OdeSession.errorText(error) }));
         this.deps.approvals.denyAll();
         this.deps.questions.cancelAll();
-        this.deps.emit({ type: "progress", text: "Updating the work with your message" });
+        this.deps.emit({ type: "progress", text: t("runtime.updatingTheWorkWithYourMessage") });
       }
       if (epoch !== this.stopEpoch || (request.requestId && this.cancelledRequests.has(request.requestId))) {
-        await this.conversation.finish(exchangeId, "Stopped before starting.", "stopped");
+        await this.conversation.finish(exchangeId, t("runtime.stoppedBeforeStarting"), "stopped");
       } else this.waiting.push(next);
       await this.publishConversation();
     });
@@ -186,7 +187,7 @@ export class OdeSession {
     await this.deps.production?.recover();
     await this.conversation.recover();
     const deliveryRecovery = await this.deps.deliveries?.recover(this.songId);
-    if (deliveryRecovery?.failed) this.deps.emit({ type: "error", message: "Some saved audio links could not be restored. Ask Ode to check the saved files." });
+    if (deliveryRecovery?.failed) this.deps.emit({ type: "error", message: t("runtime.someSavedAudioLinksCouldNotBeRestored") });
     await this.publishConversation();
   }
 
@@ -213,7 +214,7 @@ export class OdeSession {
    * The work runs to its end, and its signal tells it the musician pressed Stop meanwhile.
    */
   async exclusive<T>(work: (stopped: AbortSignal) => Promise<T>): Promise<T> {
-    if (this.isBusy) throw new SessionBusyError("Ode is still working. Wait for it to finish, or press Stop.");
+    if (this.isBusy) throw new SessionBusyError(t("runtime.odeIsStillWorkingWaitForItTo"));
     const controller = new AbortController();
     this.exclusiveController = controller;
     this.working = true;
@@ -233,7 +234,7 @@ export class OdeSession {
     while (this.cancelledRequests.size > 256) this.cancelledRequests.delete(this.cancelledRequests.values().next().value!);
     this.stopEpoch += 1;
     for (const request of this.waiting.splice(0)) {
-      if (request.exchangeId) void this.conversation.finish(request.exchangeId, "Stopped before starting.", "stopped").then(() => this.publishConversation()).catch((error: unknown) => this.deps.emit({ type: "error", message: OdeSession.errorText(error) }));
+      if (request.exchangeId) void this.conversation.finish(request.exchangeId, t("runtime.stoppedBeforeStarting"), "stopped").then(() => this.publishConversation()).catch((error: unknown) => this.deps.emit({ type: "error", message: OdeSession.errorText(error) }));
     }
     this.deps.approvals.denyAll();
     this.deps.questions.cancelAll();
@@ -319,7 +320,7 @@ export class OdeSession {
           const limit = LIMIT_MESSAGES[result.end];
           if (limit) this.deps.emit({ type: "error", message: limit });
           status = result.end === LoopEnd.Reply ? "complete" : "stopped";
-          savedReply = reply || limit || (controller.signal.aborted ? "Stopped. Work already issued may have completed." : "The request ended before a complete answer.");
+          savedReply = reply || limit || (controller.signal.aborted ? t("runtime.stoppedPendingWork") : t("runtime.incompleteAnswer"));
         } catch (error) {
           savedReply = OdeSession.errorText(error);
           if (!controller.signal.aborted) this.deps.emit({ type: "error", message: savedReply });
@@ -330,7 +331,7 @@ export class OdeSession {
         versionId = receipt?.versionId ?? null;
       } catch (error) {
         status = "failed";
-        const message = `Could not record the changes: ${OdeSession.errorText(error)}`;
+        const message = t("runtime.couldNotRecordChanges", { error: OdeSession.errorText(error) });
         savedReply = [reply, message].filter(Boolean).join("\n\n");
         this.deps.emit({ type: "error", message });
       }
@@ -341,10 +342,10 @@ export class OdeSession {
         try { await production?.finish(status !== "complete"); }
         catch (error) {
           status = "failed";
-          savedReply = [savedReply, `Could not save the production checkpoint: ${OdeSession.errorText(error)}`].filter(Boolean).join("\n\n");
+          savedReply = [savedReply, t("runtime.couldNotSaveCheckpoint", { error: OdeSession.errorText(error) })].filter(Boolean).join("\n\n");
           this.deps.emit({ type: "error", message: OdeSession.errorText(error) });
         }
-        await this.conversation.finish(exchangeId, savedReply || (status === "stopped" ? "Stopped." : "The request failed before completion."), status, versionId);
+        await this.conversation.finish(exchangeId, savedReply || (status === "stopped" ? t("runtime.stopped") : t("runtime.theRequestFailedBeforeCompletion")), status, versionId);
         await this.publishConversation();
       } finally {
         this.controller = null;
@@ -420,7 +421,7 @@ export class OdeSession {
   private checkpoint(): void {
     const id = this.running?.exchangeId;
     if (id) void this.conversation.checkpoint(id, this.activity, this.rationale).catch((error: unknown) => {
-      this.deps.emit({ type: "error", message: `Could not save the activity: ${OdeSession.errorText(error)}` });
+      this.deps.emit({ type: "error", message: t("runtime.couldNotSaveTheActivity", { error: OdeSession.errorText(error) }) });
     });
   }
 

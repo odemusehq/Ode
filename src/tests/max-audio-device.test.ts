@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createContext, Script } from "node:vm";
 import test from "node:test";
+import { nativeStrings } from "../shared/i18n";
 import { MAX_AUDIO } from "../shared/max-audio";
 
 async function fixture(withRouting = false, names = ["Synth"], types = [{ display_name: "Synth", identifier: "actual-synth-type" as string | number }], deferTransport = false) {
@@ -51,7 +52,7 @@ async function fixture(withRouting = false, names = ["Synth"], types = [{ displa
     freepeer() {}
   }
   const context = createContext({ LiveAPI, Task, Buffer, Date: deferTransport ? class extends Date { static now() { return now; } } : Date,
-    ODE_AUDIO: MAX_AUDIO,
+    ODE_AUDIO: MAX_AUDIO, ODE_AUDIO_COPY: nativeStrings.maxAudio,
     odePatcher: { getnamed: (name: string) => ({ getattr: () => "unique-buffer", message: (...args: unknown[]) => { controls.push([name, ...args]); if (name === "odeCaptureBuffer" && args[0] === "sizeinsamps") allocatedFrames = Number(args[1]); } }) },
     releaseTask: (task: Task) => task?.cancel(),
     running: true, session: "paired",

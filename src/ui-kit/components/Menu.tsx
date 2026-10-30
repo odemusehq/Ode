@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { Icon, IconName } from "./Icon";
@@ -105,7 +106,7 @@ export function Menu<T extends string>({ label, buttonText, icon, items, onSelec
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
-        aria-label={buttonText ? `${label}: ${buttonText}` : label}
+        aria-label={buttonText ? t("kit.menuLabel", { label: (label), value: (buttonText) }) : label}
         title={buttonText ? undefined : label}
         disabled={disabled}
         onClick={() => setOpen((current) => !current)}

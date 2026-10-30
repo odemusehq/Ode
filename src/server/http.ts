@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n";
 import { RequestIdentityError } from "../mneme/conversations";
 import { ResultKind } from "../shared/events";
 import { bodyLimit } from "hono/body-limit";
@@ -88,7 +89,7 @@ const MaxAckSchema = z.object({ session: z.string().regex(/^[a-f0-9]{48}$/), id:
 const MAX_WINDOW_PATHS: ReadonlySet<string> = new Set([...Object.values(MAX_WINDOW.api), MAX_AUDIO.messagePath]);
 const MaxAudioEnvelopeSchema = z.object({ session: z.string().regex(/^[a-f0-9]{48}$/), message: z.unknown() }).strict();
 
-const SEND_VERSION_ID = "Send { versionId } with the id of the change by Ode.";
+const SEND_VERSION_ID = t("server.http.sendVersionIdWithTheId");
 
 /** Content types of the files Ode writes into the release folder. */
 const RELEASE_CONTENT_TYPES: ReadonlyMap<string, string> = new Map([
@@ -132,7 +133,7 @@ const SAFETY_HEADERS: Readonly<Record<string, string>> = {
   "X-Frame-Options": "DENY",
   "Referrer-Policy": "no-referrer",
 };
-const OPEN_FROM_LIVE = "Open Ode from Live's right-click menu.";
+const OPEN_FROM_LIVE = t("server.http.openOdeFromLiveSRightClickMenu");
 
 /** Keep the supplied Unicode filename while providing a safe fallback for older download clients. */
 function attachmentFilename(name: string): string {
@@ -203,7 +204,7 @@ export class OdeServer {
       const legacyMax = MAX_WINDOW_PATHS.has(c.req.path) && origin === undefined && contentType === "application/x-www-form-urlencoded";
       if (upload && origin === undefined) return c.text(OPEN_FROM_LIVE, 403);
       if (!(upload ? contentType.startsWith("multipart/form-data;") : contentType.startsWith(JSON_TYPE) || legacyMax)) {
-        return c.json({ error: upload ? "Choose an audio file to attach." : "Send the request as JSON." }, 415);
+        return c.json({ error: upload ? t("server.http.chooseAnAudioFileToAttach") : t("server.http.sendTheRequestAsJSON") }, 415);
       }
     }
     // Dictation has no song writes. Its captured song id and final check permit switching while ASR runs.
@@ -211,7 +212,7 @@ export class OdeServer {
     if (!READS.has(c.req.method) && c.req.path !== API.stop && c.req.path !== API.dictation && c.req.path !== API.audioImport && !composerWrite && !MAX_WINDOW_PATHS.has(c.req.path)) {
       const switchesSong = c.req.method === "POST" && (c.req.path === API.songs || c.req.path === API.songsOpen);
       if (this.switchingRequest || this.deps.songs.isSwitching || (switchesSong && this.modifyingRequests > 0)) {
-        return c.json({ error: "Ode is switching songs, or a request is still arriving. Wait for it to finish, then try again." }, 409);
+        return c.json({ error: t("server.http.odeIsSwitchingSongsOrARequest") }, 409);
       }
       // Hold admission through body parsing, so an earlier request cannot land in the next song.
       this.modifyingRequests += 1;
@@ -230,7 +231,7 @@ export class OdeServer {
   private async authorize(c: Context, next: () => Promise<void>) {
     // These exact transport routes check their own one-time bootstrap or private Max session below.
     if (MAX_WINDOW_PATHS.has(c.req.path)) {
-      if (c.req.method !== "POST") return c.json({ error: "Use POST for Ode's Max window connection." }, 405);
+      if (c.req.method !== "POST") return c.json({ error: t("server.http.usePOSTForOdeSMaxWindowConnection") }, 405);
       return next();
     }
     if (this.carriesToken(c.req.query("token"))) {
@@ -252,7 +253,7 @@ export class OdeServer {
     const limit = bodyLimit({ maxSize: 2_048 });
     const respond = (c: Context, work: (bridge: MaxWindowBridge) => object) => {
       c.header("Cache-Control", "no-store");
-      if (!this.deps.maxWindow) return c.json({ error: "Ode's Max window connection is unavailable." }, 503);
+      if (!this.deps.maxWindow) return c.json({ error: t("server.http.odeSMaxWindowConnectionIsUnavailable") }, 503);
       try { return c.json(work(this.deps.maxWindow)); }
       catch (error) {
         if (error instanceof MaxWindowError) return c.json({ error: error.message }, error.status);
@@ -261,17 +262,17 @@ export class OdeServer {
     };
     this.app.post(MAX_WINDOW.api.connect, limit, async (c) => {
       const parsed = MaxConnectSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: "Send the Max device's connection capability." }, 403);
+      if (!parsed.success) return c.json({ error: t("server.http.sendTheMaxDeviceSConnectionCapability") }, 403);
       return respond(c, (bridge) => bridge.connect(parsed.data.capability, parsed.data.audioVersion));
     });
     this.app.post(MAX_WINDOW.api.poll, limit, async (c) => {
       const parsed = MaxPollSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: "Send the Max device's private session." }, 403);
+      if (!parsed.success) return c.json({ error: t("server.http.sendTheMaxDeviceSPrivateSession") }, 403);
       return respond(c, (bridge) => bridge.poll(parsed.data.session));
     });
     this.app.post(MAX_WINDOW.api.ack, limit, async (c) => {
       const parsed = MaxAckSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: "Send the Max window's command acknowledgement." }, 400);
+      if (!parsed.success) return c.json({ error: t("server.http.sendTheMaxWindowSCommandAcknowledgement") }, 400);
       return respond(c, (bridge) => { bridge.acknowledge(parsed.data); return { ok: true }; });
     });
   }
@@ -279,9 +280,9 @@ export class OdeServer {
   private routeMaxAudio(): void {
     this.app.post(MAX_AUDIO.messagePath, bodyLimit({ maxSize: MAX_AUDIO.maxBodyBytes }), async (c) => {
       c.header("Cache-Control", "no-store");
-      if (!this.deps.maxAudio) return c.json({ error: "Ode's Max audio connection is unavailable." }, 503);
+      if (!this.deps.maxAudio) return c.json({ error: t("server.http.odeSMaxAudioConnectionIsUnavailable") }, 503);
       const parsed = MaxAudioEnvelopeSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: "Send the Max device's private session and audio job message." }, 400);
+      if (!parsed.success) return c.json({ error: t("server.http.sendTheMaxDeviceSPrivateSessionAnd") }, 400);
       try {
         await this.deps.maxAudio.receive(parsed.data.session, parsed.data.message);
         return c.json({ ok: true });
@@ -304,13 +305,13 @@ export class OdeServer {
 
     app.post(API.songsOpen, async (c) => {
       const parsed = SongOpenSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: "Send { id } with the song to open." }, 400);
+      if (!parsed.success) return c.json({ error: t("server.http.sendIdWithTheSong") }, 400);
       return this.answer(c, () => songs.open(parsed.data.id));
     });
 
     app.post(API.songs, async (c) => {
       const parsed = SongCreateSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: "Send { title } with the new song's title." }, 400);
+      if (!parsed.success) return c.json({ error: t("server.http.sendTitleWithTheNew") }, 400);
       return this.answer(c, () => songs.create(parsed.data.title));
     });
   }
@@ -321,8 +322,8 @@ export class OdeServer {
 
     app.post(API.chat, async (c) => {
       const parsed = TextSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: "Send { text } with what to ask Ode." }, 400);
-      if (parsed.data.songId && parsed.data.songId !== song.songId) return c.json({ error: "The open song changed. Your message stayed in the composer; send it again in the intended song." }, 409);
+      if (!parsed.success) return c.json({ error: t("server.http.sendTextWithWhatTo") }, 400);
+      if (parsed.data.songId && parsed.data.songId !== song.songId) return c.json({ error: t("server.http.theOpenSongChangedYourMessageStayed") }, 409);
       const songId = song.songId;
       try {
         if (parsed.data.requestId) await this.deps.composer.assertRequest(songId, parsed.data.requestId, parsed.data.text);
@@ -340,16 +341,16 @@ export class OdeServer {
       return c.json({ songId: session.songId, exchanges: await session.transcript() });
     });
 
-    const draftLimit = bodyLimit({ maxSize: 64 * 1024, onError: (c) => c.json({ error: "The draft is too large to save in one message." }, 413) });
+    const draftLimit = bodyLimit({ maxSize: 64 * 1024, onError: (c) => c.json({ error: t("server.http.theDraftIsTooLargeToSave") }, 413) });
     app.get(API.composer, async (c) => {
       const songId = z.uuid().safeParse(c.req.query("songId"));
-      if (!songId.success) return c.json({ error: "Name the song whose draft to read." }, 400);
+      if (!songId.success) return c.json({ error: t("server.http.nameTheSongWhoseDraftToRead") }, 400);
       try { return c.json(await this.deps.composer.read(songId.data)); }
       catch (error) { if (error instanceof SongNotFoundError) return c.json({ error: error.message }, 404); if (error instanceof ComposerError) return c.json({ error: error.message, composer: error.composer }, error.status); throw error; }
     });
     const draftAction = <T>(schema: z.ZodType<T>, work: (input: T) => Promise<unknown>) => async (c: Context) => {
       const parsed = schema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: "The draft request is incomplete or too large. Your words stayed in the composer." }, 400);
+      if (!parsed.success) return c.json({ error: t("server.http.theDraftRequestIsIncompleteOrToo") }, 400);
       try { return c.json(await work(parsed.data)); }
       catch (error) {
         if (error instanceof ComposerError) return c.json({ error: error.message, ...(error.composer ? { composer: error.composer } : {}) }, error.status);
@@ -363,27 +364,27 @@ export class OdeServer {
     app.post(API.composerCancel, draftLimit, draftAction(ComposerCancelSchema, (input) => this.deps.composer.cancel(input)));
 
     app.post(API.audioImport, bodyLimit({ maxSize: MAX_AUDIO_UPLOAD_BYTES + 1024 * 1024,
-      onError: (c) => c.json({ error: "The audio file is too large. Attach a shorter range (up to 128 MiB)." }, 413),
+      onError: (c) => c.json({ error: t("server.http.theAudioFileIsTooLargeAttach") }, 413),
     }), async (c) => {
       const form = await c.req.formData();
       const file = form.get("file");
       const scope = form.get("scope") ?? "reference";
       if (!(file instanceof File) || !["sample", "reference", "processed-bounce"].includes(String(scope))) {
-        return c.json({ error: "Choose an audio file and its intended use." }, 400);
+        return c.json({ error: t("server.http.chooseAnAudioFileAndItsIntended") }, 400);
       }
-      if (file.size > MAX_AUDIO_UPLOAD_BYTES) return c.json({ error: "The audio file exceeds 128 MiB." }, 413);
+      if (file.size > MAX_AUDIO_UPLOAD_BYTES) return c.json({ error: t("server.http.theAudioFileExceeds128MiB") }, 413);
       const start = form.get("start"), end = form.get("end");
       const library = new LocalAudioFiles(config.userDir, config.tempDir);
       try {
         const draftIds = [form.get("songId"), form.get("writerId"), form.get("entryId")];
         const linking = draftIds.some((id) => id !== null);
-        if (linking && draftIds.some((id) => !z.uuid().safeParse(id).success)) return c.json({ error: "Name the song, writer and attachment entry for this draft upload." }, 400);
+        if (linking && draftIds.some((id) => !z.uuid().safeParse(id).success)) return c.json({ error: t("server.http.nameTheSongWriterAndAttachmentEntry") }, 400);
         let draftLink: { baseRevision: number; snapshot: z.infer<typeof ComposerDraftSchema> } | undefined;
         if (linking) {
           let snapshot: unknown;
-          try { snapshot = JSON.parse(String(form.get("snapshot"))); } catch { return c.json({ error: "Include the saved draft snapshot with its upload." }, 400); }
+          try { snapshot = JSON.parse(String(form.get("snapshot"))); } catch { return c.json({ error: t("server.http.includeTheSavedDraftSnapshotWithIts") }, 400); }
           const linked = z.object({ baseRevision: z.coerce.number().int().min(0), snapshot: ComposerDraftSchema }).safeParse({ baseRevision: form.get("baseRevision"), snapshot });
-          if (!linked.success) return c.json({ error: "Include the saved draft revision and snapshot with its upload." }, 400);
+          if (!linked.success) return c.json({ error: t("server.http.includeTheSavedDraftRevisionAndSnapshot") }, 400);
           draftLink = linked.data;
         }
         const bytes = new Uint8Array(await file.arrayBuffer());
@@ -401,33 +402,33 @@ export class OdeServer {
     });
 
     app.post(API.dictation, bodyLimit({ maxSize: MAX_DICTATION_BYTES + 64 * 1024,
-      onError: (c) => c.json({ error: "Dictation is limited to 16 MiB and one minute." }, 413),
+      onError: (c) => c.json({ error: t("server.http.dictationIsLimitedTo16MiBAnd") }, 413),
     }), async (c) => {
       const songId = song.songId;
       const form = await c.req.formData();
       const file = form.get("file");
-      if (!(file instanceof File) || typeof form.get("songId") !== "string") return c.json({ error: "Send a WAV recording and its songId." }, 400);
-      if (form.get("songId") !== songId || song.songId !== songId) return c.json({ error: "The open song changed. Dictate again in the intended song." }, 409);
-      if (file.size > MAX_DICTATION_BYTES) return c.json({ error: "Dictation is limited to 16 MiB and one minute." }, 413);
+      if (!(file instanceof File) || typeof form.get("songId") !== "string") return c.json({ error: t("server.http.sendAWAVRecordingAndItsSongId") }, 400);
+      if (form.get("songId") !== songId || song.songId !== songId) return c.json({ error: t("server.http.theOpenSongChangedDictateAgainIn") }, 409);
+      if (file.size > MAX_DICTATION_BYTES) return c.json({ error: t("server.http.dictationIsLimitedTo16MiBAnd") }, 413);
       const role = (await this.deps.models.roles()).transcription;
-      if (song.songId !== songId) return c.json({ error: "The open song changed. Dictate again in the intended song." }, 409);
-      if (!RoleCheck.isConfigured(role)) return c.json({ error: "Add a Meta key in Ode: Settings to use dictation." }, 503);
+      if (song.songId !== songId) return c.json({ error: t("server.http.theOpenSongChangedDictateAgainIn") }, 409);
+      if (!RoleCheck.isConfigured(role)) return c.json({ error: t("server.http.addAMetaKeyInOdeSettings") }, 503);
       try {
         const bytes = new Uint8Array(await file.arrayBuffer());
-        if (song.songId !== songId) return c.json({ error: "The open song changed. Dictate again in the intended song." }, 409);
+        if (song.songId !== songId) return c.json({ error: t("server.http.theOpenSongChangedDictateAgainIn") }, 409);
         const text = await new Dictation(this.deps.services, config.tempDir).transcribe(bytes, c.req.raw.signal, () => song.songId === songId);
-        if (song.songId !== songId) return c.json({ error: "The open song changed. The dictation was not submitted." }, 409);
+        if (song.songId !== songId) return c.json({ error: t("server.http.theOpenSongChangedTheDictationWas") }, 409);
         return c.json({ songId, text });
       } catch (error) {
         if (error instanceof DictationError) return c.json({ error: error.message }, error.status);
-        if (c.req.raw.signal.aborted) return c.json({ error: "Dictation cancelled." }, 408);
-        return c.json({ error: "Dictation could not finish. Try again." }, 502);
+        if (c.req.raw.signal.aborted) return c.json({ error: t("server.http.dictationCancelled") }, 408);
+        return c.json({ error: t("server.http.dictationCouldNotFinishTryAgain") }, 502);
       }
     });
 
     app.post(API.stop, async (c) => {
       const parsed = z.object({ requestIds: z.array(z.uuid()).max(256).optional() }).safeParse(await OdeServer.body(c) ?? {});
-      if (!parsed.success) return c.json({ error: "Send requestIds as an optional list of request ids." }, 400);
+      if (!parsed.success) return c.json({ error: t("server.http.sendRequestIdsAsAnOptionalListOf") }, 400);
       sessions.current.stop(parsed.data.requestIds);
       if (parsed.data.requestIds?.length) await this.deps.composer.cancelMany(song.songId, parsed.data.requestIds);
       return c.json({ ok: true });
@@ -450,22 +451,22 @@ export class OdeServer {
 
     app.post("/api/approvals/:id", async (c) => {
       const parsed = DecisionSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: 'Send { decision: "allow" } or { decision: "deny" }.' }, 400);
+      if (!parsed.success) return c.json({ error: t("server.http.sendDecisionAllowOr") }, 400);
       const known = approvals.decide(c.req.param("id"), parsed.data.decision === "allow" ? Decision.Allow : Decision.Deny);
-      return known ? c.json({ ok: true }) : c.json({ error: "Unknown approval" }, 404);
+      return known ? c.json({ ok: true }) : c.json({ error: t("server.http.unknownApproval") }, 404);
     });
 
     app.post("/api/questions/:id", async (c) => {
       const parsed = ChoiceSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: "Send { choice } with one of the question's answers." }, 400);
+      if (!parsed.success) return c.json({ error: t("server.http.sendChoiceWithOneOf") }, 400);
       const answered = questions.answer(c.req.param("id"), parsed.data.choice);
-      return answered ? c.json({ ok: true }) : c.json({ error: "That question is answered already, or the choice is outside its answers." }, 404);
+      return answered ? c.json({ ok: true }) : c.json({ error: t("server.http.thatQuestionIsAnsweredAlreadyOrThe") }, 404);
     });
 
     app.get(API.lyrics, async (c) => c.json(await lyrics.read()));
     app.put(API.lyrics, async (c) => {
       const parsed = LyricsWriteSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: "Send { text, baseRevision } with the whole lyrics and the revision they were edited from." }, 400);
+      if (!parsed.success) return c.json({ error: t("server.http.sendTextBaseRevisionWithThe") }, 400);
       try {
         return c.json(await lyrics.write(parsed.data.text, parsed.data.baseRevision, VersionAuthor.Musician, parsed.data.songId));
       } catch (error) {
@@ -477,7 +478,7 @@ export class OdeServer {
     // Lyrics support marks one section: the accent is the song's pronunciation setting.
     app.post(API.lyricsCheck, async (c) => {
       const parsed = LyricsCheckSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: "Send { lines } with the section's sung lines." }, 400);
+      if (!parsed.success) return c.json({ error: t("server.http.sendLinesWithTheSectionS") }, 400);
       const accent = (await prefs.effective(await song.read())).pronunciation;
       const answer: LyricsCheckResponse = await this.deps.lyricsChecker.check(parsed.data.lines, accent);
       return c.json(answer);
@@ -485,14 +486,14 @@ export class OdeServer {
 
     app.post(API.lyricsStrict, async (c) => {
       const parsed = StrictRhymesSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: "Send { name, strict } with the section's name." }, 400);
+      if (!parsed.success) return c.json({ error: t("server.http.sendNameStrictWithThe") }, 400);
       return c.json(await lyrics.setStrictRhymes(parsed.data.name, parsed.data.strict));
     });
 
     app.get("/api/release/file/:name", async (c) => {
       const name = basename(c.req.param("name"));
       const data = await readFile(join(song.releaseDir, name)).catch(() => null);
-      if (!data) return c.json({ error: "That file is missing from the release folder." }, 404);
+      if (!data) return c.json({ error: t("server.http.thatFileIsMissingFromTheRelease") }, 404);
       return c.body(data, 200, { "Content-Type": RELEASE_CONTENT_TYPES.get(extname(name).toLowerCase()) ?? OTHER_CONTENT_TYPE });
     });
 
@@ -508,7 +509,7 @@ export class OdeServer {
         });
       } catch (error) {
         if (error instanceof AudioDeliveryError) return c.json({ error: error.message }, error.status);
-        if (error instanceof z.ZodError) return c.json({ error: "Name a valid song and audio delivery." }, 400);
+        if (error instanceof z.ZodError) return c.json({ error: t("server.http.nameAValidSongAndAudioDelivery") }, 400);
         if (error instanceof SongNotFoundError) return c.json({ error: error.message }, 404);
         throw error;
       }
@@ -517,7 +518,7 @@ export class OdeServer {
 
     app.put(API.mode, async (c) => {
       const parsed = ModeSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: `mode must be one of: ${Object.values(Mode).join(", ")}` }, 400);
+      if (!parsed.success) return c.json({ error: t("server.http.modeMustBeOneOf", { details: (Object.values(Mode).join(", ")) }) }, 400);
       const mode = await prefs.setMode(parsed.data.mode);
       bus.emit({ type: "mode", mode });
       return c.json({ mode });
@@ -536,7 +537,7 @@ export class OdeServer {
 
     app.post("/api/versions/:id/restore", async (c) => {
       if (!RestoreRequestSchema.safeParse(await OdeServer.body(c)).success) {
-        return c.json({ error: "Restoring deletes the versions after it, so the musician must confirm it: send { confirmed: true }." }, 400);
+        return c.json({ error: t("server.http.restoringDeletesTheVersionsAfterItSo") }, 400);
       }
       return this.answer(c, async (): Promise<RestoreResult> => {
         try {
@@ -550,7 +551,7 @@ export class OdeServer {
 
     app.post("/api/versions/:id/name", async (c) => {
       const parsed = NameSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: "Send { name }." }, 400);
+      if (!parsed.success) return c.json({ error: t("server.http.sendName") }, 400);
       return this.answer(c, () => versions.name(c.req.param("id"), parsed.data.name));
     });
 
@@ -605,13 +606,13 @@ export class OdeServer {
 
     app.put(API.settings, async (c) => {
       const parsed = SettingsUpdateSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: "Send { provider, model, services } with any keys to change." }, 400);
+      if (!parsed.success) return c.json({ error: t("server.http.sendProviderModelServicesWith") }, 400);
       return c.json(await settings.update(parsed.data));
     });
 
     app.post(API.settingsModels, async (c) => {
       const parsed = ModelListRequestSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: "Send { provider } and the key to list models with." }, 400);
+      if (!parsed.success) return c.json({ error: t("server.http.sendProviderAndTheKey") }, 400);
       try {
         return c.json(await models.models(parsed.data));
       } catch (error) {
@@ -627,7 +628,7 @@ export class OdeServer {
       const asked = decodeURIComponent(c.req.path).replace(/^\/+/, "");
       const path = Object.hasOwn(ui, asked) ? asked : UI_INDEX;
       const file = ui[path];
-      if (file === undefined) return c.text("Ode's pages are missing from this build.", 404);
+      if (file === undefined) return c.text(t("server.http.odeSPagesAreMissingFromThisBuild"), 404);
       return c.body(Buffer.from(file, "base64"), 200, { "Content-Type": UI_CONTENT_TYPES.get(extname(path).toLowerCase()) ?? OTHER_CONTENT_TYPE });
     });
   }

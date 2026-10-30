@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { editNotes, NoteEditsSchema } from "../../music/parts/note-editor";
 import { defineTool } from "../define";
 import { NoteSchema } from "../live/schemas";
@@ -14,7 +15,7 @@ export const notesEditTool = defineTool({
   ].join(" "),
   input: { notes: NoteSchema.strict().array(), ...NoteEditsSchema.shape },
   changes: "none",
-  describe: () => "Draft note changes",
+  describe: () => t("toolActivity.draftNoteChanges"),
   async run({ notes, updates, remove, add }) {
     return editNotes(notes, { updates, remove, add });
   },

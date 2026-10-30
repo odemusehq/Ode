@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { ModePicker } from "../views/ModePicker";
 import { SongMenu } from "../views/SongMenu";
 import { IconButton, IconName } from "../../ui-kit";
@@ -13,7 +14,7 @@ export function DialogHeader() {
     <div className="app-header__song"><SongMenu /></div>
     <ModePicker />
     <IconButton id="ode-sidebar-toggle" icon={IconName.Sidebar} className="app-header__sidebar"
-      label={open ? "Hide sidebar" : "Show sidebar"} aria-expanded={open} aria-controls="ode-sidebar"
+      label={open ? t("app.hideSidebar") : t("app.showSidebar")} aria-expanded={open} aria-controls="ode-sidebar"
       onClick={() => void client.toggleSidebar()} />
   </header>;
 }

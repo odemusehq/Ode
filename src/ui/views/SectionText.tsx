@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { CSSVariables } from "../../ui-kit";
@@ -42,7 +43,7 @@ export function SectionText({ lines, label, onLines, renderMarks }: SectionTextP
       <textarea
         className="section-text__field"
         aria-label={label}
-        placeholder="Write the lines"
+        placeholder={t("lyrics.linesPlaceholder")}
         value={draft}
         rows={rows.length}
         wrap="off"

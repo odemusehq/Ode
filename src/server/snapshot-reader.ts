@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n";
 import type { LiveConnections } from "../shared/live";
 import type { SetContents, SetSnapshot } from "../shared/set-snapshot";
 import type { SongStore } from "../mneme/song-store";
@@ -35,7 +36,7 @@ export class SnapshotReader implements SetReader {
       this.last = snapshot;
       return snapshot;
     } catch (error) {
-      throw new SetReadError(`Ode can't read the Set: ${error instanceof Error ? error.message : String(error)}`);
+      throw new SetReadError(t("server.snapshotReader.odeCanTReadTheSet", { message: (error instanceof Error ? error.message : String(error)) }));
     }
   }
 }

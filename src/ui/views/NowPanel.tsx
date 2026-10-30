@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { useLayoutEffect, useRef } from "react";
 import { Button, ButtonVariant, cx } from "../../ui-kit";
 import { useAppState, useClient } from "../app/hooks";
@@ -31,28 +32,28 @@ export function NowPanel() {
   }, [exchanges, steps, thought, progress, busy, waiting]);
 
   return (
-    <section className={cx("now", (busy || activeId) && stream === StreamState.Open && "now--live-feedback")} aria-label="Conversation with Ode">
+    <section className={cx("now", (busy || activeId) && stream === StreamState.Open && "now--live-feedback")} aria-label={t("chat.conversation")}>
       <div className="now__conversation" ref={conversation} onScroll={() => {
         const node = conversation.current;
         if (node) atEnd.current = node.scrollHeight - node.scrollTop - node.clientHeight < 60;
       }}>
-        <div role="log" aria-label="Saved conversation" aria-live="polite" aria-relevant="additions text">
+        <div role="log" aria-label={t("chat.savedConversation")} aria-live="polite" aria-relevant="additions text">
           {exchanges.map((exchange) => <article className="now__exchange" key={exchange.id}>
-            {exchange.request && <div className="now__message now__message--user"><h2>You</h2><p>{exchange.request}</p></div>}
+            {exchange.request && <div className="now__message now__message--user"><h2>{t("common.you")}</h2><p>{exchange.request}</p></div>}
             <WorkingSteps steps={exchange.id === activeId && busy ? mergeSteps(exchange.activity ?? [], steps) : exchange.activity ?? []}
               rationale={exchange.id === activeId && busy ? thought ?? exchange.rationale : exchange.rationale}
               progress={exchange.id === activeId && busy ? progress : null} active={exchange.id === activeId} waiting={exchange.id === activeId && waiting > 0} />
             {Boolean(exchange.reply || exchange.deliveries?.length) && <div className="now__message now__message--assistant">
-              <h2>Ode</h2>
+              <h2>{t("common.ode")}</h2>
               {exchange.reply && <p>{exchange.reply}</p>}
-              {Boolean(exchange.deliveries?.length) && <ul className="now__deliveries" aria-label="Prepared audio files">
+              {Boolean(exchange.deliveries?.length) && <ul className="now__deliveries" aria-label={t("chat.preparedAudio")}>
                 {exchange.deliveries?.map((delivery) => <li key={delivery.id}>
-                  <a href={client.api.audioDeliveryUrl(delivery.songId, delivery.id)} download={delivery.name}>Download {delivery.name}</a>
+                  <a href={client.api.audioDeliveryUrl(delivery.songId, delivery.id)} download={delivery.name}>{t("chat.download", { name: (delivery.name) })}</a>
                 </li>)}
               </ul>}
             </div>}
             {exchange.versionId && <ActualChanges versionId={exchange.versionId} />}
-            {(exchange.status === "failed" || exchange.status === "stopped") && <p className="now__turn-status">{exchange.status === "failed" ? "This request failed." : "This request was stopped."}</p>}
+            {(exchange.status === "failed" || exchange.status === "stopped") && <p className="now__turn-status">{exchange.status === "failed" ? t("chat.requestFailed") : t("chat.requestStopped")}</p>}
           </article>)}
           {busy && !activeId && <div className="now__exchange">
             <WorkingSteps steps={steps} rationale={thought} progress={progress} active waiting={waiting > 0} />
@@ -61,7 +62,7 @@ export function NowPanel() {
         <ResultLine />
       </div>
       {waiting > 0 && <div className="now__waiting">
-        <p role="status">Ode is waiting for your decision. <Button variant={ButtonVariant.Quiet} onClick={() => decisions.current?.querySelector<HTMLElement>("button, input, textarea")?.focus()}>Go to decision</Button></p>
+        <p role="status">{t("decisions.waiting")} <Button variant={ButtonVariant.Quiet} onClick={() => decisions.current?.querySelector<HTMLElement>("button, input, textarea")?.focus()}>{t("decisions.goToDecision")}</Button></p>
         <div className="now__decisions" ref={decisions}>
           {questions.map((question) => <QuestionCard key={question.id} question={question} />)}
           {approvals.map((approval) => <ApplyCard key={approval.id} approval={approval} />)}

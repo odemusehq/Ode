@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import type { FormEvent } from "react";
 import { Button, ButtonVariant, IconButton, IconName } from "../../ui-kit";
@@ -95,13 +96,13 @@ export function NowInput() {
       if (!isCurrentDictation(active)) return;
       const result = await client.api.transcribe(file, active.songId, active.controller.signal);
       if (!isCurrentDictation(active)) return;
-      if (result.songId !== active.songId) throw new Error("The open song changed. Record the message again in the intended song.");
+      if (result.songId !== active.songId) throw new Error(t("chat.dictationSongChanged"));
       const transcript = result.text.trim();
-      if (!transcript) throw new Error("No words were recognised. Record again or type your message.");
+      if (!transcript) throw new Error(t("chat.dictationEmpty"));
       // Functional append preserves edits made while permission, recording or transcription was pending.
       client.composer.appendText(transcript);
     } catch (error) {
-      if (isCurrentDictation(active)) client.store.setError(`Dictation stopped: ${errorMessage(error)}`);
+      if (isCurrentDictation(active)) client.store.setError(t("chat.dictationStopped", { error: (errorMessage(error)) }));
     } finally {
       active.recorder.cancel();
       if (voice.current === active) {
@@ -134,7 +135,7 @@ export function NowInput() {
       else active.recorder.cancel();
     } catch (error) {
       if (isCurrentDictation(active)) {
-        client.store.setError(`Dictation did not start: ${errorMessage(error)}`);
+        client.store.setError(t("chat.dictationStartFailed", { error: (errorMessage(error)) }));
         cancelDictation();
       }
     }
@@ -154,15 +155,15 @@ export function NowInput() {
 
   return (
     <form className="now__composer" onSubmit={(event) => void submit(event)}>
-      {attachments.length > 0 && <ul className="now__attachments" aria-label="Attached audio">
+      {attachments.length > 0 && <ul className="now__attachments" aria-label={t("chat.attachedAudio")}>
         {attachments.map((file) => <li key={file.entryId}>
           <span>{file.name}</span>
-          <IconButton icon={IconName.Close} label={`Remove ${file.name}`} onClick={() => client.composer.removeAttachment(file.entryId)} />
+          <IconButton icon={IconName.Close} label={t("chat.removeAttachment", { name: (file.name) })} onClick={() => client.composer.removeAttachment(file.entryId)} />
         </li>)}
       </ul>}
-      <label htmlFor={inputId} className="ode-visually-hidden">Message Ode</label>
+      <label htmlFor={inputId} className="ode-visually-hidden">{t("chat.messageLabel")}</label>
       <textarea ref={field} id={inputId} className="ode-input now__field" value={text} rows={2} disabled={!composer.loaded || composer.songId !== songId}
-        placeholder={busy ? "Add a detail or change direction…" : "Tell Ode what you want…"}
+        placeholder={t("chat.messagePlaceholder")}
         autoComplete="off"
         onChange={(event) => client.composer.editText(event.target.value)}
         onKeyDown={(event) => {
@@ -176,17 +177,17 @@ export function NowInput() {
           className="now__voice"
           disabled={voicePhase === "permission" || voicePhase === "transcribing" || (voicePhase === "idle" && (!supportsDictation || !dictationReady || !songId || !composer.loaded || sending))}
           aria-pressed={voicePhase === "recording"} aria-busy={voicePhase === "permission" || voicePhase === "transcribing"}
-          label={voicePhase === "recording" ? "Finish dictation" : "Dictate message"}
-          title={!supportsDictation ? "Microphone recording is unavailable." : !dictationReady ? "Add your Meta key in Settings to use dictation." : voicePhase === "recording" ? "Finish dictation" : "Dictate message"}
+          label={voicePhase === "recording" ? t("chat.finishDictation") : t("chat.dictateMessage")}
+          title={!supportsDictation ? t("chat.microphoneUnavailable") : !dictationReady ? t("chat.dictationSetup") : voicePhase === "recording" ? t("chat.finishDictation") : t("chat.dictateMessage")}
           onClick={() => { if (voicePhase === "recording") void finishDictation(); else void startDictation(); }} />
-        {voicePhase !== "idle" && <IconButton icon={IconName.Close} label="Cancel dictation" onClick={() => { cancelDictation(); field.current?.focus(); }} />}
-        {((busy && stoppable) || sending || composer.pending) && <IconButton icon={IconName.Stop} label="Stop Ode" onClick={() => { cancelDictation(); void client.stopRequest(); }} />}
-        <IconButton type="submit" className="now__send" icon={IconName.Send} label="Send message" aria-busy={sending}
+        {voicePhase !== "idle" && <IconButton icon={IconName.Close} label={t("chat.cancelDictation")} onClick={() => { cancelDictation(); field.current?.focus(); }} />}
+        {((busy && stoppable) || sending || composer.pending) && <IconButton icon={IconName.Stop} label={t("chat.stop")} onClick={() => { cancelDictation(); void client.stopRequest(); }} />}
+        <IconButton type="submit" className="now__send" icon={IconName.Send} label={t("chat.send")} aria-busy={sending}
           disabled={sending || !composer.loaded || !composer.valid || composer.conflicts.length > 0 || voicePhase !== "idle" || (!text.trim() && attachments.length === 0)} />
       </div>
-      {composer.error && <p className="small" role="status">{composer.error} {composer.conflicts.length === 0 && <Button variant={ButtonVariant.Quiet} onClick={() => { void (composer.loaded ? client.composer.flush() : client.composer.open(songId, true)); }}>Retry</Button>}</p>}
-      {composer.conflicts.length > 0 && <p className="small" role="status">Another draft was saved. <Button variant={ButtonVariant.Quiet} disabled={composer.saving} onClick={() => { void client.composer.resolve("local").catch((error: unknown) => client.store.setError(errorMessage(error))); }}>Keep this draft</Button> <Button variant={ButtonVariant.Quiet} disabled={composer.saving} onClick={() => { void client.composer.resolve("saved").catch((error: unknown) => client.store.setError(errorMessage(error))); }}>Use saved draft</Button></p>}
-      {voicePhase !== "idle" && <p className="small muted" role="status">{voicePhase === "permission" ? "Waiting for microphone permission…" : voicePhase === "recording" ? "Recording…" : "Transcribing…"}</p>}
+      {composer.error && <p className="small" role="status">{composer.error} {composer.conflicts.length === 0 && <Button variant={ButtonVariant.Quiet} onClick={() => { void (composer.loaded ? client.composer.flush() : client.composer.open(songId, true)); }}>{t("common.retry")}</Button>}</p>}
+      {composer.conflicts.length > 0 && <p className="small" role="status">{t("chat.draftConflict")} <Button variant={ButtonVariant.Quiet} disabled={composer.saving} onClick={() => { void client.composer.resolve("local").catch((error: unknown) => client.store.setError(errorMessage(error))); }}>{t("chat.keepDraft")}</Button> <Button variant={ButtonVariant.Quiet} disabled={composer.saving} onClick={() => { void client.composer.resolve("saved").catch((error: unknown) => client.store.setError(errorMessage(error))); }}>{t("chat.useSavedDraft")}</Button></p>}
+      {voicePhase !== "idle" && <p className="small muted" role="status">{voicePhase === "permission" ? t("chat.microphonePermission") : voicePhase === "recording" ? t("chat.recording") : t("chat.transcribing")}</p>}
     </form>
   );
 }

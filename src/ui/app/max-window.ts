@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { LiveDialog } from "./dialog";
 import { Layout } from "./layout";
 
@@ -31,7 +32,7 @@ export class MaxWindowClient {
   private async open(view: unknown, address: unknown, id: unknown): Promise<void> {
     if (!validId(id)) return;
     const failed = (message: string) => { this.fail(message); LiveDialog.max?.outlet("ode_open_failed", id, message); };
-    if (this.opening) { failed("Ode is already changing views. Try again when it finishes."); return; }
+    if (this.opening) { failed(t("app.window.alreadyChanging")); return; }
     this.opening = true;
     try {
       if (typeof address !== "string" || !Object.values(Layout).includes(view as Layout)) throw new Error("Unsupported Ode view.");
@@ -39,12 +40,12 @@ export class MaxWindowClient {
       if (url.origin !== current.origin || url.protocol !== "http:" || url.pathname !== "/" || url.username || url.password || url.searchParams.get("view") !== view) {
         throw new Error("Unsupported Ode view address.");
       }
-      if (!await this.save()) { failed("Your draft could not be saved. Resolve the save notice before changing views."); return; }
+      if (!await this.save()) { failed(t("app.window.saveBeforeChanging")); return; }
       this.pending = id;
       this.showWorkspace(view as Layout);
     } catch {
       this.pending = null;
-      failed("Ode could not change views. Your current window stayed open.");
+      failed(t("app.window.changeFailed"));
     } finally { if (!this.pending) this.opening = false; }
   }
 }

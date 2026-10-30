@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { z } from "zod";
 import { LocalAudioFiles } from "../../live/local-audio-files";
 import { extractAudio } from "../../music/audio/extract";
@@ -20,7 +21,7 @@ export const audioExcerptTool = defineTool({
   changes: "memory",
   mainAgentOnly: true,
   observationTargets: () => [],
-  describe: ({ name }) => `Save sample · ${name}`,
+  describe: ({ name }) => t("toolActivity.saveSample", { name: name }),
   run: async ({ audioId, name, selection }, ctx) => {
     if (!ctx.exchangeId) throw new Error("A saved sample needs the current accepted request's exchange id.");
     const limit = ctx.config.limits.toolResultMaxChars;

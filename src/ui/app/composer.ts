@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { ComposerDraftSchema, type ComposerAttachment, type ComposerDraft, type ComposerPending, type ComposerState, type ComposerWrite } from "../../shared/composer";
 import { ApiError, errorMessage, type OdeApi } from "./api";
 
@@ -54,12 +55,12 @@ export class Composer {
     song.loading = (async () => {
       try {
         const stored = await this.api.getComposer(songId, this.writerId);
-        if (stored.songId !== songId) throw new Error("The saved draft belongs to another song.");
+        if (stored.songId !== songId) throw new Error(t("composer.wrongSong"));
         if (song.generation === generation && !song.dirty) this.take(song, stored, true, recovering);
         else if (!song.server || stored.revision === song.server.revision) this.take(song, stored, false);
         song.loaded = true;
         song.error = null;
-      } catch (error) { song.error = `Reading the draft stopped: ${errorMessage(error)}`; }
+      } catch (error) { song.error = t("composer.readFailed", { reason: (errorMessage(error)) }); }
       finally { song.loading = null; this.publish(); }
     })();
     return song.loading;
@@ -115,17 +116,17 @@ export class Composer {
   }
 
   async prepare(captured: ComposerCapture): Promise<ComposerState> {
-    if (!await this.flush(captured.songId)) throw new Error(this.entry(captured.songId).error ?? "Resolve the saved draft before sending.");
+    if (!await this.flush(captured.songId)) throw new Error(this.entry(captured.songId).error ?? t("composer.resolveBeforeSending"));
     const song = this.entry(captured.songId);
     const generation = song.generation;
     song.preparing = this.api.prepareComposerSend({ songId: song.songId, writerId: this.writerId, writeId: crypto.randomUUID(), baseRevision: song.server!.revision, snapshot: captured.draft });
     try {
       const stored = await song.preparing;
       if (stored.pending && JSON.stringify(ComposerDraftSchema.parse(stored.pending.snapshot)) !== JSON.stringify(ComposerDraftSchema.parse(captured.draft))) {
-        throw new ApiError(409, "An earlier send still awaits acknowledgement. Stop it before sending an edited draft.", stored);
+        throw new ApiError(409, t("composer.previousSendUnconfirmed"), stored);
       }
       this.take(song, stored, song.generation === generation && !song.dirty);
-      if (!stored.pending && !stored.acceptedRequestId) throw new Error("The saved request has no delivery receipt. Refresh the conversation before sending again.");
+      if (!stored.pending && !stored.acceptedRequestId) throw new Error(t("composer.missingReceipt"));
       return stored;
     } catch (error) { this.failed(song, error); throw error; }
     finally { song.preparing = null; if (song.dirty && !song.error) this.schedule(song); }
@@ -180,7 +181,7 @@ export class Composer {
       song.conflictBase ??= conflict.baseRevision;
       await this.save(song);
       conflict = song.server?.conflicts.find((entry) => entry.writerId === this.writerId);
-      if (!conflict || JSON.stringify(song.draft) !== JSON.stringify(conflict.draft)) throw new Error(song.error ?? "Your latest draft must be retained before choosing a copy.");
+      if (!conflict || JSON.stringify(song.draft) !== JSON.stringify(conflict.draft)) throw new Error(song.error ?? t("composer.saveBeforeChoosing"));
     }
     const generation = song.generation;
     const backendChoice = displayedCanonical ? choice === "local" ? "saved" : "local" : choice;
@@ -197,7 +198,7 @@ export class Composer {
 
   uploadContext(songId: string): { songId: string; writerId: string; baseRevision: number; snapshot: ComposerDraft } {
     const song = this.entry(songId);
-    if (!song.loaded || !song.server) throw new Error("Read the saved draft before attaching audio.");
+    if (!song.loaded || !song.server) throw new Error(t("composer.readBeforeAttaching"));
     return { songId, writerId: this.writerId, baseRevision: song.server.revision, snapshot: structuredClone(song.draft) };
   }
 
@@ -216,7 +217,7 @@ export class Composer {
     const ownAppend = previous && stored.draft.textEditId === previous.draft.textEditId && stored.draft.text === previous.draft.text && JSON.stringify(otherEntries) === JSON.stringify(previous.draft.attachments);
     if (ownAppend && !song.saving) this.take(song, stored, false);
     if (!song.draft.attachments.some((entry) => entry.entryId === attachment.entryId)) { song.draft = { ...song.draft, attachments: [...song.draft.attachments, attachment] }; song.generation++; }
-    if (conflict) { song.conflictBase = conflict.baseRevision; this.take(song, stored, false); song.error = "Both drafts are saved; choose which to use."; }
+    if (conflict) { song.conflictBase = conflict.baseRevision; this.take(song, stored, false); song.error = t("composer.chooseDraft"); }
     if (!ownAppend || song.saving) { song.dirty = true; this.schedule(song); }
     this.publish();
   }
@@ -248,8 +249,8 @@ export class Composer {
     const parsed = ComposerDraftSchema.safeParse(draft);
     if (!parsed.success) {
       this.clearTimer(song);
-      if (ComposerDraftSchema.safeParse({ ...draft, text: "" }).success) { song.draft = draft; song.generation++; song.dirty = true; song.error = "Draft too long to save. Shorten it to send."; }
-      else song.error = parsed.error.issues[0]?.message ?? "The attachment metadata is invalid.";
+      if (ComposerDraftSchema.safeParse({ ...draft, text: "" }).success) { song.draft = draft; song.generation++; song.dirty = true; song.error = t("composer.tooLong"); }
+      else song.error = parsed.error.issues[0]?.message ?? t("composer.invalidAttachment");
       this.publish(); return;
     }
     song.draft = parsed.data; song.generation++; song.dirty = true; song.error = null;
@@ -262,7 +263,7 @@ export class Composer {
     if (song.preparing) return song.preparing.catch(() => undefined).then(() => this.save(song));
     if (song.saving) return song.saving;
     if (!song.loaded || !song.dirty) return Promise.resolve();
-    if (!ComposerDraftSchema.safeParse(song.draft).success) { song.error = "Draft too long to save. Shorten it to send."; this.publish(); return Promise.resolve(); }
+    if (!ComposerDraftSchema.safeParse(song.draft).success) { song.error = t("composer.tooLong"); this.publish(); return Promise.resolve(); }
     this.clearTimer(song);
     const attempt = song.attempt ?? { write: this.write(song), generation: song.generation };
     song.attempt = attempt;

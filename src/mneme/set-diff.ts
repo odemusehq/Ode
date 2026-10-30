@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n";
 import { basename } from "node:path";
 import { diffIndices } from "node-diff3";
 import { MIXER_INDEX, TAG_SEPARATOR, type Note, type TrackRef } from "../shared/live";
@@ -44,12 +45,12 @@ const WARP_MODES: Readonly<Record<number, string>> = {
 const SUMMARY_TRACK_NAMES = 3;
 /** The lead sheet's details in plain words; the title is named with its old and new words. */
 const SHEET_DETAIL_WORDS: ReadonlyArray<readonly [Exclude<keyof SheetDetails, "title">, string]> = [
-  ["intent", "what the song is about"],
-  ["links", "clip links"],
-  ["locked", "locked parts"],
-  ["credits", "credits"],
-  ["notes", "notes"],
-  ["composition", "musical plan"],
+  ["intent", t("changes.whatTheSongIsAbout")],
+  ["links", t("changes.clipLinks")],
+  ["locked", t("changes.lockedParts")],
+  ["credits", t("changes.words.credits")],
+  ["notes", t("changes.words.notes")],
+  ["composition", t("changes.musicalPlan")],
 ];
 
 /** The switch every Live device has for turning it on and off. */
@@ -116,8 +117,8 @@ export class SetWording {
   /** "bars 9–16" or "bar 9". */
   static bars(start: number, end: number, beatsPerBar: number | null): string {
     const span = SetWording.barSpan(start, end, beatsPerBar);
-    if (beatsPerBar === null) return `beats ${span}`;
-    return span.includes("–") ? `bars ${span}` : `bar ${span}`;
+    if (beatsPerBar === null) return t("changes.beatSpan", { span: span });
+    return span.includes("–") ? t("changes.barSpan", { span: span }) : t("changes.singleBar", { span: span });
   }
 
   /** "A minor", "C major", "D Dorian". */
@@ -130,11 +131,11 @@ export class SetWording {
 
   /** "4/4". */
   static signature(signature: TimeSignature | null): string {
-    return signature ? `${signature.numerator}/${signature.denominator}` : "meter unknown (SDK cannot read Song meter)";
+    return signature ? `${signature.numerator}/${signature.denominator}` : t("changes.meterUnknownSDKCannotReadSongMeter");
   }
 
   static position(beat: number, beatsPerBar: number | null): string {
-    return beatsPerBar === null ? `beat ${SetWording.number(beat)}` : `bar ${SetWording.bar(beat, beatsPerBar)}`;
+    return beatsPerBar === null ? t("changes.singleBeat", { beat: SetWording.number(beat) }) : t("changes.barPosition", { beat: SetWording.bar(beat, beatsPerBar) });
   }
 
   /** A number as short as it stays readable: 2400, 12.5, 0.85. */
@@ -183,7 +184,7 @@ export class SetWording {
   }
 
   static warpMode(mode: number): string {
-    return WARP_MODES[mode] ?? `mode ${mode}`;
+    return WARP_MODES[mode] ?? t("changes.unknownWarpMode", { mode: mode });
   }
 
   /** A name without Ode's tag, for a name that still carries it. */
@@ -193,14 +194,14 @@ export class SetWording {
   }
 
   /** "1 clip", "3 clips". */
-  static count(amount: number, noun: string): string {
-    return `${amount} ${noun}${amount === 1 ? "" : "s"}`;
+  static count(amount: number, noun: "line" | "edit" | "scene" | "clip" | "note" | "pad" | "chain"): string {
+    return t(`changes.counts.${noun}`, { count: amount });
   }
 
   /** "a", "a and b", "a, b and c". */
   static list(items: readonly string[]): string {
     if (items.length < 2) return items.join("");
-    return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+    return t("changes.list", { join: items.slice(0, -1).join(", "), value: items[items.length - 1] });
   }
 
   /** Whether the device's Device On switch is off. */
@@ -224,7 +225,7 @@ export class SetWording {
 export class LyricsWording {
   /** "Lyrics · Verse 1 line 2", "Lyrics · Verse 2 lines 1–2 and Chorus line 3", "Lyrics · 2 lines added", "Lyrics · line 5 and 1 line removed". */
   static label(before: string, after: string): string {
-    return `Lyrics · ${LyricsWording.words(before, after)}`;
+    return t("changes.lyricsChange", { before: LyricsWording.words(before, after) });
   }
 
   /**
@@ -248,9 +249,9 @@ export class LyricsWording {
       removed += oldSung - replaced;
     }
     const parts = LyricsWording.places(newLines, changed);
-    if (added > 0) parts.push(`${SetWording.count(added, "line")} added`);
-    if (removed > 0) parts.push(`${SetWording.count(removed, "line")} removed`);
-    return SetWording.list(parts) || "changed";
+    if (added > 0) parts.push(t("changes.linesAdded", { added: SetWording.count(added, "line") }));
+    if (removed > 0) parts.push(t("changes.linesRemoved", { removed: SetWording.count(removed, "line") }));
+    return SetWording.list(parts) || t("changes.words.changed");
   }
 
   /** "Verse 1 line 2", "Chorus lines 1–2", or "line 5" for lines above the first label, one part per label in order. */
@@ -261,7 +262,7 @@ export class LyricsWording {
       const key = label ?? "";
       byLabel.set(key, [...(byLabel.get(key) ?? []), line]);
     }
-    return [...byLabel].map(([label, numbers]) => `${label ? `${label} ` : ""}${numbers.length === 1 ? "line" : "lines"} ${SetWording.spans(numbers)}`);
+    return [...byLabel].map(([label, numbers]) => t("changes.lyricLineLocation", { isLabel: Boolean(label), label: label, length: numbers.length, numbers: SetWording.spans(numbers) }));
   }
 
   /** An empty text gives an empty list of lines. */
@@ -298,18 +299,18 @@ export class SetDiff {
 
   /** "12 edits on Drums and Pad", "5 edits on Bass and the lyrics", or "Song settings" when only the song changed. */
   static summary(changes: SetChange[]): string {
-    if (changes.length === 0) return "Everything stayed the same";
+    if (changes.length === 0) return t("changes.unchanged");
     const tracks = TouchedTracks.names(changes);
     const lyrics = changes.some((change) => change.target.scope === "sheet" && change.target.field === "lyrics");
     const sheet = changes.some((change) => change.target.scope === "sheet" && change.target.field !== "lyrics");
-    if (tracks.length === 0 && !lyrics && !sheet) return "Song settings";
+    if (tracks.length === 0 && !lyrics && !sheet) return t("changes.songOnly");
     const named = tracks.slice(0, SUMMARY_TRACK_NAMES);
     const more = tracks.length - named.length;
-    if (more > 0) named.push(`${more} more ${more === 1 ? "track" : "tracks"}`);
-    if (lyrics) named.push("the lyrics");
-    if (sheet) named.push("the lead sheet");
-    if (changes.some((change) => change.target.scope === "song")) named.push("song settings");
-    return `${SetWording.count(changes.length, "edit")} on ${SetWording.list(named)}`;
+    if (more > 0) named.push(t("changes.moreTracks", { more: more }));
+    if (lyrics) named.push(t("changes.lyricsSubject"));
+    if (sheet) named.push(t("changes.leadSheetSubject"));
+    if (changes.some((change) => change.target.scope === "song")) named.push(t("changes.songSubject"));
+    return t("changes.summary", { length: SetWording.count(changes.length, "edit"), named: SetWording.list(named) });
   }
 }
 
@@ -601,7 +602,7 @@ class DiffBuilder {
   }
 
   private static key(list: TrackList, index: number, track: TrackSnapshot): TrackKey {
-    const name = SetWording.name(track) || (list === TrackList.Main ? "Main" : `track ${index + 1}`);
+    const name = SetWording.name(track) || (list === TrackList.Main ? t("changes.words.main") : t("changes.unnamedTrack", { value: index + 1 }));
     const key: TrackKey = { list, index, name };
     if (track.tag) key.tag = track.tag;
     return key;
@@ -619,26 +620,26 @@ class DiffBuilder {
     const before = this.from.song;
     const after = this.to.song;
     if (before.tempo !== after.tempo) {
-      const label = `Song · tempo ${SetWording.tempo(before.tempo)} → ${SetWording.tempo(after.tempo)} BPM`;
+      const label = t("changes.tempoChange", { beforeTempo: SetWording.tempo(before.tempo), afterTempo: SetWording.tempo(after.tempo) });
       this.add(ChangeKind.Changed, { scope: "song", field: "tempo" }, label, before.tempo, after.tempo);
     }
     const keyBefore = DiffBuilder.songKey(before);
     const keyAfter = DiffBuilder.songKey(after);
     if (!Values.same(keyBefore, keyAfter)) {
-      this.add(ChangeKind.Changed, { scope: "song", field: "key" }, `Song · ${DiffBuilder.keyWords(keyBefore, keyAfter)}`, keyBefore, keyAfter);
+      this.add(ChangeKind.Changed, { scope: "song", field: "key" }, t("changes.keyChange", { keyBefore: DiffBuilder.keyWords(keyBefore, keyAfter) }), keyBefore, keyAfter);
     }
     const signatureBefore = this.from.signature;
     const signatureAfter = this.to.signature;
     if (!Values.same(signatureBefore, signatureAfter)) {
-      const label = `Song · time signature ${SetWording.signature(signatureBefore)} → ${SetWording.signature(signatureAfter)}`;
+      const label = t("changes.timeSignatureChange", { signatureBefore: SetWording.signature(signatureBefore), signatureAfter: SetWording.signature(signatureAfter) });
       this.add(ChangeKind.Changed, { scope: "song", field: "signature" }, label, signatureBefore, signatureAfter);
     }
     if (!Values.same(before.locators, after.locators)) {
-      const label = `Song · ${this.locatorWords(before.locators, after.locators)}`;
+      const label = t("changes.locatorsChange", { beforeLocators: this.locatorWords(before.locators, after.locators) });
       this.add(ChangeKind.Changed, { scope: "song", field: "locators" }, label, before.locators, after.locators);
     }
     if (!Values.same(before.scenes, after.scenes)) {
-      const label = `Song · ${DiffBuilder.sceneWords(before.scenes, after.scenes)}`;
+      const label = t("changes.scenesChange", { beforeScenes: DiffBuilder.sceneWords(before.scenes, after.scenes) });
       this.add(ChangeKind.Changed, { scope: "song", field: "scenes" }, label, before.scenes, after.scenes);
     }
   }
@@ -650,10 +651,10 @@ class DiffBuilder {
   private static keyWords(before: SongKey, after: SongKey): string {
     const parts: string[] = [];
     if (before.rootNote !== after.rootNote || before.scaleName !== after.scaleName) {
-      parts.push(`key ${SetWording.key(before.rootNote, before.scaleName)} → ${SetWording.key(after.rootNote, after.scaleName)}`);
+      parts.push(t("changes.keyValueChange", { beforeRootNote: SetWording.key(before.rootNote, before.scaleName), afterRootNote: SetWording.key(after.rootNote, after.scaleName) }));
     }
-    if (before.scaleMode !== after.scaleMode) parts.push(`Scale Mode ${after.scaleMode ? "on" : "off"}`);
-    return parts.join(", ") || "scale changed";
+    if (before.scaleMode !== after.scaleMode) parts.push(t("changes.scaleMode", { isAfterScaleMode: Boolean(after.scaleMode) }));
+    return parts.join(", ") || t("changes.scaleChanged");
   }
 
   /** "locator Chorus added at bar 9", "locator Verse moved to bar 5", "locator Intro renamed Start". */
@@ -666,20 +667,20 @@ class DiffBuilder {
       const index = sameName >= 0 ? sameName : added.findIndex((locator) => locator.time === old.time);
       const match = added[index];
       if (!match) {
-        parts.push(`locator ${this.locatorName(old)} removed`);
+        parts.push(t("changes.locatorRemoved", { old: this.locatorName(old) }));
         continue;
       }
       added.splice(index, 1);
       parts.push(
         match.name === old.name
-          ? `locator ${this.locatorName(old)} moved to ${this.barAt(match.time)}`
-          : `locator ${this.locatorName(old)} ${match.name ? `renamed ${match.name}` : "name cleared"}`,
+          ? t("changes.locatorMovedTo", { old: this.locatorName(old), time: this.barAt(match.time) })
+          : t("changes.locatorRename", { old: this.locatorName(old), isName: Boolean(match.name), name: match.name }),
       );
     }
     for (const locator of added) {
-      parts.push(`${locator.name ? `locator ${locator.name}` : "locator"} added at ${this.barAt(locator.time)}`);
+      parts.push(t("changes.locatorAdded", { isName: Boolean(locator.name), name: locator.name, time: this.barAt(locator.time) }));
     }
-    return parts.join(", ") || "locators changed";
+    return parts.join(", ") || t("changes.locatorsChanged");
   }
 
   private static sameLocator(a: LocatorInfo, b: LocatorInfo): boolean {
@@ -687,7 +688,7 @@ class DiffBuilder {
   }
 
   private locatorName(locator: LocatorInfo): string {
-    return locator.name || `at ${this.barAt(locator.time)}`;
+    return locator.name || t("changes.locatorPosition", { time: this.barAt(locator.time) });
   }
 
   private barAt(beat: number): string {
@@ -697,10 +698,10 @@ class DiffBuilder {
   /** "scene Bridge added", "2 scenes removed", "scene 3 renamed Chorus", "scene Chorus tempo 120 → 128 BPM". */
   private static sceneWords(before: readonly SceneInfo[], after: readonly SceneInfo[]): string {
     if (after.length > before.length) {
-      return DiffBuilder.scenesAddedOrRemoved(after.length - before.length, DiffBuilder.extraNames(after, before), "added");
+      return DiffBuilder.scenesAddedOrRemoved(after.length - before.length, DiffBuilder.extraNames(after, before), t("changes.words.added"));
     }
     if (after.length < before.length) {
-      return DiffBuilder.scenesAddedOrRemoved(before.length - after.length, DiffBuilder.extraNames(before, after), "removed");
+      return DiffBuilder.scenesAddedOrRemoved(before.length - after.length, DiffBuilder.extraNames(before, after), t("changes.words.removed"));
     }
     const parts: string[] = [];
     after.forEach((scene, index) => {
@@ -708,20 +709,20 @@ class DiffBuilder {
       if (!old) return;
       const name = scene.name || `${index + 1}`;
       if (old.name !== scene.name) {
-        parts.push(`scene ${index + 1} ${scene.name ? `renamed ${scene.name}` : "name cleared"}`);
+        parts.push(t("changes.sceneRename", { value: index + 1, isName: Boolean(scene.name), name: scene.name }));
       } else if (old.tempo !== scene.tempo) {
-        parts.push(`scene ${name} tempo ${SetWording.tempo(old.tempo)} → ${SetWording.tempo(scene.tempo)} BPM`);
+        parts.push(t("changes.sceneTempo", { name: name, tempo: SetWording.tempo(old.tempo), tempo2: SetWording.tempo(scene.tempo) }));
       } else if (old.signatureNumerator !== scene.signatureNumerator || old.signatureDenominator !== scene.signatureDenominator) {
         const was = `${old.signatureNumerator}/${old.signatureDenominator}`;
-        parts.push(`scene ${name} time signature ${was} → ${scene.signatureNumerator}/${scene.signatureDenominator}`);
+        parts.push(t("changes.sceneTimeSignature", { name: name, was: was, signatureNumerator: scene.signatureNumerator, signatureDenominator: scene.signatureDenominator }));
       }
     });
-    return parts.join(", ") || "scenes changed";
+    return parts.join(", ") || t("changes.scenesChanged");
   }
 
   /** "scenes Bridge and Outro added", or "2 scenes added" when they are unnamed. */
   private static scenesAddedOrRemoved(count: number, names: readonly string[], verb: string): string {
-    if (names.length === count) return `${count === 1 ? "scene" : "scenes"} ${SetWording.list(names)} ${verb}`;
+    if (names.length === count) return t("changes.sceneCountChange", { count: count, names: SetWording.list(names), verb: verb });
     return `${SetWording.count(count, "scene")} ${verb}`;
   }
 
@@ -752,18 +753,18 @@ class DiffBuilder {
     for (const section of after.sections) {
       const old = earlier.get(section.id);
       const target: ChangeTarget = { scope: "sheet", field: "section", section: section.id };
-      if (!old) this.add(ChangeKind.Added, target, `${DiffBuilder.sectionName(section)} · added`, undefined, section);
+      if (!old) this.add(ChangeKind.Added, target, t("changes.sectionAdded", { section: DiffBuilder.sectionName(section) }), undefined, section);
       else if (!DiffBuilder.sameSection(old, section)) this.add(ChangeKind.Changed, target, this.sectionWords(old, section), old, section);
     }
     for (const section of before.sections) {
       if (later.has(section.id)) continue;
       const target: ChangeTarget = { scope: "sheet", field: "section", section: section.id };
-      this.add(ChangeKind.Removed, target, `${DiffBuilder.sectionName(section)} · removed`, section, undefined);
+      this.add(ChangeKind.Removed, target, t("changes.sectionRemoved", { section: DiffBuilder.sectionName(section) }), section, undefined);
     }
     const detailsBefore = DiffBuilder.sheetDetails(before);
     const detailsAfter = DiffBuilder.sheetDetails(after);
     if (!Values.same(detailsBefore, detailsAfter)) {
-      const label = `Lead sheet · ${DiffBuilder.detailWords(detailsBefore, detailsAfter)}`;
+      const label = t("changes.leadSheetDetails", { detailsBefore: DiffBuilder.detailWords(detailsBefore, detailsAfter) });
       this.add(ChangeKind.Changed, { scope: "sheet", field: "details" }, label, detailsBefore, detailsAfter);
     }
   }
@@ -783,15 +784,15 @@ class DiffBuilder {
     const name = DiffBuilder.sectionName(before);
     const chords = !Values.same(before.chords, after.chords);
     const form = this.formWords(before, after);
-    if (form.length === 0) return `Chords · ${name}`;
-    if (!chords) return `Song form · ${name} · ${form.join(", ")}`;
-    return `${name} · ${SetWording.list(["chords", ...form])}`;
+    if (form.length === 0) return t("changes.chords", { name: name });
+    if (!chords) return t("changes.songFormChange", { name: name, join: form.join(", ") });
+    return `${name} · ${SetWording.list([t("changes.words.chords"), ...form])}`;
   }
 
   /** "renamed Middle 8", "verse → chorus", "bars 17–24": what changed in the section's place in the song form. */
   private formWords(before: Section, after: Section): string[] {
     const parts: string[] = [];
-    if (before.name !== after.name) parts.push(after.name ? `renamed ${after.name}` : "name cleared");
+    if (before.name !== after.name) parts.push(after.name ? t("changes.sectionRenamed", { afterName: after.name }) : t("changes.nameCleared"));
     if (before.kind !== after.kind) parts.push(`${before.kind} → ${after.kind}`);
     if (before.startBeat !== after.startBeat || before.lengthBeats !== after.lengthBeats) {
       parts.push(SetWording.bars(after.startBeat, after.startBeat + after.lengthBeats, this.beatsPerBar));
@@ -812,9 +813,9 @@ class DiffBuilder {
 
   /** "title 'Old' → 'New'", "credits and notes". */
   private static detailWords(before: SheetDetails, after: SheetDetails): string {
-    const parts: string[] = before.title === after.title ? [] : [`title '${before.title}' → '${after.title}'`];
+    const parts: string[] = before.title === after.title ? [] : [t("changes.songTitleChange", { beforeTitle: before.title, afterTitle: after.title })];
     for (const [field, words] of SHEET_DETAIL_WORDS) if (!Values.same(before[field], after[field])) parts.push(words);
-    return SetWording.list(parts) || "details changed";
+    return SetWording.list(parts) || t("changes.detailsChanged");
   }
 
   private trackList(list: TrackList, before: readonly TrackSnapshot[], after: readonly TrackSnapshot[], pairing: Pairing): void {
@@ -822,7 +823,7 @@ class DiffBuilder {
       const key = DiffBuilder.key(list, index, track);
       const partner = pairing.toOf(index);
       if (partner === undefined) {
-        this.add(ChangeKind.Removed, { scope: "track", track: key, field: "present" }, `${key.name} · removed`, track, undefined);
+        this.add(ChangeKind.Removed, { scope: "track", track: key, field: "present" }, t("changes.trackRemoved", { name: key.name }), track, undefined);
       } else {
         this.track(track, itemAt(after, partner), key);
       }
@@ -830,7 +831,7 @@ class DiffBuilder {
     for (const index of pairing.freeTo()) {
       const track = itemAt(after, index);
       const key = DiffBuilder.key(list, index, track);
-      this.add(ChangeKind.Added, { scope: "track", track: key, field: "present" }, `${key.name} · added`, undefined, track);
+      this.add(ChangeKind.Added, { scope: "track", track: key, field: "present" }, t("changes.trackAdded", { name: key.name }), undefined, track);
     }
   }
 
@@ -838,11 +839,11 @@ class DiffBuilder {
     const target = (field: TrackField): ChangeTarget => ({ scope: "track", track, field });
     const who = track.name;
     const name = SetWording.name(after);
-    if (SetWording.name(before) !== name) this.add(ChangeKind.Changed, target("name"), `${who} · renamed ${name}`, before.name, after.name);
-    if (before.mute !== after.mute) this.add(ChangeKind.Changed, target("mute"), `${who} · ${after.mute ? "muted" : "unmuted"}`, before.mute, after.mute);
-    if (before.solo !== after.solo) this.add(ChangeKind.Changed, target("solo"), `${who} · ${after.solo ? "soloed" : "unsoloed"}`, before.solo, after.solo);
-    if (before.arm !== after.arm) this.add(ChangeKind.Changed, target("arm"), `${who} · ${after.arm ? "armed" : "disarmed"}`, before.arm, after.arm);
-    if (before.color !== after.color) this.add(ChangeKind.Changed, target("color"), `${who} · colour changed`, before.color, after.color);
+    if (SetWording.name(before) !== name) this.add(ChangeKind.Changed, target("name"), t("changes.trackRenamed", { who: who, name: name }), before.name, after.name);
+    if (before.mute !== after.mute) this.add(ChangeKind.Changed, target("mute"), t("changes.trackMute", { who: who, isAfterMute: Boolean(after.mute) }), before.mute, after.mute);
+    if (before.solo !== after.solo) this.add(ChangeKind.Changed, target("solo"), t("changes.trackSolo", { who: who, isAfterSolo: Boolean(after.solo) }), before.solo, after.solo);
+    if (before.arm !== after.arm) this.add(ChangeKind.Changed, target("arm"), t("changes.trackArm", { who: who, isAfterArm: Boolean(after.arm) }), before.arm, after.arm);
+    if (before.color !== after.color) this.add(ChangeKind.Changed, target("color"), t("changes.trackColour", { who: who }), before.color, after.color);
     this.clips(before, after, track);
     this.devices(track, before.devices, after.devices, { from: [], to: [] }, []);
     this.mixer(before, after, track);
@@ -876,11 +877,11 @@ class DiffBuilder {
       return;
     }
     if (before) {
-      const label = `${track.name} · removed ${this.clipPlace(before, place)}`;
+      const label = t("changes.clipRemoved", { name: track.name, before: this.clipPlace(before, place) });
       this.add(ChangeKind.Removed, { scope: "clip", track, clip: place, field: "present" }, label, before, undefined);
     }
     if (after) {
-      const label = `${track.name} · added ${this.clipPlace(after, place)}`;
+      const label = t("changes.clipAdded", { name: track.name, after: this.clipPlace(after, place) });
       this.add(ChangeKind.Added, { scope: "clip", track, clip: place, field: "present" }, label, undefined, after);
     }
   }
@@ -900,12 +901,12 @@ class DiffBuilder {
     }
     const name = SetWording.name(after);
     if (SetWording.name(before) !== name) {
-      this.add(ChangeKind.Changed, target("name"), `${what} ${name ? `renamed ${name}` : "name cleared"}`, before.name, after.name);
+      this.add(ChangeKind.Changed, target("name"), t("changes.clipRename", { what: what, isName: Boolean(name), name: name }), before.name, after.name);
     }
     if (before.muted !== after.muted) {
-      this.add(ChangeKind.Changed, target("muted"), `${what} ${after.muted ? "deactivated" : "activated"}`, before.muted, after.muted);
+      this.add(ChangeKind.Changed, target("muted"), t("changes.clipActivation", { what: what, isAfterMuted: Boolean(after.muted) }), before.muted, after.muted);
     }
-    if (before.color !== after.color) this.add(ChangeKind.Changed, target("color"), `${what} colour changed`, before.color, after.color);
+    if (before.color !== after.color) this.add(ChangeKind.Changed, target("color"), t("changes.clipColour", { what: what }), before.color, after.color);
     const loopBefore = DiffBuilder.loop(before, place);
     const loopAfter = DiffBuilder.loop(after, place);
     if (!Values.same(loopBefore, loopAfter)) {
@@ -928,28 +929,28 @@ class DiffBuilder {
       end = Math.max(end, note.start + note.duration);
     }
     const clip = `${track.name} · ${this.clipId(before, place)}`;
-    if (start > end) return `${clip} · notes changed`;
-    if ("slot" in place) return `${clip} · notes in ${SetWording.bars(start, end, this.beatsPerBar)}`;
+    if (start > end) return t("changes.notesChanged", { clip: clip });
+    if ("slot" in place) return t("changes.clipNotesIn", { clip: clip, start: SetWording.bars(start, end, this.beatsPerBar) });
     const offset = after.startTime - after.startMarker;
     const bars = SetWording.bars(Math.max(after.startTime, start + offset), Math.max(after.startTime, end + offset), this.beatsPerBar);
-    return place.lane === undefined ? `${track.name} · notes in ${bars}` : `${track.name} · take lane ${place.lane + 1} · notes in ${bars}`;
+    return place.lane === undefined ? t("changes.trackNotesIn", { name: track.name, bars: bars }) : t("changes.takeLaneNotesIn", { name: track.name, value: place.lane + 1, bars: bars });
   }
 
   /** "clip Bass A", or where the clip is when it is unnamed. */
   private clipId(clip: ClipInfo, place: ClipKey): string {
     const name = SetWording.name(clip);
-    if ("slot" in place) return name ? `clip ${name}` : `clip in slot ${place.slot + 1}`;
-    const lane = place.lane === undefined ? "" : ` on take lane ${place.lane + 1}`;
-    return `${name ? `clip ${name}` : `clip in ${SetWording.bars(clip.startTime, clip.endTime, this.beatsPerBar)}`}${lane}`;
+    if ("slot" in place) return name ? t("changes.namedClip", { name: name }) : t("changes.unnamedClipSlot", { value: place.slot + 1 });
+    const lane = place.lane === undefined ? "" : t("changes.takeLaneSuffix", { value: place.lane + 1 });
+    return t("changes.arrangedClipLocation", { isName: Boolean(name), name: name, startTime: SetWording.bars(clip.startTime, clip.endTime, this.beatsPerBar), lane: lane });
   }
 
   /** "clip Bass A in bars 9–16", "clip Fill in slot 3". */
   private clipPlace(clip: ClipInfo, place: ClipKey): string {
     const name = SetWording.name(clip);
-    const title = name ? `clip ${name}` : "clip";
-    if ("slot" in place) return `${title} in slot ${place.slot + 1}`;
-    const lane = place.lane === undefined ? "" : ` on take lane ${place.lane + 1}`;
-    return `${title} in ${SetWording.bars(clip.startTime, clip.endTime, this.beatsPerBar)}${lane}`;
+    const title = name ? t("changes.namedClip", { name: name }) : t("changes.words.clipNoun");
+    if ("slot" in place) return t("changes.clipSlotLocation", { title: title, value: place.slot + 1 });
+    const lane = place.lane === undefined ? "" : t("changes.takeLaneSuffix", { value: place.lane + 1 });
+    return t("changes.clipRangeLocation", { title: title, startTime: SetWording.bars(clip.startTime, clip.endTime, this.beatsPerBar), lane: lane });
   }
 
   /** Session clips leave out where they start and end: Live moves those when a clip is launched. */
@@ -972,28 +973,28 @@ class DiffBuilder {
   }
 
   private loopWords(before: ClipLoop, after: ClipLoop): string {
-    if (before.looping !== after.looping) return after.looping ? "loop on" : "loop off";
+    if (before.looping !== after.looping) return after.looping ? t("changes.loopOn") : t("changes.loopOff");
     if (before.loopStart !== after.loopStart || before.loopEnd !== after.loopEnd) {
       const was = SetWording.barSpan(before.loopStart, before.loopEnd, this.beatsPerBar);
-      return `loop ${this.beatsPerBar === null ? "beats" : "bars"} ${was} → ${SetWording.barSpan(after.loopStart, after.loopEnd, this.beatsPerBar)}`;
+      return t("changes.loopRangeChange", { isBeatsPerBar: Boolean(this.beatsPerBar === null), was: was, afterLoopStart: SetWording.barSpan(after.loopStart, after.loopEnd, this.beatsPerBar) });
     }
     if (before.duration !== after.duration) {
-      const unit = this.beatsPerBar === null ? "beats" : "bars";
+      const unit = this.beatsPerBar === null ? t("changes.words.beats") : t("changes.words.bars");
       const divisor = this.beatsPerBar ?? 1;
-      return `length ${SetWording.number(before.duration / divisor)} → ${SetWording.number(after.duration / divisor)} ${unit}`;
+      return t("changes.clipLength", { number: SetWording.number(before.duration / divisor), number2: SetWording.number(after.duration / divisor), unit: unit });
     }
-    return "start and end changed";
+    return t("changes.startAndEndChanged");
   }
 
   private static audioWords(before: ClipAudio, after: ClipAudio): string {
     const parts: string[] = [];
     if (before.filePath !== after.filePath) {
-      parts.push(`file ${SetWording.fileName(before.filePath) || "empty"} → ${SetWording.fileName(after.filePath) || "empty"}`);
+      parts.push(t("changes.audioFile", { value: SetWording.fileName(before.filePath) || t("changes.words.empty"), value2: SetWording.fileName(after.filePath) || t("changes.words.empty") }));
     }
-    if (before.warping !== after.warping) parts.push(after.warping ? "warping on" : "warping off");
-    if (before.warpMode !== after.warpMode) parts.push(`warp mode ${SetWording.warpMode(before.warpMode)} → ${SetWording.warpMode(after.warpMode)}`);
-    if (!Values.same(before.warpMarkers, after.warpMarkers)) parts.push("warp markers moved");
-    return parts.join(", ") || "audio changed";
+    if (before.warping !== after.warping) parts.push(after.warping ? t("changes.warpingOn") : t("changes.warpingOff"));
+    if (before.warpMode !== after.warpMode) parts.push(t("changes.warpMode", { beforeWarpMode: SetWording.warpMode(before.warpMode), afterWarpMode: SetWording.warpMode(after.warpMode) }));
+    if (!Values.same(before.warpMarkers, after.warpMarkers)) parts.push(t("changes.warpMarkersMoved"));
+    return parts.join(", ") || t("changes.audioChanged");
   }
 
   /** The devices in one list, a track's or a chain's, at the chain paths `place.from` and `place.to`. */
@@ -1008,7 +1009,7 @@ class DiffBuilder {
     before.forEach((device, index) => {
       const partner = pairing.toOf(index);
       if (partner === undefined) {
-        const label = DiffBuilder.words(track, context, `removed ${device.name}`);
+        const label = DiffBuilder.words(track, context, t("changes.deviceRemoved", { name: device.name }));
         this.add(ChangeKind.Removed, { scope: "device", track, chain: [...place.from], index, field: "present" }, label, device, undefined);
       } else {
         this.device(track, device, itemAt(after, partner), { ...place, fromIndex: index, toIndex: partner }, context);
@@ -1016,7 +1017,7 @@ class DiffBuilder {
     });
     for (const index of pairing.freeTo()) {
       const device = itemAt(after, index);
-      const label = DiffBuilder.words(track, context, `added ${device.name}`);
+      const label = DiffBuilder.words(track, context, t("changes.deviceAdded", { name: device.name }));
       this.add(ChangeKind.Added, { scope: "device", track, chain: [...place.to], index, field: "present" }, label, undefined, device);
     }
   }
@@ -1059,17 +1060,17 @@ class DiffBuilder {
   /** What changed in the device itself: its name, its sample or its chains. */
   private static deviceWords(before: DeviceSnapshot, after: DeviceSnapshot): string[] {
     const parts: string[] = [];
-    if (before.name !== after.name) parts.push(`renamed ${after.name}`);
+    if (before.name !== after.name) parts.push(t("changes.sectionRenamed", { afterName: after.name }));
     if ((before.sample ?? null) !== (after.sample ?? null)) {
-      parts.push(`sample ${SetWording.fileName(before.sample) || "empty"} → ${SetWording.fileName(after.sample) || "empty"}`);
+      parts.push(t("changes.deviceSample", { value: SetWording.fileName(before.sample) || t("changes.words.empty"), value2: SetWording.fileName(after.sample) || t("changes.words.empty") }));
     }
     const chainsBefore = before.chains ?? [];
     const chainsAfter = after.chains ?? [];
-    const noun = [...chainsBefore, ...chainsAfter].some((chain) => chain.receivingNote !== undefined) ? "pads" : "chains";
+    const noun = [...chainsBefore, ...chainsAfter].some((chain) => chain.receivingNote !== undefined) ? t("changes.words.pads") : t("changes.words.chains");
     if (chainsBefore.length !== chainsAfter.length) parts.push(`${noun} ${chainsBefore.length} → ${chainsAfter.length}`);
-    else if (chainsBefore.some((chain, index) => chain.receivingNote !== chainsAfter[index]?.receivingNote)) parts.push(`${noun} changed`);
-    if (chainsBefore.some((chain, index) => Boolean(chain.mixer) !== Boolean(chainsAfter[index]?.mixer))) parts.push("chain mixer data availability changed");
-    else if (chainsBefore.some((chain, index) => chain.mixer?.sends.length !== chainsAfter[index]?.mixer?.sends.length)) parts.push("chain mixer layout changed");
+    else if (chainsBefore.some((chain, index) => chain.receivingNote !== chainsAfter[index]?.receivingNote)) parts.push(t("changes.deviceChainsChanged", { noun: noun }));
+    if (chainsBefore.some((chain, index) => Boolean(chain.mixer) !== Boolean(chainsAfter[index]?.mixer))) parts.push(t("changes.chainMixerDataAvailabilityChanged"));
+    else if (chainsBefore.some((chain, index) => chain.mixer?.sends.length !== chainsAfter[index]?.mixer?.sends.length)) parts.push(t("changes.chainMixerLayoutChanged"));
     return parts;
   }
 
@@ -1081,7 +1082,7 @@ class DiffBuilder {
       const was = parameter.value;
       const now = current[index]?.value;
       if (typeof was !== "number" || typeof now !== "number" || was === now) return;
-      const what = index === 0 ? "volume" : index === 1 ? "pan" : `send ${index - 1}`;
+      const what = index === 0 ? t("changes.words.volume") : index === 1 ? t("changes.words.pan") : t("changes.numberedSend", { value: index - 1 });
       const wording = (value: number) => index === 1 ? SetWording.pan(value) : SetWording.value(parameter, value);
       this.add(ChangeKind.Changed, { scope: "device", track, chain, index: MIXER_INDEX, field: "parameter", parameter: index },
         DiffBuilder.words(track, context, `${what} ${wording(was)} → ${wording(now)}`), was, now);
@@ -1096,14 +1097,14 @@ class DiffBuilder {
     before: number,
     after: number,
   ): string {
-    if (parameter.name === DEVICE_ON) return DiffBuilder.words(track, context, `${device} turned ${after ? "on" : "off"}`);
+    if (parameter.name === DEVICE_ON) return DiffBuilder.words(track, context, t("changes.deviceEnabled", { device: device, isAfter: Boolean(after) }));
     const values = `${SetWording.value(parameter, before)} → ${SetWording.value(parameter, after)}`;
     return DiffBuilder.words(track, [...context, device], `${parameter.name} ${values}`);
   }
 
   /** "pad C1" for a Drum Rack pad, otherwise "chain 2". */
   private static chainName(chain: ChainSnapshot, index: number): string {
-    return chain.receivingNote === undefined ? `chain ${index + 1}` : `pad ${noteName(chain.receivingNote)}`;
+    return chain.receivingNote === undefined ? t("changes.chain", { value: index + 1 }) : t("changes.pad", { receivingNote: noteName(chain.receivingNote) });
   }
 
   private static words(track: TrackKey, context: readonly string[], last: string): string {
@@ -1112,13 +1113,13 @@ class DiffBuilder {
 
   private mixer(before: TrackSnapshot, after: TrackSnapshot, track: TrackKey): void {
     const { volume, panning, sends } = before.mixer;
-    this.mixerChange(track, VOLUME_PARAMETER, "volume", volume, after.mixer.volume, (value) => SetWording.value(volume, value));
-    this.mixerChange(track, PAN_PARAMETER, "pan", panning, after.mixer.panning, (value) => SetWording.pan(value));
+    this.mixerChange(track, VOLUME_PARAMETER, t("changes.words.volume"), volume, after.mixer.volume, (value) => SetWording.value(volume, value));
+    this.mixerChange(track, PAN_PARAMETER, t("changes.words.pan"), panning, after.mixer.panning, (value) => SetWording.pan(value));
     sends.forEach((send, index) => {
       const partner = this.returns.toOf(index);
       const next = partner === undefined ? undefined : after.mixer.sends[partner];
       if (!next) return;
-      this.mixerChange(track, FIRST_SEND_PARAMETER + index, `send ${this.returnName(index, send)}`, send, next, (value) => SetWording.value(send, value));
+      this.mixerChange(track, FIRST_SEND_PARAMETER + index, t("changes.namedSend", { index: this.returnName(index, send) }), send, next, (value) => SetWording.value(send, value));
     });
     if (sends.length !== this.from.returnTracks.length) return;
     // A send to an added return track starts where SetDiff.apply puts it; one set anywhere else is an added parameter.
@@ -1128,7 +1129,7 @@ class DiffBuilder {
       if (!send || !returnTrack || typeof send.value !== "number") continue;
       const fresh = Sends.fresh(returnTrack, index);
       if (send.value === fresh.value) continue;
-      const label = `${track.name} · send ${SetWording.name(returnTrack)} ${SetWording.value(fresh, fresh.value)} → ${SetWording.value(send, send.value)}`;
+      const label = t("changes.trackSendChange", { name: track.name, returnTrack: SetWording.name(returnTrack), fresh: SetWording.value(fresh, fresh.value), send: SetWording.value(send, send.value) });
       const target: ChangeTarget = { scope: "device", track, chain: [], index: MIXER_INDEX, field: "parameter", parameter: FIRST_SEND_PARAMETER + index };
       this.add(ChangeKind.Added, target, label, undefined, send.value);
     }
@@ -1580,7 +1581,7 @@ class SnapshotPatcher {
 /** The item at a position the caller knows is there. */
 function itemAt<T>(items: readonly T[], index: number): T {
   const item = items[index];
-  if (item === undefined) throw new RangeError(`Position ${index} is out of range`);
+  if (item === undefined) throw new RangeError(t("changes.positionIsOutOfRange", { index: index }));
   return item;
 }
 

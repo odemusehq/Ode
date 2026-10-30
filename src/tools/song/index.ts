@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
@@ -88,8 +89,8 @@ export const songTools: AnyTool[] = [
     input: LeadSheetPatchSchema.shape,
     describe: (patch) => {
       const fields = (Object.keys(patch) as (keyof LeadSheetPatch)[]).filter((field) => patch[field] !== undefined);
-      const words = fields.map((field) => (field === "title" && patch.title ? `title ${patch.title}` : SHEET_FIELD_WORDS[field]));
-      return `Lead sheet · ${SetWording.list(words) || "unchanged"}`;
+      const words = fields.map((field) => (field === "title" && patch.title ? t("toolActivity.title", { title: patch.title }) : SHEET_FIELD_WORDS[field]));
+      return t("toolActivity.leadSheet", { value: SetWording.list(words) || "unchanged" });
     },
     run: async (patch, ctx) => {
       if (patch.composition) validateComposition(patch.composition, { ...await ctx.song.read(), ...patch });
@@ -155,7 +156,7 @@ export const songTools: AnyTool[] = [
       source: z.enum(["said", "detected"]),
       confidence: z.number().min(0).max(1).optional().describe("How sure you are (0–1); needed for a detected value"),
     },
-    describe: ({ field, value, source }) => `${source === "said" ? "Your setting" : "Detected"} · ${SettingValue.words(field, value)}`,
+    describe: ({ field, value, source }) => t("toolActivity.preferenceSource", { isSource: Boolean(source === "said"), field: SettingValue.words(field, value) }),
     run: async ({ field, value, source, confidence }, ctx) => {
       const checked = SettingValue.check(field, value);
       if (source === "said") return ctx.prefs.setByMusician(field, checked as never);
@@ -174,7 +175,7 @@ export const songTools: AnyTool[] = [
         .optional()
         .describe('Credits to add to the lead sheet, e.g. { role: "Written by", name }; a credit the sheet already holds stays once'),
     },
-    describe: () => "Release · lyric sheet and credits",
+    describe: () => t("toolActivity.releaseLyricSheetAndCredits"),
     run: async ({ credits }, ctx) => {
       const saved = credits ? await ctx.song.updateWithReceipt({ credits: mergedCredits((await ctx.song.read()).credits, credits) }) : null;
       const sheet = saved ?? await ctx.song.read();

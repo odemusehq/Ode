@@ -1,11 +1,12 @@
+import { t } from "../../shared/i18n";
 import { StreamState } from "./model";
 
 /** What to say about the connection to the Ode server; null while it is open. */
 export const SERVER_MESSAGES: Record<StreamState, string | null> = {
-  [StreamState.Connecting]: "Connecting to Ode…",
+  [StreamState.Connecting]: t("connection.connecting"),
   [StreamState.Open]: null,
-  [StreamState.Reconnecting]: "Reconnecting to Ode…",
-  [StreamState.Closed]: "Reconnecting to Ode…",
+  [StreamState.Reconnecting]: t("connection.reconnecting"),
+  [StreamState.Closed]: t("connection.reconnecting"),
 };
 
 export function isServerLost(state: StreamState): boolean {

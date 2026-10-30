@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import type { Note } from "../../shared/live";
 import { noteName } from "../../shared/notes";
 import { cx } from "./cx";
@@ -45,7 +46,7 @@ export function PianoRoll({ label, notes, beatsPerBar, lengthBeats = 0, pitchRan
   const style: CSSVariables = { "--roll-rows": rows };
 
   return (
-    <div className="ode-roll" role="img" aria-label={`${label}: ${describeNotes(notes, bars, meter !== null)}`} style={style}>
+    <div className="ode-roll" role="img" aria-label={t("kit.pianoRollLabel", { label: (label), description: (describeNotes(notes, bars, meter !== null)) })} style={style}>
       <div className="ode-roll__keys" aria-hidden="true">
         {pitches.map((pitch) => (
           <div key={pitch} className={cx("ode-roll__key", isBlackKey(pitch) && "ode-roll__key--black")}>
@@ -116,10 +117,9 @@ function velocityStyle(note: Note): CSSVariables {
 }
 
 function describeNotes(notes: readonly Note[], bars: number, meterKnown: boolean): string {
-  if (notes.length === 0) return "an empty clip";
+  if (notes.length === 0) return t("kit.emptyClip");
   const pitches = notes.map((note) => note.pitch);
   const low = noteName(Math.min(...pitches));
   const high = noteName(Math.max(...pitches));
-  const unit = meterKnown ? (bars === 1 ? "bar" : "bars") : (bars === 1 ? "quarter-note beat" : "quarter-note beats");
-  return `${notes.length} notes from ${low} to ${high} over ${bars} ${unit}${meterKnown ? "" : "; time signature unavailable"}`;
+  return t("kit.notesDescription", { count: (notes.length), low: (low), high: (high), length: (bars), hasMeterKnown: Boolean((meterKnown)) });
 }

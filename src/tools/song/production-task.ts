@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { ProductionTaskReadSchema, ProductionTaskUpdateSchema, ProductionTaskPatchSchema, type ProductionTask, type ProductionTaskRead } from "../../shared/production-task";
 import { defineTool, type AnyTool } from "../define";
 
@@ -71,7 +72,7 @@ export const productionTaskTools: AnyTool[] = [
     mainAgentOnly: true,
     description: "Create or revise the full production checkpoint, without performing its steps. First plan: baseRevision 0 and omit taskId; otherwise give current taskId/revision, goal, shared brief and whole ordered steps (up to 24). Keep existing ids, especially every unfinished step: normal omission is refused. For a genuinely different scope use replace true with current id/revision; the previous task is archived. At most one step is working. Complete steps only with cited saved evidence: tool {exchangeId,toolCallId,summary,targets}, version {versionId,summary,targets}, musician {exchangeId,quote,summary,targets}, each with kind. Sources and targets are checked; success alone does not prove the musical goal. Blocked steps need a blocker. Prefer production_task_patch for focused progress without resending large evidence. Returns a compact acknowledgement; read pages for detail. Never store private reasoning or replay instructions.",
     input: ProductionTaskUpdateSchema.omit({ exchangeId: true }).shape,
-    describe: ({ goal }) => `Production plan · ${goal}`,
+    describe: ({ goal }) => t("toolActivity.productionPlan", { goal: goal }),
     run: async (input, ctx) => {
       if (!ctx.exchangeId) throw new Error("A production checkpoint needs the current accepted request's exchange id.");
       return bounded(acknowledge(await ctx.production.update({ ...input, exchangeId: ctx.exchangeId })), ctx.config.limits.toolResultMaxChars);
@@ -84,7 +85,7 @@ export const productionTaskTools: AnyTool[] = [
     mainAgentOnly: true,
     description: "Patch the current production checkpoint with taskId and baseRevision from a read. Supply only changed goal/brief/task blocker, or steps [{id, action?, status?, targetTags?, evidence?, blocker?}] for existing step ids. appendSteps adds new step objects without ids, up to 24 total steps. Omitted fields, other steps and their evidence stay unchanged; supplied targetTags/evidence arrays replace those fields, and blocker null clears a resolved blocker. Completion uses the same saved-source and target checks as full update. One working step maximum; patch old/new working statuses together when advancing. This saves the checkpoint, never executes host work. Returns a compact acknowledgement. Genuine goal replacement archives the old task.",
     input: patchInput,
-    describe: () => "Production plan · update progress",
+    describe: () => t("toolActivity.productionPlanUpdateProgress"),
     run: async (input, ctx) => {
       if (!ctx.exchangeId) throw new Error("A production checkpoint needs the current accepted request's exchange id.");
       return bounded(acknowledge(await ctx.production.patch({ ...input, exchangeId: ctx.exchangeId })), ctx.config.limits.toolResultMaxChars);

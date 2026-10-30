@@ -56,7 +56,7 @@ function number(name) {
 function start() {
   if (running) return;
   running = true;
-  status("Connecting to Ode…");
+  status(ODE_COPY.connecting);
   loop = new Task(tick, this);
   loop.interval = ODE_WINDOW.pollMs;
   loop.repeat();
@@ -127,7 +127,7 @@ function disconnect() {
   session = "";
   busy = false;
   pending = null;
-  connectionNotice = "Ode disconnected. Open Ode from Live to reconnect.";
+  connectionNotice = ODE_COPY.disconnected;
   status(connectionNotice);
 }
 
@@ -136,7 +136,7 @@ function tick() {
   fitWindow();
   if (busy) return;
   if (pending && Date.now() - pending.started > ODE_WINDOW.openTimeoutMs) {
-    finishOpen(pending.id, "error", "Ode's page did not become ready. Press Open Ode to retry.");
+    finishOpen(pending.id, "error", ODE_COPY.pageNotReady);
   }
   var names = ODE_WINDOW.parameterNames;
   var nextPort = number(names.port);
@@ -146,7 +146,7 @@ function tick() {
     var capability = "";
     for (var index = 0; index < names.words.length; index++) {
       var word = number(names.words[index]);
-      if (word < 0) { status("Ode's connection is incomplete. Open Ode from Live to retry."); return; }
+      if (word < 0) { status(ODE_COPY.incompleteConnection); return; }
       capability += ("0000" + word.toString(16)).slice(-4);
     }
     if (latch !== consumedLatch || nextPort !== consumedPort || capability !== consumedCapability) {
@@ -158,14 +158,14 @@ function tick() {
       session = "";
       connectionNotice = "";
       busy = true;
-      status("Connecting to Ode…");
+      status(ODE_COPY.connecting);
       if (typeof ode_audio_stop === "function") ode_audio_stop();
       var connectionBody = { capability: capability };
       if (typeof LiveAPI === "function" && typeof Buffer === "function") connectionBody.audioVersion = 1;
       http(ODE_WINDOW.api.connect, connectionBody, function (response, code) {
         busy = false;
         if (code !== 200 || !response || typeof response.session !== "string" || !response.session || !safeUrl(response.url)) {
-          connectionNotice = code > 0 ? "Ode connection failed (HTTP " + code + "). Press Open Ode to retry." : "Ode could not connect. Open Ode from Live, then retry.";
+          connectionNotice = code > 0 ? ODE_COPY.httpConnectionFailed.replace("{status}", String(code)) : ODE_COPY.connectionFailed;
           status(connectionNotice);
           return;
         }
@@ -174,14 +174,14 @@ function tick() {
         pageUrl = response.url;
         if (connectedPageUrl !== pageUrl) loaded = false;
         connectedPageUrl = pageUrl;
-        status("Ready. Press Open Ode.");
+        status(ODE_COPY.ready);
         if (wantsOpen) open_ode();
       });
       return;
     }
   }
   if (!session) {
-    status(connectionNotice || "Load the Ode extension, then choose Open Ode in Live.");
+    status(connectionNotice || ODE_COPY.loadExtension);
     return;
   }
   busy = true;
@@ -205,18 +205,18 @@ function open_ode() {
 function openCommand(command, local) {
   if (command && completedIds.includes(command.id)) return;
   if (!command || typeof command.id !== "string" || command.id.length > 128 || !["ask", "lyrics", "history", "settings"].includes(command.view) || !safeUrl(command.url)) {
-    status("Ode sent an invalid window request. Reopen Ode from Live.");
+    status(ODE_COPY.invalidWindowRequest);
     return;
   }
   pending = { id: command.id, local: local, started: Date.now() };
-  status("Opening Ode…");
+  status(ODE_COPY.opening);
   try {
     var objects = windowObjects();
     // jweb creates its native renderer when the child window becomes visible.
     frontWindow();
     if (loaded) objects.browser.message("ode_open", command.view, command.url, command.id);
     else objects.browser.message("read", command.url + "&odeWindowCommand=" + encodeURIComponent(command.id));
-  } catch (_) { finishOpen(command.id, "error", "Ode's window stayed closed. Press Open Ode to retry."); }
+  } catch (_) { finishOpen(command.id, "error", ODE_COPY.windowClosed); }
 }
 
 function frontWindow() {
@@ -236,23 +236,23 @@ function finishOpen(id, result, error) {
   pending = null;
   if (result === "ready") {
     loaded = true;
-    status("Ode is open.");
+    status(ODE_COPY.open);
     try { frontWindow(); }
-    catch (_) { result = "error"; error = "Ode's window could not open. Press Open Ode to retry."; }
+    catch (_) { result = "error"; error = ODE_COPY.windowUnavailable; }
   }
   if (result !== "ready") {
     if (loaded) try { frontWindow(); } catch (_) {}
-    status(error || "Ode's page stayed closed. Press Open Ode to retry.");
+    status(error || ODE_COPY.pageClosedRetry);
   }
   if (!command.local && session) {
     var payload = { session: session, id: command.id, status: result };
-    if (result !== "ready") payload.error = String(error || "Ode's page stayed closed.").slice(0, ODE_WINDOW.errorMaxChars);
+    if (result !== "ready") payload.error = String(error || ODE_COPY.pageClosed).slice(0, ODE_WINDOW.errorMaxChars);
     // A valid connection can outlive a command that the server already timed out.
     http(ODE_WINDOW.api.ack, payload, function (_response, code) { if (code !== 200 && code !== 409) disconnect(); });
   }
 }
 
 function ode_opened(id) { finishOpen(String(id), "ready"); }
-function ode_open_failed(id, message) { finishOpen(String(id), "error", String(message || "Save the open draft, then retry.").slice(0, ODE_WINDOW.errorMaxChars)); }
+function ode_open_failed(id, message) { finishOpen(String(id), "error", String(message || ODE_COPY.saveDraft).slice(0, ODE_WINDOW.errorMaxChars)); }
 function ode_close() { try { windowObjects().control.message("wclose"); } catch (_) {} }
 function anything() { /* jweb also emits URL/title/load notifications; none proves the app is ready. */ }

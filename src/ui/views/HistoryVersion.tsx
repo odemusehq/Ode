@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { useId, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 import type { RestoreResult } from "../../shared/api";
@@ -38,14 +39,14 @@ enum Task {
 }
 
 const MENU_ITEMS: readonly MenuItem<VersionAction>[] = [
-  { id: VersionAction.Restore, label: "Restore this version", icon: IconName.Restore },
-  { id: VersionAction.Name, label: "Name this version", icon: IconName.Edit },
+  { id: VersionAction.Restore, label: t("history.restoreVersion"), icon: IconName.Restore },
+  { id: VersionAction.Name, label: t("history.nameVersion"), icon: IconName.Edit },
 ];
 
 const AUTHOR_LABELS: Record<VersionAuthor, string> = {
-  [VersionAuthor.Musician]: "You",
-  [VersionAuthor.Ode]: "Ode",
-  [VersionAuthor.Observed]: "Observed during Ode’s work",
+  [VersionAuthor.Musician]: t("common.you"),
+  [VersionAuthor.Ode]: t("common.ode"),
+  [VersionAuthor.Observed]: t("history.observedAuthor"),
 };
 
 /** Each author's colour from the brand: cyan for the musician, violet for Ode. */
@@ -55,7 +56,12 @@ const AUTHOR_TONES: Record<VersionAuthor, Tone> = {
   [VersionAuthor.Observed]: Tone.Neutral,
 };
 
-const AUTHOR_SEPARATOR = " · ";
+// These prefixes belong to saved summaries and must not follow editable display labels.
+const SAVED_AUTHOR_PREFIXES: Record<VersionAuthor, RegExp> = {
+  [VersionAuthor.Musician]: /^You · /,
+  [VersionAuthor.Ode]: /^Ode · /,
+  [VersionAuthor.Observed]: /^Observed during Ode[’']s work · /,
+};
 
 export interface HistoryVersionProps {
   version: VersionListItem;
@@ -88,7 +94,7 @@ export function HistoryVersion({ version, kind, selected, onSelect, newer, onOut
     try {
       notes.push(restoreNote(await client.restoreVersion(version.id), moment));
     } catch (error) {
-      notes.push({ tone: Tone.Danger, text: `Restoring stopped: ${errorMessage(error)}. Check the current Set; saved history remains available.` });
+      notes.push({ tone: Tone.Danger, text: t("history.restoreFailed", { error: (errorMessage(error)) }) });
     }
     onOutcome(notes);
     setTask(Task.None);
@@ -143,7 +149,7 @@ export function HistoryVersion({ version, kind, selected, onSelect, newer, onOut
             <span className="history-row__author">{author}</span>
             {version.name && <strong className="history-row__name">{version.name}</strong>}
           </span>
-          <span className="history-row__summary">{withoutAuthor(version.summary, author)}</span>
+          <span className="history-row__summary">{version.changeCount === 0 ? t("common.initialVersion") : withoutAuthor(version.summary, version.author)}</span>
         </button>
         {fold && (
           <Button
@@ -153,35 +159,35 @@ export function HistoryVersion({ version, kind, selected, onSelect, newer, onOut
             aria-expanded={fold.open}
             onClick={fold.onToggle}
           >
-            {fold.count} more
+            {t("history.moreVersions", { count: (fold.count) })}
           </Button>
         )}
-        <Menu label="Version actions" icon={IconName.More} items={MENU_ITEMS} onSelect={startAction} align={MenuAlign.End} disabled={working} />
+        <Menu label={t("history.versionActions")} icon={IconName.More} items={MENU_ITEMS} onSelect={startAction} align={MenuAlign.End} disabled={working} />
       </div>
       {(task === Task.Naming || task === Task.SavingName) && (
         <form className="history-row__name-form" onSubmit={(event) => void saveName(event)}>
           <TextInput
-            aria-label="Name of this version"
+            aria-label={t("history.versionName")}
             value={draft}
-            placeholder="e.g. Chorus idea"
+            placeholder={t("history.versionNamePlaceholder")}
             autoFocus
             disabled={task === Task.SavingName}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={handleNameKeyDown}
           />
           <Button type="submit" variant={ButtonVariant.Primary} disabled={task === Task.SavingName}>
-            Save
+            {t("common.save")}
           </Button>
           <Button onClick={() => setTask(Task.None)} disabled={task === Task.SavingName}>
-            Cancel
+            {t("common.cancel")}
           </Button>
-          {nameError && <Notice tone={Tone.Danger}>The name is waiting to be saved: {nameError}</Notice>}
+          {nameError && <Notice tone={Tone.Danger}>{t("history.nameSaveFailed", { error: (nameError) })}</Notice>}
         </form>
       )}
       {(task === Task.Confirming || task === Task.Restoring) && (
         <ConfirmCard
           message={confirmMessage(moment, newer)}
-          confirmLabel="Restore"
+          confirmLabel={t("common.restore")}
           busy={task === Task.Restoring}
           onConfirm={() => void restore()}
           onCancel={() => setTask(Task.None)}
@@ -194,21 +200,19 @@ export function HistoryVersion({ version, kind, selected, onSelect, newer, onOut
 
 /** A restore changes the current Set while keeping the saved history. */
 function confirmMessage(moment: string, newer: number): string {
-  const later = newer === 0 ? "Your saved history stays available." : `${newer} later ${newer === 1 ? "version stays" : "versions stay"} available in History.`;
-  return `Apply the supported changes from ${moment} to the currently open Live Set? ${later} Automation and hidden plugin state cannot be restored.`;
+  return t("history.confirmRestore", { moment: (moment), newer: (newer) });
 }
 
 /** How the restore went, under the version: back, back with what stayed as it is, or stopped and why. */
 function restoreNote(outcome: RestoreResult, moment: string): VersionNote {
   const skipped = outcome.skipped.join("; ");
   if (!outcome.restored) {
-    return { tone: Tone.Danger, text: skipped ? `Restoring ${moment} was incomplete: ${skipped}. Saved history remains available.` : `Restoring ${moment} was incomplete. Saved history remains available.` };
+    return { tone: Tone.Danger, text: t("history.restoreIncomplete", { moment: (moment), hasSkipped: Boolean((skipped)), skipped: (skipped) }) };
   }
-  return skipped ? { tone: Tone.Warning, text: `Restored supported changes from ${moment}. Left as it is: ${skipped}` } : { tone: Tone.Success, text: `Restored supported changes from ${moment}.` };
+  return skipped ? { tone: Tone.Warning, text: t("history.restoredWithSkipped", { moment: (moment), skipped: (skipped) }) } : { tone: Tone.Success, text: t("history.restored", { moment: (moment) }) };
 }
 
 /** "You · 12 edits on Drums and Pad" under "You" reads as "12 edits on Drums and Pad". */
-function withoutAuthor(summary: string, author: string): string {
-  const prefix = `${author}${AUTHOR_SEPARATOR}`;
-  return summary.startsWith(prefix) ? summary.slice(prefix.length) : summary;
+function withoutAuthor(summary: string, author: VersionAuthor): string {
+  return summary.replace(SAVED_AUTHOR_PREFIXES[author], "");
 }

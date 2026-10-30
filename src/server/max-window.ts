@@ -1,9 +1,10 @@
+import { t } from "../shared/i18n";
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { DialogView } from "../shared/config";
 import type { MaxAudioCommand } from "../shared/max-audio";
 import { MAX_WINDOW, type MaxWindowAcknowledgement, type MaxWindowBinding, type MaxWindowBootstrap, type MaxWindowCommand, type MaxWindowConnection, type MaxWindowPoll } from "../shared/max-window";
 
-const DISCONNECTED = "Ode's Max device is not connected. Load Ode.amxd on one track in this Set, then open Ode again.";
+const DISCONNECTED = t("server.maxWindow.odeSMaxDeviceIsNotConnectedLoad");
 
 export class MaxWindowError extends Error {
   constructor(message: string, readonly status: 403 | 409 = 409) {
@@ -90,21 +91,21 @@ export class MaxWindowBridge {
   acknowledge(acknowledgement: MaxWindowAcknowledgement): void {
     this.authorized(acknowledgement.session);
     const pending = this.pending.get(acknowledgement.id);
-    if (!pending) throw new MaxWindowError("That Ode window command is no longer waiting.");
+    if (!pending) throw new MaxWindowError(t("server.maxWindow.thatOdeWindowCommandIsNoLonger"));
     this.pending.delete(acknowledgement.id);
     clearTimeout(pending.timer);
     if (acknowledgement.status === "ready") pending.resolve();
-    else pending.reject(new MaxWindowError("Ode's window could not open. Click Open Ode on the Max device to try again."));
+    else pending.reject(new MaxWindowError(t("server.maxWindow.odeSWindowCouldNotOpenClickOpen")));
   }
 
   open(view: DialogView): Promise<void> {
     if (!this.connected) return Promise.reject(new MaxWindowError(DISCONNECTED));
-    if (this.pending.size >= MAX_WINDOW.maxPending) return Promise.reject(new MaxWindowError("Ode is already waiting for its window to open. Wait a moment, then try again."));
+    if (this.pending.size >= MAX_WINDOW.maxPending) return Promise.reject(new MaxWindowError(t("server.maxWindow.odeIsAlreadyWaitingForItsWindow")));
     const command = { id: randomUUID(), view, url: this.localUrl(view) };
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(command.id);
-        reject(new MaxWindowError("Ode's Max window did not respond. Click Open Ode on the device, then try again."));
+        reject(new MaxWindowError(t("server.maxWindow.odeSMaxWindowDidNotRespondClick")));
       }, MAX_WINDOW.openTimeoutMs);
       timer.unref?.();
       this.pending.set(command.id, { command, resolve, reject, timer });
@@ -142,7 +143,7 @@ export class MaxWindowBridge {
     const url = this.urlForView(view);
     const parsed = new URL(url);
     if (parsed.protocol !== "http:" || !["localhost", "127.0.0.1"].includes(parsed.hostname) || !parsed.port || parsed.username || parsed.password) {
-      throw new MaxWindowError("Ode's local window address is unavailable.");
+      throw new MaxWindowError(t("server.maxWindow.odeSLocalWindowAddressIsUnavailable"));
     }
     return url;
   }

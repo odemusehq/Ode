@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n";
 import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { BEAT_TOLERANCE, MIXER_INDEX, type ClipRef, type DeviceRef, type ExtensionOp, type LoopSettings, type Note, type TrackRef } from "../shared/live";
@@ -271,15 +272,15 @@ export class RestorePlanner {
     for (const locator of before) {
       const kept = at(after, locator.time);
       if (!kept) {
-        this.staged.add(Stage.SongStructure, { op: "song_delete_locator", args: { locator: { time: locator.time } }, label: `locator "${locator.name}"` });
+        this.staged.add(Stage.SongStructure, { op: "song_delete_locator", args: { locator: { time: locator.time } }, label: t("server.restorePlanner.locator", { name: (locator.name) }) });
       } else if (kept.name !== locator.name) {
-        this.staged.add(Stage.SongValues, { op: "locator_rename", args: { locator: { time: locator.time }, name: kept.name }, label: `locator "${kept.name}"` });
+        this.staged.add(Stage.SongValues, { op: "locator_rename", args: { locator: { time: locator.time }, name: kept.name }, label: t("server.restorePlanner.locator", { name: (kept.name) }) });
       }
     }
     for (const locator of after) {
       if (at(before, locator.time)) continue;
       const args = locator.name ? { time: locator.time, name: locator.name } : { time: locator.time };
-      this.staged.add(Stage.SongStructure, { op: "song_create_locator", args, label: `locator "${locator.name}"` });
+      this.staged.add(Stage.SongStructure, { op: "song_create_locator", args, label: t("server.restorePlanner.locator", { name: (locator.name) }) });
     }
   }
 
@@ -289,17 +290,17 @@ export class RestorePlanner {
       const was = after[index]!;
       const now = before[index]!;
       if (was.name !== now.name) {
-        this.staged.add(Stage.SongValues, { op: "scene_rename", args: { scene: { index }, name: was.name }, label: `scene ${index + 1}` });
+        this.staged.add(Stage.SongValues, { op: "scene_rename", args: { scene: { index }, name: was.name }, label: t("server.restorePlanner.scene", { index: (index + 1) }) });
       }
       if (was.tempo !== now.tempo || was.signatureNumerator !== now.signatureNumerator || was.signatureDenominator !== now.signatureDenominator) {
-        this.skipped.push(`Scene ${index + 1} · tempo and time signature`);
+        this.skipped.push(t("server.restorePlanner.sceneTempoAndTimeSignature", { index: (index + 1) }));
       }
     }
     for (let index = before.length - 1; index >= after.length; index -= 1) {
-      this.staged.add(Stage.SongStructure, { op: "song_delete_scene", args: { scene: { index } }, label: `scene ${index + 1}` });
+      this.staged.add(Stage.SongStructure, { op: "song_delete_scene", args: { scene: { index } }, label: t("server.restorePlanner.scene", { index: (index + 1) }) });
     }
     for (const scene of after.slice(before.length)) {
-      this.staged.add(Stage.SongStructure, { op: "song_create_scene", args: scene.name ? { index: -1, name: scene.name } : { index: -1 }, label: `scene "${scene.name}"` });
+      this.staged.add(Stage.SongStructure, { op: "song_create_scene", args: scene.name ? { index: -1, name: scene.name } : { index: -1 }, label: t("server.restorePlanner.scene2", { name: (scene.name) }) });
     }
   }
 
@@ -313,7 +314,7 @@ export class RestorePlanner {
     }
     const ref = RestorePlanner.currentRef(key);
     const id = JSON.stringify(ref);
-    const entry = this.trackFields.get(id) ?? { ref, fields: {}, label: `${key.name} · track settings` };
+    const entry = this.trackFields.get(id) ?? { ref, fields: {}, label: t("server.restorePlanner.trackSettings", { name: (key.name) }) };
     entry.fields[field] = change.after;
     this.trackFields.set(id, entry);
   }
@@ -324,11 +325,11 @@ export class RestorePlanner {
    */
   private planTrackRemoval(change: SetChange, key: TrackKey): void {
     if (RestorePlanner.isGroup(change)) {
-      this.skipped.push(`${key.name} (a group track stays; its tracks go one by one)`);
+      this.skipped.push(t("server.restorePlanner.aGroupTrackStaysItsTracksGo", { name: (key.name) }));
       return;
     }
     if (key.list === TrackList.Returns) {
-      this.skipped.push(`${key.name} (return tracks are removed in Live)`);
+      this.skipped.push(t("server.restorePlanner.returnTracksAreRemovedInLive", { name: (key.name) }));
     } else if (key.list === TrackList.Tracks) {
       this.removals.push({ call: { op: "song_delete_track", args: { track: RestorePlanner.currentRef(key) }, label: change.label }, depth: 0, index: key.index });
     }
@@ -344,7 +345,7 @@ export class RestorePlanner {
   private planNewReturnTracks(changes: SetChange[]): void {
     for (const change of changes.filter((entry) => RestorePlanner.trackOf(entry).list === TrackList.Returns)) {
       const track = change.after as TrackSnapshot | undefined;
-      this.skipped.push(RestorePlanner.isTrack(track) ? `return track ${track.name} (return tracks are added in Live)` : change.label);
+      this.skipped.push(RestorePlanner.isTrack(track) ? t("server.restorePlanner.returnTrackReturnTracksAreAddedIn", { name: (track.name) }) : change.label);
     }
   }
 
@@ -354,15 +355,15 @@ export class RestorePlanner {
     for (const change of changes.filter((entry) => RestorePlanner.trackOf(entry).list === TrackList.Tracks)) {
       const track = change.after as TrackSnapshot | undefined;
       if (!RestorePlanner.isTrack(track)) this.skipped.push(change.label);
-      else if (track.kind !== "midi" && track.kind !== "audio") this.skipped.push(`${track.name} (only the musician can create a group track again)`);
+      else if (track.kind !== "midi" && track.kind !== "audio") this.skipped.push(t("server.restorePlanner.onlyTheMusicianCanCreateAGroup", { name: (track.name) }));
       else regular.push({ track, tag: track.tag ?? randomBytes(TAG_BYTES).toString("hex") });
     }
     if (regular.length === 0) return;
     const createStage = this.staged.nextCreatingStage;
     for (const { track, tag } of regular) {
       const op = track.kind === "midi" ? "song_create_midi_track" : "song_create_audio_track";
-      this.staged.add(createStage, { op, args: { name: track.name, tag }, label: `track ${track.name}` });
-      if (track.groupTrack !== null) this.skipped.push(`${track.name} · its group`);
+      this.staged.add(createStage, { op, args: { name: track.name, tag }, label: t("server.restorePlanner.track", { name: (track.name) }) });
+      if (track.groupTrack !== null) this.skipped.push(t("server.restorePlanner.itsGroup", { name: (track.name) }));
     }
     for (const { track, tag } of regular) this.fillTrack(track, { tag }, createStage + NEXT_CREATING_STEP);
   }
@@ -371,13 +372,13 @@ export class RestorePlanner {
   private fillTrack(track: TrackSnapshot, ref: TrackRef, from: number): void {
     this.planMixer(ref, track.mixer, from - 1, track.name);
     if (track.kind !== "return") {
-      this.staged.add(from - 1, { op: "track_set", args: { track: ref, mute: track.mute, solo: track.solo, arm: track.arm }, label: `${track.name} · track settings` });
+      this.staged.add(from - 1, { op: "track_set", args: { track: ref, mute: track.mute, solo: track.solo, arm: track.arm }, label: t("server.restorePlanner.trackSettings", { name: (track.name) }) });
     }
     for (const device of track.devices) this.insertDevice(ref, [], device.index, device, from, track.name);
     for (const clip of track.arrangementClips) this.createClip(ref, track.name, { start: clip.startTime }, clip, from);
     for (const slot of track.clipSlots) if (slot.clip) this.createClip(ref, track.name, { slot: slot.slot }, slot.clip, from);
     for (const lane of track.takeLanes) {
-      this.staged.add(from, { op: "track_create_take_lane", args: lane.name ? { track: ref, name: lane.name } : { track: ref }, label: `${track.name} · take lane ${lane.lane + 1}` });
+      this.staged.add(from, { op: "track_create_take_lane", args: lane.name ? { track: ref, name: lane.name } : { track: ref }, label: t("server.restorePlanner.takeLane", { name: (track.name), value: (lane.lane + 1) }) });
       for (const clip of lane.clips) this.createClip(ref, track.name, { start: clip.startTime, lane: lane.lane }, clip, from + NEXT_CREATING_STEP);
     }
   }
@@ -388,7 +389,7 @@ export class RestorePlanner {
       this.staged.add(stage, {
         op: "parameter_set",
         args: { parameter: { device: { track, ...(chain.length > 0 ? { chain } : {}), index: MIXER_INDEX }, parameter: index }, value: parameter.value },
-        label: `${owner} · mixer`,
+        label: t("server.restorePlanner.mixer", { owner: (owner) }),
       });
     });
   }
@@ -413,7 +414,7 @@ export class RestorePlanner {
     }
     const lanes = key.list === TrackList.Tracks ? (this.current.tracks[key.index]?.takeLanes.length ?? 0) : 0;
     if ("lane" in clipKey && clipKey.lane !== undefined && clipKey.lane >= lanes) {
-      this.skipped.push(`${key.name} · clip "${clip.name}" on take lane ${clipKey.lane + 1}`);
+      this.skipped.push(t("server.restorePlanner.clipOnTakeLane", { name: (key.name), name2: (clip.name), value: (clipKey.lane + 1) }));
       return;
     }
     this.createClip(this.survivingRef(key), key.name, clipKey, clip, Stage.Add);
@@ -421,11 +422,11 @@ export class RestorePlanner {
 
   /** Creates a clip with its notes or its audio file (at a creating step), then sets its colour, mute, loop and warp mode. */
   private createClip(track: TrackRef, owner: string, key: ClipKey, clip: ClipInfo, stage: number): void {
-    const label = `${owner} · clip "${clip.name}"`;
+    const label = t("server.restorePlanner.clip", { owner: (owner), name: (clip.name) });
     const named = { ...(clip.name ? { name: clip.name } : {}), ...(clip.tag ? { tag: clip.tag } : {}) };
     const audio = clip.kind === "audio" ? (clip as AudioClipInfo) : null;
     if (audio && !(audio.filePath && existsSync(audio.filePath))) {
-      this.blocked.push(`${label} (its audio file is missing)`);
+      this.blocked.push(t("server.restorePlanner.itsAudioFileIsMissing", { label: (label) }));
       return;
     }
     const length = "slot" in key ? Math.max(clip.loopEnd, clip.endMarker) : clip.endTime - clip.startTime;
@@ -434,7 +435,7 @@ export class RestorePlanner {
       return;
     }
     if (!audio && !RestorePlanner.canRecreateMidi(clip, length)) {
-      const reason = `${label} · this SDK cannot recreate its MIDI markers, loop boundaries and Arrangement span together`;
+      const reason = t("server.restorePlanner.thisSDKCannotRecreateItsMIDI", { label: (label) });
       this.blocked.push(reason);
       this.skipped.push(reason);
       return;
@@ -451,7 +452,7 @@ export class RestorePlanner {
       if ("slot" in key) this.staged.add(stage, { op: "clip_slot_create_audio_clip", args: { slot: { track, slot: key.slot }, ...settings }, label });
       else if (key.lane !== undefined) this.staged.add(stage, { op: "take_lane_create_audio_clip", args: { lane: { track, lane: key.lane }, start: key.start, length, ...settings }, label });
       else this.staged.add(stage, { op: "track_create_audio_clip", args: { track, start: key.start, length, ...settings }, label });
-      if (audio.warping && audio.warpMarkers.length > DEFAULT_WARP_MARKERS) this.blocked.push(`${label} · its custom warp markers cannot be reconstructed by this SDK`);
+      if (audio.warping && audio.warpMarkers.length > DEFAULT_WARP_MARKERS) this.blocked.push(t("server.restorePlanner.itsCustomWarpMarkersCannotBe", { label: (label) }));
     } else {
       const notes = clip.notes ?? [];
       if ("slot" in key) this.staged.add(stage, { op: "clip_slot_create_midi_clip", args: { slot: { track, slot: key.slot }, length, notes, ...named }, label });
@@ -530,7 +531,7 @@ export class RestorePlanner {
       return;
     }
     if (RestorePlanner.isDifferentDevice(change)) {
-      this.skipped.push(`${key.name} · ${after.name} (${before.name} is in its place now)`);
+      this.skipped.push(t("server.restorePlanner.isInItsPlaceNow", { name: (key.name), name2: (after.name), name3: (before.name) }));
       return;
     }
     const sampleChanged = (before.sample ?? null) !== (after.sample ?? null);
@@ -538,7 +539,7 @@ export class RestorePlanner {
       const device: DeviceRef = { track: RestorePlanner.currentRef(key), ...(chain.length > 0 ? { chain } : {}), index };
       this.staged.add(Stage.Values, { op: "simpler_replace_sample", args: { device, filePath: after.sample }, label: change.label });
     } else if (sampleChanged) {
-      this.skipped.push(`${change.label} (the sample file is missing)`);
+      this.skipped.push(t("server.restorePlanner.theSampleFileIsMissing", { label: (change.label) }));
     }
     // Live names a Simpler after its sample, so the old sample brings the old name back with it.
     const renamed = before.name !== after.name && !sampleChanged;
@@ -556,7 +557,7 @@ export class RestorePlanner {
     const name = RestorePlanner.insertName(device);
     const label = `${owner} · ${device.name}`;
     if (!name) {
-      this.skipped.push(`${label} (only the musician can add plug-ins and presets back)`);
+      this.skipped.push(t("server.restorePlanner.onlyTheMusicianCanAddPlugInsAnd", { label: (label) }));
       return;
     }
     const stage = this.staged.insertionStage(JSON.stringify(track), from);
@@ -574,15 +575,15 @@ export class RestorePlanner {
     }
     if (device.sample) {
       if (existsSync(device.sample)) this.staged.add(stage + 1, { op: "simpler_replace_sample", args: { device: ref, filePath: device.sample }, label });
-      else this.skipped.push(`${label} · sample (its file is missing)`);
+      else this.skipped.push(t("server.restorePlanner.sampleItsFileIsMissing", { label: (label) }));
     }
     const chainStage = stage + NEXT_CREATING_STEP;
     (device.chains ?? []).forEach((inner, position) => {
-      this.staged.add(chainStage, { op: "rack_insert_chain", args: { device: ref }, label: `${label} · chain ${position + 1}` });
+      this.staged.add(chainStage, { op: "rack_insert_chain", args: { device: ref }, label: t("server.restorePlanner.chain", { label: (label), index: (position + 1) }) });
       if (inner.receivingNote !== undefined) {
-        this.staged.add(chainStage + 1, { op: "drum_pad_set_note", args: { device: ref, chain: position, note: inner.receivingNote }, label: `${label} · pad ${position + 1}` });
+        this.staged.add(chainStage + 1, { op: "drum_pad_set_note", args: { device: ref, chain: position, note: inner.receivingNote }, label: t("server.restorePlanner.pad", { label: (label), index: (position + 1) }) });
       }
-      if (inner.mixer) this.planMixer(track, inner.mixer, chainStage + 1, `${label} · chain ${position + 1}`, [...chain, index, position]);
+      if (inner.mixer) this.planMixer(track, inner.mixer, chainStage + 1, t("server.restorePlanner.chain", { label: (label), index: (position + 1) }), [...chain, index, position]);
       for (const nested of inner.devices) this.insertDevice(track, [...chain, index, position], nested.index, nested, chainStage + NEXT_CREATING_STEP, owner);
     });
   }

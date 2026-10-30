@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { useMemo } from "react";
 import { Menu, MenuAlign } from "../../ui-kit";
 import type { MenuItem } from "../../ui-kit";
@@ -5,7 +6,7 @@ import type { Mode } from "../../shared/personalisation";
 import { useAppState, useClient } from "../app/hooks";
 import { MODE_DESCRIPTIONS, MODE_LABELS, MODE_ORDER } from "../app/modes";
 
-const MENU_LABEL = "Mode";
+const MENU_LABEL = t("chat.mode");
 
 /** The header's mode menu: Auto or Manual, each with a line saying what it does. */
 export function ModePicker() {

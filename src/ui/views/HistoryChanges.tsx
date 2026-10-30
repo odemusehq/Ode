@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { useCallback } from "react";
 import type { Note } from "../../shared/live";
 import type { SetChange } from "../../shared/versions";
@@ -5,8 +6,9 @@ import { Notice, PianoRoll, Tone, cx, pitchRangeOf } from "../../ui-kit";
 import { useClient, useRequest } from "../app/hooks";
 import { isLyricsChange, labelUnder, lyricsHunks, notesChange, notesEnd } from "./change-values";
 
-const SONG = "Song";
-const LYRICS = "Lyrics";
+// Persisted labels keep their original prefixes even when the catalogue headings are edited.
+const SAVED_SONG_HEADING = "Song";
+const SAVED_LYRICS_HEADING = "Lyrics";
 
 export interface HistoryChangesProps {
   versionId: string;
@@ -26,7 +28,7 @@ export function HistoryChanges({ versionId, id }: HistoryChangesProps) {
   if (detail.error) {
     return (
       <div id={id} className="history-detail">
-        <Notice tone={Tone.Danger}>Reading this version's changes stopped: {detail.error}</Notice>
+        <Notice tone={Tone.Danger}>{t("history.changesFailed", { error: (detail.error) })}</Notice>
       </div>
     );
   }
@@ -34,7 +36,7 @@ export function HistoryChanges({ versionId, id }: HistoryChangesProps) {
   if (!detail.data) {
     return (
       <div id={id} className="history-detail">
-        <p className="muted small">Reading the changes…</p>
+        <p className="muted small">{t("history.readingChanges")}</p>
       </div>
     );
   }
@@ -44,34 +46,35 @@ export function HistoryChanges({ versionId, id }: HistoryChangesProps) {
   const songChanges = song.filter((change) => !isLyricsChange(change));
   return (
     <div id={id} className="history-detail">
-      {version.request && <p className="muted small">Asked: “{version.request}”</p>}
-      {songChanges.length > 0 && <ChangePart title={SONG} changes={songChanges} beatsPerBar={beatsPerBar} />}
+      {version.request && <p className="muted small">{t("history.request", { request: (version.request) })}</p>}
+      {songChanges.length > 0 && <ChangePart title={t("common.song")} savedHeading={SAVED_SONG_HEADING} changes={songChanges} beatsPerBar={beatsPerBar} />}
       {lyrics.map((change, index) => (
         <LyricsPart key={index} change={change} />
       ))}
       {tracks.map((track, index) => (
         <ChangePart key={`${index}-${track.track}`} title={track.track} changes={track.changes} beatsPerBar={beatsPerBar} track />
       ))}
-      {song.length === 0 && tracks.length === 0 && <p className="muted small">The Set stayed the same.</p>}
+      {song.length === 0 && tracks.length === 0 && <p className="muted small">{t("history.unchanged")}</p>}
     </div>
   );
 }
 
 interface ChangePartProps {
   title: string;
+  savedHeading?: string;
   changes: readonly SetChange[];
   beatsPerBar: number | null;
   /** A track the version touched: highlighted. */
   track?: boolean;
 }
 
-function ChangePart({ title, changes, beatsPerBar, track }: ChangePartProps) {
+function ChangePart({ title, savedHeading = title, changes, beatsPerBar, track }: ChangePartProps) {
   return (
     <section className={cx("history-detail__part", track && "history-detail__part--track")} aria-label={title}>
       <h3 className="history-detail__title">{title}</h3>
       <ul className="history-detail__changes">
         {changes.map((change, index) => (
-          <ChangeItem key={index} change={change} heading={title} beatsPerBar={beatsPerBar} />
+          <ChangeItem key={index} change={change} heading={savedHeading} beatsPerBar={beatsPerBar} />
         ))}
       </ul>
     </section>
@@ -103,20 +106,20 @@ interface LyricsPartProps {
 function LyricsPart({ change }: LyricsPartProps) {
   const hunks = lyricsHunks(change);
   return (
-    <section className="history-detail__part" aria-label={LYRICS}>
-      <h3 className="history-detail__title">{LYRICS}</h3>
-      <p className="history-change__label">{labelUnder(change.label, LYRICS)}</p>
+    <section className="history-detail__part" aria-label={t("common.lyrics")}>
+      <h3 className="history-detail__title">{t("common.lyrics")}</h3>
+      <p className="history-change__label">{labelUnder(change.label, SAVED_LYRICS_HEADING)}</p>
       {hunks.map((hunk, index) => (
         <div key={index} className="history-lines">
           {hunk.removed.map((line, lineIndex) => (
             <del key={`removed-${lineIndex}`} className="history-lines__old">
-              <span className="ode-visually-hidden">Was: </span>
+              <span className="ode-visually-hidden">{t("history.previousLine")}</span>
               {line}
             </del>
           ))}
           {hunk.added.map((line, lineIndex) => (
             <ins key={`added-${lineIndex}`} className="history-lines__new">
-              <span className="ode-visually-hidden">Now: </span>
+              <span className="ode-visually-hidden">{t("history.currentLine")}</span>
               {line}
             </ins>
           ))}
@@ -142,14 +145,14 @@ function NotesBeforeAfter({ label, before, after, beatsPerBar }: NotesBeforeAfte
     <div className="history-change__rolls">
       {before && (
         <figure className="history-change__roll">
-          <figcaption className="history-change__caption">Before</figcaption>
-          <PianoRoll label={`${label}, before`} notes={before} pitchRange={range} lengthBeats={length} beatsPerBar={beatsPerBar} />
+          <figcaption className="history-change__caption">{t("common.before")}</figcaption>
+          <PianoRoll label={t("history.notesBefore", { label: (label) })} notes={before} pitchRange={range} lengthBeats={length} beatsPerBar={beatsPerBar} />
         </figure>
       )}
       {after && (
         <figure className="history-change__roll">
-          <figcaption className="history-change__caption">After</figcaption>
-          <PianoRoll label={`${label}, after`} notes={after} pitchRange={range} lengthBeats={length} beatsPerBar={beatsPerBar} />
+          <figcaption className="history-change__caption">{t("common.after")}</figcaption>
+          <PianoRoll label={t("history.notesAfter", { label: (label) })} notes={after} pitchRange={range} lengthBeats={length} beatsPerBar={beatsPerBar} />
         </figure>
       )}
     </div>

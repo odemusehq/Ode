@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { API } from "../../shared/api";
 import type {
   ApprovalRequest,
@@ -82,7 +83,7 @@ export class OdeApi {
     const response = await fetch(API.audioImport, { method: HttpMethod.Post, body });
     if (!response.ok) {
       const result = await response.json().catch(() => ({})) as { error?: string; composer?: ComposerState };
-      throw new ApiError(response.status, result.error ?? "Attaching audio failed.", result.composer);
+      throw new ApiError(response.status, result.error ?? t("api.attachFailed"), result.composer);
     }
     return await response.json() as AudioAttachment;
   }
@@ -113,7 +114,7 @@ export class OdeApi {
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     const result = await response.json() as ComposerState & { error?: string; composer?: ComposerState };
-    if (!response.ok) throw new ApiError(response.status, result.error ?? "Saving the draft failed.", result.composer);
+    if (!response.ok) throw new ApiError(response.status, result.error ?? t("api.saveDraftFailed"), result.composer);
     return result;
   }
   async transcribe(file: File, songId: string, signal?: AbortSignal): Promise<DictationResponse> {

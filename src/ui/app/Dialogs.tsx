@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { useEffect, useState } from "react";
 import { Button, ButtonVariant } from "../../ui-kit";
 import { HistoryView } from "../views/HistoryView";
@@ -10,9 +11,9 @@ import { Layout } from "./layout";
 import { StatusBar } from "./StatusBar";
 
 const PANELS = [
-  { view: Layout.Lyrics, label: "Lyrics" },
-  { view: Layout.History, label: "History" },
-  { view: Layout.Settings, label: "Settings" },
+  { view: Layout.Lyrics, label: t("common.lyrics") },
+  { view: Layout.History, label: t("common.history") },
+  { view: Layout.Settings, label: t("common.settings") },
 ] as const;
 
 /** One continuing conversation, with optional tools in its right sidebar. */
@@ -41,8 +42,8 @@ function Sidebar() {
     await client.navigate(view);
     if (client.store.getSnapshot().sidebarView === view) document.getElementById(`sidebar-tab-${view}`)?.focus();
   };
-  return <aside id="ode-sidebar" className="workspace-sidebar" aria-label="Song workspace" aria-hidden={!open} inert={!open}>
-    <nav className="sidebar-tabs" role="tablist" aria-label="Workspace panels">
+  return <aside id="ode-sidebar" className="workspace-sidebar" aria-label={t("app.workspaceLabel")} aria-hidden={!open} inert={!open}>
+    <nav className="sidebar-tabs" role="tablist" aria-label={t("app.panelsLabel")}>
       {PANELS.map(({ view, label }, index) => <Button key={view} id={`sidebar-tab-${view}`} variant={ButtonVariant.Quiet}
         role="tab" aria-selected={selected === view} aria-controls={`sidebar-panel-${view}`} tabIndex={selected === view ? 0 : -1}
         onClick={() => void activate(view)} onKeyDown={(event) => {

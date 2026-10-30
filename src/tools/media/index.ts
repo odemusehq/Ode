@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { copyFile, mkdir, readdir, stat } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { z } from "zod";
@@ -90,7 +91,7 @@ export const mediaTools: AnyTool[] = [
     mainAgentOnly: true,
     description: "Explicitly retain one Arrangement audio track's pre-FX, pre-fader source capture in Ode's managed audio catalogue. Give track/start/end in quarter-note beats, and an optional name. Returns persistent id, source hash and a managed working path for audio_describe/audio_analyze/audio_compare; library_audio_open reopens its id later. This changes persistent memory and follows Manual Apply. No model listening runs here. Only Arrangement audio tracks are supported; this does not capture MIDI instruments, processing, returns or Main, and unchanged bytes do not prove current processed Set sound.",
     input: { track: TrackRefSchema, start: z.number().min(0), end: z.number().positive(), name: z.string().min(1).max(200).optional() },
-    describe: ({ track, start, end }, names) => `Keep an audio capture · ${names.track(track)} · ${names.span(start, end)}`,
+    describe: ({ track, start, end }, names) => t("toolActivity.keepAnAudioCapture", { track: names.track(track), start: names.span(start, end) }),
     run: (input, ctx) => withAudio(input, ctx, async (path) => {
       ctx.signal?.throwIfAborted();
       const frozen = await MusicAudio.freeze(path);
@@ -147,7 +148,7 @@ export const mediaTools: AnyTool[] = [
     description:
       `Create cover art choices for the song from a written brief (subject, mood, colours, style; text and logos only when asked): several images at 3000 × 3000 pixels, the size release platforms ask for, saved in the song's release folder as cover-1.png, cover-2.png and so on, numbered after any earlier choices, which stay. Then let the musician pick one with ask_musician (options "Cover 1", "Cover 2"…, images the files returned, in the same order) and keep their pick with cover_art_choose. Base the brief on what the song is about; make only original artwork. Returns { choices }: the new files.`,
     input: { brief: z.string().min(10) },
-    describe: () => "Release · cover art choices",
+    describe: () => t("toolActivity.releaseCoverArtChoices"),
     run: async ({ brief }, ctx) => {
       const dir = ctx.song.releaseDir;
       const count = ctx.config.release.coverChoices;
@@ -168,7 +169,7 @@ export const mediaTools: AnyTool[] = [
     changes: "memory",
     description: `Keep one of the cover art choices made with cover_art_create as the song's cover: the file (such as "cover-2.png") is copied to ${COVER_FILE} in the release folder, replacing the cover there. Returns { cover, from }.`,
     input: { file: z.string().regex(COVER_CHOICE).describe('One of the choices, such as "cover-2.png"') },
-    describe: ({ file }) => `Release · ${file} as the cover`,
+    describe: ({ file }) => t("toolActivity.releaseAsTheCover", { file: file }),
     run: async ({ file }, ctx) => {
       const source = join(ctx.song.releaseDir, file);
       if (!(await exists(source))) throw new Error(`${file} is missing from the release folder: make choices with cover_art_create first.`);
@@ -246,7 +247,7 @@ export const mediaTools: AnyTool[] = [
       consent: z.literal(true).describe("The artist agreed to Ode using this recording of their voice for demo vocals"),
     },
     describe: ({ track, start, end }, names) =>
-      `Save your singing on ${names.track(track)} (${names.span(start, end)}) as the recording Ode uses to sing demo vocals in your voice`,
+      t("toolActivity.saveVoiceReference", { track: names.track(track), start: names.span(start, end) }),
     run: async ({ track, start, end }, ctx) => {
       const arrangement = new ArrangementAudio(ctx);
       const lookup = await arrangement.resolve(track);
@@ -261,7 +262,7 @@ export const mediaTools: AnyTool[] = [
     description:
       "Remove the recording of the artist's voice and their consent, as soon as the artist withdraws it. Demo vocals then wait for a new recording and a new consent (voice_reference_set).",
     input: {},
-    describe: () => "Remove the recording of your voice that Ode sings demo vocals with",
+    describe: () => t("toolActivity.removeVoiceReference"),
     run: async (_input, ctx) => {
       await voiceReference(ctx).clear();
       return { cleared: true };

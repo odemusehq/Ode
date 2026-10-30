@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { API } from "../../shared/api";
 import type { RestoreResult, SongsResponse } from "../../shared/api";
 import type { UiEvent } from "../../shared/events";
@@ -125,7 +126,7 @@ export class OdeClient {
       if (saved.some((ok) => !ok)) return false;
       if (content() === before) return !checkLeave || (this.leaveCheck?.() ?? true);
     }
-    this.store.setError("Your draft is still changing. Pause typing briefly before changing views.");
+    this.store.setError(t("client.draftChanging"));
     return false;
   }
 
@@ -140,7 +141,7 @@ export class OdeClient {
       const versions = await this.api.getVersions();
       if (read === this.versionsRead && songId === this.store.getSnapshot().songId) this.store.setVersions(versions);
     } catch (error) {
-      if (read === this.versionsRead && songId === this.store.getSnapshot().songId) this.store.setHistoryError(`Reading the history stopped: ${errorMessage(error)}`);
+      if (read === this.versionsRead && songId === this.store.getSnapshot().songId) this.store.setHistoryError(t("client.readHistoryFailed", { reason: (errorMessage(error)) }));
     }
   }
 
@@ -160,12 +161,12 @@ export class OdeClient {
     try {
       await this.saveLyrics();
       if (epoch !== this.sendEpoch) return false;
-      if (!songId || songId !== this.store.getSnapshot().songId) throw new Error("The open song changed or is still loading. Send this message again in the intended song.");
+      if (!songId || songId !== this.store.getSnapshot().songId) throw new Error(t("client.songNotReady"));
       await this.api.chat({ text: request, requestId, songId }, controller.signal);
       this.pendingIds.delete(scope);
       return true;
     } catch (error) {
-      if (!controller.signal.aborted) this.store.setError(`Send was not confirmed: ${errorMessage(error)}`);
+      if (!controller.signal.aborted) this.store.setError(t("client.sendUnconfirmed", { reason: (errorMessage(error)) }));
       return false;
     } finally {
       this.sending.delete(controller);
@@ -183,7 +184,7 @@ export class OdeClient {
     try {
       await this.saveLyrics();
       if (epoch !== this.sendEpoch) return false;
-      if (captured.songId !== this.store.getSnapshot().songId) throw new Error("The open song changed. Your draft stays with its song.");
+      if (captured.songId !== this.store.getSnapshot().songId) throw new Error(t("client.songChanged"));
       const prepared = await this.composer.prepare(captured);
       if (epoch !== this.sendEpoch || controller.signal.aborted) {
         const requestId = prepared.pending?.requestId ?? prepared.acceptedRequestId;
@@ -192,24 +193,24 @@ export class OdeClient {
       }
       if (prepared.acceptedRequestId) { this.composer.acknowledge(captured, prepared); return true; }
       const pending = prepared.pending!;
-      if (captured.songId !== this.store.getSnapshot().songId) throw new Error("The open song changed. Your draft stays with its song.");
+      if (captured.songId !== this.store.getSnapshot().songId) throw new Error(t("client.songChanged"));
       const response = await this.api.chat({ text: pending.payload, requestId: pending.requestId, songId: captured.songId }, controller.signal);
       if (epoch !== this.sendEpoch || controller.signal.aborted) return false;
       this.composer.acknowledge(captured, response.composer);
       return true;
     } catch (error) {
-      if (!controller.signal.aborted) this.store.setError(`Send was not confirmed: ${errorMessage(error)}`);
+      if (!controller.signal.aborted) this.store.setError(t("client.sendUnconfirmed", { reason: (errorMessage(error)) }));
       return false;
     } finally { this.sending.delete(controller); }
   }
 
   async attachAudio(file: File, scope: AudioScope, source: string, songId: string): Promise<void> {
-    if (!await this.composer.flush(songId)) throw new Error("Save or resolve the draft before attaching audio.");
+    if (!await this.composer.flush(songId)) throw new Error(t("client.saveBeforeAttaching"));
     const entryId = crypto.randomUUID();
     const context = this.composer.uploadContext(songId);
     try {
       const uploaded = await this.api.importAudio(file, scope, source, { ...context, entryId });
-      if (!uploaded.composer) throw new Error("The audio was uploaded but its draft link was not acknowledged. Refresh the saved draft.");
+      if (!uploaded.composer) throw new Error(t("client.attachmentUnconfirmed"));
       this.composer.uploaded(songId, entryId, uploaded.composer, uploaded.linked !== false);
     } catch (error) {
       if (error instanceof ApiError && error.composer) this.composer.uploaded(songId, entryId, error.composer);
@@ -226,7 +227,7 @@ export class OdeClient {
       if (epoch !== this.sendEpoch) return;
       await this.api.why({ versionId });
     } catch (error) {
-      this.store.setError(`Ode's answer stopped: ${errorMessage(error)}`);
+      this.store.setError(t("client.answerFailed", { reason: (errorMessage(error)) }));
     }
   }
 
@@ -239,7 +240,7 @@ export class OdeClient {
       if (epoch !== this.sendEpoch) return;
       await this.api.again({ versionId });
     } catch (error) {
-      this.store.setError(`Another take stopped: ${errorMessage(error)}`);
+      this.store.setError(t("client.againFailed", { reason: (errorMessage(error)) }));
     } finally {
       await this.loadVersions();
     }
@@ -252,9 +253,9 @@ export class OdeClient {
     this.store.startRequest();
     try {
       const outcome = await this.api.undo({ versionId });
-      if (!outcome.restored) this.store.setError(refusal("Undo stopped", outcome));
+      if (!outcome.restored) this.store.setError(t("client.undoStopped", { hasReason: Boolean((outcome.skipped.join("; "))), reason: (outcome.skipped.join("; ")) }));
     } catch (error) {
-      this.store.setError(`Undo stopped: ${errorMessage(error)}`);
+      this.store.setError(t("client.undoStopped", { hasReason: Boolean((errorMessage(error))), reason: (errorMessage(error)) }));
     } finally {
       await this.loadVersions();
       this.undoing = false;
@@ -273,7 +274,7 @@ export class OdeClient {
       await this.composer.cancelPending(drafts);
       await this.refreshStatus();
     } catch (error) {
-      this.store.setError(`Stop stayed here: ${errorMessage(error)}`);
+      this.store.setError(t("client.stopFailed", { reason: (errorMessage(error)) }));
     }
   }
 
@@ -283,7 +284,7 @@ export class OdeClient {
       await this.api.answer(questionId, { choice });
     } catch (error) {
       this.store.setQuestionAnswered(questionId, false);
-      this.store.setError(`Your answer stayed here: ${errorMessage(error)}`);
+      this.store.setError(t("client.sendAnswerFailed", { reason: (errorMessage(error)) }));
     }
   }
 
@@ -294,7 +295,7 @@ export class OdeClient {
       await this.api.decide(approvalId, { decision });
     } catch (error) {
       this.store.setApprovalDecided(approvalId, false);
-      this.store.setError(`Your choice stayed here: ${errorMessage(error)}`);
+      this.store.setError(t("client.sendChoiceFailed", { reason: (errorMessage(error)) }));
     }
   }
 
@@ -305,7 +306,7 @@ export class OdeClient {
       this.store.setMode((await this.api.setMode({ mode })).mode);
     } catch (error) {
       this.store.setMode(previous);
-      this.store.setError(`The mode stayed as it was: ${errorMessage(error)}`);
+      this.store.setError(t("client.modeFailed", { reason: (errorMessage(error)) }));
     }
   }
 
@@ -341,16 +342,16 @@ export class OdeClient {
       if (read === this.conversationRead) this.store.setConversation(conversation.songId, conversation.exchanges);
       if (read === this.conversationRead) await this.composer.open(conversation.songId, true);
     } catch (error) {
-      if (read === this.conversationRead) this.store.setError(`Reading the conversation stopped: ${errorMessage(error)}`);
+      if (read === this.conversationRead) this.store.setError(t("client.readConversationFailed", { reason: (errorMessage(error)) }));
     }
   }
 
   private async saveLyrics(): Promise<void> {
-    if (!await this.lyrics.flush()) throw new Error(this.lyrics.getSnapshot().saveError ?? "Save the lyrics before continuing.");
+    if (!await this.lyrics.flush()) throw new Error(this.lyrics.getSnapshot().saveError ?? t("client.saveLyricsBeforeContinuing"));
   }
 
   private async saveComposer(): Promise<void> {
-    if (!await this.composer.flush()) throw new Error(this.composer.getSnapshot().error ?? "Save or resolve the current draft before changing songs.");
+    if (!await this.composer.flush()) throw new Error(this.composer.getSnapshot().error ?? t("client.saveDraftBeforeChangingSongs"));
   }
 
   private async checkVersions(): Promise<void> {
@@ -361,10 +362,4 @@ export class OdeClient {
       // The next request saves the hand edits anyway.
     }
   }
-}
-
-/** "Undo stopped: You have changed the Set since…", from the reasons the server gave. */
-function refusal(what: string, outcome: RestoreResult): string {
-  const reasons = outcome.skipped.join("; ");
-  return reasons ? `${what}: ${reasons}` : `${what}.`;
 }

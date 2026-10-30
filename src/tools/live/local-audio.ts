@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { z } from "zod";
 import { LocalAudioFiles, type AudioFileRecord } from "../../live/local-audio-files";
 import { buildLibraryProfile } from "../../music/audio/library-profile";
@@ -135,7 +136,7 @@ export const localAudioTools: AnyTool[] = [
     input: { id: z.uuid(), expectedRevision: z.number().int().nonnegative(), patch: LibraryAnnotationsPatchSchema.refine((patch) => Object.keys(patch).length > 0, "Give at least one annotation field to change.") },
     changes: "memory",
     mainAgentOnly: true,
-    describe: () => "Audio library · save labels",
+    describe: () => t("toolActivity.audioLibrarySaveLabels"),
     run: async ({ id, expectedRevision, patch }, ctx) => {
       const limit = windowSize(ctx);
       bounded({ id, saved: true }, limit);
@@ -153,7 +154,7 @@ export const localAudioTools: AnyTool[] = [
     input: { id: z.uuid(), level: LibraryProfileLevelSchema.optional() },
     changes: "memory",
     mainAgentOnly: true,
-    describe: ({ level }) => level === "full" ? "Audio library · measure full file" : "Audio library · inspect file metadata",
+    describe: ({ level }) => level === "full" ? t("toolActivity.audioLibraryMeasureFullFile") : t("toolActivity.audioLibraryInspectFileMetadata"),
     run: async ({ id, level }, ctx) => {
       ctx.signal?.throwIfAborted();
       const limit = windowSize(ctx);

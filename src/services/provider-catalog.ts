@@ -1,3 +1,4 @@
+import { t, type MessageKey } from "../shared/i18n";
 import {
   OPTIONAL_ROLES,
   type ChatModelOption,
@@ -42,17 +43,27 @@ interface LyricsCatalog {
 }
 
 interface CatalogFile {
-  chat: ChatProvider[];
+  chat: (Omit<ChatProvider, "keyHint" | "modelHint"> & { keyHint: MessageKey; modelHint?: MessageKey })[];
   meta: MetaModels;
   lyrics: LyricsCatalog;
-  services: Record<OptionalRole, ServiceProviderOption[]>;
+  services: Record<OptionalRole, (Omit<ServiceProviderOption, "name"> & ({ name: string } | { nameKey: MessageKey }))[]>;
 }
 
 /** The providers and models Ode offers in Settings, bundled with Ode as providers.json. */
 export class ProviderCatalog {
   static readonly bundled = new ProviderCatalog(catalogFile as CatalogFile);
 
-  private constructor(private readonly file: CatalogFile) {}
+  private readonly file: Omit<CatalogFile, "chat" | "services"> & { chat: ChatProvider[]; services: Record<OptionalRole, ServiceProviderOption[]> };
+
+  private constructor(file: CatalogFile) {
+    this.file = {
+      ...file,
+      chat: file.chat.map((provider) => ({ ...provider, keyHint: t(provider.keyHint), modelHint: provider.modelHint ? t(provider.modelHint) : undefined })),
+      services: Object.fromEntries(OPTIONAL_ROLES.map((role) => [role, file.services[role].map((provider) => ({
+        id: provider.id, baseUrl: provider.baseUrl, name: "nameKey" in provider ? t(provider.nameKey) : provider.name,
+      }))])) as Record<OptionalRole, ServiceProviderOption[]>,
+    };
+  }
 
   get meta(): MetaModels {
     return this.file.meta;

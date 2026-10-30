@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { LyricsSections, type LyricsSection } from "../../shared/lyrics-sections";
 import { Button, ButtonVariant, Icon, IconName, Menu, MenuAlign, cx } from "../../ui-kit";
@@ -12,17 +13,17 @@ import "./LyricsPanel.css";
 
 /** The View menu: which of Lyrics support's marks the editor shows. */
 const VIEW_ITEMS: readonly { id: keyof LyricsView; label: string; description: string }[] = [
-  { id: "syllables", label: "Syllables", description: "Light bars between syllables" },
-  { id: "counts", label: "Syllable counts", description: "The count at the end of each line" },
-  { id: "stress", label: "Stress", description: "A dot under each stressed syllable" },
-  { id: "details", label: "Line details", description: "Written analysis beneath each section" },
-  { id: "rhymes", label: "Rhymes", description: "Rhyming letters in colour, stronger on near rhymes" },
+  { id: "syllables", label: t("lyrics.view.syllables"), description: t("lyrics.view.syllablesDescription") },
+  { id: "counts", label: t("lyrics.view.counts"), description: t("lyrics.view.countsDescription") },
+  { id: "stress", label: t("lyrics.view.stress"), description: t("lyrics.view.stressDescription") },
+  { id: "details", label: t("lyrics.view.details"), description: t("lyrics.view.detailsDescription") },
+  { id: "rhymes", label: t("lyrics.view.rhymes"), description: t("lyrics.view.rhymesDescription") },
 ];
 
 /** What the notice says while Lyrics support is quiet. */
 const SUPPORT_MESSAGES: Readonly<Record<SupportStatus.Setup | SupportStatus.Unreachable, string>> = {
-  [SupportStatus.Setup]: "Add your Meta key in Settings to enable lyric checks.",
-  [SupportStatus.Unreachable]: "Lyrics support is out of reach right now, so syllables and rhymes are paused.",
+  [SupportStatus.Setup]: t("lyrics.supportSetup"),
+  [SupportStatus.Unreachable]: t("lyrics.supportUnavailable"),
 };
 
 /** The song's lyrics as sections that the musician and Ode both edit. */
@@ -35,14 +36,14 @@ export function LyricsPanel({ settingsRevision = 0 }: { settingsRevision?: numbe
   return (
     <section className="lyrics" aria-labelledby={titleId}>
       <h2 id={titleId} className="ode-visually-hidden">
-        Lyrics
+        {t("common.lyrics")}
       </h2>
       {stored ? (
         <LyricsEditor key={stored.songId} text={text} strictRhymes={strictRhymes ?? []} settingsRevision={settingsRevision} />
       ) : loadError ? (
         <ProblemLine message={loadError} onRetry={() => void client.lyrics.load()} />
       ) : (
-        <p className="lyrics__reading">Reading the lyrics…</p>
+        <p className="lyrics__reading">{t("lyrics.reading")}</p>
       )}
       {saveError && <ProblemLine message={saveError} onRetry={() => client.lyrics.retrySave()} />}
     </section>
@@ -115,7 +116,7 @@ function LyricsEditor({ text, strictRhymes, settingsRevision }: LyricsEditorProp
       return -1;
     });
     if (positions.includes(-1)) {
-      client.store.setError("That section changed while the question was open. Your newer lyrics are safe; choose the section action again.");
+      client.store.setError(t("lyrics.sectionChanged"));
       return;
     }
     save(change(current, positions));
@@ -162,9 +163,9 @@ function LyricsEditor({ text, strictRhymes, settingsRevision }: LyricsEditorProp
     ask(
       index,
       {
-        message: `"${name}" is already in the song. Link this section to it? Its lines take the place of these.`,
-        confirmLabel: "Link",
-        cancelLabel: "Keep apart",
+        message: t("lyrics.confirmExistingSection", { name: (name) }),
+        confirmLabel: t("lyrics.link"),
+        cancelLabel: t("lyrics.keepSeparate"),
         onConfirm: () => {
           setAsking(null);
           changeLatest([target, source], (current, [to, from]) => current.map((each, at) => at === to ? { name, lines: [...current[from!]!.lines] } : each));
@@ -178,7 +179,7 @@ function LyricsEditor({ text, strictRhymes, settingsRevision }: LyricsEditorProp
   const setQuickName = (index: number, name: string) => {
     const current = sections[index]?.name ?? "";
     const verse = /^Verse \d+$/;
-    setName(index, name === "Verse" ? (verse.test(current) ? current : LyricsSections.freeName(sections, "Verse 1")) : name);
+    setName(index, name === t("lyrics.quickNames.verse") ? (verse.test(current) ? current : LyricsSections.freeName(sections, t("lyrics.firstVerse"))) : name);
   };
 
   const act = (index: number, action: SectionAction) => {
@@ -187,13 +188,13 @@ function LyricsEditor({ text, strictRhymes, settingsRevision }: LyricsEditorProp
     const insert = (copy: LyricsSection) => save([...sections.slice(0, index + 1), copy, ...sections.slice(index + 1)]);
     switch (action) {
       case SectionAction.Duplicate:
-        insert({ name: LyricsSections.freeName(sections, section.name ?? "Section"), lines: [...section.lines] });
+        insert({ name: LyricsSections.freeName(sections, section.name ?? t("lyrics.section")), lines: [...section.lines] });
         return;
       case SectionAction.LinkedCopy:
         insert({ name: section.name, lines: [...section.lines] });
         return;
       case SectionAction.Unlink: {
-        const name = LyricsSections.freeName(sections, LyricsSections.baseName(section.name ?? "Section"));
+        const name = LyricsSections.freeName(sections, LyricsSections.baseName(section.name ?? t("lyrics.section")));
         save(sections.map((each, at) => (at === index ? { ...each, name } : each)));
         rename(index);
         return;
@@ -201,8 +202,8 @@ function LyricsEditor({ text, strictRhymes, settingsRevision }: LyricsEditorProp
       case SectionAction.Delete:
         const target = intent(index);
         ask(index, {
-          message: `Delete ${section.name ?? "this section"} and its lines? History keeps the version before.`,
-          confirmLabel: "Delete",
+          message: t("lyrics.confirmDeleteSection", { name: (section.name), hasName: ((section.name) != null) }),
+          confirmLabel: t("common.delete"),
           onConfirm: () => {
             setAsking(null);
             changeLatest([target], (current, [to]) => current.filter((_, at) => at !== to));
@@ -228,8 +229,8 @@ function LyricsEditor({ text, strictRhymes, settingsRevision }: LyricsEditorProp
     const sourceIntent = intent(from);
     const targetIntent = intent(to);
     ask(to, {
-      message: `Replace the lines of ${target.name ?? "this section"} with ${source.name} and link them?`,
-      confirmLabel: "Replace and link",
+      message: t("lyrics.confirmReplaceAndLink", { target: (target.name), hasTarget: ((target.name) != null), source: (source.name) }),
+      confirmLabel: t("lyrics.replaceAndLink"),
       onConfirm: () => {
         setAsking(null);
         changeLatest([sourceIntent, targetIntent], (current, [sourceAt, targetAt]) => current.map((each, at) => at === targetAt ? { name: current[sourceAt!]!.name, lines: [...current[sourceAt!]!.lines] } : each));
@@ -238,7 +239,7 @@ function LyricsEditor({ text, strictRhymes, settingsRevision }: LyricsEditorProp
   };
 
   const addSection = () => {
-    const name = LyricsSections.freeName(sections, "Section");
+    const name = LyricsSections.freeName(sections, t("lyrics.section"));
     save([...sections, { name, lines: [""] }]);
     rename(sections.length);
   };
@@ -255,8 +256,8 @@ function LyricsEditor({ text, strictRhymes, settingsRevision }: LyricsEditorProp
     >
       <div className="lyrics-editor__toolbar">
         <Menu
-          label="View"
-          buttonText="View"
+          label={t("common.view")}
+          buttonText={t("common.view")}
           items={VIEW_ITEMS.map((item) => ({ ...item, checked: view[item.id] }))}
           multiple
           onSelect={toggleView}
@@ -289,16 +290,16 @@ function LyricsEditor({ text, strictRhymes, settingsRevision }: LyricsEditorProp
               const to = index + direction;
               if (to >= 0 && to < sections.length) move(index, to);
             }}
-            linkTargets={sections.flatMap((other, at) => at !== index && other.name !== section.name ? [{ id: String(at), label: other.name ?? `Untitled section ${at + 1}` }] : [])}
+            linkTargets={sections.flatMap((other, at) => at !== index && other.name !== section.name ? [{ id: String(at), label: other.name ?? t("lyrics.untitledSection", { index: (at + 1) }) }] : [])}
             onLinkTo={(to) => link(index, to)}
             onPartners={(show) => setPartners(show ? section.name : null)}
             renderMarks={marksBehind(section.name !== null && strictRhymes.includes(section.name))}
-            analysis={view.details && <details className="section__analysis"><summary>Line analysis</summary><ol>
+            analysis={view.details && <details className="section__analysis"><summary>{t("lyrics.lineAnalysisTitle")}</summary><ol>
               {section.lines.filter(LyricsSections.isSung).map((line, lineIndex) => {
                 const check = marks.marksFor(section.lines.filter(LyricsSections.isSung))[lineIndex];
                 return <li key={lineIndex}><p>{line}</p>{check ? <p>
-                  {MarkLayout.count(check)} syllables. {check.words.map((word) => `${word.text}: ${word.syllables.map((syllable, at) => `${syllable} (${word.stress[at] === 1 ? "primary stress" : word.stress[at] === 2 ? "secondary stress" : "unstressed"})`).join(", ")}`).join("; ")}. Rhyme: {check.rhyme.letter ? `${check.rhyme.letter}, ${check.rhyme.quality}${check.rhyme.part ? `, ending ${check.rhyme.part}` : ""}` : "no partner"}.
-                </p> : <p>Analysis is not available for this line yet.</p>}</li>;
+                  {t("lyrics.lineAnalysis", { count: (MarkLayout.count(check)), words: (check.words.map((word) => t("lyrics.wordAnalysis", { word: (word.text), syllables: (word.syllables.map((syllable, at) => t("lyrics.syllableAnalysis", { syllable: (syllable), stress: (word.stress[at]) }))).join(", ") })).join("; ")), rhyme: (t("lyrics.rhymeAnalysis", { hasLetter: Boolean((check.rhyme.letter)), letter: (check.rhyme.letter), quality: (check.rhyme.quality), hasPart: Boolean((check.rhyme.part)), part: (check.rhyme.part) })) })}
+                </p> : <p>{t("lyrics.analysisUnavailable")}</p>}</li>;
               })}
             </ol></details>}
             extras={
@@ -315,7 +316,7 @@ function LyricsEditor({ text, strictRhymes, settingsRevision }: LyricsEditorProp
         ))}
         <Button variant={ButtonVariant.Quiet} className="lyrics-editor__add" onClick={addSection}>
           <Icon name={IconName.Plus} />
-          Section
+          {t("lyrics.section")}
         </Button>
       </div>
       {support.status !== SupportStatus.Ready && (
@@ -344,11 +345,11 @@ function StrictToggle({ on, onChange }: StrictToggleProps) {
       type="button"
       className={cx("section__strict", on && "section__strict--on")}
       aria-pressed={on}
-      title="Ask for perfect rhymes in this section"
+      title={t("lyrics.strictRhymesHint")}
       onClick={() => onChange(!on)}
     >
       <Icon name={IconName.Lock} />
-      Strict rhymes
+      {t("lyrics.strictRhymes")}
     </button>
   );
 }
@@ -367,7 +368,7 @@ function SupportNotice({ status, detail, onRetry }: SupportNoticeProps) {
       <Icon name={setup ? IconName.Info : IconName.Alert} />
       <p className="lyrics-notice__text">{SUPPORT_MESSAGES[status]}</p>
       {!setup && <Button variant={ButtonVariant.Quiet} onClick={onRetry}>
-        Try again
+        {t("common.retry")}
       </Button>}
     </div>
   );
@@ -382,7 +383,7 @@ function ProblemLine({ message, onRetry }: ProblemLineProps) {
   return (
     <div className="lyrics__problem" role="alert">
       <p className="lyrics__problem-text">{message}</p>
-      <Button onClick={onRetry}>Retry</Button>
+      <Button onClick={onRetry}>{t("common.retry")}</Button>
     </div>
   );
 }

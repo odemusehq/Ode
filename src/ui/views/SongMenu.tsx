@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import type { SongsResponse } from "../../shared/api";
@@ -7,7 +8,7 @@ import { useAppState, useClient } from "../app/hooks";
 
 /** The menu's entry that starts a new song. */
 const NEW_SONG = "new";
-const UNTITLED = "Untitled song";
+const UNTITLED = t("common.untitledSong");
 
 /** Which song Ode is working on, with every other song and a new one a click away. */
 export function SongMenu() {
@@ -22,7 +23,7 @@ export function SongMenu() {
     try {
       setSongs(await client.songs());
     } catch (error) {
-      client.store.setError(`The song list ran into a problem: ${errorMessage(error)}`);
+      client.store.setError(t("song.listFailed", { error: (errorMessage(error)) }));
     }
   }, [client]);
 
@@ -41,7 +42,7 @@ export function SongMenu() {
       await client.openSong(id);
       await load();
     } catch (error) {
-      client.store.setError(`Ode stayed on this song: ${errorMessage(error)}`);
+      client.store.setError(t("song.switchFailed", { error: (errorMessage(error)) }));
     }
   };
 
@@ -52,7 +53,7 @@ export function SongMenu() {
       setNaming(false);
       await load();
     } catch (error) {
-      client.store.setError(`Starting the new song ran into a problem: ${errorMessage(error)}`);
+      client.store.setError(t("song.createFailed", { error: (errorMessage(error)) }));
     }
   };
 
@@ -60,9 +61,9 @@ export function SongMenu() {
     return (
       <form className="song-menu" onSubmit={(event) => void create(event)}>
         <TextInput
-          aria-label="The new song's title"
+          aria-label={t("song.title")}
           value={draft}
-          placeholder="The new song's title"
+          placeholder={t("song.title")}
           autoFocus
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={(event) => {
@@ -72,9 +73,9 @@ export function SongMenu() {
           }}
         />
         <Button type="submit" variant={ButtonVariant.Primary}>
-          Start
+          {t("song.start")}
         </Button>
-        <Button onClick={() => setNaming(false)}>Cancel</Button>
+        <Button onClick={() => setNaming(false)}>{t("common.cancel")}</Button>
       </form>
     );
   }
@@ -82,12 +83,12 @@ export function SongMenu() {
   return (
     <Select
       className="song-menu"
-      aria-label="Song"
+      aria-label={t("common.song")}
       value={songs?.current ?? ""}
       disabled={busy || !songs}
       options={[
         ...(songs?.songs ?? []).map((song) => ({ value: song.id, label: song.title || UNTITLED })),
-        { value: NEW_SONG, label: "New song…" },
+        { value: NEW_SONG, label: t("common.newSong") },
       ]}
       onChange={(id) => void choose(id)}
     />

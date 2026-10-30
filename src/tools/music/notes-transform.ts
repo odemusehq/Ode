@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { NoteTransformSchema, transformNotes } from "../../music/parts/note-transformer";
 import { defineTool } from "../define";
 import { NoteSchema } from "../live/schemas";
@@ -20,11 +21,11 @@ export const notesTransformTool = defineTool({
   changes: "none",
   describe: ({ transposeSemitones = 0, timeScale = 1, timeOffsetBeats = 0 }) => {
     const actions = [
-      transposeSemitones === 0 ? "" : `transpose ${transposeSemitones > 0 ? "+" : ""}${transposeSemitones} semitones`,
-      timeScale === 1 ? "" : `timing ×${timeScale}`,
-      timeOffsetBeats === 0 ? "" : `shift ${timeOffsetBeats > 0 ? "+" : ""}${timeOffsetBeats} beats`,
+      transposeSemitones === 0 ? "" : t("toolActivity.transposeNotes", { isTransposeSemitones: Boolean(transposeSemitones > 0), transposeSemitones: transposeSemitones }),
+      timeScale === 1 ? "" : t("toolActivity.timing", { timeScale: timeScale }),
+      timeOffsetBeats === 0 ? "" : t("toolActivity.shiftNotes", { isTimeOffsetBeats: Boolean(timeOffsetBeats > 0), timeOffsetBeats: timeOffsetBeats }),
     ].filter(Boolean);
-    return `Draft ${actions.join(" · ") || "note transform"}`;
+    return t("toolActivity.draft", { value: actions.join(" · ") || "note transform" });
   },
   async run({ notes, transposeSemitones, timeScale, timeOffsetBeats }) {
     return transformNotes(notes, { transposeSemitones, timeScale, timeOffsetBeats });

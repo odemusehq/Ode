@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { z } from "zod";
 import { extensionTool } from "./extension-tool";
 import { SceneRefSchema, TrackRefSchema } from "./schemas";
@@ -13,7 +14,7 @@ export const sceneTools = [
     changes: "set",
     description: "Rename a scene.",
     input: { scene: SceneRefSchema, name: z.string().min(1) },
-    describe: ({ scene, name }, names) => `Song · ${names.scene(scene)} · rename to ${name}`,
+    describe: ({ scene, name }, names) => t("toolActivity.renameScene", { scene: names.scene(scene), name: name }),
   }),
 ];
 

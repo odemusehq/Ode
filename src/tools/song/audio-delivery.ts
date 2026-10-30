@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { z } from "zod";
 import { AudioDeliveryNameSchema } from "../../shared/audio-delivery";
 import { defineTool, type AnyTool } from "../define";
@@ -14,7 +15,7 @@ export const audioDeliveryTools: AnyTool[] = [
     mainAgentOnly: true,
     description: "Retain an exact supplied managed audio file for download in this song's saved chat. Give audioId from the managed library and an explicit download name including its original WAV/AIFF extension. The source must be nonempty supported PCM WAV/AIFF with finite samples. No transcoding, gain change, crop or new native export occurs. The immutable receipt binds exact bytes/hash, inspected format/frames and the original source/range declaration; it does not establish current Set sound, mastering quality, complete tails or stem alignment. A repeated accepted-exchange/source/name tuple reuses the verified retained file. Returns {delivery,linkWarning?}; a link warning preserves the actual retained file for recovery/listing. Main-only persistent file change follows Manual Apply; it never edits the Set.",
     input: { audioId: z.uuid(), name: AudioDeliveryNameSchema },
-    describe: ({ name }) => `Delivery · retain ${name}`,
+    describe: ({ name }) => t("toolActivity.deliveryRetain", { name: name }),
     run: ({ audioId, name }, ctx) => {
       if (!ctx.exchangeId) throw new Error("Retaining audio needs the current accepted request's exchange id.");
       const songId = ctx.song.songId;

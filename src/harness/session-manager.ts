@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n";
 import type { ConversationStore } from "../mneme/conversations";
 import { OdeSession, SessionBusyError, type SessionDeps } from "./session";
 
@@ -21,7 +22,7 @@ export class SessionManager {
   /** Switches to the conversation of another song. */
   switchTo(songId: string): void {
     if (songId === this.key) return;
-    if (this.session.isBusy) throw new SessionBusyError("Ode is still working on this song.");
+    if (this.session.isBusy) throw new SessionBusyError(t("runtime.stillWorkingOnSong"));
     this.key = songId;
     this.session.retire();
     this.session = new OdeSession(this.deps, this.conversations.log(songId), songId);

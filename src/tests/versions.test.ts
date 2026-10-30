@@ -125,6 +125,6 @@ test("a damaged line ends the history there, and the versions before it carry on
   await history.record(edited(), VersionAuthor.Ode, "Lead added", "add a lead");
   await appendFile(join(dir, "versions.jsonl"), '{"id": "cut short\n');
   const reopened = new VersionHistory(dir, 20);
-  assert.deepEqual((await reopened.list()).map((version) => version.summary), ["Where the history starts", "Lead added"]);
+  assert.deepEqual((await reopened.list()).map((version) => version.summary), ["Initial version", "Lead added"]);
   assert.ok((await readdir(dir)).some((name) => name.startsWith("versions.jsonl.unreadable-")));
 });

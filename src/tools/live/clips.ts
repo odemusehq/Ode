@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { z } from "zod";
 import { extensionTool } from "./extension-tool";
 import { SetWording } from "../../mneme/set-diff";
@@ -24,7 +25,7 @@ export const takeLaneTools = [
     changes: "set",
     description: "Rename a take lane.",
     input: { lane: TakeLaneRefSchema, name: z.string().min(1) },
-    describe: ({ lane, name }, names) => `${names.takeLane(lane)} · rename to ${name}`,
+    describe: ({ lane, name }, names) => t("toolActivity.renameTakeLane", { lane: names.takeLane(lane), name: name }),
   }),
   extensionTool({
     op: "take_lane_create_midi_clip",
@@ -38,7 +39,7 @@ export const takeLaneTools = [
       ...nameFields,
     },
     describe: ({ lane, start, length, notes, name }, names) =>
-      `${names.takeLane(lane)} · new MIDI clip${name ? ` ${name}` : ""} in ${names.span(start, start + length)}${notes ? ` with ${SetWording.count(notes.length, "note")}` : ""}`,
+      t("toolActivity.createTakeLaneMidiClip", { lane: names.takeLane(lane), isName: Boolean(name), name: name, start: names.span(start, start + length), isNotes: Boolean(notes), length: (notes ? SetWording.count(notes.length, "note") : "") }),
   }),
   extensionTool({
     op: "take_lane_create_audio_clip",
@@ -53,7 +54,7 @@ export const takeLaneTools = [
       loop: LoopSchema.optional(),
       ...nameFields,
     },
-    describe: ({ lane, start, name }, names) => `${names.takeLane(lane)} · new audio clip${name ? ` ${name}` : ""} at ${names.position(start)}`,
+    describe: ({ lane, start, name }, names) => t("toolActivity.createTakeLaneAudioClip", { lane: names.takeLane(lane), isName: Boolean(name), name: name, start: names.position(start) }),
   }),
 ];
 
@@ -69,21 +70,21 @@ export const clipSlotTools = [
     description: "Create a MIDI clip in an empty Session clip slot, optionally with notes (beats from the clip start).",
     input: { slot: ClipSlotRefSchema, length: z.number().positive(), notes: z.array(NoteSchema).optional(), ...nameFields },
     describe: ({ slot, length, notes, name }, names) =>
-      `${names.slot(slot)} · new MIDI clip${name ? ` ${name}` : ""}, ${names.length(length)}${notes ? ` with ${SetWording.count(notes.length, "note")}` : ""}`,
+      t("toolActivity.createSessionMidiClip", { slot: names.slot(slot), isName: Boolean(name), name: name, length: names.length(length), isNotes: Boolean(notes), length2: (notes ? SetWording.count(notes.length, "note") : "") }),
   }),
   extensionTool({
     op: "clip_slot_create_audio_clip",
     changes: "set",
     description: "Create an audio clip in an empty Session clip slot from a file imported with import_into_project.",
     input: { slot: ClipSlotRefSchema, filePath: z.string().min(1), warped: z.boolean().optional(), loop: LoopSchema.optional(), ...nameFields },
-    describe: ({ slot, name }, names) => `${names.slot(slot)} · new audio clip${name ? ` ${name}` : ""}`,
+    describe: ({ slot, name }, names) => t("toolActivity.createSessionAudioClip", { slot: names.slot(slot), isName: Boolean(name), name: name }),
   }),
   extensionTool({
     op: "clip_slot_delete_clip",
     changes: "set",
     description: "Delete the clip in a Session clip slot.",
     input: { slot: ClipSlotRefSchema },
-    describe: ({ slot }, names) => `${names.clip(slot)} · delete`,
+    describe: ({ slot }, names) => t("toolActivity.deleteSessionClip", { slot: names.clip(slot) }),
   }),
 ];
 
@@ -106,12 +107,12 @@ export const clipTools = [
     },
     describe: ({ clip, name, color, muted, looping }, names) => {
       const changes = [
-        name === undefined ? "" : `rename to ${name}`,
-        color === undefined ? "" : "colour",
-        muted === undefined ? "" : muted ? "deactivate" : "activate",
-        looping === undefined ? "" : looping ? "loop on" : "loop off",
+        name === undefined ? "" : t("toolActivity.rename", { name: name }),
+        color === undefined ? "" : t("toolActivity.words.colour"),
+        muted === undefined ? "" : muted ? t("toolActivity.words.deactivate") : t("toolActivity.words.activate"),
+        looping === undefined ? "" : looping ? t("toolActivity.loopOn") : t("toolActivity.loopOff"),
       ].filter((change) => change.length > 0);
-      return `${names.clip(clip)} · ${SetWording.list(changes) || "unchanged"}`;
+      return `${names.clip(clip)} · ${SetWording.list(changes) || t("toolActivity.words.unchanged")}`;
     },
   }),
   extensionTool({
@@ -125,7 +126,7 @@ export const clipTools = [
     changes: "set",
     description: "Replace all notes in an existing MIDI clip, preserving every untouched note and field in the supplied list. First read midi_clip_get_notes and give expected:{token:recoveryToken} from that actual read; never echo its full preimage. The synchronous native guard refuses changed notes, another target, an expired token or restarted Live extension before writing. On refusal reread and reconcile the requested edit with current material rather than replaying the stale replacement. The token is consumed only on a successful write. Beats remain relative to clip start. New clip creation accepts initial notes separately.",
     input: { clip: ClipRefSchema, notes: z.array(NoteSchema), expected: z.object({ token: z.string().min(1).max(1000) }) },
-    describe: ({ clip, notes }, names) => `${names.clip(clip)} · write ${SetWording.count(notes.length, "note")}, replacing its notes`,
+    describe: ({ clip, notes }, names) => t("toolActivity.writeReplacingItsNotes", { clip: names.clip(clip), length: (notes ? SetWording.count(notes.length, "note") : "") }),
   }),
   extensionTool({
     op: "audio_clip_get",
@@ -143,10 +144,10 @@ export const clipTools = [
     },
     describe: ({ clip, warping, warpMode }, names) => {
       const changes = [
-        warping === undefined ? "" : warping ? "warping on" : "warping off",
-        warpMode === undefined ? "" : `warp mode ${SetWording.warpMode(warpMode)}`,
+        warping === undefined ? "" : warping ? t("toolActivity.warpingOn") : t("toolActivity.warpingOff"),
+        warpMode === undefined ? "" : t("toolActivity.warpMode", { warpMode: SetWording.warpMode(warpMode) }),
       ].filter((change) => change.length > 0);
-      return `${names.clip(clip)} · ${SetWording.list(changes) || "unchanged"}`;
+      return `${names.clip(clip)} · ${SetWording.list(changes) || t("toolActivity.words.unchanged")}`;
     },
   }),
 ];

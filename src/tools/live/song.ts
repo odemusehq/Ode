@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { z } from "zod";
 import { LIVE_TEMPO } from "../../shared/live";
 import { extensionTool } from "./extension-tool";
@@ -16,35 +17,35 @@ export const songTools = [
     changes: "set",
     description: "Set the Set's tempo in BPM.",
     input: { tempo: z.number().min(LIVE_TEMPO.min).max(LIVE_TEMPO.max).describe("Beats per minute") },
-    describe: ({ tempo }) => `Song · tempo to ${tempo} BPM`,
+    describe: ({ tempo }) => t("toolActivity.setTempo", { tempo: tempo }),
   }),
   extensionTool({
     op: "song_create_midi_track",
     changes: "set",
     description: "Create a MIDI track after the selected track (or at the end). Returns the new track's reference, index and name.",
     input: { ...nameFields },
-    describe: ({ name }) => `Song · new MIDI track${name ? ` ${name}` : ""}`,
+    describe: ({ name }) => t("toolActivity.createMidiTrack", { isName: Boolean(name), name: name }),
   }),
   extensionTool({
     op: "song_create_audio_track",
     changes: "set",
     description: "Create an audio track after the selected track (or at the end). Returns the new track's reference, index and name.",
     input: { ...nameFields },
-    describe: ({ name }) => `Song · new audio track${name ? ` ${name}` : ""}`,
+    describe: ({ name }) => t("toolActivity.createAudioTrack", { isName: Boolean(name), name: name }),
   }),
   extensionTool({
     op: "song_delete_track",
     changes: "set",
     description: "Delete a track and everything on it.",
     input: { track: TrackRefSchema },
-    describe: ({ track }, names) => `${names.track(track)} · delete the track`,
+    describe: ({ track }, names) => t("toolActivity.deleteTheTrack", { track: names.track(track) }),
   }),
   extensionTool({
     op: "song_duplicate_track",
     changes: "set",
     description: "Duplicate a track with its clips and devices; the copy goes right after the original.",
     input: { track: TrackRefSchema, ...nameFields },
-    describe: ({ track, name }, names) => `${names.track(track)} · duplicate the track${name ? ` as ${name}` : ""}`,
+    describe: ({ track, name }, names) => t("toolActivity.duplicateTrack", { track: names.track(track), isName: Boolean(name), name: name }),
   }),
   extensionTool({
     op: "song_create_scene",
@@ -54,41 +55,41 @@ export const songTools = [
       index: z.number().int().min(-1).optional().describe("0-based position; -1 or empty for the end"),
       name: z.string().min(1).optional(),
     },
-    describe: ({ name }) => `Song · new scene${name ? ` ${name}` : ""}`,
+    describe: ({ name }) => t("toolActivity.createScene", { isName: Boolean(name), name: name }),
   }),
   extensionTool({
     op: "song_delete_scene",
     changes: "set",
     description: "Delete a scene and the clips in its row.",
     input: { scene: SceneRefSchema },
-    describe: ({ scene }, names) => `Song · delete ${names.scene(scene)}`,
+    describe: ({ scene }, names) => t("toolActivity.deleteScene", { scene: names.scene(scene) }),
   }),
   extensionTool({
     op: "song_duplicate_scene",
     changes: "set",
     description: "Duplicate a scene with its clips; the copy goes right after the original.",
     input: { scene: SceneRefSchema },
-    describe: ({ scene }, names) => `Song · duplicate ${names.scene(scene)}`,
+    describe: ({ scene }, names) => t("toolActivity.duplicateScene", { scene: names.scene(scene) }),
   }),
   extensionTool({
     op: "song_create_locator",
     changes: "set",
     description: "Add a locator in the Arrangement at a beat, for example to mark where Verse 1 or the Chorus starts.",
     input: { time: z.number().min(0).describe("Position in beats"), name: z.string().min(1).optional() },
-    describe: ({ time, name }, names) => `Song · new locator${name ? ` ${name}` : ""} at ${names.position(time)}`,
+    describe: ({ time, name }, names) => t("toolActivity.createLocator", { isName: Boolean(name), name: name, time: names.position(time) }),
   }),
   extensionTool({
     op: "song_delete_locator",
     changes: "set",
     description: "Delete a locator from the Arrangement.",
     input: { locator: LocatorRefSchema },
-    describe: ({ locator }, names) => `Song · delete ${names.locator(locator)}`,
+    describe: ({ locator }, names) => t("toolActivity.deleteLocator", { locator: names.locator(locator) }),
   }),
   extensionTool({
     op: "locator_rename",
     changes: "set",
     description: "Rename a locator.",
     input: { locator: LocatorRefSchema, name: z.string().min(1) },
-    describe: ({ locator, name }, names) => `Song · ${names.locator(locator)} · rename to ${name}`,
+    describe: ({ locator, name }, names) => t("toolActivity.renameLocator", { locator: names.locator(locator), name: name }),
   }),
 ];

@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { z } from "zod";
 import { hookNotesInRange, melodyNoteHash } from "../../music/melody/lyric-phrases";
 import { SetLookup } from "../../server/set-lookup";
@@ -17,7 +18,7 @@ export const hookRetainTool = defineTool({
     lengthBeats: z.number().positive(),
     description: z.string().optional(),
   },
-  describe: ({ id }) => `Keep the chosen hook · ${id}`,
+  describe: ({ id }) => t("toolActivity.keepTheChosenHook", { id: id }),
   async run({ id, clipTag, startBeat = 0, lengthBeats, description }, ctx) {
     const snapshot = await ctx.snapshots.read();
     const matches = new SetLookup(snapshot).allTracks.flatMap((track) => SetLookup.clipsOf(track)).filter((clip) => clip.tag === clipTag);

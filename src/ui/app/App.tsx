@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { useEffect } from "react";
 import { AskDialog } from "./Dialogs";
 import { LiveDialog } from "./dialog";
@@ -10,7 +11,7 @@ export function App() {
   const busy = useAppState((state) => state.busy);
   const sidebarOpen = useAppState((state) => state.sidebarOpen);
   const sidebarView = useAppState((state) => state.sidebarView);
-  useEffect(() => { document.title = "Ode"; client.windowReady(); }, [client, sidebarOpen, sidebarView]);
+  useEffect(() => { document.title = t("common.ode"); client.windowReady(); }, [client, sidebarOpen, sidebarView]);
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || event.defaultPrevented) return;

@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import "./host-globals";
 import { initialize, type ActivationContext } from "@ableton-extensions/sdk";
 import texts from "ode:texts";
@@ -30,7 +31,7 @@ class OdeExtension implements DialogHost {
     const notice = new Notice(this.live.ui);
     const { storageDirectory, tempDirectory } = this.live.environment;
     if (!storageDirectory || !tempDirectory) {
-      await notice.show("Ode needs its folders", "Ode keeps its settings and songs in the folders Live gives each extension. Restart Live, then open Ode again.");
+      await notice.show(t("live.foldersTitle"), t("live.foldersMessage"));
       return;
     }
     const set = new LiveSet(this.live);
@@ -43,7 +44,7 @@ class OdeExtension implements DialogHost {
       this.window.start();
     } catch (error) {
       console.error(`Ode stopped while starting: ${describeError(error)}`);
-      await notice.show("Ode stopped while starting", `${describeError(error)}. Restart Live to try again.`);
+      await notice.show(t("live.startupTitle"), t("live.startupMessage", { error: describeError(error) }));
       return;
     }
     new ContextMenu(this.live, new PointerBuilder(this.live, set, new LocationFinder(set)), this, notice).register();
@@ -59,9 +60,9 @@ class OdeExtension implements DialogHost {
     catch (error) {
       const missing = error instanceof MaxWindowMissingError && error.reason === "missing";
       const message = missing
-        ? "First load the Ode device in this Set:\n\n1. Download Ode.amxd from the same Ode release as the extension.\n2. Drag Ode.amxd onto an audio track or the Main track in Live.\n3. Click Open Ode on the device.\n\nYou only need one Ode device per Set. Max for Live must be available in your Live edition."
-        : error instanceof MaxWindowMissingError ? error.message : "The Ode window could not open. Click Open Ode on the Max device, then try again.";
-      await new Notice(this.live.ui).show(missing ? "Load the Ode device first" : "Ode's window stayed closed", message, undefined, 300);
+        ? t("live.deviceInstructions")
+        : error instanceof MaxWindowMissingError ? error.message : t("live.windowUnavailable");
+      await new Notice(this.live.ui).show(missing ? t("live.deviceTitle") : t("live.windowClosedTitle"), message, undefined, 300);
     }
   }
 }

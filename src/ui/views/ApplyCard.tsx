@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n";
 import { Button, ButtonVariant, Card, IconName, Tone } from "../../ui-kit";
 import { useClient } from "../app/hooks";
 import type { Approval } from "../app/model";
@@ -16,10 +17,10 @@ export function ApplyCard({ approval }: ApplyCardProps) {
       actions={
         <>
           <Button variant={ButtonVariant.Primary} icon={IconName.Check} disabled={approval.decided} onClick={() => void client.decide(approval.id, "allow")}>
-            Apply
+            {t("common.apply")}
           </Button>
           <Button disabled={approval.decided} onClick={() => void client.decide(approval.id, "deny")}>
-            Skip
+            {t("common.skip")}
           </Button>
         </>
       }

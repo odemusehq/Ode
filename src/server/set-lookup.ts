@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n";
 import { BEAT_TOLERANCE, TAG_SEPARATOR, type ClipRef, type TrackRef } from "../shared/live";
 import type { ClipInfo } from "../shared/live-ops";
 import type { DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
@@ -18,7 +19,7 @@ export class SetLookup {
 
   /** Beats (quarter notes) in one bar of the Set's time signature. */
   get beatsPerBar(): number {
-    if (!this.snapshot.signature) throw new Error("The current meter is unavailable from Live. Supply a time signature explicitly.");
+    if (!this.snapshot.signature) throw new Error(t("server.setLookup.theCurrentMeterIsUnavailableFromLive"));
     const { numerator, denominator } = this.snapshot.signature;
     return (numerator * QUARTER_NOTES_PER_WHOLE_NOTE) / denominator;
   }
@@ -39,7 +40,7 @@ export class SetLookup {
     if ("main" in ref) return this.snapshot.main;
     if ("tag" in ref) {
       const matches = this.allTracks.filter((track) => track.tag === ref.tag);
-      if (matches.length > 1) throw new Error(`ambiguous: track tagged "${ref.tag}". Use a track index or a unique tag.`);
+      if (matches.length > 1) throw new Error(t("server.setLookup.ambiguousTrackTaggedUseATrack", { tag: (ref.tag) }));
       return matches[0];
     }
     const names = this.allTracks.map((track) => {
@@ -51,7 +52,7 @@ export class SetLookup {
     const exact = full.length > 0 ? full : names.filter(({ plain, full }) => plain === ref.name || full === ref.name);
     const lower = ref.name.toLowerCase();
     const matches = exact.length > 0 ? exact : names.filter(({ plain, full }) => plain.toLowerCase() === lower || full.toLowerCase() === lower);
-    if (matches.length > 1) throw new Error(`ambiguous: track named "${ref.name}". Use a track index or an exact full name with a unique tag.`);
+    if (matches.length > 1) throw new Error(t("server.setLookup.ambiguousTrackNamedUseATrack", { name: (ref.name) }));
     return matches[0]?.track;
   }
 
@@ -62,7 +63,7 @@ export class SetLookup {
         ...track.clipSlots.flatMap((slot) => slot.clip?.tag === ref.tag ? [{ track, clip: slot.clip, arranged: false }] : []),
         ...SetLookup.arrangedClips(track).filter((clip) => clip.tag === ref.tag).map((clip) => ({ track, clip, arranged: true })),
       ]);
-      if (matches.length > 1) throw new Error(`ambiguous: clip tagged "${ref.tag}". Use its track and slot or Arrangement position, or give the clips unique tags.`);
+      if (matches.length > 1) throw new Error(t("server.setLookup.ambiguousClipTaggedUseItsTrack", { tag: (ref.tag) }));
       return matches[0];
     }
     const track = this.track(ref.track);
@@ -106,10 +107,10 @@ export class SetLookup {
 
   /** "bars 9–16" for an Arrangement span in beats ("bar 9" when it fits in one). */
   barsLabel(start: number, end: number): string {
-    if (!this.snapshot.signature) return `beats ${start}–${end}`;
+    if (!this.snapshot.signature) return t("server.setLookup.beats", { start: (start), end: (end) });
     const first = Math.floor(start / this.beatsPerBar + BEAT_TOLERANCE) + 1;
     const last = Math.max(first, Math.ceil(end / this.beatsPerBar - BEAT_TOLERANCE));
-    return first === last ? `bar ${first}` : `bars ${first}–${last}`;
+    return first === last ? t("server.setLookup.bar", { first: (first) }) : t("server.setLookup.bars", { first: (first), last: (last) });
   }
 
   /** "4 bars" for a length of whole bars, "6 beats" for any other length. */
@@ -117,9 +118,9 @@ export class SetLookup {
     const bars = this.snapshot.signature ? beats / this.beatsPerBar : Number.NaN;
     if (Math.abs(bars - Math.round(bars)) <= BEAT_TOLERANCE && Math.round(bars) > 0) {
       const whole = Math.round(bars);
-      return `${whole} ${whole === 1 ? "bar" : "bars"}`;
+      return t("server.setLookup.barLength", { count: whole });
     }
     const rounded = Math.round(beats * 100) / 100;
-    return `${rounded} ${rounded === 1 ? "beat" : "beats"}`;
+    return t("server.setLookup.beatLength", { count: rounded });
   }
 }
