@@ -159,6 +159,8 @@ export class RestorePlanner {
   /** The removed tracks that are deleted (every one but a group track), which moves the tracks after them up. */
   private deletedTracks: TrackKey[] = [];
   private addedTracks: TrackKey[] = [];
+  /** Appended take lanes on surviving tracks, created before clips are placed in them. */
+  private readonly addedTakeLanes: { track: TrackKey; count: number }[] = [];
   /** Devices removed whole, by their place in the current Set: what is inside them goes with them. */
   private removedDevices: { track: TrackKey; path: number[] }[] = [];
   /** Devices added whole, by their place in the version restored: what is inside them comes with them. */
@@ -208,6 +210,13 @@ export class RestorePlanner {
       .filter((change) => RestorePlanner.isDifferentDevice(change))
       .map((change) => RestorePlanner.devicePlace(change));
 
+    // Discover lane additions first, even if a clip change precedes its track's metadata in the list.
+    for (const change of changes) {
+      if (change.target.scope === "track" && change.target.field === "takeLanes") {
+        this.planTrackField(change, change.target.track, change.target.field);
+      }
+    }
+
     const additions: DeviceAddition[] = [];
     for (const change of changes) {
       const { target } = change;
@@ -216,6 +225,7 @@ export class RestorePlanner {
       if (target.scope === "song") {
         this.planSong(change);
       } else if (target.scope === "track") {
+        if (target.field === "takeLanes") continue;
         if (target.field !== "present") this.planTrackField(change, target.track, target.field);
         else if (change.kind === ChangeKind.Removed) this.planTrackRemoval(change, target.track);
       } else if (target.scope === "clip") {
@@ -313,14 +323,19 @@ export class RestorePlanner {
     if (field === "takeLanes") {
       const before = change.before as Pick<TakeLaneInfo, "lane" | "name">[];
       const after = change.after as Pick<TakeLaneInfo, "lane" | "name">[];
-      if (!Array.isArray(before) || !Array.isArray(after) || before.length !== after.length) {
+      if (!Array.isArray(before) || !Array.isArray(after) || before.length > after.length) {
         this.skipped.push(t("server.restorePlanner.trackStructureInLive", { label: change.label }));
         return;
       }
       after.forEach((lane, index) => {
+        if (index >= before.length) {
+          this.staged.add(Stage.Add, { op: "track_create_take_lane", args: { track: this.survivingRef(key), name: lane.name }, label: change.label });
+          return;
+        }
         if (before[index]?.name === lane.name) return;
         this.staged.add(Stage.Values, { op: "take_lane_rename", args: { lane: { track: RestorePlanner.currentRef(key), lane: index }, name: lane.name }, label: change.label });
       });
+      if (after.length > before.length) this.addedTakeLanes.push({ track: key, count: after.length });
       return;
     }
     if (field === "position") {
@@ -432,11 +447,16 @@ export class RestorePlanner {
       return;
     }
     const lanes = key.list === TrackList.Tracks ? (this.current.tracks[key.index]?.takeLanes.length ?? 0) : 0;
+    let stage = Stage.Add;
     if ("lane" in clipKey && clipKey.lane !== undefined && clipKey.lane >= lanes) {
-      this.skipped.push(t("server.restorePlanner.clipOnTakeLane", { name: (key.name), name2: (clip.name), value: (clipKey.lane + 1) }));
-      return;
+      const addition = this.addedTakeLanes.find((entry) => RestorePlanner.sameTrack(entry.track, key));
+      if (!addition || clipKey.lane >= addition.count) {
+        this.skipped.push(t("server.restorePlanner.clipOnTakeLane", { name: (key.name), name2: (clip.name), value: (clipKey.lane + 1) }));
+        return;
+      }
+      stage += NEXT_CREATING_STEP;
     }
-    this.createClip(this.survivingRef(key), key.name, clipKey, clip, Stage.Add);
+    this.createClip(this.survivingRef(key), key.name, clipKey, clip, stage);
   }
 
   /** Creates a clip with its notes or its audio file (at a creating step), then sets its colour, mute, loop and warp mode. */

@@ -59,6 +59,40 @@ test("take-lane names can be restored while unsupported lane structure is explic
   assert.ok(removed.skipped.some((reason) => reason.includes("restore this structure in Live")));
 });
 
+test("restoring missing take lanes creates them before their MIDI clips and keeps existing takes", async () => {
+  const { live, song, lyrics, reader } = await rig();
+  live.edit((set) => {
+    const original = { ...TestSets.clip(1, "Original bass", 0, 4, [{ pitch: 48, start: 0, duration: 2, velocity: 80 }]),
+      ref: { track: { index: 1 }, lane: 0, start: 0 } };
+    at(set.tracks, 1).takeLanes = [{ lane: 0, name: "Original take", clips: [original] }];
+  });
+  const current = await reader.read();
+  const target = structuredClone(current);
+  const clip = { ...TestSets.clip(1, "Bass take", 0, 4, [{ pitch: 45, start: 0, duration: 1, velocity: 96 }]),
+    ref: { track: { index: 1 }, lane: 1, start: 0 } };
+  at(target.tracks, 1).takeLanes.push({ lane: 1, name: "Chosen take", clips: [clip] }, { lane: 2, name: "", clips: [] });
+  const plan = new RestorePlanner(current).plan(SetDiff.between(current, target).reverse());
+  const creations = plan.steps.findIndex((step) => step.some((call) => call.op === "track_create_take_lane"));
+  const clips = plan.steps.findIndex((step) => step.some((call) => call.op === "take_lane_create_midi_clip"));
+  assert.ok(creations >= 0 && clips > creations);
+  const result = await new RestoreRunner(live, song, lyrics, () => reader.read()).putBack(current, target);
+  assert.deepEqual(result, { complete: true, skipped: [] });
+  assert.deepEqual(JSON.parse(JSON.stringify(at(live.snapshot().tracks, 1).takeLanes)), at(target.tracks, 1).takeLanes);
+  assert.deepEqual(SetDiff.between(live.snapshot(), target), []);
+});
+
+test("a missing audio file blocks the restore before any missing take lane is created", () => {
+  const current = TestSets.small();
+  at(current.tracks, 1).kind = "audio";
+  const target = structuredClone(current);
+  const clip = { ...TestSets.clip(1, "Vocal take", 0, 4, []), kind: "audio" as const,
+    ref: { track: { index: 1 }, lane: 0, start: 0 }, filePath: "/missing-ode-test-audio.wav", warping: false, warpMode: 0, warpMarkers: [] };
+  at(target.tracks, 1).takeLanes = [{ lane: 0, name: "Vocal take", clips: [clip] }];
+  const plan = new RestorePlanner(current).plan(SetDiff.between(current, target));
+  assert.ok(plan.blocked?.some((reason) => reason.includes("audio file is missing")));
+  assert.deepEqual(plan.steps, []);
+});
+
 async function tempDir(): Promise<string> {
   return mkdtemp(join(tmpdir(), "ode-restore-"));
 }

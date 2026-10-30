@@ -87,6 +87,27 @@ export class FakeSetLive implements LiveConnections {
         if (arm !== undefined) found.arm = arm;
         return this.summary(found);
       },
+      track_create_take_lane: ({ track, name }: ExtensionOpArgs["track_create_take_lane"]) => {
+        const lanes = this.track(track).takeLanes;
+        const lane = { lane: lanes.length, name: name ?? `Take ${lanes.length + 1}`, clips: [] };
+        lanes.push(lane);
+        return lane;
+      },
+      take_lane_rename: ({ lane, name }: ExtensionOpArgs["take_lane_rename"]) => {
+        const found = this.track(lane.track).takeLanes[lane.lane];
+        if (!found) throw new Error("The take lane is missing");
+        found.name = name;
+        return found;
+      },
+      take_lane_create_midi_clip: (args: ExtensionOpArgs["take_lane_create_midi_clip"]) => {
+        const lane = this.track(args.lane.track).takeLanes[args.lane.lane];
+        if (!lane) throw new Error("The take lane must exist before creating its clip");
+        const ref = { track: args.lane.track, lane: args.lane.lane, start: args.start };
+        const clip = FakeSetLive.newClip(ref, args.name, args.tag, args.start, args.length, args.notes ?? []);
+        lane.clips.push(clip);
+        lane.clips.sort((a, b) => a.startTime - b.startTime);
+        return { clip: clip.ref, name: clip.name, tag: args.tag };
+      },
       track_create_midi_clip: (args: ExtensionOpArgs["track_create_midi_clip"]) => {
         const track = this.track(args.track);
         const clip = FakeSetLive.newClip({ track: args.track, start: args.start }, args.name, args.tag, args.start, args.length, args.notes ?? []);
@@ -316,7 +337,8 @@ export class FakeSetLive implements LiveConnections {
     }
     const track = this.track(ref.track);
     const startsThere = (clip: ClipInfo) => Math.abs(clip.startTime - ref.start) <= SAME_BEAT;
-    const found = track.arrangementClips.find(startsThere) ?? track.takeLanes.flatMap((lane) => lane.clips).find(startsThere);
+    const clips = ref.lane === undefined ? track.arrangementClips : track.takeLanes[ref.lane]?.clips ?? [];
+    const found = clips.find(startsThere);
     if (!found) throw new Error(`not found: Arrangement clip at beat ${ref.start}`);
     return found;
   }
