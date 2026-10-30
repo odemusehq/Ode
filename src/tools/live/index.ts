@@ -51,7 +51,10 @@ const applyAsOneUndoStep = defineTool({
       if (!definition) throw new Error(`call ${index + 1}: ${call.op} runs on its own, outside a group`);
       const args = z.object(definition.input).safeParse(call.args);
       if (!args.success) throw new Error(`call ${index + 1} (${call.op}): ${z.prettifyError(args.error)}`);
-      return { op: call.op, args: args.data };
+      // Registry-resolved source restrictions are internal and only make a replacement more conservative.
+      const originReadTokens = call.op === "midi_clip_set_notes" && Array.isArray(call.args.originReadTokens)
+        ? call.args.originReadTokens : undefined;
+      return { op: call.op, args: { ...args.data, ...(originReadTokens ? { originReadTokens } : {}) } };
     });
     return ctx.live.extension.call("apply_as_one_undo_step", { calls: checked });
   },

@@ -43,6 +43,40 @@ test("concurrent model calls reserve their turns and tokens before dispatch", ()
   assert.equal(tokens.reserve(1), null);
 });
 
+test("temporary MIDI material belongs to the parent request and expires immediately on Stop", async () => {
+  let active = false, opened = 0, closed = 0;
+  let wait: Promise<void> | undefined, enter: () => void = () => undefined;
+  const loop = new AgentLoop({
+    services: { chat: async () => ({ complete: async () => {
+      enter(); await wait;
+      return { message: { content: "Done" }, tokens: 1, finishReason: "stop" };
+    } }) },
+    registry: { alwaysLoaded: () => [], functions: () => [], beginMidiMaterials: () => {
+      opened++; active = true;
+      return () => { if (active) { active = false; closed++; } };
+    } }, labels: {}, limits, skills: {}, subagentPrompt: async () => "",
+  } as never);
+  const controller = new AbortController();
+  const start = { agent: "main" as const, system: "", history: [], prompt: "draft", conversation: "fixture", depth: 0,
+    exchangeId: "request", signal: controller.signal, gate: { check: async () => null },
+    events: { thought() {}, toolStarted() {}, toolFinished() {}, subagentStarted() {}, subagentFinished() {} } };
+  await loop.run(start);
+  assert.equal(opened, 1); assert.equal(closed, 1); assert.equal(active, false);
+  await loop.run({ ...start, agent: "subagent", depth: 1 });
+  assert.equal(opened, 1, "A child must not reset or close its parent's shared material.");
+  let finish!: () => void;
+  wait = new Promise<void>((resolve) => { finish = resolve; });
+  const entered = new Promise<void>((resolve) => { enter = resolve; });
+  const pending = loop.run(start);
+  await entered;
+  assert.equal(active, true);
+  controller.abort();
+  assert.equal(active, false, "Stop expires material while the provider's pending response is still unresolved.");
+  finish();
+  assert.equal((await pending).end, LoopEnd.Cancelled);
+  assert.equal(closed, 2);
+});
+
 test("Stop during an awaited gate prevents the edit, and questions accept ordinary text", async () => {
   const controller = new AbortController();
   let dispatched = 0;

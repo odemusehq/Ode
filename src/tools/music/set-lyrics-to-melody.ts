@@ -37,7 +37,7 @@ export const setLyricsToMelodyTool = defineTool({
       splitSyllables: setting.splitSyllables,
       melismaSyllables: setting.melismaSyllables,
     };
-    if (JSON.stringify(result).length > ctx.config.limits.toolResultMaxChars) throw new Error("This complete lyric setting exceeds the tool result window. Use a smaller supplied phrase; no incomplete replacement was returned.");
+    if (!ctx.midiMaterials && JSON.stringify(result).length > ctx.config.limits.toolResultMaxChars) throw new Error("This complete lyric setting exceeds the tool result window. Use a smaller supplied phrase; no incomplete replacement was returned.");
     return result;
   },
 });

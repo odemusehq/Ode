@@ -9,6 +9,9 @@ import { audioTools } from "./audio";
 import { mediaTools } from "./media";
 import { songTools } from "./song";
 import { isMutationReceipt, type MutationReceipt } from "../shared/mutation-receipt";
+import { MidiMaterials, type MidiMaterialScope } from "../harness/midi-materials";
+import { midiDescription, midiInputSchema, midiLabelInput, midiOutputPaths, resolveMidiInput } from "./midi-material-adapter";
+import { midiMaterialTools } from "./midi-material";
 
 /** Who a tool list is for: the main agent gets every tool, subagents the read-only ones. */
 export type AgentKind = "main" | "subagent";
@@ -24,18 +27,34 @@ export interface ToolOutcome {
   targets?: readonly string[];
 }
 
-const GROUPS: readonly (readonly AnyTool[])[] = [liveTools, musicTools, audioTools, mediaTools, songTools];
+const GROUPS: readonly (readonly AnyTool[])[] = [liveTools, musicTools, audioTools, mediaTools, songTools, midiMaterialTools];
 
 /** Every Ode tool, offered to the model as a function with a JSON Schema for its input. */
 export class ToolRegistry {
   private readonly byName = new Map<string, AnyTool>();
   private readonly functionsByName = new Map<string, ChatCompletionTool>();
+  private readonly midiMaterials = new MidiMaterials();
+  private readonly midiScopes = new Map<string, MidiMaterialScope>();
 
   constructor(private readonly ctx: ToolContext) {
     for (const definition of GROUPS.flat()) {
       if (this.byName.has(definition.name)) throw new Error(`Two tools share the name ${definition.name}.`);
       this.byName.set(definition.name, definition);
     }
+  }
+
+  /** Main request lifetime; children select this same captured-song scope by trusted exchange id. */
+  beginMidiMaterials(exchangeId: string): () => void {
+    const songId = this.ctx.song?.songId;
+    if (!songId) return () => undefined;
+    const previous = this.midiScopes.get(exchangeId);
+    if (previous) this.midiMaterials.end(previous);
+    const scope = this.midiMaterials.begin(songId, exchangeId);
+    this.midiScopes.set(exchangeId, scope);
+    return () => {
+      this.midiMaterials.end(scope);
+      if (this.midiScopes.get(exchangeId) === scope) this.midiScopes.delete(exchangeId);
+    };
   }
 
   find(name: string): AnyTool | undefined {
@@ -78,28 +97,44 @@ export class ToolRegistry {
     signal?.throwIfAborted();
     const definition = this.byName.get(name);
     if (!definition) return { ok: false, text: `Ode's tools are named in tool search; ${name} is unknown.` };
-    const parsed = z.object(definition.input).safeParse(input);
+    const parsed = midiInputSchema(name, definition.input).safeParse(input);
     if (!parsed.success) return { ok: false, text: `The input for ${name} needs fixing: ${z.prettifyError(parsed.error)}` };
+    const receipts: MutationReceipt[] = [];
     try {
+      const scope = execution.exchangeId ? this.midiScopes.get(execution.exchangeId) : undefined;
+      scope?.assertActive(this.ctx.song.songId ?? "", execution.exchangeId ?? "");
+      let actual: Record<string, unknown>;
+      let noteOrigins: string[] = [];
       // Group arguments are otherwise parsed only by the batch runner. Mediation must see the same canonical
       // references, including union ordering/stripped fields, before it decides what material a call affects.
       if (name === "apply_as_one_undo_step") {
         const group = parsed.data as { calls: { op: string; args: Record<string, unknown> }[] };
+        const calls: { op: string; args: Record<string, unknown> }[] = [];
         for (const call of group.calls) {
           const operation = this.byName.get(call.op);
           if (!operation) throw new Error(`Unknown grouped operation: ${call.op}`);
-          call.args = z.object(operation.input).parse(call.args);
+          call.args = midiInputSchema(call.op, operation.input).parse(call.args);
+          const resolved = resolveMidiInput(call.op, call.args, scope);
+          const args = z.object(operation.input).parse(resolved.input);
+          if (call.op === "midi_clip_set_notes" && resolved.noteOrigins.length) args.originReadTokens = resolved.noteOrigins;
+          calls.push({ op: call.op, args });
         }
+        actual = { ...parsed.data, calls };
+      } else {
+        const resolved = resolveMidiInput(name, parsed.data, scope);
+        noteOrigins = resolved.noteOrigins;
+        actual = z.object(definition.input).parse(resolved.input);
+        if (name === "midi_clip_set_notes" && noteOrigins.length) actual.originReadTokens = noteOrigins;
       }
       if (definition.changes === "set" || name === "lyrics_write" || name === "lead_sheet_update") {
         const sheet = await this.ctx.song.read();
         if (sheet.locked.length > 0) assertUnlocked(name, parsed.data, await this.ctx.snapshots.read());
       }
       signal?.throwIfAborted();
+      scope?.assertActive(this.ctx.song.songId ?? "", execution.exchangeId ?? "");
       const extension = this.ctx.live.extension;
       const live = signal ? { extension: { call: <R>(op: string, args: unknown) => extension.call<R>(op, args, signal) } } : this.ctx.live;
-      const result = (await definition.run(parsed.data, { ...this.ctx, live, signal, ...execution })) ?? { done: true };
-      const receipts: MutationReceipt[] = [];
+      const result = (await definition.run(actual, { ...this.ctx, live, signal, ...execution, midiMaterials: scope })) ?? { done: true };
       const covered = new Set(["midi_clip_set_notes", "lyrics_write", "lead_sheet_update", "hook_retain", "release_prepare"]);
       const clean = (value: unknown): unknown => {
         if (Array.isArray(value)) return value.map(clean);
@@ -117,12 +152,31 @@ export class ToolRegistry {
         if (receipts.filter((receipt) => receipt.kind !== "unverified").length < expectedReceipts) unverified(name);
       } else if (definition.changes === "set" && !covered.has(name)) unverified(name);
       if (covered.has(name) && name !== "release_prepare" && !Array.isArray((result as Record<string, unknown>).__odeReceipts)) unverified(name);
-      return { ok: true, text: JSON.stringify(cleaned), input: parsed.data,
+      const outputs = midiOutputPaths(name, cleaned, parsed.data, noteOrigins);
+      let projected = cleaned;
+      if (scope && outputs.length) {
+        try {
+          scope.assertActive(this.ctx.song.songId ?? "", execution.exchangeId ?? "");
+          projected = scope.capture({ result: cleaned, outputs, sourceTool: name, signal, maxResultChars: this.ctx.config.limits.toolResultMaxChars });
+        } catch (error) {
+          if (definition.changes === "none") throw error;
+          // The host returned success already. A temporary transport failure cannot turn it into a failed write.
+          const materialWarning = `Calls completed, but temporary MIDI material is unavailable: ${(error instanceof Error ? error.message : String(error)).slice(0, 300)} Read the actual Set before continuing; do not replay these completed calls.`;
+          const nativeTransactions = (cleaned as { nativeTransactions?: number })?.nativeTransactions;
+          const completed = { completed: true, materialWarning, ...(nativeTransactions === undefined ? {} : { nativeTransactions }) };
+          const withActualResult = cleaned && typeof cleaned === "object" && !Array.isArray(cleaned) ? { ...cleaned, ...completed } : completed;
+          const limit = this.ctx.config.limits.toolResultMaxChars;
+          projected = JSON.stringify(withActualResult).length <= limit ? withActualResult
+            : JSON.stringify(completed).length <= limit ? completed
+            : JSON.stringify({ completed: true }).length <= limit ? { completed: true } : limit >= 4 ? true : 1;
+        }
+      }
+      return { ok: true, text: JSON.stringify(projected), input: parsed.data,
         ...(definition.observationTargets ? { targets: definition.observationTargets(cleaned) } : {}),
         ...(receipts.length ? { receipts } : {}) };
     } catch (error) {
       return { ok: false, text: error instanceof Error ? error.message : String(error), input: parsed.data,
-        ...((definition.changes === "set" || name === "lyrics_write" || name === "lead_sheet_update" || name === "hook_retain" || name === "release_prepare" && Array.isArray((parsed.data as Record<string, unknown>).credits))
+        ...(receipts.length ? { receipts } : (definition.changes === "set" || name === "lyrics_write" || name === "lead_sheet_update" || name === "hook_retain" || name === "release_prepare" && Array.isArray((parsed.data as Record<string, unknown>).credits))
           ? { receipts: [{ kind: "unverified" as const, tool: name, reason: "The operation failed; any partial write has unknown scope." }] } : {}) };
     }
   }
@@ -134,9 +188,12 @@ export class ToolRegistry {
   describe(name: string, input: unknown): string | undefined {
     const definition = this.byName.get(name);
     if (!definition?.describe) return undefined;
-    const parsed = z.object(definition.input).safeParse(input);
+    const parsed = midiInputSchema(name, definition.input).safeParse(input);
     if (!parsed.success) return undefined;
-    const line = definition.describe(parsed.data, new RefNames(this.ctx.snapshots.latest)).trim();
+    if (name === "apply_as_one_undo_step") {
+      return (parsed.data as { calls: { op: string; args: unknown }[] }).calls.map((call) => this.describe(call.op, call.args) ?? call.op).join("; ");
+    }
+    const line = definition.describe(midiLabelInput(name, parsed.data), new RefNames(this.ctx.snapshots.latest)).trim();
     return line || undefined;
   }
 
@@ -144,7 +201,7 @@ export class ToolRegistry {
   target(name: string, input: unknown): string | undefined {
     const definition = this.byName.get(name);
     if (!definition) return undefined;
-    const parsed = z.object(definition.input).safeParse(input);
+    const parsed = midiInputSchema(name, definition.input).safeParse(input);
     if (!parsed.success) return undefined;
     const args = parsed.data as Record<string, unknown>;
     const names = new RefNames(this.ctx.snapshots.latest);
@@ -160,10 +217,10 @@ export class ToolRegistry {
   private functionFor(definition: AnyTool): ChatCompletionTool {
     const known = this.functionsByName.get(definition.name);
     if (known) return known;
-    const { $schema: _dialect, ...parameters } = z.toJSONSchema(z.object(definition.input)) as Record<string, unknown>;
+    const { $schema: _dialect, ...parameters } = z.toJSONSchema(midiInputSchema(definition.name, definition.input)) as Record<string, unknown>;
     const made: ChatCompletionTool = {
       type: "function",
-      function: { name: definition.name, description: definition.description, parameters },
+      function: { name: definition.name, description: midiDescription(definition.name, definition.description), parameters },
     };
     this.functionsByName.set(definition.name, made);
     return made;

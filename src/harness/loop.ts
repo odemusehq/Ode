@@ -177,6 +177,23 @@ export class AgentLoop {
   constructor(private readonly deps: LoopDeps) {}
 
   async run(start: LoopRun): Promise<LoopResult> {
+    const close = start.agent === "main" && start.depth === 0 && start.exchangeId
+      ? this.deps.registry.beginMidiMaterials?.(start.exchangeId)
+      : undefined;
+    const stop = () => close?.();
+    if (close) {
+      start.signal.addEventListener("abort", stop, { once: true });
+      if (start.signal.aborted) stop();
+    }
+    try {
+      return await this.runWithinRequest(start);
+    } finally {
+      if (close) start.signal.removeEventListener("abort", stop);
+      close?.();
+    }
+  }
+
+  private async runWithinRequest(start: LoopRun): Promise<LoopResult> {
     const { limits, registry } = this.deps;
     const run: LoopRun & { budget: RequestBudget } = { ...start, budget: start.budget ?? new RequestBudget(limits) };
     const model = await this.deps.services.chat(run.agent);

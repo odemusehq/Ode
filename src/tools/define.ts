@@ -1,4 +1,5 @@
 import type { ProductionTaskStore } from "../mneme/production-task";
+import type { MidiMaterialScope } from "../harness/midi-materials";
 import type { AudioDeliveries } from "../mneme/audio-deliveries";
 import type { z } from "zod";
 import type { OdeConfig } from "../shared/config";
@@ -34,6 +35,8 @@ export interface MusicianQuestions {
 }
 
 export interface ToolContext {
+  /** Exact temporary note material shared only within the current accepted request and original song. */
+  midiMaterials?: MidiMaterialScope;
   production: ProductionTaskStore;
   deliveries: AudioDeliveries;
   exchangeId?: string;
