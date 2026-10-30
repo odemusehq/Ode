@@ -38,6 +38,8 @@ import { RefusedError, type VersionActions } from "./version-actions";
 import type { Services } from "../services/types";
 import { RoleCheck } from "../services/roles";
 import { Dictation, DictationError, MAX_DICTATION_BYTES } from "./dictation";
+import { ComposerCancelSchema, ComposerDraftSchema, ComposerPrepareSchema, ComposerResolveSchema, ComposerWriteSchema } from "../shared/composer";
+import { ComposerError, type ComposerStore } from "../mneme/composer-store";
 
 /** The built UI's files by path ("index.html", "assets/index-….js"), each base64-encoded. */
 export type UiFiles = Readonly<Record<string, string>>;
@@ -53,6 +55,7 @@ export interface ServerDeps {
   settings: SettingsStore;
   models: ModelRoles;
   services: Pick<Services, "transcribe">;
+  composer: ComposerStore;
   approvals: Approvals;
   questions: Questions;
   sessions: SessionManager;
@@ -111,6 +114,7 @@ const TOKEN_COOKIE = "ode";
 const JSON_TYPE = "application/json";
 /** Methods that only read. */
 const READS: ReadonlySet<string> = new Set(["GET", "HEAD"]);
+const COMPOSER_WRITES: ReadonlySet<string> = new Set([API.composer, API.composerSend, API.composerResolve, API.composerCancel]);
 /** Kept on every answer: Ode's pages open as Live's dialogs alone, unframed, and keep their address to themselves. */
 const SAFETY_HEADERS: Readonly<Record<string, string>> = {
   "Content-Security-Policy": "frame-ancestors 'none'",
@@ -177,7 +181,8 @@ export class OdeServer {
       }
     }
     // Dictation has no song writes. Its captured song id and final check permit switching while ASR runs.
-    if (!READS.has(c.req.method) && c.req.path !== API.stop && c.req.path !== API.dictation) {
+    const composerWrite = COMPOSER_WRITES.has(c.req.path);
+    if (!READS.has(c.req.method) && c.req.path !== API.stop && c.req.path !== API.dictation && c.req.path !== API.audioImport && !composerWrite) {
       const switchesSong = c.req.method === "POST" && (c.req.path === API.songs || c.req.path === API.songsOpen);
       if (this.switchingRequest || this.deps.songs.isSwitching || (switchesSong && this.modifyingRequests > 0)) {
         return c.json({ error: "Ode is switching songs, or a request is still arriving. Wait for it to finish, then try again." }, 409);
@@ -242,15 +247,44 @@ export class OdeServer {
       const parsed = TextSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: "Send { text } with what to ask Ode." }, 400);
       if (parsed.data.songId && parsed.data.songId !== song.songId) return c.json({ error: "The open song changed. Your message stayed in the composer; send it again in the intended song." }, 409);
-      try { await sessions.current.accept(parsed.data); }
-      catch (error) { if (error instanceof RequestIdentityError) return c.json({ error: error.message }, 409); throw error; }
-      return c.json({ ok: true });
+      const songId = song.songId;
+      try {
+        if (parsed.data.requestId) await this.deps.composer.assertRequest(songId, parsed.data.requestId, parsed.data.text);
+        await sessions.current.accept(parsed.data);
+        return c.json({ ok: true, ...(parsed.data.requestId ? { composer: await this.deps.composer.accepted(songId, parsed.data.requestId) } : {}) });
+      } catch (error) {
+        if (error instanceof RequestIdentityError) return c.json({ error: error.message }, 409);
+        if (error instanceof ComposerError) return c.json({ error: error.message, ...(error.composer ? { composer: error.composer } : {}) }, error.status);
+        throw error;
+      }
     });
 
     app.get(API.conversation, async (c) => {
       const session = sessions.current;
       return c.json({ songId: session.songId, exchanges: await session.transcript() });
     });
+
+    const draftLimit = bodyLimit({ maxSize: 64 * 1024, onError: (c) => c.json({ error: "The draft is too large to save in one message." }, 413) });
+    app.get(API.composer, async (c) => {
+      const songId = z.uuid().safeParse(c.req.query("songId"));
+      if (!songId.success) return c.json({ error: "Name the song whose draft to read." }, 400);
+      try { return c.json(await this.deps.composer.read(songId.data)); }
+      catch (error) { if (error instanceof SongNotFoundError) return c.json({ error: error.message }, 404); if (error instanceof ComposerError) return c.json({ error: error.message, composer: error.composer }, error.status); throw error; }
+    });
+    const draftAction = <T>(schema: z.ZodType<T>, work: (input: T) => Promise<unknown>) => async (c: Context) => {
+      const parsed = schema.safeParse(await OdeServer.body(c));
+      if (!parsed.success) return c.json({ error: "The draft request is incomplete or too large. Your words stayed in the composer." }, 400);
+      try { return c.json(await work(parsed.data)); }
+      catch (error) {
+        if (error instanceof ComposerError) return c.json({ error: error.message, ...(error.composer ? { composer: error.composer } : {}) }, error.status);
+        if (error instanceof SongNotFoundError) return c.json({ error: error.message }, 404);
+        throw error;
+      }
+    };
+    app.put(API.composer, draftLimit, draftAction(ComposerWriteSchema, (input) => this.deps.composer.save(input)));
+    app.post(API.composerSend, draftLimit, draftAction(ComposerPrepareSchema, (input) => this.deps.composer.prepare(input)));
+    app.post(API.composerResolve, draftLimit, draftAction(ComposerResolveSchema, (input) => this.deps.composer.resolve(input)));
+    app.post(API.composerCancel, draftLimit, draftAction(ComposerCancelSchema, (input) => this.deps.composer.cancel(input)));
 
     app.post(API.audioImport, bodyLimit({ maxSize: MAX_AUDIO_UPLOAD_BYTES + 1024 * 1024,
       onError: (c) => c.json({ error: "The audio file is too large. Attach a shorter range (up to 128 MiB)." }, 413),
@@ -265,13 +299,27 @@ export class OdeServer {
       const start = form.get("start"), end = form.get("end");
       const library = new LocalAudioFiles(config.userDir, config.tempDir);
       try {
-        const record = await library.add({ name: file.name, bytes: new Uint8Array(await file.arrayBuffer()),
-          purpose: scope === "sample" ? "library" : scope as "reference" | "processed-bounce",
-          source: String(form.get("sourceDescription") ?? ""),
-          ...(start !== null && end !== null ? { range: { start: Number(start), end: Number(end) } } : {}),
-        });
+        const draftIds = [form.get("songId"), form.get("writerId"), form.get("entryId")];
+        const linking = draftIds.some((id) => id !== null);
+        if (linking && draftIds.some((id) => !z.uuid().safeParse(id).success)) return c.json({ error: "Name the song, writer and attachment entry for this draft upload." }, 400);
+        let draftLink: { baseRevision: number; snapshot: z.infer<typeof ComposerDraftSchema> } | undefined;
+        if (linking) {
+          let snapshot: unknown;
+          try { snapshot = JSON.parse(String(form.get("snapshot"))); } catch { return c.json({ error: "Include the saved draft snapshot with its upload." }, 400); }
+          const linked = z.object({ baseRevision: z.coerce.number().int().min(0), snapshot: ComposerDraftSchema }).safeParse({ baseRevision: form.get("baseRevision"), snapshot });
+          if (!linked.success) return c.json({ error: "Include the saved draft revision and snapshot with its upload." }, 400);
+          draftLink = linked.data;
+        }
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const audio = { name: file.name, bytes,
+          purpose: scope === "sample" ? "library" as const : scope as "reference" | "processed-bounce", source: String(form.get("sourceDescription") ?? ""),
+          ...(start !== null && end !== null ? { range: { start: Number(start), end: Number(end) } } : {}) };
+        if (linking) return c.json(await this.deps.composer.attach({ songId: String(draftIds[0]), writerId: String(draftIds[1]), entryId: String(draftIds[2]), ...draftLink!, scope: String(scope) as "sample" | "reference" | "processed-bounce", audio }));
+        const record = await library.add(audio);
         return c.json({ ...await library.open(record.id), scope });
       } catch (error) {
+        if (error instanceof ComposerError) return c.json({ error: error.message, composer: error.composer }, error.status);
+        if (error instanceof SongNotFoundError) return c.json({ error: error.message }, 404);
         return c.json({ error: OdeServer.messageOf(error) }, 400);
       }
     });
@@ -305,6 +353,7 @@ export class OdeServer {
       const parsed = z.object({ requestIds: z.array(z.uuid()).max(256).optional() }).safeParse(await OdeServer.body(c) ?? {});
       if (!parsed.success) return c.json({ error: "Send requestIds as an optional list of request ids." }, 400);
       sessions.current.stop(parsed.data.requestIds);
+      if (parsed.data.requestIds?.length) await this.deps.composer.cancelMany(song.songId, parsed.data.requestIds);
       return c.json({ ok: true });
     });
 

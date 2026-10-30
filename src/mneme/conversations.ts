@@ -31,6 +31,10 @@ export class ConversationLog {
     return this.keep > 0 ? exchanges.slice(-this.keep) : [];
   }
 
+  async find(id: string): Promise<ConversationExchange | null> {
+    return (await this.all()).find((exchange) => exchange.id === id) ?? null;
+  }
+
   async begin(request: string): Promise<string> {
     return (await this.beginOnce(request)).id;
   }

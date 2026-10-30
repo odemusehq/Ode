@@ -7,6 +7,10 @@ import type { RestoreResult, VersionDetail, VersionListItem } from "./versions";
 export const API = {
   chat: "/api/chat", // POST ChatRequest → { ok: true } (a typed line, spoken words or a tapped suggestion)
   conversation: "/api/conversation", // GET complete saved transcript
+  composer: "/api/composer", // GET ?songId&writerId; PUT ComposerWrite → ComposerState
+  composerSend: "/api/composer/send", // POST ComposerPrepare freezes identity; never dispatches
+  composerResolve: "/api/composer/resolve", // POST ComposerResolve → ComposerState
+  composerCancel: "/api/composer/cancel", // POST ComposerCancel → ComposerState
   audioImport: "/api/audio/import", // POST explicit multipart audio upload
   dictation: "/api/dictation", // POST multipart { songId, file: PCM WAV } → DictationResponse; never submits chat
   stop: "/api/stop", // POST → { ok: true }

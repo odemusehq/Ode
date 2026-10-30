@@ -57,6 +57,12 @@ export class SongStore {
     return join(this.dir, "versions");
   }
 
+  /** Resolve a known song without changing the open song; late composer saves retain their original owner. */
+  async directoryFor(id: string): Promise<string> {
+    if (!z.uuid().safeParse(id).success || !(await this.index.read()).songs.some((song) => song.id === id)) throw new SongNotFoundError("That song is gone from Ode's list.");
+    return join(this.paths.songs, id);
+  }
+
   /** Opens the song used last, or starts the first one. */
   async openLast(): Promise<SongEntry> {
     const { current, songs } = await this.index.read();

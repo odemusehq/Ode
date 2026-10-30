@@ -104,18 +104,28 @@ export class LocalAudioFiles {
     return found;
   }
 
+  /** Validate a referenced asset without copying large recordings into the working folder. */
+  async verify(id: string): Promise<AudioFileRecord> {
+    return (await this.verified(id)).record;
+  }
+
   /** An exact-byte working copy that existing temp-only analysis and Live import tools may consume. */
   async open(id: string): Promise<ManagedAudio> {
-    ID.parse(id);
-    const record = RecordSchema.parse(JSON.parse(await readFile(await this.inside(this.metadata(id)), "utf8")));
-    if (record.id !== id) throw new Error("The audio catalogue entry has the wrong identifier.");
-    const bytes = await readFile(await this.inside(this.file(record)));
-    if (bytes.byteLength !== record.bytes || hash(bytes) !== record.sha256) throw new Error("The stored audio changed; attach the original file again.");
+    const { record, bytes } = await this.verified(id);
     await mkdir(this.tempDirectory, { recursive: true });
     const path = join(this.tempDirectory, `${randomUUID()}${extname(record.name).toLowerCase()}`);
     await writeFile(path, bytes, { flag: "wx" });
     await writeFile(`${path}.ode.json`, JSON.stringify(record), { flag: "wx" });
     return { ...record, path };
+  }
+
+  private async verified(id: string) {
+    ID.parse(id);
+    const record = RecordSchema.parse(JSON.parse(await readFile(await this.inside(this.metadata(id)), "utf8")));
+    if (record.id !== id) throw new Error("The audio catalogue entry has the wrong identifier.");
+    const bytes = await readFile(await this.inside(this.file(record)));
+    if (bytes.byteLength !== record.bytes || hash(bytes) !== record.sha256) throw new Error("The stored audio changed; attach the original file again.");
+    return { record, bytes };
   }
 
   private metadata(id: string): string { return join(this.root, `${id}.json`); }
