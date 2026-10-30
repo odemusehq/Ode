@@ -1,12 +1,12 @@
 import { useLayoutEffect, useRef } from "react";
-import { Button, ButtonVariant } from "../../ui-kit";
+import { Button, ButtonVariant, cx } from "../../ui-kit";
 import { useAppState, useClient } from "../app/hooks";
 import { ApplyCard } from "./ApplyCard";
 import { NowInput } from "./NowInput";
 import { QuestionCard } from "./QuestionCard";
 import { ActualChanges, RequestFeedback, ResultLine } from "./ResultLine";
 import { WorkingSteps } from "./WorkingSteps";
-import type { Step } from "../app/model";
+import { StreamState, type Step } from "../app/model";
 import "./NowPanel.css";
 
 /** The saved dialogue and actual changes, with decisions and the composer always within reach. */
@@ -17,31 +17,31 @@ export function NowPanel() {
   const approvals = useAppState((state) => state.approvals);
   const steps = useAppState((state) => state.steps);
   const thought = useAppState((state) => state.thought);
+  const progress = useAppState((state) => state.progress);
+  const busy = useAppState((state) => state.busy);
+  const stream = useAppState((state) => state.stream);
   const activeId = exchanges.find((exchange) => exchange.status === "running")?.id;
   const waiting = questions.length + approvals.length;
   const conversation = useRef<HTMLDivElement>(null);
   const decisions = useRef<HTMLDivElement>(null);
   const atEnd = useRef(true);
-  const lastTurn = useRef<string | undefined>(undefined);
 
   useLayoutEffect(() => {
-    const turn = exchanges.at(-1)?.id;
-    if (lastTurn.current !== turn) atEnd.current = true;
-    lastTurn.current = turn;
     if (atEnd.current && conversation.current) conversation.current.scrollTop = conversation.current.scrollHeight;
-  }, [exchanges, steps, thought, waiting]);
+  }, [exchanges, steps, thought, progress, busy, waiting]);
 
   return (
-    <section className="now" aria-label="Conversation with Ode">
+    <section className={cx("now", (busy || activeId) && stream === StreamState.Open && "now--live-feedback")} aria-label="Conversation with Ode">
       <div className="now__conversation" ref={conversation} onScroll={() => {
         const node = conversation.current;
         if (node) atEnd.current = node.scrollHeight - node.scrollTop - node.clientHeight < 60;
       }}>
         <div role="log" aria-label="Saved conversation" aria-live="polite" aria-relevant="additions text">
           {exchanges.map((exchange) => <article className="now__exchange" key={exchange.id}>
-            {exchange.request && <div className="now__message now__message--user"><h2>You</h2><p>{exchange.request.replace(/^Managed path: .*$/gm, "").trim()}</p></div>}
-            <WorkingSteps steps={exchange.id === activeId ? mergeSteps(exchange.activity ?? [], steps) : exchange.activity ?? []}
-              rationale={exchange.id === activeId ? thought ?? exchange.rationale : exchange.rationale} active={exchange.id === activeId} />
+            {exchange.request && <div className="now__message now__message--user"><h2>You</h2><p>{exchange.request}</p></div>}
+            <WorkingSteps steps={exchange.id === activeId && busy ? mergeSteps(exchange.activity ?? [], steps) : exchange.activity ?? []}
+              rationale={exchange.id === activeId && busy ? thought ?? exchange.rationale : exchange.rationale}
+              progress={exchange.id === activeId && busy ? progress : null} active={exchange.id === activeId} waiting={exchange.id === activeId && waiting > 0} />
             {Boolean(exchange.reply || exchange.deliveries?.length) && <div className="now__message now__message--assistant">
               <h2>Ode</h2>
               {exchange.reply && <p>{exchange.reply}</p>}
@@ -54,6 +54,9 @@ export function NowPanel() {
             {exchange.versionId && <ActualChanges versionId={exchange.versionId} />}
             {(exchange.status === "failed" || exchange.status === "stopped") && <p className="now__turn-status">{exchange.status === "failed" ? "This request failed." : "This request was stopped."}</p>}
           </article>)}
+          {busy && !activeId && <div className="now__exchange">
+            <WorkingSteps steps={steps} rationale={thought} progress={progress} active waiting={waiting > 0} />
+          </div>}
         </div>
         <ResultLine />
       </div>

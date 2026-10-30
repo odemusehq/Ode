@@ -4,13 +4,15 @@ import type { Step } from "../app/model";
 interface WorkingStepsProps {
   steps: readonly Step[];
   rationale?: string | null;
+  progress?: string | null;
   active?: boolean;
+  waiting?: boolean;
 }
 
 /** A turn's public activity: current work stays visible; its completed steps expand in place. */
-export function WorkingSteps({ steps, rationale, active = false }: WorkingStepsProps) {
-  if (!steps.length && !rationale) return null;
-  const current = active ? steps.findLast((step) => step.status === "running") : undefined;
+export function WorkingSteps({ steps, rationale, progress, active = false, waiting = false }: WorkingStepsProps) {
+  if (!active && !steps.length && !rationale) return null;
+  const running = steps.filter((step) => step.status === "running");
   const failed = steps.filter((step) => step.status === "error").length;
   const completed = steps.filter((step) => step.status === "done").length;
   const subjects = [...new Set(steps.flatMap((step) => {
@@ -19,16 +21,28 @@ export function WorkingSteps({ steps, rationale, active = false }: WorkingStepsP
   }))];
   const subject = subjects.length > 2 ? `${subjects.slice(0, 2).join(", ")} + ${subjects.length - 2} more` : subjects.join(", ");
   const count = `${steps.length} ${steps.length === 1 ? "step" : "steps"}`;
-  const summary = current?.label ?? (steps.length === 1 ? steps[0]!.label : [subject, count].filter(Boolean).join(" · "));
-  const statusIcon = active ? IconName.Info : failed > 0 ? IconName.Alert : IconName.Check;
-  const shortRationale = rationale && rationale.length > 180 ? `${rationale.slice(0, 177).trimEnd()}…` : rationale;
+  const summary = active
+    ? [completed ? `${completed} done` : steps.length ? count : "Activity", failed ? `${failed} failed` : null].filter(Boolean).join(" · ")
+    : steps.length === 1 ? steps[0]!.label : [subject, steps.length ? count : "Activity"].filter(Boolean).join(" · ");
+  const statusIcon = failed > 0 ? IconName.Alert : running.length > 0 ? IconName.Info : IconName.Check;
 
   return <div className={cx("activity", active && "activity--active")}>
-    {steps.length > 0 && <details className="activity__group">
-      <summary aria-label={`${active ? "Current activity" : "Activity"}: ${summary}. ${completed} completed${failed ? `, ${failed} failed` : ""}. Expand for steps and purpose.`}>
+    {active && <div className="activity__live" role="status">
+      {waiting || running.length === 0
+        ? <p className="activity__running"><span className={cx("activity__pulse", waiting && "activity__pulse--waiting")} aria-hidden="true" />
+          <span>{waiting ? "Waiting for your decision" : progress || "Ode is working…"}</span></p>
+        : running.map((step) => <p className="activity__running" key={step.id}>
+          <span className="activity__pulse" aria-hidden="true" /><span>{step.label}</span>
+        </p>)}
+      {!waiting && running.length > 0 && progress && progress !== rationale && !running.some((step) => step.label === progress) &&
+        <p className="activity__purpose">{progress}</p>}
+      {rationale && <p className="activity__purpose">{rationale}</p>}
+    </div>}
+    {/* Keep this disclosure mounted and uncontrolled across activity updates and completion. */}
+    <details className="activity__group" hidden={!steps.length && !rationale}>
+      <summary aria-label={`Activity: ${summary}. ${completed} completed${failed ? `, ${failed} failed` : ""}. Expand for steps and purpose.`}>
         <Icon name={statusIcon} />
         <span className="activity__summary">{summary}</span>
-        {current && completed > 0 && <span className="activity__count">{completed} done</span>}
         <span className="activity__chevron"><Icon name={IconName.ChevronRight} /></span>
       </summary>
       {rationale && <p className="activity__rationale">{rationale}</p>}
@@ -40,7 +54,6 @@ export function WorkingSteps({ steps, rationale, active = false }: WorkingStepsP
           </span>
         </li>)}
       </ol>
-    </details>}
-    {active && shortRationale && <p className="activity__purpose">{shortRationale}</p>}
+    </details>
   </div>;
 }
