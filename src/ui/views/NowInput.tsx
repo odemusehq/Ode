@@ -63,6 +63,11 @@ export function NowInput() {
   useEffect(() => { void client.composer.open(songId); }, [client, songId]);
 
   useEffect(() => {
+    // The field starts disabled while its saved draft loads, so mount-time autofocus cannot reach it.
+    if (composer.loaded && composer.songId === songId && document.activeElement === document.body) field.current?.focus();
+  }, [composer.loaded, composer.songId, songId]);
+
+  useEffect(() => {
     if (voicePhase === "idle") return;
     const escape = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
@@ -179,7 +184,7 @@ export function NowInput() {
       <label htmlFor={inputId} className="ode-visually-hidden">Message Ode</label>
       <textarea ref={field} id={inputId} className="ode-input now__field" value={text} rows={2} disabled={!composer.loaded || composer.songId !== songId}
         placeholder={busy ? "Add a detail or change direction…" : "Tell Ode what you want…"}
-        aria-describedby={`${inputId}-hint`} autoComplete="off" autoFocus
+        aria-describedby={`${inputId}-hint`} autoComplete="off"
         onChange={(event) => client.composer.editText(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
