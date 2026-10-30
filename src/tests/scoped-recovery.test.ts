@@ -4,6 +4,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { MidiNoteOperations } from "../live/extension/ops/midi-notes";
+import { UndoOperations } from "../live/extension/ops/undo";
+import type { OperationTable, RegularOp } from "../live/extension/ops/operation";
+import { fromLiveNotes } from "../live/extension/notes";
 import { ReferenceResolver } from "../live/extension/refs";
 import { Describer } from "../live/extension/describe";
 import type { Live } from "../live/extension/sdk";
@@ -18,6 +21,8 @@ import { RestoreRunner } from "../server/restore-runner";
 import { RequestContext, type RequestContextDeps } from "../server/request-context";
 import type { SessionManager } from "../harness/session-manager";
 import { VersionAuthor } from "../shared/versions";
+import { ToolRegistry } from "../tools";
+import type { ToolContext } from "../tools/define";
 import { FakeLive } from "./fake-live";
 import { FakeSetLive } from "./fake-set-live";
 import { TestSets } from "./sets";
@@ -57,6 +62,67 @@ test("MIDI receipts bind to the native clip and refuse changed notes or a restar
   assert.equal((clip as unknown as { notes: { pitch: number }[] }).notes[0]?.pitch, 67);
   const restarted = new MidiNoteOperations(services).table();
   await assert.rejects(restarted.midi_clip_get_notes.prepare({ clip: ref, recoveryToken: receipt.token }, followUps)(), /earlier Live session/);
+});
+
+test("public MIDI replacement requires its read guard and preserves it through grouped calls", async () => {
+  const fake = new FakeLive(), clip = fake.midiClip("Hook", 0), other = fake.midiClip("Other", 4);
+  const original = { pitch: 60, startTime: 0, duration: 1, velocity: 87 };
+  Object.defineProperty(clip, "notes", { value: [original], writable: true });
+  Object.defineProperty(other, "notes", { value: [original], writable: true });
+  const noteClip = clip as unknown as { notes: Parameters<typeof fromLiveNotes>[0] };
+  const otherNotes = other as unknown as { notes: Parameters<typeof fromLiveNotes>[0] };
+  fake.midiTrack("Voice", [clip, other]);
+  const set = fake.liveSet(), native = { withinTransaction: <T>(run: () => T) => run() } as Live;
+  const midi = new MidiNoteOperations({ live: native, set, refs: new ReferenceResolver(set), describe: new Describer(set) }).table();
+  const operations = { ...midi, ...new UndoOperations(native, midi as unknown as OperationTable<RegularOp>).table() };
+  const followUps = { after: async <T, R>(started: Promise<T>, apply: (value: T) => R) => apply(await started) };
+  const registry = new ToolRegistry({ song: { read: async () => ({ locked: [] }) }, live: { extension: {
+    call: async (op: keyof typeof operations, args: never) => operations[op].prepare(args, followUps)(),
+  } } } as unknown as ToolContext);
+  const ref = { track: { index: 0 }, start: 0 };
+  const desired = [{ pitch: 64, start: 0, duration: 1, velocity: 87 }];
+  const missing = await registry.run("midi_clip_set_notes", { clip: ref, notes: desired });
+  assert.equal(missing.ok, false, "An existing clip cannot be replaced without its observed preimage.");
+  assert.equal(fromLiveNotes(noteClip.notes)[0]?.pitch, 60);
+  const read = JSON.parse((await registry.run("midi_clip_get_notes", { clip: ref })).text);
+  const expected = { token: read.recoveryToken };
+  const manual = { pitch: 72, startTime: 0.37, duration: 0.29, velocity: 101, probability: 0.7, velocityDeviation: 4, releaseVelocity: 56 };
+  const mutableRead = await midi.midi_clip_get_notes.prepare({ clip: ref }, followUps)();
+  mutableRead.notes.push({ pitch: manual.pitch, start: manual.startTime, duration: manual.duration });
+  const prepared = midi.midi_clip_set_notes.prepare({ clip: ref, notes: desired, expected: { token: mutableRead.recoveryToken! } }, followUps);
+  Object.assign(clip, { notes: [original, manual] });
+  await assert.rejects(prepared(), /kept/, "Returned-note mutation cannot alter a guard, and an earlier preparation must recheck at execution.");
+  const stale = await registry.run("midi_clip_set_notes", { clip: ref, notes: desired, expected });
+  assert.equal(stale.ok, false);
+  assert.deepEqual((stale.input as { expected: unknown }).expected, expected, "The canonical tool input must keep the guard.");
+  assert.deepEqual(noteClip.notes, [original, manual]);
+  const moved = await registry.run("midi_clip_set_notes", { clip: { track: { index: 0 }, start: 4 }, notes: desired, expected });
+  assert.equal(moved.ok, false);
+  assert.deepEqual(otherNotes.notes, [original]);
+  const fresh = JSON.parse((await registry.run("midi_clip_get_notes", { clip: ref })).text);
+  const replacement = fresh.notes.map((note: { pitch: number }) => ({ ...note, pitch: note.pitch === 60 ? 64 : note.pitch }));
+  const stopped = new AbortController(); stopped.abort();
+  await assert.rejects(registry.run("midi_clip_set_notes", { clip: ref, notes: replacement, expected: { token: fresh.recoveryToken } }, stopped.signal), { name: "AbortError" });
+  const grouped = await registry.run("apply_as_one_undo_step", { calls: [{ op: "midi_clip_set_notes", args: {
+    clip: ref, notes: replacement, expected: { token: fresh.recoveryToken },
+  } }] });
+  assert.equal(grouped.ok, true, grouped.text);
+  const canonical = grouped.input as { calls: { args: { expected: unknown } }[] };
+  assert.deepEqual(canonical.calls[0]?.args.expected, { token: fresh.recoveryToken });
+  assert.deepEqual(JSON.parse(JSON.stringify(fromLiveNotes(noteClip.notes))), replacement);
+  const firstReceipt = grouped.receipts?.find((receipt) => receipt.kind === "midi-notes");
+  assert.ok(firstReceipt?.kind === "midi-notes");
+  const next = JSON.parse((await registry.run("midi_clip_get_notes", { clip: ref })).text);
+  const second = await registry.run("midi_clip_set_notes", { clip: ref,
+    notes: next.notes.map((note: { pitch: number }) => ({ ...note, pitch: note.pitch === 64 ? 65 : note.pitch })),
+    expected: { token: next.recoveryToken } });
+  assert.equal(second.ok, true, second.text);
+  const secondReceipt = second.receipts?.find((receipt) => receipt.kind === "midi-notes");
+  assert.ok(secondReceipt?.kind === "midi-notes");
+  for (const receipt of [secondReceipt, firstReceipt]) {
+    await midi.midi_clip_set_notes.prepare({ clip: ref, notes: receipt.before, expected: { token: receipt.token, notes: receipt.after } }, followUps)();
+  }
+  assert.deepEqual(JSON.parse(JSON.stringify(fromLiveNotes(noteClip.notes))), fresh.notes, "Earlier receipt tokens remain usable for reverse Undo after a later write is undone.");
 });
 
 test("scoped lyric Undo keeps simultaneous and later musician lines", async () => {

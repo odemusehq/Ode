@@ -117,14 +117,14 @@ export const clipTools = [
   extensionTool({
     op: "midi_clip_get_notes",
     alwaysLoad: true,
-    description: "Read every note in a MIDI clip (pitch, start and duration in beats from the clip start, velocity, mute, probability).",
+    description: "Read the supported performance fields of every MIDI note in a clip and its recoveryToken: pitch, start/duration in beats from clip start, velocity, mute, probability, velocity deviation and release velocity. For a later replacement pass this actual recoveryToken as midi_clip_set_notes.expected.token. The token binds this native clip and its observed note state in this extension lifetime; expired tokens require a fresh read. This is not a history of intermediate edits or unavailable MPE/automation.",
     input: { clip: ClipRefSchema },
   }),
   extensionTool({
     op: "midi_clip_set_notes",
     changes: "set",
-    description: "Replace all notes in a MIDI clip with the given notes (beats from the clip start). Read the notes first if you only want to change some.",
-    input: { clip: ClipRefSchema, notes: z.array(NoteSchema) },
+    description: "Replace all notes in an existing MIDI clip, preserving every untouched note and field in the supplied list. First read midi_clip_get_notes and give expected:{token:recoveryToken} from that actual read; never echo its full preimage. The synchronous native guard refuses changed notes, another target, an expired token or restarted Live extension before writing. On refusal reread and reconcile the requested edit with current material rather than replaying the stale replacement. The token is consumed only on a successful write. Beats remain relative to clip start. New clip creation accepts initial notes separately.",
+    input: { clip: ClipRefSchema, notes: z.array(NoteSchema), expected: z.object({ token: z.string().min(1).max(1000) }) },
     describe: ({ clip, notes }, names) => `${names.clip(clip)} · write ${SetWording.count(notes.length, "note")}, replacing its notes`,
   }),
   extensionTool({

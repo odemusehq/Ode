@@ -212,7 +212,7 @@ export interface ExtensionOpArgs {
   clip_get: { clip: ClipRef };
   clip_set: { clip: ClipRef; name?: string; color?: number; muted?: boolean; looping?: boolean };
   midi_clip_get_notes: { clip: ClipRef; recoveryToken?: string };
-  midi_clip_set_notes: { clip: ClipRef; notes: Note[]; expected?: { token: string; notes: Note[] } };
+  midi_clip_set_notes: { clip: ClipRef; notes: Note[]; expected?: { token: string; notes?: Note[] } };
   audio_clip_get: { clip: ClipRef };
   audio_clip_set: { clip: ClipRef; warping?: boolean; warpMode?: number };
   device_get: { device: DeviceRef; withValues?: boolean };

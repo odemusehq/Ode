@@ -1,3 +1,4 @@
+import { createHash, randomUUID } from "node:crypto";
 import type { ArrangementClipRef, ClipRef, ClipSlotRef, DeviceRef, LiveConnections, LiveLink, LocatorRef, Note, ParameterRef, SceneRef, TrackRef } from "../shared/live";
 import { MIXER_INDEX } from "../shared/live";
 import type { ClipInfo, ExtensionOpArgs, MixerInfo, ParameterInfo, TrackSummary } from "../shared/live-ops";
@@ -31,6 +32,7 @@ export class FakeSetLive implements LiveConnections {
   readonly calls: { op: string; args: unknown }[] = [];
   readonly extension: FakeLink;
   private state: SetSnapshot;
+  private readonly noteGuards = new Map<string, { clip: ClipInfo; hash: string }>();
 
   constructor(
     initial: SetSnapshot,
@@ -122,9 +124,21 @@ export class FakeSetLive implements LiveConnections {
         if (looping !== undefined) found.looping = looping;
         return found;
       },
-      midi_clip_get_notes: ({ clip }: ExtensionOpArgs["midi_clip_get_notes"]) => ({ notes: this.midiClip(clip).notes ?? [] }),
-      midi_clip_set_notes: ({ clip, notes }: ExtensionOpArgs["midi_clip_set_notes"]) => {
-        this.midiClip(clip).notes = notes;
+      midi_clip_get_notes: ({ clip, recoveryToken }: ExtensionOpArgs["midi_clip_get_notes"]) => {
+        const found = this.midiClip(clip);
+        if (recoveryToken && this.noteGuards.get(recoveryToken)?.clip !== found) throw new Error("That MIDI recovery receipt expired or belongs to another clip; the notes were kept.");
+        if (recoveryToken) {
+          const guard = this.noteGuards.get(recoveryToken)!;
+          this.noteGuards.delete(recoveryToken); this.noteGuards.set(recoveryToken, guard);
+        }
+        return { notes: structuredClone(found.notes ?? []), guardedRecovery: true, recoveryToken: this.rememberNotes(found) };
+      },
+      midi_clip_set_notes: ({ clip, notes, expected }: ExtensionOpArgs["midi_clip_set_notes"]) => {
+        const found = this.midiClip(clip), guard = expected && this.noteGuards.get(expected.token);
+        if (expected && (!guard || guard.clip !== found || guard.hash !== FakeSetLive.notesHash(found) ||
+          expected.notes !== undefined && JSON.stringify(found.notes ?? []) !== JSON.stringify(expected.notes))) throw new Error("The MIDI clip changed or its read token expired. Its notes were kept; reread and reconcile the edit.");
+        found.notes = notes;
+        if (expected) this.noteGuards.delete(expected.token);
         return { count: notes.length };
       },
       device_get: ({ device }: ExtensionOpArgs["device_get"]) => this.findDevice(device),
@@ -219,6 +233,17 @@ export class FakeSetLive implements LiveConnections {
         return { results };
       },
     };
+  }
+
+  private rememberNotes(clip: ClipInfo): string {
+    const token = randomUUID();
+    this.noteGuards.set(token, { clip, hash: FakeSetLive.notesHash(clip) });
+    while (this.noteGuards.size > 4096) this.noteGuards.delete(this.noteGuards.keys().next().value!);
+    return token;
+  }
+
+  private static notesHash(clip: ClipInfo): string {
+    return createHash("sha256").update(JSON.stringify(clip.notes ?? [])).digest("hex");
   }
 
   private summary(track: TrackSnapshot): TrackSummary {
