@@ -71,7 +71,7 @@ export class AudioDeliveries {
         sha256: record.sha256, bytes: bytes.length, createdAt: new Date().toISOString(), provenance: record.provenance, currentness: "unknown",
         exchangeId: request.exchangeId, extension,
         source: { id: record.id, name: record.name, purpose: record.purpose, sha256: record.sha256, bytes: record.bytes,
-          provenance: record.provenance, currentness: "unknown", declaredSource: record.declaredSource, range: record.range },
+          provenance: record.provenance, currentness: "unknown", declaredSource: record.declaredSource, range: record.range, derivation: record.derivation },
         audio: { ...inspected, durationSeconds: inspected.frames / inspected.sampleRate },
       });
       this.admit(manifest, options.maxResultChars);

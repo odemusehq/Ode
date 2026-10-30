@@ -6,6 +6,48 @@ export const LibraryKindSchema = z.enum(["one-shot", "loop", "recording"]);
 export const LibraryProfileLevelSchema = z.enum(["metadata", "full"]);
 export type LibraryProfileLevel = z.infer<typeof LibraryProfileLevelSchema>;
 
+export const AudioProvenanceSchema = z.enum(["user-supplied", "sdk-pre-fx-capture", "local-excerpt"]);
+export const AudioExcerptFactsSchema = z.object({
+  format: z.enum(["WAV", "AIFF"]), sampleRate: z.number().finite().positive(), channels: z.number().int().positive(),
+  channelLayout: z.enum(["mono", "stereo", "unknown"]), frames: z.number().int().nonnegative(),
+  bitDepth: z.number().int().positive(), encoding: boundedText(80),
+});
+export type AudioExcerptFacts = z.infer<typeof AudioExcerptFactsSchema>;
+export const AudioExcerptSelectionSchema = z.discriminatedUnion("unit", [
+  z.object({ unit: z.literal("seconds"), from: z.number().finite().min(0), to: z.number().finite().positive() }).strict(),
+  z.object({ unit: z.literal("frames"), firstFrame: z.number().int().min(0), endFrame: z.number().int().positive() }).strict(),
+]);
+export type AudioExcerptSelection = z.infer<typeof AudioExcerptSelectionSchema>;
+
+/** One parent reference, never copied recursive ancestry or a declaration of Arrangement beat positions. */
+export const AudioExcerptDerivationSchema = z.object({
+  kind: z.literal("local-excerpt"), version: z.literal(1),
+  sourceAudioId: z.uuid(), sourceSha256: z.string().regex(/^[0-9a-f]{64}$/), sourceBytes: z.number().int().positive(),
+  sourceProvenance: AudioProvenanceSchema, source: AudioExcerptFactsSchema,
+  firstFrame: z.number().int().min(0), endFrame: z.number().int().positive(),
+  output: AudioExcerptFactsSchema, container: z.enum(["WAV", "AIFF", "AIFC"]),
+  exchangeId: z.string().min(1).max(1000),
+}).superRefine((value, ctx) => {
+  if (value.endFrame <= value.firstFrame || value.endFrame > value.source.frames || value.output.frames !== value.endFrame - value.firstFrame) {
+    ctx.addIssue({ code: "custom", message: "The nonempty exclusive frame selection must fit the parent and match the output frame count." });
+  }
+  if (["format", "sampleRate", "channels", "channelLayout", "bitDepth", "encoding"].some((field) =>
+    value.source[field as keyof AudioExcerptFacts] !== value.output[field as keyof AudioExcerptFacts])) {
+    ctx.addIssue({ code: "custom", message: "A raw excerpt must preserve source format, sample rate, channels and sample encoding." });
+  }
+  if ((value.container === "WAV") !== (value.output.format === "WAV")) ctx.addIssue({ code: "custom", message: "The excerpt container must match its inspected format." });
+});
+export type AudioExcerptDerivation = z.infer<typeof AudioExcerptDerivationSchema>;
+
+/** Builder facts are validated against the captured input and inspected output before publication. */
+export interface AudioExcerptBuild {
+  bytes: Uint8Array;
+  source: unknown;
+  selection: { firstFrame: number; endFrame: number };
+  output: unknown;
+  container: unknown;
+}
+
 /** Declarations entered by Ode from the conversation, never a claim that audio analysis established them. */
 export const LibraryAnnotationsPatchSchema = z.object({
   labels: z.array(boundedText(80)).max(32).optional(),

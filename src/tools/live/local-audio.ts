@@ -3,6 +3,7 @@ import { LocalAudioFiles, type AudioFileRecord } from "../../live/local-audio-fi
 import { buildLibraryProfile } from "../../music/audio/library-profile";
 import { LibraryAnnotationsPatchSchema, LibraryProfileLevelSchema, LibrarySearchSchema } from "../../shared/audio-library";
 import { defineTool, type AnyTool, type ToolContext } from "../define";
+import { audioExcerptTool } from "./audio-excerpt";
 
 const detailSections = z.enum(["source", "annotations", "profile", "report"]);
 type DetailSection = z.infer<typeof detailSections>;
@@ -83,6 +84,7 @@ function details(record: AudioFileRecord, section: DetailSection, detailHash: st
 }
 
 export const localAudioTools: AnyTool[] = [
+  audioExcerptTool,
   defineTool({
     name: "library_audio_search",
     description: [
