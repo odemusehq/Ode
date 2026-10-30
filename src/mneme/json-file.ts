@@ -69,29 +69,39 @@ export class JsonFile<T> {
    * Writes the text to a file of its own beside `path`, syncs it to disk, then renames it over `path`, so a reader
    * sees the old file or the new one whole. A rename that another program holds up is tried again for a moment.
    */
-  static async writeAtomically(path: string, text: string, mode?: number): Promise<void> {
+  static async writeAtomically(path: string, text: string, mode?: number, signal?: AbortSignal): Promise<void> {
+    signal?.throwIfAborted();
     await mkdir(dirname(path), { recursive: true, ...(mode === undefined ? {} : { mode: 0o700 }) });
+    signal?.throwIfAborted();
     const temporary = `${path}.${randomUUID()}.tmp`;
-    const file = await open(temporary, "w", mode);
+    let published = false;
+    let created = false;
     try {
-      await file.writeFile(text, "utf8");
-      await file.sync();
-    } finally {
-      await file.close();
-    }
-    const { renameRetries, renameRetryMs } = defaults.storage;
-    for (let attempt = 0; ; attempt++) {
+      const file = await open(temporary, "wx", mode);
+      created = true;
       try {
-        await rename(temporary, path);
-        return;
-      } catch (error) {
-        const code = (error as NodeJS.ErrnoException).code ?? "";
-        if (!BUSY_CODES.has(code) || attempt >= renameRetries) {
-          await rm(temporary, { force: true });
-          throw error;
-        }
-        await new Promise((resolve) => setTimeout(resolve, renameRetryMs * (attempt + 1)));
+        signal?.throwIfAborted();
+        await file.writeFile(text, "utf8");
+        await file.sync();
+      } finally {
+        await file.close();
       }
+      const { renameRetries, renameRetryMs } = defaults.storage;
+      for (let attempt = 0; ; attempt++) {
+        // Cancellation during staging/retry never publishes a new document. An issued rename is not rolled back.
+        signal?.throwIfAborted();
+        try {
+          await rename(temporary, path);
+          published = true;
+          return;
+        } catch (error) {
+          const code = (error as NodeJS.ErrnoException).code ?? "";
+          if (!BUSY_CODES.has(code) || attempt >= renameRetries) throw error;
+          await new Promise((resolve) => setTimeout(resolve, renameRetryMs * (attempt + 1)));
+        }
+      }
+    } finally {
+      if (created && !published) await rm(temporary, { force: true });
     }
   }
 

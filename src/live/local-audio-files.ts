@@ -237,7 +237,7 @@ export class LocalAudioFiles {
       const next = { ...raw, annotations };
       const path = await this.inside(this.metadata(id));
       signal?.throwIfAborted();
-      await JsonFile.writeAtomically(path, JSON.stringify(next));
+      await JsonFile.writeAtomically(path, JSON.stringify(next), undefined, signal);
       return storedRecord(next).record;
     });
   }
@@ -262,7 +262,7 @@ export class LocalAudioFiles {
       const next = { ...current.raw, profile: existing?.level === "full" && profile.level === "metadata" ? existing : profile };
       const path = await this.inside(this.metadata(id));
       signal?.throwIfAborted();
-      await JsonFile.writeAtomically(path, JSON.stringify(next));
+      await JsonFile.writeAtomically(path, JSON.stringify(next), undefined, signal);
       return storedRecord(next).record;
     });
   }
