@@ -39,6 +39,7 @@ export const mixCheck = defineTool({
     const arrangement = new ArrangementAudio(ctx);
     const measured: MeasuredTrack[] = [];
     const skipped: SkippedTrack[] = [];
+    const seen = new Set<string>();
     for (const ref of input.tracks) {
       ctx.signal?.throwIfAborted();
       const lookup = await arrangement.resolve(ref);
@@ -46,6 +47,12 @@ export const mixCheck = defineTool({
         skipped.push(lookup.skipped);
         continue;
       }
+      const identity = JSON.stringify(lookup.track.ref);
+      if (seen.has(identity)) {
+        skipped.push({ track: lookup.track.name, reason: "duplicate reference to a source already included; it is not an independent track" });
+        continue;
+      }
+      seen.add(identity);
       try {
         const captured = await arrangement.withRender(lookup.track.ref, input.start, input.end, async (path) => {
           const frozen = await MusicAudio.freeze(path);

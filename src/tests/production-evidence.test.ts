@@ -82,12 +82,15 @@ test("partial mix observations cover only measured sources, including calls sele
     return { path };
   } } } } as unknown as ToolContext);
   const observations = new ToolObservations(song);
-  const input = { tracks: [{ name: "Voice" }, { tag: "lead" }], start: 0, end: 16 };
+  const input = { tracks: [{ name: "Voice" }, { tag: "voice" }, { tag: "lead" }], start: 0, end: 16 };
   const result = await registry.run("mix_check", input);
   assert.equal(result.ok, true);
   assert.deepEqual(result.targets, ["voice"]);
   const body = JSON.parse(result.text);
   assert.equal(body.status, "partial");
+  assert.equal(body.tracks.length, 1);
+  assert.equal(body.masking.length, 0);
+  assert.match(body.skipped[0].reason, /duplicate reference/);
   assert.equal(body.tracks[0].source.frames, 4000);
   assert.match(body.tracks[0].source.sha256, /^[a-f0-9]{64}$/);
   await observations.record({ ...result, input: result.input, name: "mix_check", exchangeId, toolCallId: "partial" });
