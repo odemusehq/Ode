@@ -1,0 +1,33 @@
+import assert from "node:assert/strict";
+import { mkdtemp } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { test } from "node:test";
+import { userPaths } from "../mneme/paths";
+import { SongStore } from "../mneme/song-store";
+import { ToolObservations } from "../mneme/tool-observations";
+
+test("tool observations retain real outcomes and scoped citations without credentials or cross-song writes", async () => {
+  const root = await mkdtemp(join(tmpdir(), "ode-observations-"));
+  const song = new SongStore(userPaths(root), () => undefined);
+  const first = await song.create("Night Bus");
+  const observations = new ToolObservations(song);
+  const input = { clip: { track: { tag: "vocal" }, tag: "hook" }, apiKey: "private-value", nested: { authorization: "Bearer private-value" } };
+  const text = JSON.stringify({ notes: [{ pitch: 60 }], clip: { tag: "hook" }, token: "private-result" });
+  const saved = await observations.record({ exchangeId: "exchange-1", toolCallId: "read-hook", name: "midi_clip_get_notes", input, ok: true, text });
+  assert.equal(saved.songId, first.id);
+  assert.equal(saved.ok, true);
+  assert.deepEqual(saved.targets, ["hook", "vocal"]);
+  assert.equal(saved.resultLength, text.length);
+  assert.match(saved.resultHash, /^[a-f0-9]{64}$/);
+  assert.doesNotMatch(JSON.stringify(saved), /private-value|private-result/);
+  assert.equal((await new ToolObservations(song).find("exchange-1", "read-hook"))?.resultHash, saved.resultHash);
+  await assert.rejects(observations.record({ exchangeId: "exchange-1", toolCallId: "read-hook", name: "midi_clip_get_notes", input, ok: true, text: "different" }), /already|immutable/i);
+  const pending = observations.record({ exchangeId: "exchange-2", toolCallId: "failed-write", name: "midi_clip_set_notes", input, ok: false, text: "Clip missing" });
+  await song.create("Morning Train");
+  await pending;
+  assert.equal(await observations.find("exchange-2", "failed-write"), null);
+  await song.open(first.id);
+  assert.equal((await observations.find("exchange-2", "failed-write"))?.ok, false);
+  assert.equal((await observations.recent(1))[0]?.toolCallId, "failed-write");
+});
