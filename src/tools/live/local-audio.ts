@@ -5,7 +5,7 @@ import { defineTool, type AnyTool } from "../define";
 export const localAudioTools: AnyTool[] = [
   defineTool({
     name: "library_audio_search",
-    description: "Find audio files explicitly attached by the musician to Ode, by filename or their source description. Searches only Ode's managed copies, including library samples, references and supplied processed bounces. Does not scan the native Live Browser, Packs or arbitrary folders. Returns file ids and declared provenance; unchanged bytes do not prove a bounce matches the current Set. If the catalogue is empty, ask the musician to attach audio in chat. Read-only.",
+    description: "Find audio explicitly attached by the musician or Arrangement captures deliberately retained by audio_capture, by filename or source description. Searches only Ode's managed library samples, references, supplied processed bounces and retained pre-FX captures. Does not scan the native Live Browser, Packs or arbitrary folders. Returns ids and provenance; unchanged bytes do not prove current processed Set sound. If empty, ask the musician to attach audio or deliberately retain a supported capture. Read-only.",
     input: { query: z.string(), limit: z.number().int().min(1).max(100).optional() },
     changes: "none",
     run: ({ query, limit }, ctx) => new LocalAudioFiles(ctx.config.userDir, ctx.config.tempDir).search(query, limit),

@@ -80,7 +80,7 @@ export class LevelChecker {
         findings.push({
           track: track.name,
           issue: LevelIssue.Unmeasured,
-          advice: `${track.name} peaks at ${signed(track.peak)} ${track.peakUnit ?? "dBFS"} here; integrated loudness is below the gates or the passage is too short. This is not silence.`,
+          advice: `${track.name} peaks at ${signed(track.peak)} ${track.peakUnit ?? "dBFS"} here; integrated loudness is unmeasured (unknown channel layout, below the gates or too short). This is not silence.`,
         });
       }
     }

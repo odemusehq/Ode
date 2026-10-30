@@ -17,7 +17,7 @@ const RecordSchema = z.object({
   importedAt: z.string(),
   declaredSource: z.string().max(2000).optional(),
   range: z.object({ start: z.number().finite().min(0), end: z.number().finite().positive() }).optional(),
-  provenance: z.literal("user-supplied"),
+  provenance: z.enum(["user-supplied", "sdk-pre-fx-capture"]),
   currentness: z.literal("unknown"),
   analysisSupported: z.boolean(),
 });
@@ -29,6 +29,8 @@ export interface AudioFileInput {
   bytes: Uint8Array;
   purpose: AudioFileRecord["purpose"];
   source?: string;
+  /** Only internal capture callers set this; browser uploads always use the user-supplied default. */
+  provenance?: AudioFileRecord["provenance"];
   /** Beats declared by the musician, not inferred from the file or current tempo. */
   range?: { start: number; end: number };
 }
@@ -67,7 +69,7 @@ export class LocalAudioFiles {
     const record = RecordSchema.parse({
       id: randomUUID(), name, purpose: input.purpose, sha256: hash(input.bytes), bytes: input.bytes.byteLength,
       importedAt: new Date().toISOString(), declaredSource: input.source?.trim() || undefined, range: input.range,
-      provenance: "user-supplied", currentness: "unknown", analysisSupported: ANALYSIS_SUFFIX.test(name),
+      provenance: input.provenance ?? "user-supplied", currentness: "unknown", analysisSupported: ANALYSIS_SUFFIX.test(name),
     });
     await mkdir(this.root, { recursive: true });
     await this.inside(this.root, true);
@@ -129,7 +131,7 @@ export class LocalAudioFiles {
 }
 
 /** Call only after TempFolder.inside(path). Hash equality proves these bytes, never the current Live signal path. */
-export async function audioProvenance(path: string): Promise<AudioFileRecord | null> {
+export async function audioProvenance(path: string, frozenBytes?: Uint8Array): Promise<AudioFileRecord | null> {
   let json: string;
   try {
     const [audioPath, metadataPath] = await Promise.all([realpath(path), realpath(`${path}.ode.json`)]);
@@ -140,7 +142,7 @@ export async function audioProvenance(path: string): Promise<AudioFileRecord | n
     throw error;
   }
   const record = RecordSchema.parse(JSON.parse(json));
-  const bytes = await readFile(path);
+  const bytes = frozenBytes ?? await readFile(path);
   if (bytes.byteLength !== record.bytes || hash(bytes) !== record.sha256) throw new Error("The attached audio changed; reopen the original from Ode's audio library.");
   return record;
 }

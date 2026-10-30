@@ -4,6 +4,7 @@ import { Capability, ROLE_CAPABILITY, type CapabilityAdapters, type SeparatedSte
 import { RoleCheck } from "./roles";
 import { SpeechAudio } from "./speech-audio";
 import type { DemoVocalInput, RoleSource, Services, Transcript } from "./types";
+import type { MusicAudioSource } from "./music-audio";
 
 /** Model-backed services: each role's capability, served by the adapter for the provider chosen in Settings. */
 export class ModelServices implements Services {
@@ -25,11 +26,11 @@ export class ModelServices implements Services {
     return this.adapter(role, Capability.Text);
   }
 
-  async describeAudio(audioPath: string, question: string, signal?: AbortSignal): Promise<string> {
-    return (await this.adapter("audio_understanding", Capability.AudioUnderstanding)).describe(audioPath, question, signal);
+  async describeAudio(audio: MusicAudioSource, question: string, signal?: AbortSignal) {
+    return (await this.adapter("audio_understanding", Capability.AudioUnderstanding)).describe(audio, question, signal);
   }
 
-  async compareAudio(a: string, b: string, question: string, levelMatch: boolean, signal?: AbortSignal) {
+  async compareAudio(a: MusicAudioSource, b: MusicAudioSource, question: string, levelMatch: boolean, signal?: AbortSignal) {
     const adapter = await this.adapter("audio_understanding", Capability.AudioUnderstanding);
     if (!adapter.compare) throw new Error("The configured audio service does not support paired comparison.");
     return adapter.compare(a, b, question, levelMatch, signal);

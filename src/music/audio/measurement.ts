@@ -18,6 +18,7 @@ export class AudioMeasurement {
   readonly frames: number;
   readonly stereo: { correlation: number | null; monoPowerRatioDb: number | null; leftPowerDb: number | null; rightPowerDb: number | null } | null;
   readonly loudness: LoudnessReading;
+  readonly loudnessSupported: boolean;
   /** dBTP. */
   readonly truePeak: number;
   /** dBFS. */
@@ -27,14 +28,17 @@ export class AudioMeasurement {
   readonly tone: ToneProfile;
 
   constructor(audio: AudioData, bands: FrequencyBands = new FrequencyBands()) {
-    const meter = new LoudnessMeter(audio.sampleRate, audio.channels.length);
-    meter.push(audio.channels);
     this.duration = durationSeconds(audio);
     this.sampleRate = audio.sampleRate;
     this.channelCount = audio.channels.length;
     this.frames = audio.channels[0]?.length ?? 0;
     this.stereo = AudioMeasurement.stereoReading(audio);
-    this.loudness = meter.reading();
+    this.loudnessSupported = audio.channels.length === 1 || audio.channels.length === 2;
+    if (this.loudnessSupported) {
+      const meter = new LoudnessMeter(audio.sampleRate, audio.channels.length);
+      meter.push(audio.channels);
+      this.loudness = meter.reading();
+    } else this.loudness = { integrated: NaN, momentaryMax: NaN, shortTermMax: NaN, range: NaN };
     this.truePeak = new TruePeakMeter().measure(audio);
     this.samplePeak = samplePeak(audio);
     this.spectrum = new SpectrumAnalyzer(audio.sampleRate, bands).analyze(audio);

@@ -37,9 +37,9 @@ const FLOAT_BITS: readonly number[] = [32, 64];
  * renders and records. Other formats should be exported as WAV first.
  */
 export class AudioFileDecoder {
-  decode(bytes: Uint8Array, name: string): AudioData {
+  decode(bytes: Uint8Array, name: string, options: { rejectNonfinite?: boolean } = {}): AudioData {
     const { view, block } = this.block(bytes, name);
-    return { sampleRate: block.sampleRate, channels: AudioFileDecoder.samples(view, block) };
+    return { sampleRate: block.sampleRate, channels: AudioFileDecoder.samples(view, block, options.rejectNonfinite ?? false) };
   }
 
   inspect(bytes: Uint8Array, name: string) {
@@ -99,6 +99,7 @@ export class AudioFileDecoder {
     else if (format.code === WAV_PCM) kind = format.bits === 8 ? SampleKind.UnsignedInt : SampleKind.SignedInt;
     else throw new Error(`${name}: this WAV is compressed (format ${format.code}) and Ode reads PCM WAV; export as PCM WAV`);
     const frameBytes = (format.bits / 8) * format.channels;
+    if (Number.isFinite(frameBytes) && frameBytes > 0 && data.size % frameBytes !== 0) throw new Error(`${name}: the WAV data ends in an incomplete channel frame`);
     return {
       channels: format.channels,
       sampleRate: format.sampleRate,
@@ -143,22 +144,23 @@ export class AudioFileDecoder {
     return { channels: common.channels, sampleRate: common.sampleRate, encoding, start: soundStart, frames: common.frames };
   }
 
-  private static samples(view: DataView, block: PcmBlock): Float32Array[] {
+  private static samples(view: DataView, block: PcmBlock, rejectNonfinite: boolean): Float32Array[] {
     const bytes = block.encoding.bits / 8;
     const channels = Array.from({ length: block.channels }, () => new Float32Array(block.frames));
     for (let frame = 0; frame < block.frames; frame++) {
       for (let channel = 0; channel < block.channels; channel++) {
         const offset = block.start + (frame * block.channels + channel) * bytes;
         if (offset + bytes > view.byteLength) return channels;
-        channels[channel]![frame] = AudioFileDecoder.sample(view, offset, block.encoding);
+        channels[channel]![frame] = AudioFileDecoder.sample(view, offset, block.encoding, rejectNonfinite);
       }
     }
     return channels;
   }
 
-  private static sample(view: DataView, offset: number, { kind, bits, littleEndian }: SampleEncoding): number {
+  private static sample(view: DataView, offset: number, { kind, bits, littleEndian }: SampleEncoding, rejectNonfinite: boolean): number {
     if (kind === SampleKind.Float) {
       const value = bits === 64 ? view.getFloat64(offset, littleEndian) : view.getFloat32(offset, littleEndian);
+      if (rejectNonfinite && (!Number.isFinite(value) || Math.abs(value) > 3.4028234663852886e38)) throw new Error("Audio contains a nonfinite sample or one outside the decoded float range; listening was not dispatched.");
       // A damaged float sample (NaN or infinity) reads as silence, so one bad sample leaves the measurements whole.
       return Number.isFinite(value) ? value : 0;
     }

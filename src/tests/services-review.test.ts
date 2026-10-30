@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { AudioFileDecoder } from "../music/audio/decode";
-import { writeWav } from "../music/audio/wav";
+import { writeWav, WavBitDepth } from "../music/audio/wav";
+import { MusicAudio } from "../services/music-audio";
 import { OpenAiCompatibleAudioUnderstander } from "../services/adapters/openai-compatible-audio";
 import { SelfHostedSingingVoice, SelfHostedStemSeparator } from "../services/adapters/self-hosted";
+import { ElevenLabsSoundGenerator } from "../services/adapters/elevenlabs-sound";
 
 test("listening preserves stereo and rejects empty, refused and truncated responses", async () => {
   const dir = await mkdtemp(join(tmpdir(), "ode-listening-"));
@@ -22,9 +25,13 @@ test("listening preserves stereo and rejects empty, refused and truncated respon
       return new Response(JSON.stringify({ choices: choice ? [choice] : [] }), { headers: { "Content-Type": "application/json" } });
     };
     const listener = new OpenAiCompatibleAudioUnderstander({ provider: "meta", baseUrl: "https://example.invalid/v1", apiKey: "offline", model: "muse-spark-1.2" });
-    assert.equal(await listener.describe(path, "What sounds?"), "An audible stereo signal.");
+    const described = await listener.describe(path, "What sounds?") as any;
+    assert.equal(described.answer, "An audible stereo signal.");
     const encoded = sent.messages[0].content.find((part: any) => part.type === "input_audio").input_audio.data;
     const audio = new AudioFileDecoder().decode(Buffer.from(encoded, "base64"), "request.wav");
+    assert.equal(described.evidence.payload.sha256, createHash("sha256").update(Buffer.from(encoded, "base64")).digest("hex"));
+    assert.equal(described.evidence.criteria, "What sounds?");
+    assert.equal(described.evidence.sources[0].sha256, createHash("sha256").update(await readFile(path)).digest("hex"));
     assert.equal(audio.channels.length, 2);
     assert.equal(audio.sampleRate, 48_000);
     const comparison = await listener.compare(path, path, "Compare the stereo examples", false);
@@ -38,6 +45,51 @@ test("listening preserves stereo and rejects empty, refused and truncated respon
     globalThis.fetch = originalFetch;
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test("empty listening is refused before dispatch and generated sounds request real WAV", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "ode-listening-format-"));
+  const originalFetch = globalThis.fetch;
+  try {
+    const path = join(dir, "empty.wav");
+    await writeWav(path, { sampleRate: 48_000, channels: [new Float32Array(0)] });
+    let calls = 0;
+    let url = "";
+    const valid = join(dir, "valid.wav");
+    await writeWav(valid, { sampleRate: 44_100, channels: [new Float32Array(4410)] });
+    const bytes = await readFile(valid);
+    globalThis.fetch = async (input) => { calls++; url = String(input); return new Response(bytes, { headers: { "Content-Type": "audio/wav" } }); };
+    const role = { provider: "meta", baseUrl: "https://example.invalid/v1", apiKey: "offline", model: "audio" };
+    await assert.rejects(new OpenAiCompatibleAudioUnderstander(role).describe(path, "Listen"), /empty|zero|samples|frames/i);
+    assert.equal(calls, 0);
+    const generated = await new ElevenLabsSoundGenerator({ ...role, baseUrl: "https://example.invalid" }).generate("Soft impact", 1, join(dir, "generated.mp3"), false);
+    assert.equal(new URL(url).searchParams.get("output_format"), "wav_44100");
+    assert.match(generated, /\.wav$/);
+    assert.deepEqual(await readFile(generated), bytes);
+  } finally { globalThis.fetch = originalFetch; await rm(dir, { recursive: true, force: true }); }
+});
+
+test("nonfinite PCM and inconsistent channel lengths cannot become listening evidence", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "ode-invalid-listening-"));
+  try {
+    const path = join(dir, "bad.wav");
+    await writeWav(path, { sampleRate: 48_000, channels: [Float32Array.from([0, Number.NaN, Infinity])] }, WavBitDepth.Float32);
+    await assert.rejects(new MusicAudio().prepare(await MusicAudio.freeze(path)), /nonfinite|finite/i);
+    await writeWav(path, { sampleRate: 48_000, channels: [Float32Array.from([0, 0.1, 0.2])] });
+    const source = await MusicAudio.freeze(path);
+    const prepared = await new MusicAudio().prepare(source);
+    // Cached arrays are no longer an input: samples are decoded from the captured source bytes for each operation.
+    const injected = { ...source, audio: { sampleRate: 1, channels: [Float32Array.from([0.5])] } };
+    assert.equal((await new MusicAudio().prepare(injected)).payload.sha256, prepared.payload.sha256);
+    source.source.frames = 999;
+    assert.equal(prepared.sources[0]!.frames, 3);
+    assert.equal((await new MusicAudio().prepare(source)).sources[0]!.frames, 3);
+    const broken = Uint8Array.from(source.bytes);
+    new DataView(broken.buffer).setUint16(22, 2, true); // Six mono data bytes cannot form whole stereo frames.
+    await assert.rejects(new MusicAudio().prepare({ bytes: broken, source: { ...source.source, sha256: createHash("sha256").update(broken).digest("hex") } }), /channel|frame/i);
+    source.bytes[source.bytes.length - 1]! ^= 1;
+    await assert.rejects(new MusicAudio().prepare(source), /captured.*changed/i);
+  } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
 test("self-hosted separation sends WAV for AIFF input and rejects unsupported vocal instructions", async () => {

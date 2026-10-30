@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { OdeConfig, type RoleConfig } from "../../shared/config";
-import type { AudioUnderstander } from "../capabilities";
-import { MusicAudio } from "../music-audio";
+import type { AudioListeningResult, AudioUnderstander } from "../capabilities";
+import { MusicAudio, audioHash, type FrozenMusicAudio, type ListeningPayload, type MusicAudioSource } from "../music-audio";
 
 /** Audio understanding over an OpenAI-compatible endpoint that accepts input_audio parts (Meta's included). */
 export class OpenAiCompatibleAudioUnderstander implements AudioUnderstander {
@@ -12,20 +12,23 @@ export class OpenAiCompatibleAudioUnderstander implements AudioUnderstander {
     this.client = new OpenAI({ baseURL: role.baseUrl, apiKey: role.apiKey, timeout: 120_000, maxRetries: 0 });
   }
 
-  async describe(audioPath: string, question: string, signal?: AbortSignal): Promise<string> {
-    const prepared = await this.music.prepare(audioPath);
-    return this.ask(prepared.bytes, `${question}\nListening representation: ${JSON.stringify(prepared.representation)}`, signal);
+  async describe(audio: MusicAudioSource, question: string, signal?: AbortSignal): Promise<AudioListeningResult> {
+    const prepared = await this.music.prepare(audio);
+    return this.ask(prepared, question, `${question}\nListening representation: ${JSON.stringify(prepared.payload.representation)}`, signal);
   }
 
-  async compare(a: string, b: string, question: string, levelMatch: boolean, signal?: AbortSignal) {
-    const { bytes, comparison } = await this.music.comparison(a, b, levelMatch);
-    const answer = await this.ask(bytes, `${question}\nThe WAV contains A followed by B. Comparison layout: ${JSON.stringify(comparison)}. Compare both for the stated criterion; do not infer source currentness or a complete mix from these files.`, signal);
-    return { answer, comparison };
+  async compare(a: MusicAudioSource, b: MusicAudioSource, question: string, levelMatch: boolean, signal?: AbortSignal) {
+    const prepared = await this.music.comparison(a, b, levelMatch);
+    const result = await this.ask(prepared, question, `${question}\nThe WAV contains A followed by B. Comparison layout: ${JSON.stringify(prepared.comparison)}. Compare both for the stated criterion; do not infer source currentness or a complete mix from these files.`, signal);
+    return { ...result, comparison: prepared.comparison };
   }
 
-  private async ask(bytes: Uint8Array, question: string, signal?: AbortSignal): Promise<string> {
+  private async ask(prepared: { bytes: Uint8Array; sources: FrozenMusicAudio["source"][]; payload: ListeningPayload }, criteria: string, question: string, signal?: AbortSignal): Promise<AudioListeningResult> {
     signal?.throwIfAborted();
-    const data = Buffer.from(bytes).toString("base64");
+    const data = Buffer.from(prepared.bytes).toString("base64");
+    const prompt = `${question}\nAudio preparation: source channel count and sample rate preserved in PCM24 WAV; signals above full scale are uniformly attenuated to avoid conversion clipping. Stereo/full-band model judgement is not independently validated; use numerical metrics for technical claims.`;
+    const requestHash = audioHash(Buffer.from(JSON.stringify({ model: this.role.model, prompt, maxTokens: OdeConfig.services.audioMaxTokens, payloadSha256: prepared.payload.sha256 })));
+    const dispatchedAt = new Date().toISOString();
     const response = await this.client.chat.completions.create({
       model: this.role.model,
       max_tokens: OdeConfig.services.audioMaxTokens,
@@ -33,18 +36,19 @@ export class OpenAiCompatibleAudioUnderstander implements AudioUnderstander {
         {
           role: "user",
           content: [
-            { type: "text", text: `${question}\nAudio preparation: source channel count and sample rate preserved in PCM24 WAV; signals above full scale are uniformly attenuated to avoid conversion clipping. Stereo/full-band model judgement is not independently validated; use numerical metrics for technical claims.` },
+            { type: "text", text: prompt },
             { type: "input_audio", input_audio: { data, format: "wav" } },
           ],
         },
       ],
     }, { signal });
-    const choice = response.choices[0];
+    const choice = response.choices?.[0];
     if (!choice) throw new Error("Audio listening is incomplete: the service returned no answer.");
     if (choice.message.refusal) throw new Error(`Audio listening was refused: ${choice.message.refusal}`);
     if (choice.finish_reason !== "stop") throw new Error(`Audio listening is incomplete (${choice.finish_reason}); no audio judgement was verified. Try a shorter passage.`);
     const answer = choice.message.content?.trim();
     if (!answer) throw new Error("Audio listening is incomplete: the service returned an empty answer.");
-    return answer;
+    return { answer, evidence: { criteria, prompt, provider: this.role.provider, model: this.role.model, sources: prepared.sources, payload: prepared.payload,
+      requestHash, dispatchedAt, completedAt: new Date().toISOString() } };
   }
 }

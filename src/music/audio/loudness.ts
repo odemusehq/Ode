@@ -14,8 +14,6 @@ const MOMENTARY_SECONDS = 0.4;
 const SHORT_TERM_SECONDS = 3;
 /** Step between blocks: 75 % overlap of the 400 ms gating blocks, seconds. */
 const STEP_SECONDS = 0.1;
-/** BS.1770-4 channel weight for the left and right surround channels. */
-const SURROUND_WEIGHT = 1.41;
 
 const MOMENTARY_STEPS = Math.round(MOMENTARY_SECONDS / STEP_SECONDS);
 const SHORT_TERM_STEPS = Math.round(SHORT_TERM_SECONDS / STEP_SECONDS);
@@ -37,17 +35,10 @@ function toLufs(meanSquare: number): number {
 }
 
 /**
- * BS.1770-4 channel weights by channel count: mono and stereo channels weigh 1 (mono stays at 1, without a +3 dB lift);
- * four channels are L, R, Ls, Rs; five are L, R, C, Ls, Rs; six are L, R, C, LFE (left out), Ls, Rs.
+ * Mono and stereo channels weigh 1. Channel count alone cannot establish surround roles or LFE placement.
  */
 function channelWeights(channelCount: number): number[] {
-  if (channelCount === 4) return [1, 1, SURROUND_WEIGHT, SURROUND_WEIGHT];
-  if (channelCount === 5) return [1, 1, 1, SURROUND_WEIGHT, SURROUND_WEIGHT];
-  if (channelCount >= 6) {
-    return Array.from({ length: channelCount }, (_, index) =>
-      index === 3 || index > 5 ? 0 : index > 3 ? SURROUND_WEIGHT : 1,
-    );
-  }
+  if (channelCount !== 1 && channelCount !== 2) throw new Error("Loudness needs an established mono/stereo channel layout; multichannel roles are unknown.");
   return Array.from({ length: channelCount }, () => 1);
 }
 

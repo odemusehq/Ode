@@ -27,24 +27,28 @@ export type TrackLookup = { track: RenderableTrack } | { skipped: SkippedTrack }
 
 /** Reads the Set and renders Arrangement audio tracks through the Ode extension. */
 export class ArrangementAudio {
-  private songInfo: SongInfo | null = null;
-
   constructor(private readonly ctx: ToolContext) {}
 
-  /** Tempo, key, scale and tracks of the Set (read once). */
+  /** Fresh metadata: manual structural edits must not leave later captures using an old index. */
   async song(): Promise<SongInfo> {
-    this.songInfo ??= await this.ctx.live.extension.call<ExtensionOpResults["song_get"]>("song_get", {});
-    return this.songInfo;
+    return this.ctx.live.extension.call<ExtensionOpResults["song_get"]>("song_get", {});
   }
 
   /** The track a reference points at when it renders; otherwise the reason it is skipped. */
   async resolve(ref: TrackRef): Promise<TrackLookup> {
     if ("main" in ref) return { skipped: { track: "Main", reason: RENDER_LIMITS.main ?? "" } };
-    const track = findTrack(await this.song(), ref);
-    if (!track) return { skipped: { track: describeTrackRef(ref), reason: "missing from the Set" } };
+    const song = await this.song();
+    const found = findTrack(song, ref);
+    if ("reason" in found) return { skipped: { track: describeTrackRef(ref), reason: found.reason } };
+    const track = found.track;
     const reason = RENDER_LIMITS[track.kind];
     if (reason) return { skipped: { track: track.name, reason } };
-    return { track: { ref: { index: track.index }, name: track.name } };
+    const all = [...song.tracks, ...song.returnTracks];
+    // Even an explicitly selected index is converted to an unambiguous identity before asynchronous capture.
+    if (track.tag && all.filter((candidate) => candidate.tag === track.tag).length === 1) return { track: { ref: { tag: track.tag }, name: track.name } };
+    const name = fullName(track);
+    if (all.filter((candidate) => fullName(candidate) === name).length !== 1) return { skipped: { track: track.name, reason: "ambiguous track identity; give the intended track a unique name or tag before capturing it" } };
+    return { track: { ref: { name }, name: track.name } };
   }
 
   /**
@@ -52,7 +56,10 @@ export class ArrangementAudio {
    * render is deleted once `use` is done, so the temp folder keeps only what Ode still needs.
    */
   async withRender<T>(track: TrackRef, start: number, end: number, use: (path: string) => Promise<T>): Promise<T> {
-    const args: ExtensionOpArgs["render_track_audio"] = { track, start, end };
+    requireRange(start, end);
+    const resolved = await this.resolve(track);
+    if ("skipped" in resolved) throw new Error(`${resolved.skipped.track} stays unrendered: ${resolved.skipped.reason}`);
+    const args: ExtensionOpArgs["render_track_audio"] = { track: resolved.track.ref, start, end };
     const { path } = await this.ctx.live.extension.call<ExtensionOpResults["render_track_audio"]>("render_track_audio", args);
     try {
       return await use(path);
@@ -68,22 +75,23 @@ export function requireRange(start: number, end: number): void {
 }
 
 /** Finds a track the way the extension does: return tracks included, so their reason shows; a name matches without Ode's tag, in any case. */
-function findTrack(song: SongInfo, ref: TrackRef): TrackSummary | undefined {
-  if ("returnIndex" in ref) return song.returnTracks.find((track) => track.index === ref.returnIndex);
-  if ("index" in ref) return song.tracks.find((track) => track.index === ref.index);
+function findTrack(song: SongInfo, ref: TrackRef): { track: TrackSummary } | { reason: string } {
+  const unique = (tracks: TrackSummary[]) => tracks.length === 1 ? { track: tracks[0]! } : { reason: tracks.length ? "ambiguous name or tag; identify one track before rendering" : "missing from the Set" };
+  if ("returnIndex" in ref) return unique(song.returnTracks.filter((track) => track.index === ref.returnIndex));
+  if ("index" in ref) return unique(song.tracks.filter((track) => track.index === ref.index));
   const all = [...song.tracks, ...song.returnTracks];
-  if ("tag" in ref) return all.find((track) => track.tag === ref.tag);
+  if ("tag" in ref) return unique(all.filter((track) => track.tag === ref.tag));
   if ("name" in ref) {
-    const wanted = baseName(ref.name);
-    return all.find((track) => track.name === wanted) ?? all.find((track) => track.name.toLowerCase() === wanted.toLowerCase());
+    const tagged = all.filter((track) => track.tag && fullName(track) === ref.name);
+    if (tagged.length) return unique(tagged);
+    const exact = all.filter((track) => track.name === ref.name);
+    if (exact.length) return unique(exact);
+    return unique(all.filter((track) => fullName(track).toLowerCase() === ref.name.toLowerCase() || track.name.toLowerCase() === ref.name.toLowerCase()));
   }
-  return undefined;
+  return { reason: "Main track audio cannot be rendered by this SDK" };
 }
 
-/** A track name as the musician sees it, with Ode's tag taken off ("Vocals ·ab12" → "Vocals"). */
-function baseName(name: string): string {
-  return (name.split(TAG_SEPARATOR)[0] ?? name).trim();
-}
+function fullName(track: TrackSummary): string { return track.tag ? `${track.name}${TAG_SEPARATOR}${track.tag}` : track.name; }
 
 function describeTrackRef(ref: TrackRef): string {
   if ("name" in ref) return ref.name;

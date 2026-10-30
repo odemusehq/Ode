@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readdir, rm, stat } from "node:fs/promises";
+import { copyFile, mkdir, readdir, stat } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { z } from "zod";
 import { COVER_CHOICE, COVER_FILE } from "../../shared/api";
@@ -9,6 +9,10 @@ import { VoiceReference } from "../../mneme/voice-reference";
 import { defineTool, type AnyTool, type ToolContext } from "../define";
 import { NoteSchema, TrackRefSchema } from "../live/schemas";
 import { audioFileEvidence } from "../audio/file-evidence";
+import { MusicAudio } from "../../services/music-audio";
+import { LocalAudioFiles } from "../../live/local-audio-files";
+import { ArrangementAudio } from "../audio/arrangement-audio";
+import type { TrackRef } from "../../shared/live";
 
 const audioSource = {
   path: z.string().min(1).optional().describe("An audio file Ode made in its temp folder; or give track, start and end to render it from the Arrangement"),
@@ -26,16 +30,14 @@ interface AudioInput {
 
 /** Runs `use` on the audio: the file given, or a render of the Arrangement, deleted once `use` is done with it. */
 async function withAudio<T>(input: AudioInput, ctx: ToolContext, use: (path: string) => Promise<T>): Promise<T> {
-  if (input.path) return use(await ctx.temp.inside(input.path));
+  if (input.path) {
+    if (input.track !== undefined || input.start !== undefined || input.end !== undefined) throw new Error("Choose one source: path alone, or track with start and end. Mixed selectors are not a capture of that track.");
+    return use(await ctx.temp.inside(input.path));
+  }
   if (input.track === undefined || input.start === undefined || input.end === undefined) {
     throw new Error("Give either path, or track with start and end.");
   }
-  const { path } = await ctx.live.extension.call<{ path: string }>("render_track_audio", { track: input.track, start: input.start, end: input.end });
-  try {
-    return await use(path);
-  } finally {
-    await rm(path, { force: true });
-  }
+  return new ArrangementAudio(ctx).withRender(input.track as TrackRef, input.start, input.end, use);
 }
 
 /** The Set's tempo, from the latest reading of the Set when there is one. */
@@ -59,24 +61,51 @@ export const mediaTools: AnyTool[] = [
     name: "audio_describe",
     changes: "none",
     description:
-      "Listen to a recording and answer a question about it: what instruments and sounds are in it, the mood, what the musician says or asks in it. For exact pitch or loudness use hum_to_midi or audio_analyze.",
+      "Listen to a supported WAV/AIFF recording and answer a musical question. Returns answer and evidence binding source/payload hashes, criterion, model, gain/representation and times. Give path alone or track with start/end, never both. Arrangement listening hears pre-FX, pre-fader audio tracks only; its temporary capture is removed and has no reusable path. Use audio_capture separately to deliberately retain a supported capture for later A/B. For measured pitch/loudness use hum_to_midi/audio_analyze.",
     input: { ...audioSource, question: z.string().min(1) },
-    run: (input, ctx) => withAudio(input, ctx, async (path) => ({
-      answer: await ctx.services.describeAudio(path, input.question, ctx.signal),
-      source: await audioFileEvidence(path),
-      signalStage: input.path ? "supplied file; stage depends on declared provenance" : "pre-effects, pre-fader Arrangement audio",
-      representation: "Source channels and sample rate in PCM24 WAV; over-full-scale input uniformly attenuated for listening. Model musical/stereo judgement is unvalidated; numerical measurements use the original samples.",
-    })),
+    run: (input, ctx) => withAudio(input, ctx, async (path) => {
+      const frozen = await MusicAudio.freeze(path);
+      const evidence = await audioFileEvidence(path, frozen);
+      let source: Record<string, unknown> = evidence;
+      if (!input.path) {
+        const { path: _deletedPath, ...captured } = evidence;
+        source = { ...captured, track: input.track, range: { start: input.start, end: input.end }, retained: false, availability: "Temporary capture removed after listening; no usable path is retained." };
+      }
+      return { ...await ctx.services.describeAudio(frozen, input.question, ctx.signal), source,
+        signalStage: input.path ? "supplied file; stage depends on declared provenance" : "pre-effects, pre-fader Arrangement audio",
+        note: "Model musical/stereo judgement is unvalidated. Evidence binds exact captured bytes, not current processed Set state." };
+    }),
+  }),
+  defineTool({
+    name: "audio_capture",
+    changes: "memory",
+    mainAgentOnly: true,
+    description: "Explicitly retain one Arrangement audio track's pre-FX, pre-fader source capture in Ode's managed audio catalogue. Give track/start/end in quarter-note beats, and an optional name. Returns persistent id, source hash and a managed working path for audio_describe/audio_analyze/audio_compare; library_audio_open reopens its id later. This changes persistent memory and follows Manual Apply. No model listening runs here. Only Arrangement audio tracks are supported; this does not capture MIDI instruments, processing, returns or Main, and unchanged bytes do not prove current processed Set sound.",
+    input: { track: TrackRefSchema, start: z.number().min(0), end: z.number().positive(), name: z.string().min(1).max(200).optional() },
+    describe: ({ track, start, end }, names) => `Keep an audio capture · ${names.track(track)} · ${names.span(start, end)}`,
+    run: (input, ctx) => withAudio(input, ctx, async (path) => {
+      const frozen = await MusicAudio.freeze(path);
+      MusicAudio.decode(frozen);
+      if (!frozen.source.frames) throw new Error("The capture has zero sample frames; no audio was retained.");
+      const library = new LocalAudioFiles(ctx.config.userDir, ctx.config.tempDir);
+      const record = await library.add({ name: `${input.name ?? "Arrangement capture " + new Date().toISOString().replaceAll(":", "-")}.${frozen.source.format === "AIFF" ? "aiff" : "wav"}`,
+        bytes: frozen.bytes, purpose: "reference", provenance: "sdk-pre-fx-capture", range: { start: input.start, end: input.end },
+        source: `SDK pre-effects, pre-fader Arrangement source audio; track ${JSON.stringify(input.track)}. Current processed Set and effect tails are unverified.` });
+      return { ...await library.open(record.id), retained: true, signalStage: "pre-effects, pre-fader Arrangement source audio",
+        availability: "Managed capture; reopen its id with library_audio_open if this working path expires." };
+    }),
   }),
   defineTool({
     name: "audio_compare",
     changes: "none",
-    description: "Compare two retained managed WAV/AIFF files for a stated musical criterion. Both recordings are sent as A then B in one WAV with a 0.5 second gap and labelled time ranges, preserving channels/rate. levelMatch defaults to true and attenuates the louder integrated-loudness file; set false when balance is the question. Requires matching channel layouts/sample rates. This does not capture the current processed Set or prove common musical alignment/currentness.",
+    description: "Compare two retained managed WAV/AIFF files for a stated musical criterion. Both recordings are sent as A then B in one WAV with a 0.5 second gap and labelled time ranges, preserving channels/rate. levelMatch defaults to true and attenuates the louder integrated-loudness file; set false when balance is the question. Requires matching mono/stereo layouts and sample rates; unknown multichannel layouts are refused. This does not capture the current processed Set or prove common musical alignment/currentness.",
     input: { a: z.string().min(1), b: z.string().min(1), question: z.string().min(1), levelMatch: z.boolean().optional() },
     run: async ({ a, b, question, levelMatch }, ctx) => {
       if (!ctx.services.compareAudio) throw new Error("The configured service has no paired-audio comparison path.");
       const [first, second] = await Promise.all([ctx.temp.inside(a), ctx.temp.inside(b)]);
-      return { ...(await ctx.services.compareAudio(first, second, question, levelMatch ?? true, ctx.signal)), a: await audioFileEvidence(first), b: await audioFileEvidence(second), note: "The listener heard both files sequentially. Artistic preference and model fidelity remain unvalidated; assess the stated criterion in Live." };
+      const [one, two] = await Promise.all([MusicAudio.freeze(first), MusicAudio.freeze(second)]);
+      const [firstEvidence, secondEvidence] = await Promise.all([audioFileEvidence(first, one), audioFileEvidence(second, two)]);
+      return { ...(await ctx.services.compareAudio(one, two, question, levelMatch ?? true, ctx.signal)), a: firstEvidence, b: secondEvidence, note: "The listener heard both files sequentially. Artistic preference and model fidelity remain unvalidated; assess the stated criterion in Live." };
     },
   }),
   defineTool({
@@ -154,17 +183,22 @@ export const mediaTools: AnyTool[] = [
       }
       const bpm = tempo ?? (await tempoOf(ctx));
       const path = await ctx.services.singDemoVocal({ lines, tempo: bpm, voiceModel: voice.recording }, await ctx.temp.file("wav"), ctx.signal);
+      const frozen = await MusicAudio.freeze(path);
+      const source = await audioFileEvidence(path, frozen);
       const available = await ctx.services.available();
       const verification: Record<string, unknown> = { status: "not auditioned", note: "A generated file is not a verified vocal performance." };
       if (available.audio_understanding) {
-        try { verification.listening = await ctx.services.describeAudio(path, "Check this demo against the requested words, entrances, endings, breath and pronunciation. Report missing words or synthesis artefacts and uncertainty; do not certify artistic quality. Requested lyrics: " + lines.map((line) => line.text).join(" / "), ctx.signal); }
+        try {
+          verification.listening = await ctx.services.describeAudio(frozen, "Check this demo against the requested words, entrances, endings, breath and pronunciation. Report missing words or synthesis artefacts and uncertainty; do not certify artistic quality. Requested lyrics: " + lines.map((line) => line.text).join(" / "), ctx.signal);
+          verification.status = "model listening completed; musical quality remains unconfirmed";
+        }
         catch (error) { ctx.signal?.throwIfAborted(); verification.listeningError = error instanceof Error ? error.message : String(error); }
       }
       if (available.transcription) {
         try { verification.transcript = await ctx.services.transcribe(path, ctx.signal); }
         catch (error) { ctx.signal?.throwIfAborted(); verification.transcriptionError = error instanceof Error ? error.message : String(error); }
       }
-      return { path, tempo: bpm, source: await audioFileEvidence(path), verification };
+      return { path, tempo: bpm, source, verification };
     },
   }),
   defineTool({
@@ -177,7 +211,7 @@ export const mediaTools: AnyTool[] = [
       seconds: z.number().min(0.5).max(30),
       loop: z.boolean().optional(),
     },
-    run: async ({ prompt, seconds, loop }, ctx) => ({ path: await ctx.services.generateSound(prompt, seconds, await ctx.temp.file("mp3"), loop, ctx.signal) }),
+    run: async ({ prompt, seconds, loop }, ctx) => ({ path: await ctx.services.generateSound(prompt, seconds, await ctx.temp.file("wav"), loop, ctx.signal) }),
   }),
   defineTool({
     name: "voice_reference_set",
