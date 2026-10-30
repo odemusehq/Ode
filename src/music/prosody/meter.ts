@@ -40,6 +40,8 @@ export class Meter {
   constructor(
     readonly numerator: number = COMMON_TIME.numerator,
     readonly denominator: number = COMMON_TIME.denominator,
+    /** Offset of the supplied note coordinates from a bar line, in quarter-note beats. */
+    readonly beatOffset = 0,
   ) {
     this.compound = denominator === EIGHTH_NOTE_UNIT && numerator > COMPOUND_DIVISION && numerator % COMPOUND_DIVISION === 0;
     this.barLength = (numerator * QUARTERS_PER_WHOLE) / denominator;
@@ -49,7 +51,7 @@ export class Meter {
 
   /** Weight of a position given in quarter-note beats from the start of a bar line. */
   weightAt(position: number): number {
-    const inBar = ((position % this.barLength) + this.barLength) % this.barLength;
+    const inBar = (((position + this.beatOffset) % this.barLength) + this.barLength) % this.barLength;
     const beat = Math.floor((inBar + POSITION_TOLERANCE) / this.beatLength);
     const offset = inBar - beat * this.beatLength;
     if (Math.abs(offset) < POSITION_TOLERANCE) return this.beatWeight(beat % this.beatsInBar);

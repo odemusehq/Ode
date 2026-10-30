@@ -3,6 +3,7 @@ import type { LineAnalysis } from "../../shared/lyrics";
 import { melodyLine } from "./melody-line";
 import { Meter } from "./meter";
 import { ProsodyChecker } from "./prosody-checker";
+import type { PlannedSyllable } from "./option-chooser";
 
 /** Positions closer than this (in beats) count as the same. */
 const SAME_TIME = 1e-3;
@@ -23,6 +24,11 @@ export interface FittedLine {
   /** Syllables in the pronunciation that fits the phrase best. */
   syllables: number;
   noteCount: number;
+  /** The setting that was checked, including any splits, with alignment into this array. */
+  notes: Note[];
+  alignment: { syllable: number; note: number }[];
+  syllableDetails: PlannedSyllable[];
+  uncertainWords: string[];
   /** 0–1 from the prosody check; 1 means zero issues. */
   score: number;
   issues: { problem: string; fix: string }[];
@@ -89,6 +95,10 @@ export class MelodyFitter {
       phrase,
       syllables: report.syllables.length,
       noteCount: phrase.length,
+      notes: report.notes,
+      alignment: report.alignment,
+      syllableDetails: report.syllables,
+      uncertainWords: line.analysis.words.filter((word) => !word.certain).map((word) => word.text),
       score: report.score,
       issues: report.issues.map(({ problem, fix }) => ({ problem, fix })),
     };

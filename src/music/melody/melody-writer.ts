@@ -52,7 +52,9 @@ export class MelodyWriter {
   }
 
   write(lyric?: LineAnalysis): Note[] {
-    const totalBeats = Math.max(1, this.plan.bars) * this.meter.barLength;
+    const totalBeats = this.plan.lengthBeats ?? Math.max(1, this.plan.bars) * this.meter.barLength;
+    if (!Number.isFinite(totalBeats) || totalBeats <= 0) throw new Error("The melody length must be a finite positive number of beats.");
+    if (!Number.isFinite(this.plan.beatOffset ?? 0)) throw new Error("The melody's metrical offset must be finite.");
     const density = clamp(this.plan.density, MIN_DENSITY, MAX_DENSITY);
     const onsets = this.rhythm(lyric, totalBeats, density);
     const width = this.range.high - this.range.low;
@@ -66,6 +68,7 @@ export class MelodyWriter {
       centre: this.range.low + width * REGISTER_POSITION[this.plan.register],
       span: width * CONTOUR_SPAN_SHARE,
       totalBeats,
+      beatOffset: this.plan.beatOffset,
     });
     const firstPass = planner.plan(onsets, null);
     const motif = this.motifShape(planner, onsets, firstPass);
@@ -74,12 +77,12 @@ export class MelodyWriter {
       pitch: pitches[index] ?? Math.round(this.range.low + width / 2),
       start: onset.start,
       duration: onset.duration,
-      velocity: Math.min(MAX_VELOCITY, Math.round(BASE_VELOCITY + ACCENT_VELOCITY * this.meter.weightAt(onset.start))),
+      velocity: Math.min(MAX_VELOCITY, Math.round(BASE_VELOCITY + ACCENT_VELOCITY * this.meter.weightAt(onset.start + (this.plan.beatOffset ?? 0)))),
     }));
   }
 
   private rhythm(lyric: LineAnalysis | undefined, totalBeats: number, density: number): MelodyOnset[] {
-    const rhythm = new MelodyRhythm(this.meter, this.random);
+    const rhythm = new MelodyRhythm(this.meter, this.random, this.plan.beatOffset ?? 0);
     if (lyric && lyric.words.length > 0) {
       const syllables = new OptionChooser().plan(lyric, Math.round(totalBeats * density));
       if (syllables.length > 0) return rhythm.forSyllables(syllables, totalBeats);

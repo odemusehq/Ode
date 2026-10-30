@@ -46,6 +46,7 @@ export class MelodyRhythm {
   constructor(
     private readonly meter: Meter,
     private readonly random: SeededRandom,
+    private readonly beatOffset = 0,
   ) {}
 
   /** Places syllables on a grid so stressed ones land on strong positions, spread evenly, the last one held. */
@@ -66,7 +67,7 @@ export class MelodyRhythm {
       const earliest = index;
       const latest = lastSlot - (count - 1 - index);
       for (let slot = earliest; slot <= latest; slot++) {
-        const fit = stressMismatch(syllable.stress, this.meter.weightAt(slot * grid));
+        const fit = stressMismatch(syllable.stress, this.meter.weightAt(slot * grid + this.beatOffset));
         if (index === 0) {
           row[slot] = { cost: fit + LATE_START_COST_PER_BEAT * slot * grid, previous: -1 };
           continue;
@@ -96,7 +97,7 @@ export class MelodyRhythm {
     const wanted = Math.min(slots, Math.max(1, Math.round(motifBeats * density)));
     const sharpness = density <= SPARSE_DENSITY ? SPARSE_SHARPNESS : density <= MEDIUM_DENSITY ? MEDIUM_SHARPNESS : DENSE_SHARPNESS;
     const chosen = new Set<number>([0]);
-    const weights = Array.from({ length: slots }, (_, slot) => this.meter.weightAt(slot * grid) ** sharpness + WEIGHT_FLOOR);
+    const weights = Array.from({ length: slots }, (_, slot) => this.meter.weightAt(slot * grid + this.beatOffset) ** sharpness + WEIGHT_FLOOR);
     while (chosen.size < wanted) {
       const open = weights.map((weight, slot) => (chosen.has(slot) ? 0 : weight));
       chosen.add(this.random.weightedIndex(open));
@@ -143,7 +144,7 @@ export class MelodyRhythm {
 
   private finalLength(start: number, totalBeats: number, grid: number): number {
     const room = totalBeats - start - BREATH_BEATS;
-    return Math.max(grid, Math.min(MAX_HOLD_BEATS, room));
+    return Math.min(totalBeats - start, Math.max(grid, Math.min(MAX_HOLD_BEATS, room)));
   }
 
   /** The last motif instance ends on a held note: its final two notes become one. */

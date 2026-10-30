@@ -19,6 +19,7 @@ export interface PitchContext {
   centre: number;
   span: number;
   totalBeats: number;
+  beatOffset?: number;
 }
 
 export interface MotifShape {
@@ -165,7 +166,7 @@ export class PitchPlanner {
       return chordTone ? cost : cost + FINAL_NON_CHORD_COST;
     }
     const strong =
-      meter.weightAt(onset.start) >= METRICAL_WEIGHT.beat ||
+      meter.weightAt(onset.start + (this.context.beatOffset ?? 0)) >= METRICAL_WEIGHT.beat ||
       onset.duration >= LONG_NOTE_BEATS ||
       (onset.stress !== null && onset.stress !== Stress.None);
     if (!chordTone) cost += strong ? STRONG_NON_CHORD_COST : WEAK_NON_CHORD_COST;

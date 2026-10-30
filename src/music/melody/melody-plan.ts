@@ -26,6 +26,10 @@ export enum MelodyVariation {
 /** What the model describes in words; the code writes the notes. */
 export interface MelodyPlan {
   bars: number;
+  /** Explicit length permits unequal and sub-bar lyric phrases. */
+  lengthBeats?: number;
+  /** Where local beat zero falls in the meter (e.g. 3.5 for a pickup before beat 4). */
+  beatOffset?: number;
   /** The meter, so 6/8 keeps its two dotted-quarter beats (3/4 has three quarter-note beats). */
   signature: TimeSignature;
   contour: Contour;
