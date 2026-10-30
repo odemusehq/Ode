@@ -66,6 +66,8 @@ export interface AppState {
   busy: boolean;
   /** Stop can interrupt what Ode is doing now. */
   stoppable: boolean;
+  /** The configured transcription service is available; no provider request is made to check it. */
+  dictationReady: boolean;
   /** Null until the server says which mode Ode is in. */
   mode: Mode | null;
   /** The song's title. */
@@ -103,6 +105,7 @@ export function initialState(): AppState {
     stream: StreamState.Connecting,
     busy: false,
     stoppable: false,
+    dictationReady: false,
     mode: null,
     title: "",
     versionGroupMinutes: null,

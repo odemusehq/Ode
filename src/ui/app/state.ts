@@ -40,6 +40,7 @@ export class Store {
       ...this.state,
       busy: status.busy,
       stoppable: status.busy && status.stoppable,
+      dictationReady: status.dictationReady ?? false,
       progress: status.busy ? this.state.progress : null,
       mode: status.mode,
       title: status.title,
