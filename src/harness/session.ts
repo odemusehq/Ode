@@ -237,8 +237,10 @@ export class OdeSession {
     }
     this.deps.approvals.denyAll();
     this.deps.questions.cancelAll();
+    // Only a running request can leave work half issued, so only then does the production task wait for inspection.
+    const running = this.controller !== null;
     this.controller?.abort();
-    if (!this.retired) void this.deps.production?.interrupt("The musician stopped Ode. Inspect any work already issued before continuing.").catch((error: unknown) => this.deps.emit({ type: "error", message: OdeSession.errorText(error) }));
+    if (running && !this.retired) void this.deps.production?.interrupt("The musician stopped Ode. Inspect any work already issued before continuing.").catch((error: unknown) => this.deps.emit({ type: "error", message: OdeSession.errorText(error) }));
     this.exclusiveController?.abort();
   }
 

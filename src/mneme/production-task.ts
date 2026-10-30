@@ -123,7 +123,7 @@ export class ProductionTaskStore {
   }
 
   /** Stop/restart keeps the goal and work, but never treats an issued operation as proof of completion. */
-  interrupt(reason = "Interrupted. Inspect the current Set and saved observations before continuing."): Promise<ProductionTask | null> {
+  async interrupt(reason = "Interrupted. Inspect the current Set and saved observations before continuing."): Promise<ProductionTask | null> {
     const song = this.current();
     return this.enqueue(song, async () => {
       const task = await song.file.read();
