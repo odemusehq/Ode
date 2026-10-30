@@ -185,7 +185,7 @@ export const mediaTools: AnyTool[] = [
     name: "demo_vocal_render",
     changes: "none",
     description:
-      "Sing lyrics on a melody in the artist's own voice, so they can hear a demo vocal before recording. Give each lyric line with the notes it is sung on (beats from the start of the demo, in order, one or more notes per syllable after set_lyrics_to_melody; lyrics_fit_melody gives each line's phrase). Needs a saved recording of the artist's voice (voice_reference_set). Returns a WAV file to import into the project and place on an audio track.",
+      "Sing lyrics on a melody in the artist's own voice, so they can hear a demo vocal before recording. Give each lyric line with only the notes it is sung on (beats from the start of the demo, in order). From set_lyrics_to_melody use melody.notes and melody.alignment, whose zero-based note indices address that vocal subset; its top-level notes and alignment include preserved clip material and are for MIDI editing. lyrics_fit_melody returns each line's vocal notes and alignment. Needs a saved recording of the artist's voice (voice_reference_set). Returns a WAV file to import into the project and place on an audio track.",
     input: {
       lines: z.array(z.object({ text: z.string().min(1), notes: z.array(NoteSchema).min(1), pronunciation: z.string().optional(), alignment: z.array(z.object({ syllable: z.number().int().min(0), note: z.number().int().min(0) })).optional(), delivery: z.string().optional() })).min(1),
       tempo: z.number().min(LIVE_TEMPO.min).max(LIVE_TEMPO.max).optional().describe("Default: the Set's tempo"),
