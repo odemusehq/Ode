@@ -209,7 +209,7 @@ test("read-derived material keeps its original native guard while copies and rev
   } finally { r.close(); }
 });
 
-test("a child draft is discoverable by the parent without prose references and expires after exact placement", async () => {
+test("a child draft and precise edit are discoverable without prose references and expire after exact placement", async () => {
   const r = rig(); r.close();
   const input = { genre: "house", section: "chorus" as const, bars: 64, energy: 0.8, seed: 1, timeSignature: signature };
   const expected = await drumGrooveWriteTool.run(input, r.ctx) as { notes: Note[] };
@@ -222,8 +222,12 @@ test("a child draft is discoverable by the parent without prose references and e
       let message: unknown;
       if (agent === "subagent") {
         const round = childRound++;
-        message = round === 0 ? { tool_calls: [call("child-search", LoopTool.ToolSearch, { query: "drum_groove_write" })] }
-          : round === 1 ? { tool_calls: [call("draft", "drum_groove_write", input)] } : { content: "The draft is ready." };
+        if (round === 0) message = { tool_calls: [call("child-search", LoopTool.ToolSearch, { query: "drum_groove_write notes_edit" })] };
+        else if (round === 1) message = { tool_calls: [call("draft", "drum_groove_write", input)] };
+        else if (round === 2) {
+          const draft = JSON.parse(messages.findLast((item) => item.tool_call_id === "draft")!.content!);
+          message = { tool_calls: [call("precise", "notes_edit", { notes: draft.notes, updates: [{ index: 0, set: { velocity: 72 } }] })] };
+        } else message = { content: "The draft is ready." };
       } else {
         const round = mainRound++;
         if (round === 0) message = { tool_calls: [call("child", LoopTool.Subagent, { task: "Draft a 64-bar house chorus." })] };
@@ -231,7 +235,7 @@ test("a child draft is discoverable by the parent without prose references and e
           call("writer-search", LoopTool.ToolSearch, { query: "track_create_midi_clip" })] };
         else if (round === 2) {
           const inventory = JSON.parse(messages.findLast((item) => item.tool_call_id === "inventory")!.content!);
-          discovered = inventory.items.find((item: any) => item.sourceTool === "drum_groove_write").ref;
+          discovered = inventory.items.find((item: any) => item.sourceTool === "notes_edit").ref;
           const args = { track: { index: 0 }, start: 32, length: 256, notes: discovered, name: "Child groove" };
           writerChars = JSON.stringify(args).length;
           message = { tool_calls: [call("place", "track_create_midi_clip", args)] };
@@ -248,6 +252,36 @@ test("a child draft is discoverable by the parent without prose references and e
   assert.equal(approvals, 1);
   assert.ok(discovered && writerChars < 1000);
   const placed = r.track.arrangementClips.find((clip) => clip.startTime === 32) as unknown as { notes: unknown };
-  assert.deepEqual(placed.notes, toLiveNotes(expected.notes));
+  assert.deepEqual(placed.notes, toLiveNotes(expected.notes.map((note, index) => index === 0 ? { ...note, velocity: 72 } : note)));
   assert.equal((await r.run("midi_material_read", { id: discovered.id, section: "notes" })).ok, false);
+});
+
+test("a tiny dense-clip edit preserves all other notes and must reconcile intervening manual changes", async () => {
+  const r = rig(), clip = { track: { index: 0 }, start: 0 };
+  try {
+    const dense: Note[] = Array.from({ length: 1024 }, (_, index) => ({ pitch: 60 + index % 12, start: index * 0.125 + 0.003,
+      duration: 0.09, velocity: 87, muted: index % 17 === 0, probability: index % 19 === 0 ? 0 : 0.7, velocityDeviation: 3, releaseVelocity: 45 }));
+    const held = r.source as unknown as { notes: ReturnType<typeof toLiveNotes> }; held.notes = toLiveNotes(dense);
+    const read = result(await r.run("midi_clip_get_notes", { clip }));
+    const edit = { notes: read.notes, updates: [{ index: 998, set: { pitch: 65, velocity: 72 } }] };
+    assert.ok(JSON.stringify(edit).length < 1000);
+    const beforeCalls = r.calls.length, draft = result(await r.run("notes_edit", edit));
+    assert.equal(r.calls.length, beforeCalls, "Drafting an edit must not call the host.");
+    assert.equal(r.registry.find("notes_edit")?.changes, "none");
+    assert.equal(r.registry.available("subagent").some((tool) => tool.name === "notes_edit"), true);
+    const expected = dense.map((note, index) => index === 998 ? { ...note, pitch: 65, velocity: 72 } : note);
+    assert.deepEqual(await r.exactNotes(draft.notes), clean(expected));
+    const manual = { pitch: 79, startTime: 200.37, duration: 0.29, velocity: 101, probability: 0.6 };
+    held.notes.push(manual);
+    const fresh = result(await r.run("midi_clip_get_notes", { clip }));
+    const stale = await r.run("midi_clip_set_notes", { clip, notes: draft.notes, expected: { token: fresh.recoveryToken } });
+    assert.equal(stale.ok, false, "The inherited source guard must survive precise editing.");
+    assert.deepEqual(held.notes.at(-1), manual);
+    const current = await r.exactNotes(fresh.notes);
+    const reconciled = result(await r.run("notes_edit", { ...edit, notes: fresh.notes }));
+    const applied = await r.run("midi_clip_set_notes", { clip, notes: reconciled.notes, expected: { token: fresh.recoveryToken } });
+    assert.equal(applied.ok, true, applied.text);
+    assert.deepEqual(held.notes, toLiveNotes(current.map((note, index) => index === 998 ? { ...note, pitch: 65, velocity: 72 } : note)));
+    assert.deepEqual(await r.exactNotes(read.notes), clean(dense), "The original captured material remains immutable after application.");
+  } finally { r.close(); }
 });

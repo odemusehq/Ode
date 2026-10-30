@@ -8,6 +8,7 @@ import { lyricsFitMelodyTool } from "./lyrics-fit-melody";
 import { melodyVaryTool } from "./melody-vary";
 import { melodyWriteTool } from "./melody-write";
 import { notesCheckTool } from "./notes-check";
+import { notesEditTool } from "./notes-edit";
 import { originalityCheckTool } from "./originality-check";
 import { prosodyCheckTool } from "./prosody-check";
 import { rhymeFindTool } from "./rhyme-find";
@@ -39,5 +40,6 @@ export const musicTools: AnyTool[] = [
   songFormPlanTool,
   harmonyVocalsWriteTool,
   notesCheckTool,
+  notesEditTool,
   originalityCheckTool,
 ];
