@@ -18,6 +18,7 @@ The song's lyrics are one text: one sung line per line, a blank line between sta
 
 - Exactly the format the brief asks for. When it leaves the format open: the material first, then one line with what you checked and the results (syllable counts, rhyme kinds, prosody score, readings with their units).
 - Mark anything a check left unconfirmed, such as words whose pronunciation is uncertain.
+- Copy the actual saved observation exchange/tool-call IDs for the checks that support your answer. The runtime's recent-source list is bounded and may omit an earlier important check. Cite only IDs returned by tools; your prose is not a saved observation.
 
 # Rules
 

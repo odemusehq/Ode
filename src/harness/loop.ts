@@ -1,4 +1,5 @@
 import type { ChatCompletionMessageParam, ChatCompletionMessageToolCall, ChatCompletionTool } from "openai/resources/chat/completions";
+import { randomUUID } from "node:crypto";
 import type { ChatReply } from "../services/capabilities";
 import type { Services } from "../services/types";
 import type { AgentLimits } from "../shared/config";
@@ -75,6 +76,25 @@ export interface LoopRun {
   production?: ProductionRun;
   onMutation?: () => void;
   onReceipts?: (receipts: readonly MutationReceipt[]) => void;
+  /** Runtime-owned citation collection for one child invocation; never a model/provider identifier. */
+  childCitations?: ChildCitations;
+}
+
+interface ChildCitation {
+  exchangeId: string;
+  toolCallId: string;
+  name: string;
+  ok: boolean;
+  targetScope: "inferred" | "explicit";
+  targetPreview: string[];
+  targetCount: number;
+}
+
+interface ChildCitations {
+  id: string;
+  next: number;
+  total: number;
+  recent: ChildCitation[];
 }
 
 /** How a run ended. */
@@ -338,9 +358,16 @@ export class AgentLoop {
     }
     run.events.toolFinished(call.id, outcome.ok);
     let citation = "";
-    if (run.agent === "main" && run.exchangeId && this.deps.observations) {
+    if (run.exchangeId && this.deps.observations) {
+      const toolCallId = run.childCitations ? `subagent:${run.childCitations.id}:${++run.childCitations.next}` : `main:${randomUUID()}`;
       try {
-        const saved = await this.deps.observations.record({ exchangeId: run.exchangeId, toolCallId: call.id, name, input: outcome.input ?? {}, ok: outcome.ok, text: outcome.text, targets: outcome.targets });
+        const saved = await this.deps.observations.record({ exchangeId: run.exchangeId, toolCallId, name, input: outcome.input ?? {}, ok: outcome.ok, text: outcome.text, targets: outcome.targets });
+        if (run.childCitations) {
+          run.childCitations.total++;
+          run.childCitations.recent.push({ exchangeId: saved.exchangeId, toolCallId: saved.toolCallId, name: saved.name, ok: saved.ok,
+            targetScope: saved.targetScope, targetPreview: saved.targets.slice(0, 3), targetCount: saved.targets.length });
+          run.childCitations.recent = run.childCitations.recent.slice(-12);
+        }
         citation = `\nSaved observation: ${JSON.stringify({ exchangeId: saved.exchangeId, toolCallId: saved.toolCallId, targets: saved.targets })}. This records the outcome, not artistic quality or later currentness.`;
       } catch (error) {
         citation = `\nObservation was not saved: ${error instanceof Error ? error.message : String(error)}. Do not cite this call as saved evidence.`;
@@ -390,6 +417,7 @@ export class AgentLoop {
       this.slots.set(depth, slots);
     }
     run.events.subagentStarted(id, AgentLoop.firstSentence(task));
+    const citations: ChildCitations = { id: randomUUID(), next: 0, total: 0, recent: [] };
     try {
       const result = await slots.use(async () => {
         if (run.signal.aborted) return { reply: "", tokens: 0, end: LoopEnd.Cancelled };
@@ -404,15 +432,42 @@ export class AgentLoop {
           events: QUIET,
           signal: run.signal,
           budget: run.budget,
+          exchangeId: run.exchangeId,
+          childCitations: citations,
         });
       });
-      if (result.end !== LoopEnd.Reply) return `The subagent stopped at its ${result.end} before finishing.${result.reply ? ` Its last words: ${result.reply}` : ""}`;
-      return result.reply;
+      const reply = result.end !== LoopEnd.Reply ? `The subagent stopped at its ${result.end} before finishing.${result.reply ? ` Its last words: ${result.reply}` : ""}` : result.reply;
+      return this.childAnswer(reply, citations);
     } catch (error) {
-      return `The subagent stopped: ${error instanceof Error ? error.message : String(error)}`;
+      return this.childAnswer(`The subagent stopped: ${error instanceof Error ? error.message : String(error)}`, citations);
     } finally {
+      if (run.childCitations) {
+        run.childCitations.total += citations.total;
+        run.childCitations.recent = [...run.childCitations.recent, ...citations.recent].slice(-12);
+      }
       run.events.subagentFinished(id);
     }
+  }
+
+  /** Reserve room for whole source references even when a child's prose is long. */
+  private childAnswer(reply: string, saved: ChildCitations): string {
+    const limit = this.deps.limits.toolResultMaxChars;
+    const prefix = "\n\nSaved child observations: ";
+    const metadata = (citations: ChildCitation[]) => JSON.stringify({ total: saved.total, omitted: saved.total - citations.length, citations,
+      note: "Actual tool outcomes, not evidence from child prose or proof of artistic quality/currentness. targetPreview may omit saved targets." });
+    const selected: ChildCitation[] = [];
+    for (const ref of [...saved.recent].reverse()) {
+      if (prefix.length + metadata([ref, ...selected]).length <= Math.floor(limit / 3)) selected.unshift(ref);
+    }
+    const trailer = prefix + metadata(selected);
+    if (trailer.length > limit) {
+      const compact = prefix + JSON.stringify({ total: saved.total, omitted: saved.total, citations: [] });
+      return compact.length <= limit ? compact : "Child reply omitted: result limit too small.".slice(0, Math.max(0, limit));
+    }
+    const available = Math.max(0, limit - trailer.length);
+    const cut = "\n… child answer cut to retain saved observation references.";
+    const prose = reply.length <= available ? reply : reply.slice(0, Math.max(0, available - cut.length)) + cut.slice(0, available);
+    return prose + trailer;
   }
 
   private static firstSentence(text: string): string {
