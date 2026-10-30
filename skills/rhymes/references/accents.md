@@ -1,6 +1,6 @@
 # Rhymes across accents
 
-A rhyme depends on the stressed vowel and everything after it, and accents differ in exactly those sounds. This file explains the main differences between UK and US English that change rhymes, plus regional accents worth knowing. The rhyme check always has the final word for the accent in the settings; the labels in these tables are the ones it gives. Use this to anticipate problems and to say in a few words why a pair rhymes in one accent only.
+A rhyme depends on the stressed vowel and everything after it, and accents differ in exactly those sounds. This file explains the main differences between UK and US English that change rhymes, plus regional accents worth knowing. The labels in these tables describe the rhyme check's UK/US classification, not the artist's actual accent or a musical quality verdict. Their sung pronunciation and chosen rhyme take precedence. Use this to anticipate problems and to say in a few words why a pair rhymes in one accent only.
 
 ## Contents
 1. The "r" after a vowel

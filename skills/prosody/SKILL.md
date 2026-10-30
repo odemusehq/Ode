@@ -1,11 +1,11 @@
 ---
 name: prosody
-description: Make words and music agree in the Set — stressed syllables on strong beats, long notes on open vowels, simple consonants on fast notes, phrases that can be sung in one breath, and section shapes that feel settled or unsettled as they should. Ode fixes these in place, by moving the melody's notes or changing the words in the song's lyrics, and checks the result with its prosody and singability checks. Use this whenever words meet a melody — a "stress off" or "hard to sing" fix, a topline written or edited under existing words, words written for an existing melody, a line that "sounds wrong", "feels awkward" or "falls flat" — and before reporting any lyric that is sung on notes.
+description: Review words and music together in the Set — stress, vowel colour, articulation, breathing and section shape — using speech alignment as one approach while retaining deliberate departures. Ode fixes these in place, by moving the melody's notes or changing the words in the song's lyrics, and checks the result with its prosody and singability checks. Use this whenever words meet a melody — a "stress off" or "hard to sing" fix, a topline written or edited under existing words, words written for an existing melody, a line that "sounds wrong", "feels awkward" or "falls flat" — and before reporting any lyric that is sung on notes.
 ---
 
 # Prosody
 
-Prosody is the fit between what is said and how it is set. When it works, the words sound as if they could only be sung that way. When it fails, listeners hear words wrongly stressed ("TO-mor-row"), feel the music pulling against the words, or sense that something is off without knowing why. Most "this line feels awkward" problems are prosody problems, and most of them are fixed by moving a note, with the line's words left as they are.
+Prosody is the fit between what is said and how it is set. When it works, the words sound as if they could only be sung that way. When it fails, listeners hear words wrongly stressed ("TO-mor-row"), feel the music pulling against the words, or sense that something is off without knowing why. Speech alignment is useful when natural delivery is wanted. Displaced stresses, awkwardness and tension can be intentional; a check finding alone is not a reason to correct them.
 
 ## The loop
 
@@ -14,19 +14,19 @@ Prosody is the fit between what is said and how it is set. When it works, the wo
    - What is locked: everything the lead sheet's locked list names (a lyric line, a melody the musician loves, a recorded vocal).
    - The time signature established by the musician, the tempo, the song's key, and the vocal range from the settings (or a typical range when it is unset). The installed SDK cannot read the current Arrangement meter; a scene's launch meter does not establish it. Keep the meter unknown until established, and obtain it before running checks that use metrical stress.
    - The hand edits since the last request: if the musician just moved notes or retyped the line, start from what they did.
-2. **Decide** the smallest change that puts the stress right, in this order:
+2. **Decide** what emphasis the musician wants, then choose the smallest authorised change. Possible moves:
    1. **Rhythm only:** shift a note, shorten or lengthen it, add or drop a pickup. Words and pitches stay as they are.
    2. **One word:** a word with its stress in the right place, or a different word order.
    3. **The whole line**, keeping its meaning and its rhyme.
    4. **Pitch:** make the stressed syllable the higher note, once rhythm has run out of options.
-   Locked words mean you fix the notes. A locked melody means you fix the words. When both are locked, everything stays as it is: say in the result line what still fails.
-3. **Change in place.** Edit the notes of the existing melody clip, or the line's words in the lyrics, saved against the revision you read. The fix always goes into what is already there: Again gives another take and the version history keeps the old one. Moved notes stay in the song's key and inside the singer's range.
+   Locked words mean you fix the notes. A locked melody means you fix the words. When both are locked, leave them; describe any relevant finding without treating their chosen setting as a failure.
+3. **Change in place.** Edit the notes of the existing melody clip, or the line's words in the lyrics, saved against the revision you read. The fix always goes into what is already there: Again gives another take and the version history keeps the old one. Moved notes respect explicit range bounds and the intended harmony, including deliberate chromaticism.
 4. **Verify** every line whose words or notes you changed:
-   - **Prosody check** against the new notes: it comes back clean. That means every stressed syllable sits on a note at least as strong as its unstressed neighbours, the line's longest note carries a stressed syllable, and the melodic peak carries a content word.
-   - **Syllable check:** one note per syllable, or a melisma only where you meant one, on an open, stressed vowel.
+   - **Prosody check** against the new notes: inspect stress, note length and melodic peaks against the intended delivery. Keep deliberate stress shifts or emphasis on a function word; a clean heuristic is not an artistic requirement.
+   - **Syllable check:** review the intended mapping, including melisma and articulation, rather than requiring equal counts.
    - **Singability check:** treat vowel, consonant and breath findings as English-language heuristics. When tempo is known, the tool flags phrases longer than four seconds without a rest of at least 0.25 seconds; the singer's delivery decides whether a breath is needed.
-   - **Key and range:** every moved note is in the key and inside the singer's range.
-   Fix and check again, up to three rounds; if a problem remains, the result line says which.
+   - **Key and range:** inspect harmonic context and keep moved notes within explicit singer bounds; retain intentional non-diatonic notes.
+   Fix unintended problems and check again, up to three rounds; report any remaining finding or deliberate departure.
 5. **Let them hear it.** The result line says where the change is, so the musician can play it: moved notes by their bars, from a bar earlier when the change is at the start of a section; changed words by the line's label, which names the locator to play from.
 6. **Report in one line**: what moved or changed · what was checked. For example:
    - "Verse 2, line 1: 'for' now comes in on the 'and' of 4, so 'forget' lands on GET (beat 1) · stresses fit, same pitches."
@@ -46,7 +46,7 @@ Every word of two or more syllables has a fixed stress (to-MOR-row, a-FRAID, BEA
 - In 3/4, beat 1 is strong and beats 2 and 3 are weak. In 6/8 there are two main beats, 1 and 4, each divided into three.
 - A note also gains weight from being longer than its neighbours or from being a melodic high point.
 
-**The test:** each stressed syllable should feel at least as strong as the unstressed syllables next to it, by beat position, length or pitch. A stressed syllable on a weak, short, low note next to an unstressed syllable on a strong, long, high one sounds wrong. The prosody check measures exactly this.
+**A useful comparison:** when natural speech stress is the aim, compare neighbouring syllables by beat position, length and pitch. The prosody check approximates that relationship; delivery, accompaniment and intentional displacement may make a flagged setting work.
 
 **Syncopation is fine.** A stressed syllable that arrives just before the beat and is held through it (an anticipation) is heard as strong; it is everywhere in pop and R&B. What matters is that the stressed syllable stands out; its exact place on the grid matters less.
 
@@ -71,7 +71,7 @@ In the draft, every stressed syllable falls on a weak "and" and every unstressed
 
 - Say the line aloud at a natural speed. Its rhythm (which syllables are long, which are quick, where the pauses fall) is the best first draft of its musical rhythm.
 - Long, stressed syllables want longer notes; unstressed syllables want short ones. Function words (a, the, of, to, and) on long notes or melodic peaks sound oddly important.
-- Conversational styles follow speech closely; anthemic styles stretch words over long notes. Both still need the stresses in the right places.
+- Conversational styles follow speech closely; anthemic styles stretch words over long notes. Either can also displace stress deliberately.
 - Breathing is part of the rhythm. A long phrase needs a natural place to breathe, usually where a comma would go.
 
 ## Note length and vowels
@@ -89,14 +89,14 @@ Only vowels can be sustained, so a long note is a held vowel. Choose words whose
 - **Consonant clusters** ("strengths", "sixths", "texts", "asked") are hard to say on fast notes. Keep fast passages to light words with simple consonants.
 - **Sibilants** ("s", "sh") hiss on held notes; put them at the ends of phrases or on short notes.
 - **Word boundaries blur when sung.** "A nice man" can be heard as "an ice man". Hear the line in your head at tempo and listen for a different phrase appearing (a mondegreen), above all in the title line.
-- **Breath:** a phrase has to fit in one breath at the song's tempo, with time to breathe before the next.
+- **Breath:** plan practicable breath points for this singer, including breaks within a long phrase or an intentionally layered performance.
 - **Range:** keep important words out of the extremes of the singer's range unless the strain is the point (an emotional climax). The melody skill covers range itself.
 
 `references/singability.md` has more on vowels and consonants, with words that work well and badly on held notes.
 
 ## Structural prosody
 
-The shape of a section carries feeling before anyone hears a word. When you write or rework a section, match its shape to what it should feel like.
+Section shape can influence feeling. The associations below are possibilities to try in context, not reliable equations between form and emotion.
 
 - **Line count:** an even number of lines (2, 4) feels settled; an odd number (3, 5) feels unsettled and leans forward.
 - **Line lengths:** matched lengths feel balanced; a short line after long ones lands like a punch; lines that get shorter build urgency; lines that get longer can feel like spilling over.
@@ -127,6 +127,8 @@ The lines shrink from 8 to 6 to 4 syllables and all three stay unrhymed, so the 
 - **Harmony** colours meaning too, case by case: a minor key can sound tender or defiant as well as sad, and bright music under bittersweet words is an established, powerful contrast.
 
 ## Working order
+
+Start with the material the musician wants to develop. These are examples, not a required sequence; words, rhythm, harmony and melody can be revised together.
 
 - **Lyric first:** mark the stresses and the most important word in each line, decide which words should be peaks and which should be held, then write or adjust the notes to fit.
 - **Melody first:** map the strong beats, the long notes and the high notes, then choose words whose stresses land on the strong positions and whose vowels suit the long and high notes.

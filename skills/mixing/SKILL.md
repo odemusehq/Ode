@@ -45,7 +45,7 @@ Organise → gain staging → static balance (faders and pan) → corrective EQ 
 - Set levels with a Utility at the start of the chain, and keep faders near their middle range for balance.
 - Re-check levels after EQ boosts, saturation and resonant filters; they raise the level.
 - Leave the Main track peaking around −6 to −3 dBFS while mixing.
-- Mix with any limiter on the Main track switched off, then switch it back as it was: a limiter hides overs, squashes the loud parts being balanced, and makes everything sound better simply because it is louder. Loudness belongs to mastering.
+- Temporarily bypass a Main limiter only when that comparison helps and it is not integral to the artist's sound; restore it afterwards and compare at matched loudness. Preserve an intentionally limited mix.
 
 ## Balance
 

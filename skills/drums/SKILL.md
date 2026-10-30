@@ -25,7 +25,7 @@ Drums set the time feel, the energy of each section, and the pocket that bass, c
 
 ### 2. Decide
 
-Choose the feel, the pattern and what varies, using the craft below: roles kept distinct, the backbeat where the style expects it, fills only at phrase ends, and a section's energy shown by pattern changes as well as level.
+Choose feel, pattern and variation from the request. The grids, velocity ranges and phrase lengths below are examples, not required accents or limits; a displaced backbeat, mid-phrase fill or unchanging machine groove may be the point.
 
 ### 3. Change it in place
 
@@ -38,17 +38,17 @@ Choose the feel, the pattern and what varies, using the craft below: roles kept 
 
 ### 4. Verify
 
-Run every check that applies, fix what fails and check again, up to three rounds. If something still fails, the result line says what.
+Run relevant checks, fixing unintended problems up to three rounds. Pad availability and preservation still apply; review groove, velocity and phrasing against the intended feel rather than forcing a template.
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
 | Pads | every note is on a pad the Drum Rack has |
 | Backbeat | snare or clap on 2 and 4 (beat 3 in half-time), unless moved on purpose |
 | Kick and bass | where the bass locks to the kick, each of those bass notes starts with a kick hit, within a 32nd note |
-| Velocity | accents, normal hits and ghost notes are clearly different, and every part's velocities vary |
+| Velocity | inspect the chosen accent shape; varied dynamics, flat machine velocities and extreme contrasts can each be deliberate |
 | Density | the hat subdivision suits the tempo (straight sixteenths blur above about 150 BPM unless the style wants them) |
-| Fill | it sits at the end of a phrase, starts after the vocal line ends, and lands on the next downbeat with a kick (and a crash at a section change); a build's velocities rise |
-| Sections | a chorus differs from its verse in more than velocity: subdivision, kick pattern, open hats, a layered snare |
+| Fill | review placement and landing against the chosen phrase and vocal interaction; a downbeat kick/crash and rising velocity are options |
+| Sections | assess the requested contrast or continuity; identical patterns can be intentional |
 | Loop | every note ends by the clip's end, and the last bar leads cleanly back into the first |
 
 Bars outside the change, and locked parts, must be exactly as they were.
@@ -65,7 +65,7 @@ What changed, then " · ", then what was checked:
 - "Hats now accented, ghost snares around 2 and 4, kick left on the grid · velocities 24–118, loop ends clean."
 - "Chorus groove opened up: sixteenth hats, open hat into each bar, extra kick on the 'and' of 3 · backbeat kept, kick still with the bass on 1 and 3."
 
-When a groove is outside the artist's usual style (half-time for someone who always plays straight), the line says "outside your usual style".
+Explain an unexpected feel change when it helps the musician compare takes; a requested half-time or other new groove needs no style disclaimer.
 
 ## When to ask
 
@@ -124,12 +124,12 @@ Too many ghost notes make the groove busy and muddy; leave space around each bac
 - A drummer hits every note a little differently. Give each pattern an accent shape, then add small variation (±5 to 10) to hats and ghost notes.
 - In electronic styles keep the kick and backbeat steady for punch; in acoustic styles let them vary slightly too.
 - Timing: small offsets (a few milliseconds) on hats and percussion, plus deliberate ones such as a late snare for a laid-back feel. Leave the kick on the grid when the bass is locked to it.
-- Change the pattern a little every four or eight bars — an extra kick, an open hat, a dropped hat — so the loop sounds performed.
+- For a performed feel, try a small variation every four or eight bars; keep an unchanged loop when its repetition serves the track.
 
 ## Fills and transitions
 
 - Put fills at the ends of phrases: small ones (a beat, a few snare or kick notes) every four or eight bars, bigger ones (up to a bar) at section changes.
-- A fill lands on the next downbeat, usually with a crash and a kick on beat 1.
+- A fill often lands on the next downbeat with a crash and kick; delayed, missing or offset landings can also work.
 - Types: a snare build (eighths → sixteenths → thirty-seconds with rising velocity), a tom fill moving high to low, kick and snare in unison, a drop-out (the drums stop for a beat or a bar before the chorus), a reverse cymbal or riser (the sound-design skill).
 - Leave room for the vocal: a fill under the last word of a line fights it, so the fill starts after the line ends.
 - Minimal styles (house, trap) use fewer fills; their transitions come from adding or removing elements, rolls and risers.
@@ -154,10 +154,10 @@ Next bar: crash and kick together on beat 1.
 | Pre-chorus | a build: denser hats, more kick, a snare or tom build, or the kick dropped out for tension |
 | Chorus | fullest: open hats or ride, extra kicks, a layered snare and clap, a crash on the downbeat |
 | Bridge or breakdown | strip back: the kick dropped, half-time, or percussion only |
-| Final chorus | the chorus plus one more element (tambourine, extra percussion, bigger fills) |
+| Final chorus | a possible extra element for a final lift, or a reduced/unchanged groove for another ending |
 | Outro | thin out, or the chorus groove into a hard stop |
 
-Change the pattern between sections, as well as the level: the same beat played louder still sounds like the verse.
+Pattern changes can distinguish sections; the same beat with a new level, texture or lyric may also supply the intended continuity.
 
 ## Kits
 

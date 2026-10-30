@@ -1,11 +1,11 @@
 ---
 name: melody
-description: Write, fix and vary toplines, hooks, riffs and countermelodies directly in the Set. Ode edits the notes of the melody clip the musician points at, checks key, the singer's range, chord tones on strong beats, leaps, breaths and, when words are set, syllable fit, prosody and singability, then reports in one line which bars changed, so the musician can play them. Use this skill whenever a melody, topline, lead or hook clip is selected, or the musician clicks a suggestion or types anything about a melody — "make the chorus lift", "catchier", "simpler", "higher", "fix the out-of-key notes", "set these words", "write something over these chords", a hummed idea to develop — whatever words they use.
+description: Write, fix and vary toplines, hooks, riffs and countermelodies directly in the Set. Ode edits the notes of the melody clip the musician points at, reviews key, the singer's range, harmonic tension, leaps, breaths and, when words are set, lyric setting, prosody and singability, then reports in one line which bars changed, so the musician can play them. Use this skill whenever a melody, topline, lead or hook clip is selected, or the musician clicks a suggestion or types anything about a melody — "make the chorus lift", "catchier", "simpler", "higher", "fix the out-of-key notes", "set these words", "write something over these chords", a hummed idea to develop — whatever words they use.
 ---
 
 # Melody
 
-A good melody is easy to remember, comfortable to sing, agrees with the harmony, carries the words naturally, and goes somewhere: it rises to a high point and comes to rest. Most melodic problems come from losing one of those five. Ode works on the melody already in the Set: it changes the notes the musician points at, checks them, and the musician plays the result in Live straight away.
+Memorability, comfortable singing, harmonic agreement and a clear contour can help a melody. A musician may instead want a chant, a low chorus, an angular line or unresolved tension; develop that intention rather than normalising it. Ode works on the melody already in the Set: it changes the notes the musician points at, checks them, and the musician plays the result in Live straight away.
 
 ## Conventions
 
@@ -29,12 +29,12 @@ For continuing song work, use `hook_retain` after choosing the actual tagged MID
 - The melody's notes, and the chords under them: the chord part's notes or the lead sheet's chord chart, with how long each chord lasts.
 - The neighbouring sections' melodies. "Higher", "busier" and "lift" are relative: a chorus lifts only against its verse.
 - The words sung on these notes (the section's lines in the lyrics), when there are any.
-- The singer's comfortable range: the song's settings, then the musician's settings, then what memory knows from their own sung parts. When the musician tells you their range, store it as their setting. These are the only sources of the range. When it is unknown, keep to about A3–D5 and say so in the result line.
+- The singer's comfortable range: the song's settings, then the musician's settings, then what memory knows from their own sung parts. Keep a range given for this song in lead_sheet.settings; make it an artist preference only when they explicitly describe it as enduring. These are the only sources of the range. When it is unknown, keep to about A3–D5 and say so in the result line.
 - What is locked, and the groove: where the kick and snare fall.
 
 ### 2. Decide
 
-Plan in words before placing notes: the motif, the contour, the range, the rhythmic feel, where the high point falls, how each phrase ends. Keep what makes the melody recognisable, usually the motif's rhythm and the hook, and change what the request is about; write something new only when that is what was asked. The craft sections below give the rules.
+Plan in words before placing notes: the motif, the contour, the range, the rhythmic feel, where the high point falls, how each phrase ends. Keep what makes the melody recognisable, usually the motif's rhythm and the hook, and change what the request is about; write something new only when that is what was asked. The craft sections below offer approaches to try.
 
 ### 3. Change it in place
 
@@ -48,18 +48,18 @@ Plan in words before placing notes: the motif, the contour, the range, the rhyth
 
 Run the checks that apply and report their coverage. Explicit range and preservation constraints are hard requirements. Chromatic notes, suspensions, syncopation, melismas and deliberate stress departures are musical choices: inspect their intention/resolution before changing them. A passed note check is not a listening or artistic-quality verdict. English pronunciation tools are heuristic and do not establish multilingual lyric expertise.
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
-| Key | every note is in the song's scale, or is a chromatic note placed on purpose: a passing or neighbour note on a weak beat that resolves by step, or a note of a borrowed chord sounding at that moment |
-| Range | every note is inside the singer's range; the highest notes are brief and leave a little room below the top |
-| Chord tones | every note starting on beat 1 or 3, or where the chord changes, is a chord tone (root, 3rd, 5th, or the 7th of a seventh chord) or a colour tone the chord part also plays; weak-beat non-chord tones resolve by step |
-| Leaps | each leap of a fourth or more inside a phrase is followed by a step the other way; tritone, major-seventh and augmented-second leaps only where the style asks for them |
-| Breath | a beat or more of rest between phrases at medium tempos, and every phrase within one comfortable breath (about eight beats without a rest) |
-| Lift | when the request is about lift or contrast: the chorus's tessitura (where most notes sit) is a third to a fifth above the verse's, and its peak is the highest so far |
-| Syllables | with words: the lyrics-to-melody check, which splits the melody into one phrase per line, finds each line's phrase with as many notes as one of its syllable counts, or a melisma you chose on a key word |
-| Prosody | with words: the prosody check finds every stressed syllable on a note at least as strong as its unstressed neighbours |
-| Singability | with words: the singability check finds high held notes free of closed vowels ("ee", "oo") and very short notes free of consonant clusters |
-| Clashes | every long note stays clear of a half-step clash with any note the chord part, the bass or a countermelody holds at the same time in the same octave |
+| Key | inspect departures from the scale against the intended harmony; chromatic, modal, blues and deliberately unresolved notes need not resolve by step |
+| Range | every note respects explicit singer bounds; consider tessitura and duration for comfort without assuming every high note must be brief |
+| Harmony | review accented and held notes against the actual chords. Chord tones offer stability; suspensions, extensions, dissonance and unresolved tones can be intentional, including on beats 1 and 3 |
+| Leaps | inspect large intervals for this singer and requested contour; recovery by an opposite step is an option, not a requirement |
+| Breath | review usable breaths at the actual tempo and delivery; a beat of rest or eight-beat phrase is only a rough starting point |
+| Lift | when requested, assess contrast in this song: register, rhythm, space, contour or accompaniment may supply it; the chorus need not rise or contain the highest note |
+| Syllables | with words: review the actual syllable-to-note mapping, including melisma, pickups and articulation; a helper's count or phrase split alone does not decide fit |
+| Prosody | with words: inspect stress findings against intended delivery, preserving deliberate displacement |
+| Singability | with words: use vowel and consonant findings as practical prompts for the singer, not compulsory word substitutions |
+| Clashes | identify simultaneous close intervals and judge whether their tension serves the request; keep an insisted dissonance and explain its effect |
 
 Locked parts must be exactly as they were.
 
@@ -75,7 +75,7 @@ What changed, then " · ", then what was checked:
 - "Bars 5–6, which repeated the opening motif, now answer it · chord tones on 1 and 3, both leaps recovered."
 - "Two out-of-key notes in bar 3 moved into the scale · the rest as it was."
 
-When a take is outside the artist's usual style (judged from their own songs and what they have said), the line says "outside your usual style".
+Describe a stylistic departure only when it helps explain an unrequested choice; the current request may deliberately depart from earlier songs.
 
 ## When to ask
 
@@ -93,7 +93,7 @@ A motif is a short, recognisable idea, usually two to six notes over one or two 
 Keep the motif and develop it:
 
 - **Repetition** — exactly the same; the strongest glue, used most in choruses.
-- **Sequence** — the same shape starting on another degree, often a step or a third away; keeps identity while the harmony moves. Adjust intervals so strong-beat notes stay chord tones (a modified sequence).
+- **Sequence** — the same shape starting on another degree, often a step or a third away; keeps identity while the harmony moves. For a consonant sequence, adjust intervals to the changing chords (a modified sequence).
 - **Changed ending** — same start, new last note; turns a statement into a question or an answer.
 - **Rhythmic displacement** — start it half a beat or a beat later; sounds fresh without new material.
 - **Augmentation and diminution** — longer or shorter note values; augmentation makes a chorus feel broad, diminution adds urgency.
@@ -104,9 +104,9 @@ A dependable phrase plan: state the motif, repeat it (exactly or in sequence), t
 
 ## Contour
 
-- Give each phrase, and each section, one clear high point. Put it on an important word or on the hook. Approach it by step or a small leap and leave it by step; repeating the peak note too often stops it being a peak.
+- For a shaped arch, try one clear high point per phrase or section. Put it on an important word or on the hook. Approach it by step or a small leap and leave it by step; repeating the peak note too often stops it being a peak.
 - Common shapes: arch (rise then fall, natural and satisfying), rising (builds; good for pre-choruses), falling (relaxes; good for endings), wave (gentle; good for verses), and repeated notes (chant-like; works when the rhythm is strong).
-- Across the song: verse lower and narrower, pre-chorus rising, chorus highest, bridge somewhere new (another register or shape). If the chorus peak is at or below the verse's, the chorus feels flat: raise its tessitura or bring the verse down.
+- One common arc uses a lower verse, rising pre-chorus and higher chorus. A low or static chorus can instead gain its identity through rhythm, space or timbre; do not raise it merely because its peak is below the verse's.
 
 ## Range and tessitura
 
@@ -118,22 +118,22 @@ A dependable phrase plan: state the motif, repeat it (exactly or in sequence), t
 ## Steps and leaps
 
 - Use mostly stepwise motion; thirds are almost as easy. Keep larger leaps (a fourth or more) for emphasis: phrase starts, key words, the lift into the hook.
-- After a leap of a fourth or more, move by step in the opposite direction. The ear hears the gap and wants it filled.
-- Two leaps in the same direction should outline a chord (C4–E4–G4); otherwise they sound random.
-- Tritones, major sevenths and augmented seconds are hard to sing in tune. Use them only when the style wants that tension, and recover by step.
+- After a large leap, a step in the opposite direction can make the line easier to sing; repeated or continuing leaps can be the intended shape.
+- Two same-direction leaps can outline a chord (C4–E4–G4) for a clear tonal shape, or make an angular figure when that is wanted.
+- Tritones, major sevenths and augmented seconds can demand more rehearsal. A step afterwards may help; retain a continuing leap or unresolved interval when the musician wants it.
 
 ## Chord tones and non-chord tones
 
-- Put chord tones (root, third, fifth, and the seventh of seventh chords) on strong beats: beat 1, beat 3, and wherever the chord changes. That is what makes melody and harmony agree.
-- Use non-chord tones on weak beats to connect them:
+- For stable tonal writing, try chord tones (root, third, fifth and chordal sevenths) on accented positions. Strong beats can also carry suspensions, appoggiaturas, extensions or deliberate unresolved dissonance.
+- Ways to use non-chord tones, on weak or accented positions as the phrase needs:
   - **passing tone** — steps between two chord tones (C–D–E over C);
   - **neighbour tone** — steps away and back (E–F–E over C);
   - **suspension** — held over from the previous chord, then resolving down by step (C held over G, falling to B);
   - **appoggiatura** — a non-chord tone on a strong beat, often leapt to, resolving by step; expressive, so save it for the emotional word;
   - **anticipation** — a note of the next chord arriving early, typically on the "and" of 4; the heart of syncopated pop and R&B toplines.
 - Colour tones (6th, 9th, 11th, 13th) on strong beats are fine when the style uses them — pop often rests on the 9th, jazz on extensions — especially when the chord voicing includes them.
-- Watch for clashes: a long note a half step above a chord tone (F held over C major, which contains E) sounds wrong unless it resolves; a note that contradicts the chord's quality (E♭ over C major) clashes unless it is a deliberate blue note.
-- Chords still to come? Write strong-beat notes that clearly imply a harmony, so chords can follow.
+- Watch for clashes: a long note a half step above a chord tone (F held over C major, which contains E) creates close tension; E♭ over C major changes the colour through a close chromatic relationship, whether used as a blue note, a suspension-like gesture or unresolved friction.
+- Chords still to come? A melody may imply a tonal harmony, leave several choices open or keep its tonal centre ambiguous.
 
 ## Rhythm and syncopation
 
@@ -163,9 +163,11 @@ A dependable phrase plan: state the motif, repeat it (exactly or in sequence), t
 - Stable degrees (1, 3, sometimes 5 over the tonic) close a phrase; unstable degrees (2, 4, 6, 7) or endings over the dominant leave it open.
 - Verses and pre-choruses usually end open, pulling into the next section. Choruses usually close at their end, after open endings earlier on.
 - End only some phrases on the tonic; ending every one there makes the song sound finished too early.
-- Make the song's final cadence the strongest: the tonic, on a long note, often reached by step from 2 or 7.
+- For a strong tonal close, try a long tonic reached by step from 2 or 7. An unresolved, abrupt or fading ending may better serve the musician's choice.
 
 ## What each section's melody usually does
+
+Common tonal song tendencies, not required roles or a writing order.
 
 | Section | Melody usually | Why |
 |---|---|---|
@@ -180,9 +182,9 @@ A dependable phrase plan: state the motif, repeat it (exactly or in sequence), t
 **Notes for existing words** (the prosody skill covers this in depth):
 
 1. Mark each line's stressed syllables.
-2. Put stressed syllables on strong beats (1 and 3, or a strong syncopated position) and unstressed ones on weak positions; let speech rhythm suggest the melody's rhythm.
+2. For speech-like delivery, let spoken stress suggest accented notes, whether on or off the beat. Deliberate stress displacement or emphasis on a small word can serve another delivery.
 3. Give the important words — the title, the image, the turn — length, height or the downbeat.
-4. Put open vowels (ah, oh) on long or high notes; keep narrow vowels (ee) and consonant clusters off the highest held notes and off fast notes.
+4. Consider vowel and consonant demands on held, high or fast notes; open vowels may help, while chosen narrow vowels or clusters may need a delivery adjustment.
 5. Default to one syllable per note; save melisma for a few key words.
 6. Match phrase length to the line, and leave a breath between lines.
 
@@ -228,7 +230,7 @@ Checks: every note in C major; range E4–D5 and tessitura G4–C5, a fourth abo
 
 Result line: "Chorus topline up a fourth on the same rhythm, peaking just before the close · in key, inside your range, chord tones on 1 and 3."
 
-On Again, take another direction: a broader chorus starting on the downbeat with half notes and its peak near the end, or a low, chant-like hook on repeated notes whose interest is all in the rhythm — outside the usual style for an artist who belts their choruses, so the result line says so.
+On Again, take another direction: a broader chorus starting on the downbeat with half notes and its peak near the end, or a low, chant-like hook on repeated notes whose interest is all in the rhythm. Describe that choice when useful without treating a requested departure as a warning.
 
 ## Original material
 
@@ -246,4 +248,4 @@ Paths are relative to this skill's folder. Read a sub-skill when it applies; it 
 
 | Path | Read when |
 |---|---|
-| `pop/SKILL.md` | The song or the topline is pop or pop-leaning (dance-pop, synth-pop, pop ballad, indie-pop, pop R&B), or the musician asks for something catchier, a bigger chorus, a post-chorus hook, or verse and chorus that contrast over the same chord loop. |
+| `pop/SKILL.md` | The musician identifies a pop or pop-leaning direction (dance-pop, synth-pop, pop ballad, indie-pop, pop R&B), or explicitly wants pop topline techniques. “Catchier”, a bigger chorus or an existing loop alone does not select pop. |

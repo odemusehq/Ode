@@ -27,7 +27,7 @@ The loop, the checks and the one-line result are in the parent sound-design skil
 - Velocity to the filter envelope amount, so accented notes speak more.
 - Glide 30–80 ms on overlapping notes only, so slides happen where the notes overlap.
 
-**Two-layer bass for every system.** In an Instrument Rack: a mono sine sub layer, and a saturated saw or square mid layer high-passed at about 100–150 Hz, both playing the same notes. The sub carries the weight on large systems; the mid layer carries the line on phones and laptops. A macro balances them.
+**Two-layer bass for wider playback coverage.** In an Instrument Rack: a mono sine sub layer, and a saturated saw or square mid layer high-passed at about 100–150 Hz, both playing the same notes. The sub carries the weight on large systems; the mid layer carries the line on phones and laptops. A macro balances them.
 
 **Reese bass.** Two saws detuned 10–30 cents (or Wavetable's Classic unison at a low amount), Mono, low-pass around 400–1200 Hz, slow LFO movement on detune, position or cutoff. Detuned saws beat against each other and can cancel in the low end, especially in mono, so a clean sine sub goes under it and the reese is high-passed around 100–150 Hz.
 
@@ -82,16 +82,16 @@ The loop, the checks and the one-line result are in the parent sound-design skil
 
 These add to the parent skill's checks.
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
 | Level jumps | After resonance, unison or envelope changes, the part's level is matched to before; these moves can shift it by several dB |
-| Mono | Unison, detune, chorus and stereo voice modes sum to mono without collapsing or turning hollow; basses stay centred |
-| Tuning | Detuned layers drift from concert pitch on average: basses and drones still sit on the key |
-| Harshness | Very bright waveforms and heavy FM on high notes stay smooth; use the instrument's high-quality mode or soften the source |
+| Mono | Review unison, detune, chorus and stereo modes in actual mono output; retain intentional width or cancellation with its playback consequence understood |
+| Tuning | Inspect average pitch and beating against the intended harmony, including deliberately detuned or ambiguous drones |
+| Harshness | Decide whether bright waveforms, aliasing or heavy FM serve the requested sound; soften them only when unwanted |
 | Expression | Velocity, the mod wheel or macros named in plain words (Brightness, Movement, Width, Dirt) still let the musician play and ride the sound |
 
 Many unison voices and long releases add up on the CPU: use as few voices as give the size.
 
 ## Example
 
-The musician selects the Lead track — an instrumental hook at 110 BPM in G minor, still without an instrument; their songs mostly use soft, clean synths — and clicks "Make a lead". Insert Drift on the track: triangle oscillator, filter around 2.5 kHz, Mono with 40 ms glide, delayed vibrato, then Echo after it at a dotted eighth with low feedback. Check the level, the register against the vocal (the hook plays where the vocal rests) and mono. Result: "Lead on Drift: triangle, filter 2.5 kHz, 40 ms glide, dotted-eighth echo · level set, clear of the vocal's phrases, mono-compatible." Again tries a clearly different take — a Wavetable saw with light unison and a ping-pong delay — and a third take might put a square wave through Roar into a moving band-pass, with "rougher than your usual leads" in its result line.
+The musician selects the Lead track — an instrumental hook at 110 BPM in G minor, still without an instrument; their songs mostly use soft, clean synths — and clicks "Make a lead". Insert Drift on the track: triangle oscillator, filter around 2.5 kHz, Mono with 40 ms glide, delayed vibrato, then Echo after it at a dotted eighth with low feedback. Check the level, the register against the vocal (the hook plays where the vocal rests) and mono. Result: "Lead on Drift: triangle, filter 2.5 kHz, 40 ms glide, dotted-eighth echo · level set, clear of the vocal's phrases, mono-compatible." Again tries a clearly different take — a Wavetable saw with light unison and a ping-pong delay — and a third take might put a square wave through Roar into a moving band-pass, described as rougher only when that comparison helps explain an unrequested choice.

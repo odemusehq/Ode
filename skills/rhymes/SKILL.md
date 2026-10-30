@@ -5,7 +5,7 @@ description: Rhyme craft that acts on the song's lyrics. Ode re-ends lines in pl
 
 # Rhymes
 
-Rhyme serves the song: a tool to use where it helps. It makes lines memorable, gives the ear a sense of arrival, ties ideas together and puts weight on the words it touches. Used carelessly, it drags lines into nonsense or makes a song predictable. The goal is the right rhyme in the right place, in the musician's accent, with the meaning kept whole, and judged by the rhyme check, by sound alone: "love" and "move" look alike and sound different; "weight" and "late" look different and rhyme.
+Rhyme serves the song: a tool to use where it helps. It makes lines memorable, gives the ear a sense of arrival, ties ideas together and puts weight on the words it touches. Used carelessly, it drags lines into nonsense or makes a song predictable. The goal is the right rhyme in the right place, in the musician's accent, with the meaning kept whole, with the check describing sound rather than deciding artistic quality: "love" and "move" look alike and sound different; "weight" and "late" look different and rhyme.
 
 ## The loop
 
@@ -15,14 +15,14 @@ Rhyme serves the song: a tool to use where it helps. It makes lines memorable, g
    - The notes the rhyme words are sung on: a rhyme word on a long note needs a vowel that can be held.
    - The lines the lead sheet lists as locked, and the hand edits since the last request (a pair the musician just typed is their newest intent).
 2. **Decide** which line to change, what kind of rhyme the moment needs (strong where the section lands, softer where it keeps moving), and which way out of a forced rhyme to take. Meaning comes first: a line that says the right thing with a near rhyme beats a perfect rhyme that changes what the song means.
-3. **Change in place.** Re-end or rewrite the fewest lines, usually one line of the pair, in the lyrics: the same line under the same label, saved against the revision you read. When one line of the pair is locked, re-end the other. A chorus line changed in one copy reaches every copy with the same label when the lyrics are saved. In a section the lead sheet lists under strictRhymes, every end rhyme is perfect. Keep one version in the text, the clips and the takes: Again gives another take and the version history keeps this one.
+3. **Change in place.** Re-end or rewrite the fewest lines, usually one line of the pair, in the lyrics: the same line under the same label, saved against the revision you read. When one line of the pair is locked, re-end the other. A chorus line changed in one copy reaches every copy with the same label when the lyrics are saved. A saved strictRhymes preference applies when it still reflects the musician's request; a current choice of near rhyme or no rhyme overrides it. Keep one version in the text, the clips and the takes: Again gives another take and the version history keeps this one.
 4. **Verify** every line you changed:
-   - **Rhyme check** in the musician's accent: the pair has the kind you meant (perfect or multisyllabic where the section should land; near rhyme or assonance where it should keep moving), and the scheme letters match the matching section.
-   - **Stressed syllables rhyme with stressed syllables.** The check's rhyming part runs from the last stressed vowel to the end; a pair that matches only on an unstressed ending ("city" / "me") counts as unrhymed.
+   - **Rhyme check** in the musician's accent: report the kind the tool finds and compare it with the intended sound. Matching-section schemes are references, not obligations; an unrhymed section may be exactly right.
+   - **Read the classifier's scope.** Its rhyme span runs from the last stressed vowel to the end; a pair linked only by an unstressed ending ("city" / "me") may count as unrhymed while still providing an intended sound echo.
    - **Originality check:** the changed lines carry fresh pairs, or an over-used pair kept on purpose (a chant-like chorus) that the result line names.
-   - **Lyrics-to-melody check and prosody check** on each changed line: one of its counts still equals the notes of its phrase, with the stresses on the strong notes.
+   - **Lyrics-to-melody check and prosody check** on each changed line: inspect the intended syllable setting and emphasis, including melisma or deliberate stress departures.
    - **Report the kind exactly as the check labels it**, with the accent: "(perfect, UK)". A near rhyme is reported as near. A word with two pronunciations ("again", "either") may rhyme in only one of them; say which one the rhyme needs.
-   Fix and check again, up to three rounds; if the rhyme you need is still missing, the result line says what the check found.
+   Fix unintended mismatches and check again, up to three rounds; report what the check found without forcing a perfect rhyme or overriding the musician's chosen pair.
 5. **Let them hear it.** The result line names the section of the first changed line, so the musician can play it from the locator named like its label.
 6. **Report in one line**: what changed · what was checked. For example:
    - "Verse 2, line 4 now ends on 'stone', perfect rhyme with 'phone' in US English · 8 syllables on its 8 notes, ABCB like verse 1."
@@ -31,7 +31,7 @@ Rhyme serves the song: a tool to use where it helps. It makes lines memorable, g
 
 ## Asking
 
-Rhyme fixes go ahead without a question. When a pair works only in another accent than the setting: if the musician has told you (or Ode remembers) that they sing in that accent, keep it and say "rhymes in your accent"; otherwise follow the setting, fix it, and say which accent you checked in; the history covers the rest. When the musician says they sing in UK or US English, store it as their pronunciation setting; another accent (Northern English, Scottish, Southern US) is remembered about them. In Manual, Ode shows the change for Apply or Skip, and you work the same way.
+Rhyme fixes go ahead without a question. When a pair works only in another accent than the setting: if the musician has told you (or Ode remembers) that they sing in that accent, keep it and say "rhymes in your accent"; otherwise use the setting to describe the finding, changing it only as the requested rhyme fix warrants. Keep an insisted pair and explain its sound in the checked accent. Keep this song's pronunciation in lead_sheet.settings; note a regional accent in its context when the UK/US control cannot express it. Make pronunciation an artist preference only when explicitly enduring. In Manual, Ode shows the change for Apply or Skip, and you work the same way.
 
 ## Kinds of rhyme
 
@@ -51,7 +51,7 @@ A rhyme runs from the last stressed vowel of a word to its end. "Alone" rhymes o
 
 ## How strong a rhyme to use
 
-From strongest to weakest: perfect, near, assonance, consonance, unrhymed. Stronger rhymes give more sense of closure. Match the strength to the moment:
+Perfect rhyme usually gives a clearer chime than near rhyme, assonance or consonance; none is a quality ranking. Closure also depends on delivery, melody and syntax. Possible uses:
 
 - Strong rhymes where the song should land: the end of the chorus, the title line, the final line of the song.
 - Softer rhymes where the song should keep moving or sound like speech: verses, pre-choruses, conversational songs.
@@ -78,7 +78,7 @@ Letters mark which line endings rhyme with which.
 - Chorus: usually settled, because it is the arrival. A song about doubt or unfinished business can leave it open on purpose.
 - Bridge: a different scheme from verse and chorus, so it feels like new ground.
 
-**Keep matching sections on the same scheme.** Verse 2 follows verse 1's scheme, because the melody repeats and listeners expect a rhyme wherever the melody's phrase ends.
+**Compare matching sections when useful.** Repeating a scheme can reinforce a repeated melody; changing it or leaving a verse unrhymed can redirect attention. Follow the musician's choice.
 
 ## Where rhymes go
 
@@ -99,7 +99,7 @@ Ways out, in roughly this order:
 1. **Change the rhyme sound** by re-ending the other line of the pair, so the line you need has better options.
 2. **Use a near rhyme** that lets the line say exactly what it means.
 3. **Restructure** the line so a different word lands at the end.
-4. **Drop the rhyme** there if the scheme allows it (an ABCB verse rhymes only lines 2 and 4).
+4. **Drop the rhyme** where the honest wording or the musician's direction calls for it, changing the scheme if needed.
 
 ### Worked example
 
@@ -156,5 +156,5 @@ Paths are relative to this skill's folder. Read a sub-skill when it applies; it 
 
 | Path | Read when |
 |---|---|
-| `pop/SKILL.md` | The song is pop or pop-leaning, you're rhyming a chorus, title line or post-chorus hook, or the rhymes need to be catchy and easy to sing back. |
+| `pop/SKILL.md` | The song has a pop or pop-leaning direction, or the musician asks for pop rhyme techniques. A chorus, title or catchier rhyme request alone does not establish genre. |
 | `rap/SKILL.md` | You're writing or checking rap verses or hooks, the request asks for multis, internal rhymes or more rhymes per bar, or the rhymes have to work at speed against a beat. |

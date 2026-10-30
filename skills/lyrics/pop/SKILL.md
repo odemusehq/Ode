@@ -1,11 +1,11 @@
 ---
 name: lyrics-pop
-description: Pop lyric craft for Ode's in-place writing — choruses built around a repeated title, short conversational lines, pre-choruses that lift, post-chorus hooks, verses that get to the hook fast, and words written to an existing track or topline with its placeholder vowels kept on the long notes. Read it from the lyrics skill whenever the song is pop or pop-leaning (dance-pop, synth-pop, pop-rock, pop R&B, electropop), or the chorus has to be sung back after one listen.
+description: Pop lyric craft for Ode's in-place writing — choruses built around a repeated title, short conversational lines, pre-choruses that lift, post-chorus hooks, verses that get to the hook fast, and words written to an existing track or topline with its placeholder vowels kept on the long notes. Read it from the lyrics skill whenever the song is pop or pop-leaning (dance-pop, synth-pop, pop-rock, pop R&B, electropop), or the musician specifically asks for pop lyric techniques.
 ---
 
 # Pop lyrics
 
-Pop lyrics aim for instant clarity: a listener understands the chorus on first hearing and sings it by the second. Everything below serves that aim. The lyrics skill covers the loop (read, decide, change in place, verify, let them hear it, report in one line) and the general craft; this file adds only what is specific to pop.
+Pop lyrics aim for instant clarity: a listener understands the chorus on first hearing and sings it by the second. The suggestions below serve that aim when the musician wants it; unusual phrasing, a withheld title or an unresolved chorus remain available. The lyrics skill covers the loop (read, decide, change in place, verify, let them hear it, report in one line) and the general craft; this file adds only what is specific to pop.
 
 ## Get to the hook quickly
 
@@ -16,7 +16,7 @@ Pop lyrics aim for instant clarity: a listener understands the chorus on first h
 ## The chorus and its title
 
 - The title usually sits in the first line of the chorus, the last line, or both, and is often repeated several times. In pop, repeating the title is the hook working.
-- The title is the most singable phrase in the song: short, rhythmic, with an open vowel on the word that is held.
+- For a sing-back title, try short, rhythmic, with an open vowel on the word that is held.
 - The chorus is simpler and more general than the verses: everyday words, short lines, each sentence kept within one line.
 - Common chorus shapes, described by what the lines do:
   - title, answer line, title, answer line;
@@ -66,15 +66,15 @@ The lines that start the same way build momentum; the rhyme check (US) calls "aw
 Pop toplines often come before the words, sung with placeholder syllables or half-words. When the melody is there:
 
 - Take each line's count and stress pattern from its notes; the melody stays as it is unless the musician asks.
-- Keep the placeholder's vowel on long notes. If they sang "oh" on the long note, look for a word with that vowel there; it's the sound they fell for.
+- Consider keeping a placeholder's vowel on long notes when that sound is part of what the musician wants to retain. If they sang "oh" on the long note, look for a word with that vowel there; it's the sound they fell for.
 - Keep the placeholder's rhythm, including phrases that start before or after the beat.
 - If a placeholder phrase already sounds like real words, it may be the title: use it, and say so in the result line.
 
 ## Verify, on top of the lyrics skill's checks
 
-- The chorus can be understood on first listen, and the title sits in its first or last line and repeats.
-- A post-chorus hook is one to four words and passes the singability check.
-- Every chorus line passes the singability check at the song's tempo, with rests where the singer needs to breathe.
+- When immediate clarity is the aim, review the chorus and title placement for it; an indirect or unrepeated title may be deliberate.
+- Review a post-chorus hook against the requested rhythm and length; one to four words is a starting point.
+- Inspect singability findings at tempo with this singer's delivery and breaths; keep intentional vowel colour or dense phrasing.
 - Verse 2 brings something new beyond verse 1.
 
 Example result lines:

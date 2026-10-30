@@ -1,6 +1,6 @@
 # Forms by genre
 
-Typical structures, as loose habits. Always check the artist's own songs and what this song's lyric needs. For which parts play in each section, see the arrangement skill.
+Typical structures, as loose habits. The current artistic direction and this song's material govern; genre and earlier songs offer context rather than required lengths or energy arcs. For which parts play in each section, see the arrangement skill.
 
 ## Contents
 
@@ -89,4 +89,4 @@ Verse–pre-chorus–chorus with a bridge, often with a post-chorus. Reaches the
 - Radio or streaming edit: a shorter intro, a halved second verse, fewer repeats at the end.
 - Extended mix: longer DJ-friendly intro and outro, longer breakdowns.
 - Instrumental and a cappella versions keep the same form, which makes them easy to line up later.
-- Plan the main version first; edits come from removing whole phrases, so keep sections in clean 4- or 8-bar blocks.
+- Whole-phrase edits and clean 4- or 8-bar blocks can simplify alternate versions. They do not require rounding an irregular phrase, changing the artist's form or choosing a fixed writing order.

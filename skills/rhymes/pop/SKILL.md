@@ -1,11 +1,11 @@
 ---
 name: rhymes-pop
-description: Rhyme craft specific to pop, for Ode's in-place edits — strong rhymes where the chorus lands, a chorus that stays on one or two rhyme sounds, rhyming the title or leaving it unrhymed on purpose, repetition as a hook, internal rhyme in the pre-chorus, and rhyme words that sing well on long notes. Read it from the rhymes skill whenever you rhyme a pop or pop-leaning song, a chorus, a title line or a post-chorus hook, or the rhymes need to be catchy and easy to sing back.
+description: Rhyme craft specific to pop, for Ode's in-place edits — strong rhymes where the chorus lands, a chorus that stays on one or two rhyme sounds, rhyming the title or leaving it unrhymed on purpose, repetition as a hook, internal rhyme in the pre-chorus, and rhyme words that sing well on long notes. Read it from the rhymes skill for a pop or pop-leaning direction, or when the musician asks for these pop rhyme techniques. A catchy hook request alone does not establish genre.
 ---
 
 # Rhymes in pop
 
-Pop rhymes help the listener predict and sing along. A good pop chorus feels inevitable: the ear knows roughly where it's going, and the arrival still feels satisfying. The rhymes skill covers the loop, the kinds of rhyme, schemes and checking; this file adds what is specific to pop.
+Pop rhymes help the listener predict and sing along. A good pop chorus feels inevitable: the ear knows roughly where it's going, and the arrival still feels satisfying. The rhymes skill covers the loop, the kinds of rhyme, schemes and checking; this file offers pop options. Near rhyme, no rhyme and an unresolved chorus can serve pop too; follow the musician's chosen sound.
 
 ## Choruses
 
@@ -40,7 +40,7 @@ In pop the rhyme word often lands on the longest note of the line, so its vowel 
 
 - Open vowels hold beautifully: "go", "slow", "day", "far", "down". The vowel can be open without the pair being stale; still check the pair against the over-used list.
 - Short vowels with hard endings ("bit", "stuck", "pop") cut the note off. Put them on short notes, or choose another rhyme sound for long ones.
-- The singability check reports a closed vowel on a long or high note; fix it before reporting.
+- Inspect a closed-vowel warning against this singer's delivery; vowel modification or keeping the sound may work better than replacing the word.
 
 ## Freshness in a repeated chorus
 
@@ -48,9 +48,9 @@ A chorus is heard four or more times, so a stale pair is exposed every time. If 
 
 ## Verify, on top of the rhymes skill's checks
 
-- The chorus lands on a strong rhyme as the rhyme check labels it, or leaves the title line unrhymed on purpose.
-- The chorus stays on one or two rhyme sounds.
-- Rhyme words on long notes pass the singability check.
+- Review the chosen closure, whether a perfect rhyme, near rhyme, sound echo or no rhyme.
+- One or two recurring rhyme sounds can reinforce a hook; a wider or changing scheme is also valid.
+- Review long-note vowels as delivery guidance rather than requiring a clean singability score.
 - Chorus lines you wrote carry fresh pairs, or an over-used pair kept on purpose that the result line names.
 
 Example result lines:

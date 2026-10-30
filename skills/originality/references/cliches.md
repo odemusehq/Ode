@@ -61,4 +61,4 @@ The fix is almost always the plainer, more specific word.
 
 ## 5. Over-used rhyme pairs
 
-The list, with ways to find fresher rhymes, is in the rhymes skill. In short: fire / desire, heart / apart, love / above, pain / rain, night / light, eyes / lies, soul / control, cry / goodbye, forever / together, baby / maybe, true / you. Replace them in the lines you change, above all in a chorus, where they are heard again and again, and change the chorus in every section that sings it.
+The list, with ways to find fresher rhymes, is in the rhymes skill. In short: fire / desire, heart / apart, love / above, pain / rain, night / light, eyes / lies, soul / control, cry / goodbye, forever / together, baby / maybe, true / you. When freshening is wanted, consider replacing them in the lines you change, especially repeated chorus lines. Keep a common pair chosen on purpose, and preserve deliberate differences between choruses.

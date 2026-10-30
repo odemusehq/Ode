@@ -1,6 +1,6 @@
 ---
 name: drums-hip-hop
-description: Hip-hop drum programming on top of the drums skill, for editing beats in place — boom bap swing with hard snares and ghost kicks, trap half-time feel with hi-hat rolls and triplets, drill and lo-fi qualities, the 808 as kick and bass, room for the rapper, stops and beat switches, and how hooks and verses differ, each with the check that proves it. Read this whenever the track is hip-hop or rap-led (boom bap, trap, drill, lo-fi, any beat for a rapper), uses an 808, or the musician asks for hi-hat rolls, a dusty swung feel, a stop under a line or a beat switch.
+description: Hip-hop drum programming on top of the drums skill, for editing beats in place — boom bap swing with hard snares and ghost kicks, trap half-time feel with hi-hat rolls and triplets, drill and lo-fi qualities, the 808 as kick and bass, room for the rapper, stops and beat switches, and how hooks and verses differ, with practical checks interpreted in the intended musical context. Read this whenever the track is hip-hop or rap-led (boom bap, trap, drill, lo-fi, any beat for a rapper), uses an 808, or the musician asks for hi-hat rolls, a dusty swung feel, a stop under a line or a beat switch.
 ---
 
 # Hip-hop drums
@@ -62,15 +62,15 @@ In trap and drill the 808 is both kick and bass; its notes are written with the 
 
 ## Checks for hip-hop
 
-Run these with the drums skill's checks.
+Review these alongside the drums skill for the chosen beat; the bar counts, placement and variation patterns are suggestions.
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
 | Room for the voice | fills, rolls and extra hits land clear of the start of each key word in the vocal; the busiest moments fall in the gaps between lines |
-| Snare placement | 2 and 4 for boom bap; beat 3 for half-time trap and drill feels |
-| Variation | the pattern changes slightly at least every four bars |
+| Snare placement | compare with the intended feel; 2 and 4 or half-time beat 3 are starting points, not required placements |
+| Variation | assess whether changes or a deliberately unvaried loop support the flow |
 | 808 and kick | a separate kick and the 808 start together or alternate; each one's tail stays clear of the other |
-| Rolls | rolls sit on weak beats or the end of a bar, and their velocities rise or fall |
+| Rolls | inspect chosen placement and accent shape, including flat velocities or rolls that cross barlines |
 
 ## Result lines
 

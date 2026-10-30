@@ -1,11 +1,13 @@
 ---
 name: harmony-jazz
-description: Jazz harmony on top of the harmony skill, for changing jazz and jazz-influenced chords in place — seventh chords as the basic unit, major and minor ii–V–I, guide-tone lines, turnarounds, secondary and backdoor ii–Vs, tritone substitution, diminished passing chords, extensions and alterations chosen from the melody, shell, rootless, drop 2, quartal and upper-structure voicings, comping rhythm and jazz blues, each with the check that proves it. Read this whenever the song is jazz or jazz-influenced (neo-soul, bossa nova, lounge, jazz-pop, R&B with extended chords), or the musician asks for jazzier or richer chords, extensions, substitutions, a jazz reharmonization, or voicings for jazz piano or guitar.
+description: Jazz harmony on top of the harmony skill, for changing jazz and jazz-influenced chords in place — seventh chords as the basic unit, major and minor ii–V–I, guide-tone lines, turnarounds, secondary and backdoor ii–Vs, tritone substitution, diminished passing chords, extensions and alterations chosen from the melody, shell, rootless, drop 2, quartal and upper-structure voicings, comping rhythm and jazz blues, with practical checks interpreted in the intended musical context. Read this whenever the song is jazz or jazz-influenced (neo-soul, bossa nova, lounge, jazz-pop, R&B with extended chords), or the musician asks for jazzier or richer chords, extensions, substitutions, a jazz reharmonization, or voicings for jazz piano or guitar.
 ---
 
 # Jazz harmony
 
 Only what is specific to jazz. The loop (read, decide, change in place, verify, let them hear it, report in one line), function, cadences, borrowing, the general checks and the conventions (scientific pitch, chord symbols, lengths in beats) are in the harmony skill.
+
+These examples mainly describe functional jazz harmony. Modal, free, sparse or deliberately abrasive directions need not follow their voice-leading or resolution habits.
 
 ## Seventh chords are the default
 
@@ -34,7 +36,7 @@ The basic unit is the seventh chord: maj7, m7, 7, m7♭5 and dim7, with 6 and m6
 
 ## Extensions and alterations
 
-Let the melody choose. If the melody has A♭ over G7, the chord is G7♭9; if it has A, the chord is G9 or G13. Choose only alterations that agree with the melody.
+Let the melody choose. If the melody has A♭ over G7, the chord is G7♭9; if it has A, the chord is G9 or G13. For a consonant setting, choose alterations that agree with the melody; retain a chosen conflict when the musician wants that tension.
 
 | Chord | Usual tensions | Handle with care |
 |---|---|---|
@@ -103,11 +105,11 @@ Other takes for Again: substitutions — `| Cmaj7 | Dm7 G7 | Em7 E♭7 | Dm7 D�
 
 Run these with the harmony skill's checks.
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
-| Guide tones | the 3rds and 7ths move by a half or whole step (or hold) from chord to chord |
-| Tensions | every extension or alteration agrees with the melody note above it; each voicing keeps natural 9 and 13 apart from altered tensions |
-| Substitutions | tritone substitutions and diminished chords make the bass line smoother |
+| Guide tones | small moves or held 3rds and 7ths support smooth functional writing; deliberate leaps or parallel structures can serve another texture |
+| Tensions | inspect extensions, alterations and melody together, preserving intended dissonance or mixed tensions |
+| Substitutions | judge the substitution by the requested colour and bass movement; smoothness is one possible aim |
 | Register | rootless and shell voicings sit roughly between D3 and C5, out of the melody's way |
 
 ## Result lines

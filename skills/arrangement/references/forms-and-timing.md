@@ -1,6 +1,6 @@
 # Forms and timing
 
-Example forms with typical section lengths, what often plays in each section, and an energy rating from 1 to 10. They are common starting points to adapt: the song's own story, hook and the artist's habits decide. A form that breaks these patterns on purpose is often the most memorable.
+Example forms with typical section lengths, what often plays in each section, and an energy rating from 1 to 10. They are common starting points to adapt: the current direction and the song's material decide. Bar counts and energy numbers illustrate these examples, not a required final rise or writing order. A form that breaks these patterns on purpose is often the most memorable.
 
 ## Contents
 - Verse–chorus song
@@ -44,7 +44,7 @@ Common in older popular song, jazz standards and many ballads. Instrumental solo
 
 ## Club track
 
-Dance music is built in 8, 16 and 32-bar phrases so DJs can mix tracks together and dancers feel changes coming. Change something at least every 8 bars and make larger changes every 16 or 32.
+Conventional DJ-friendly dance arrangements often use 8-, 16- and 32-bar phrases. Changes at those boundaries can ease mixing; an unchanged groove or an irregular boundary can also be intentional.
 
 | Section | Bars | Often | Energy |
 |---|---|---|---|
@@ -89,7 +89,7 @@ Dense lyrics need space: keep the beat's busiest elements out of the vocal's ran
 
 ## Instrumental and ambient pieces
 
-Without a vocal, interest comes from slow change: layers entering and leaving every 8–16 bars, gradual changes in filtering, texture and harmony, and a clear peak somewhere past the middle. Keep a recognisable motif returning so the piece has an anchor.
+Instrumental or ambient pieces can use slow changes in layers, filtering, texture and harmony, a returning motif, or deliberate stasis. Neither an 8–16-bar change schedule nor a late peak is required.
 
 ## Duration tables
 
@@ -109,7 +109,7 @@ In 4/4, **seconds = bars × 240 ÷ BPM**; **bars per minute = BPM ÷ 4**.
 | 160 | 40 | 12.0 s | 24.0 s | 0:48 |
 | 174 | 43.5 | 11.0 s | 22.1 s | 0:44 |
 
-**Bars for a target length:** bars = seconds × BPM ÷ 240. A 3-minute song at 100 BPM is 75 bars; at 128 BPM, 96 bars. Round to the nearest form made of full phrases.
+**Bars for a target length:** bars = seconds × BPM ÷ 240. A 3-minute song at 100 BPM is 75 bars; at 128 BPM, 96 bars. Use the intended phrase boundaries; do not round away deliberate irregularity to fit an example form.
 
 **Half-time feel:** music at 140 or 174 BPM is often felt at half that tempo; the bar maths stays the same, but sections can feel twice as long, so fewer bars may be enough.
 

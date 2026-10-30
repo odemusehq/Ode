@@ -1,11 +1,11 @@
 ---
 name: vocals
-description: Write backing-vocal parts — harmonies, stacks, answers, echoes, ad-libs, vocal pads — as MIDI guides the singer can follow, directly in the Set, and make a demo vocal in the artist's own voice only after their clear consent. Ode puts each new part where it belongs (the backing-vocal track the musician made, or a new track named for the part) at the bars it is sung, edits existing parts in place, leaves the lead exactly as it is, and checks every part against its singer's range, the chords on strong beats, the lead's words and rhythm and singability, then reports in one line which bars changed, for the musician to play. Use this skill whenever a vocal or backing-vocal track is selected, or the musician clicks a suggestion or types anything about backing vocals, BVs, harmonies, stacks, doubles, answers, ad-libs, a vocal arrangement, which key suits their voice, or hearing the song sung in their own voice — "add a harmony", "bigger chorus vocals", "answer the lead", "demo in my voice" — even when they leave out the word vocals.
+description: Write backing-vocal parts — harmonies, stacks, answers, echoes, ad-libs, vocal pads — as MIDI guides the singer can follow, directly in the Set, and make a demo vocal in the artist's own voice only after their clear consent. Ode puts each new part where it belongs (the backing-vocal track the musician made, or a new track named for the part) at the bars it is sung, edits existing parts in place, leaves the lead exactly as it is, and checks every part against its singer's range, the intended harmonic tension, the lead's words and rhythm and singability, then reports in one line which bars changed, for the musician to play. Use this skill whenever a vocal or backing-vocal track is selected, or the musician clicks a suggestion or types anything about backing vocals, BVs, harmonies, stacks, doubles, answers, ad-libs, a vocal arrangement, which key suits their voice, or hearing the song sung in their own voice — "add a harmony", "bigger chorus vocals", "answer the lead", "demo in my voice" — even when they leave out the word vocals.
 ---
 
 # Vocals
 
-The lead vocal carries the song. Everything else in the vocal arrangement — harmonies, doubles, answers, ad-libs, pads — exists to make the lead land harder and to keep it in front. Ode writes parts the singer can actually sing, in their range, as MIDI guides placed where they belong in the Set, so the musician can play them with the song straight away.
+The lead vocal carries the song. Harmonies, doubles, answers, ad-libs and pads can support the lead, share its focus or form an independent texture, according to the musician's direction. Ode writes parts the singer can actually sing, in their range, as MIDI guides placed where they belong in the Set, so the musician can play them with the song straight away.
 
 ## Conventions
 
@@ -19,13 +19,13 @@ The lead vocal carries the song. Everything else in the vocal arrangement — ha
 
 - From the project map: key, tempo, chords, the sections, the selected clip and its bars, and the vocal tracks — the lead's guide melody, recorded vocals, and any backing-vocal track the musician has set up.
 - The lead's notes and the lines sung on them (the lyrics).
-- Who sings each part and their comfortable range: the song's settings, then the musician's settings, then what memory knows from their own sung parts. When the musician tells you their range, store it as their setting. Unless the lead sheet names another singer, backing parts are for the artist. Take a range, and who sings what, only from the settings, the lead sheet, memory and what the musician says; anything about the person stays out of it. With the range unknown, keep to about A3–D5 and say so in the result line.
+- Who sings each part and their comfortable range: the song's settings, then the musician's settings, then what memory knows from their own sung parts. Keep a range given for this song in lead_sheet.settings; use an artist preference only when they explicitly describe it as enduring. Unless the lead sheet names another singer, backing parts are for the artist. Take a range, and who sings what, only from the settings, the lead sheet, memory and what the musician says; anything about the person stays out of it. With the range unknown, keep to about A3–D5 and say so in the result line.
 - The arrangement around the voice: which instruments sit in the vocal's register, and where the gaps in the lead are.
 - What is locked, and what the artist has kept or undone in vocal arrangements before (memory).
 
 ### 2. Decide
 
-Choose the part that answers the request in that section — a harmony on the hook, answers in the gaps, a pad under the bridge — and how it grows across the song. The craft below and the harmonies sub-skill give the rules.
+Choose the part that answers the request in that section — a harmony on the hook, answers in the gaps, a pad under the bridge — and how it grows across the song. The craft below and the harmonies sub-skill offer possible approaches.
 
 ### 3. Change it in place
 
@@ -37,16 +37,16 @@ Choose the part that answers the request in that section — a harmony on the ho
 
 ### 4. Verify
 
-Run every check that applies, fix what fails and check again, up to three rounds. If something still fails, the result line says what.
+Run relevant checks, fixing unintended problems up to three rounds. Keep explicit range and preservation constraints; review harmonic and stylistic findings against the intended vocal texture.
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
 | Range | every note of every part sits inside its singer's range |
-| Chord tones | every harmony note that starts on beat 1 or 3, or is held longer than a beat, is a chord tone of the chord sounding then, or a colour tone the chord part plays |
-| Against the lead | every harmony note avoids a half or whole step against the lead note sounding at the same time, and every part stays on its own side of the lead |
-| Words and rhythm | a harmony starts and ends its notes with the lead's, on the same syllables, or only on the key words chosen; answers and echoes sit in the lead's rests |
-| Singable | each part moves mostly by step or third, without tritone or major-seventh leaps, and breathes where the lead breathes |
-| Parallels | any run of parallel fifths or octaves with the lead stays short |
+| Harmony | review accented and held notes against the chords; chord tones, extensions, suspensions and deliberate unresolved dissonance are all available |
+| Against the lead | inspect close intervals and crossings against the intended blend or independence, rather than banning them |
+| Words and rhythm | check the chosen relationship: aligned syllables for a blended harmony, or independent entrances, overlaps and text when wanted |
+| Singable | review intervals and breaths for each singer; smooth motion and shared breaths are useful defaults, not requirements |
+| Parallels | review the colour of parallel fifths or octaves; long runs can be deliberate |
 | Lead | the lead's notes, recorded vocals and words in the lyrics are exactly as they were |
 
 Locked parts must be exactly as they were.
@@ -63,7 +63,7 @@ What changed, then " · ", then what was checked:
 - "Answers on 'stay' in the gaps of verse 2 · chord tones of Bm, clear of the lead's words."
 - "Title stacked a third and a sixth below the lead in the last chorus · inside your range, chord tones on every note, lead stays on top."
 
-When a part is outside the artist's usual style (a gang chant for someone who has yet to use one), the line says "outside your usual style".
+A new vocal texture can be worth naming; avoid an automatic style disclaimer when the musician asked for it.
 
 ## When to ask
 
@@ -124,13 +124,15 @@ Write answers into the rests of the lead melody. Keep them short, start them aft
 
 ## Building across the song
 
+One possible growing arrangement follows. A stripped final chorus or unchanged vocal texture is also valid.
+
 - Verse 1: lead alone, or a single soft double on the last line.
 - Chorus 1: doubles on the hook, one harmony on the title.
 - Verse 2: answers or echoes in the gaps.
 - Bridge: a different texture — a pad, a single harmony, or the lead alone for contrast.
 - Final chorus: the fullest: doubles, a stack, answers and ad-libs.
 
-Each section adds or changes one thing, so the vocal arrangement grows with the song's energy.
+Use additions or changes only where they serve the intended arc.
 
 ## Guide parts for the session
 

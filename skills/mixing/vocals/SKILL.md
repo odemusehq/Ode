@@ -5,13 +5,13 @@ description: Mix lead vocals, doubles, harmonies, backing vocals, ad-libs and ra
 
 # Mixing vocals
 
-The vocal usually carries the song: the words must be clear, the level steady, the tone natural, and the voice in front of the music without sounding pasted on top. The loop, the checks and the one-line result are in the parent mixing skill; this file holds what is specific to vocals. Change the vocal's own chain, its sends and the parts around it in place, and tune the chain that is already there, keeping one chain per vocal.
+When the vocal carries the words, clarity, steady level and a natural tone can help. A buried, distorted, uneven or texture-like voice may instead be the artist's intention; use the settings below as starting points for that goal. The loop, the checks and the one-line result are in the parent mixing skill; this file holds what is specific to vocals. Change the vocal's own chain, its sends and the parts around it in place, and tune the chain that is already there, keeping one chain per vocal.
 
 Judge every setting from the recording itself. A voice's fundamental, its problem frequencies and its sibilance depend on the singer and the melody alone; leave the singer's gender, age and background out of every judgement.
 
 ## Before processing
 
-- **The performance comes first.** Only a new take fixes a flawed performance: when a line is clearly flawed (off pitch, clipped, distorted), say so in the result line.
+- **The performance comes first.** When pitch, clipping or distortion is unwanted, identify what processing can address and what may need another take. Preserve an intentionally rough performance.
 - **Noise and plosives:** a gentle gate or downward expansion lowers noise between phrases (a Floor of −20 to −40 dB stays natural); a high-pass and a dynamic low band soften pops. Breaths are part of a natural vocal: turn them down and keep them.
 - **Uneven phrases:** two gentle compression stages even them out more naturally than one heavy stage.
 
@@ -111,12 +111,12 @@ A demo vocal sung by a voice model in the artist's own voice is mixed like any v
 
 These add to the parent skill's checks.
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
-| Words clear | The parts around the vocal stay quiet in 2–5 kHz wherever the vocal sings: masking measured on audio parts, register and filter compared for MIDI parts |
-| Steady level | The mix check, section by section, shows where the vocal's own audio rises and falls against the other audio parts, and the compression and fader settings even out every section you touched |
-| Sibilance | The de-esser's band sits where the audio analysis of the vocal's own audio finds the sibilance (around 5–9 kHz), set to take 3–6 dB off the "s" sounds and leave the rest of the top end |
-| Mono | The lead vocal stays panned centre, with its width coming from doubles, harmonies and the returns around it |
+| Words clear | Review intelligibility in actual processed context when requested; 2–5 kHz overlap alone does not establish masking or require a cut |
+| Steady level | Compare actual processed phrases with the intended dynamics; compressor and fader settings alone do not prove a steadier performance |
+| Sibilance | Locate unwanted sibilance on this recording, then audition its reduction; 5–9 kHz and 3–6 dB are starting ranges rather than required settings |
+| Mono | Review the actual summed vocal and surrounding effects for the playback goal; centre panning is one approach, not proof of mono compatibility |
 
 ## Example
 

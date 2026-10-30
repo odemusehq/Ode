@@ -1,11 +1,13 @@
 ---
 name: song-form-pop
-description: Pop song structure on top of the song-form skill, for planning and fixing pop forms in place — reaching the first chorus early, short intros, verse–pre-chorus–chorus with post-chorus, shortened second verses, bridges and middle 8s, final-chorus lifts, dance-pop and ballad shapes, and lengths that suit streaming and radio, each with the check that proves it. Read this whenever the song is pop or pop-leaning (dance-pop, synth-pop, pop-rock, pop R&B, pop ballad) and the musician wants to plan or fix its structure, its length, the order of sections or how fast it gets to the chorus.
+description: Pop song structure on top of the song-form skill, for planning and fixing pop forms in place — reaching the first chorus early, short intros, verse–pre-chorus–chorus with post-chorus, shortened second verses, bridges and middle 8s, final-chorus lifts, dance-pop and ballad shapes, and lengths that suit streaming and radio, with practical checks interpreted in the intended musical context. Read this whenever the song is pop or pop-leaning (dance-pop, synth-pop, pop-rock, pop R&B, pop ballad) and the musician wants to plan or fix its structure, its length, the order of sections or how fast it gets to the chorus.
 ---
 
 # Pop song form
 
 Only what is specific to pop. The loop (read, decide, change in place, verify, let them hear it, report in one line), section roles, timing, the energy curve, contrast and locators are in the song-form skill.
+
+These timings and shapes are common starting points for a pop brief, not limits on the artist's form or writing order.
 
 ## Get to the hook early
 
@@ -40,7 +42,7 @@ Same melody, new lyric — and something new in the arrangement: a different dru
 
 ## The final chorus
 
-Make it the biggest moment: extra vocal harmonies and ad-libs, a new top line above the hook, the full band after a breakdown, a stripped first half then everything in, a double chorus, or a key change (which moves every part and needs the singer's range checked). A one- or two-beat drum stop just before it makes the downbeat hit harder.
+For a climactic ending, try extra vocal harmonies and ad-libs, a new top line above the hook, the full band after a breakdown, a stripped first half then everything in, a double chorus, or a key change (which moves every part and needs the singer's range checked). A one- or two-beat drum stop just before it makes the downbeat hit harder.
 
 ## Endings
 
@@ -95,19 +97,19 @@ Example at 72 BPM (one bar ≈ 3.33 s):
 
 ## Trying something outside the usual style
 
-On Again, or when the artist's habit is what makes the song drag, try a shape they rarely write: verse and chorus only with a post-chorus hook for someone who always writes pre-choruses; the chorus first for someone who always opens with a verse; a bridge that builds for someone whose bridges are always quiet. The result line then says "outside your usual style".
+On Again, or when the artist's habit is what makes the song drag, try a shape they rarely write: verse and chorus only with a post-chorus hook for someone who always writes pre-choruses; the chorus first for someone who always opens with a verse; a bridge that builds for someone whose bridges are always quiet. Explain the changed effect when useful; a requested departure from earlier habits needs no automatic warning.
 
 ## Checks for pop
 
 Run these with the song-form skill's checks.
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
-| First chorus | starts within about 45–60 seconds, or the musician's own target |
-| Length | the total sits near the musician's target, otherwise about 2:30–3:30 (longer for ballads) |
-| Verse 2 | adds something new in the arrangement, or is shorter than verse 1 |
-| Bridge | differs from the rest in at least two ways (chords, feel, density, lyric angle) |
-| Final chorus | has the highest energy of the song |
+| First chorus | compare arrival with the musician's aim; 45–60 seconds is a common reference, not a deadline |
+| Length | honour a specified duration; otherwise use 2:30–3:30 only as a starting estimate |
+| Verse 2 | consider progression, variation or deliberate repetition; shortening is optional |
+| Bridge | assess the intended change of chords, feel, density or lyric angle without requiring two differences |
+| Final chorus | follows the intended ending: a peak, a stripped return, a plateau or a decrease |
 
 ## Result lines
 

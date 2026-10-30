@@ -1,11 +1,11 @@
 ---
 name: harmony
-description: Choose, fix, reharmonize and voice chords directly in the Set. Ode rewrites the chord part's notes in place, keeps the bassline and the lead sheet's chord chart in agreement with the new chords, and checks that every strong-beat melody note fits its chord, that voices move smoothly, that the low register stays clear and that chord symbols are spelled for the key, then reports in one line which bars changed, so the musician can play them. Use this skill whenever a chord, keys, pad or guitar part is selected, or the musician clicks a suggestion or types anything about chords — "fresher chords", "less predictable", "darker", "brighter", "jazzier", "smoother voicing", "what goes under this melody", "this chord sounds wrong", a key change or a chord chart — whatever words they use.
+description: Choose, fix, reharmonize and voice chords directly in the Set. Ode rewrites the chord part's notes in place, keeps the bassline and the lead sheet's chord chart in agreement with the new chords, and reviews the intended melody–chord relationship, voice movement and low register, and checks chord-symbol spelling, then reports in one line which bars changed, so the musician can play them. Use this skill whenever a chord, keys, pad or guitar part is selected, or the musician clicks a suggestion or types anything about chords — "fresher chords", "less predictable", "darker", "brighter", "jazzier", "smoother voicing", "what goes under this melody", "this chord sounds wrong", a key change or a chord chart — whatever words they use.
 ---
 
 # Harmony
 
-Chords give a song its colour, its tension and rest, and its forward motion, and they decide how every melody note feels. Good harmony comes from the job each chord does, whether the chord is common or rare: it supports the melody note above it, moves the phrase towards its cadence, and fits what the lyric is doing at that moment. Ode changes the chords where they are, keeps every part that states them in agreement, and checks the result against the melody before the musician hears it.
+Chords give a song its colour, its tension and rest, and its forward motion, and they decide how every melody note feels. Functional motion towards a cadence is one approach. Static harmony, independent lines, clusters and unresolved tension can also serve the song; the musician's direction decides. Ode changes the chords where they are, keeps every part that states them in agreement, and checks the result against the melody before the musician hears it.
 
 ## Conventions
 
@@ -27,30 +27,30 @@ Chords give a song its colour, its tension and rest, and its forward motion, and
 ### 2. Decide
 
 1. Mark the melody's strong-beat and held notes and its phrase endings; decide where cadences go and whether each ends open or closed.
-2. Choose chords by function for each phrase, then add colour. Keep to the size of the request: "less predictable" changes a few chords and the bass line under them; the song's sound stays.
+2. For functional harmony, choose chords by function then colour; use a different organising idea when the song calls for it. Keep to the size of the request: "less predictable" changes a few chords and the bass line under them; the song's sound stays.
 3. Set the harmonic rhythm.
 4. Voice the chords: register, voice leading, and the bass note (root or inversion).
 
 ### 3. Change it in place
 
 - Rewrite the notes of the chord part the musician pointed at; keep its clip, its bars and its rhythm pattern unless the request is about rhythm.
-- When the chords change, every part that states them changes with them: the bass notes on each chord change (keep the bass's rhythm and register), any other chord part in the same bars (a pad doubling the keys), and the lead sheet's chord chart for that section, edited in place.
-- Melodies stay exactly as they are: choose chords that fit them. If a chord the musician asked for clashes with the melody, use the closest chord that fits and name the clash in the result line.
+- When the chords change, update parts that are intended to state the same harmony: the bass notes on each chord change (keep the bass's rhythm and register), any other chord part in the same bars (a pad doubling the keys), and the lead sheet's chord chart for that section, edited in place.
+- Keep the melody unless changing it is authorised. If a requested chord creates tension with it, explain the consequence briefly and honour the chosen chord; do not silently substitute a “better-fitting” one. Preserve deliberate pedals or independent bass lines too.
 - A chord part still to be written is new material: a clip on the chord track at the section's bars.
 - New clips, tracks and takes hold only new material; alternatives come from Again, which asks for another take with the Set back as it was: make it clearly different (another function, colour or bass line); the history keeps the old one.
 
 ### 4. Verify
 
-Run every check that applies, fix what fails and check again, up to three rounds. If something still fails, the result line says what.
+Run relevant checks, distinguish unintended problems from chosen tension and fix only the former, up to three rounds. Report coverage and any remaining finding; musical checks are not pass/fail standards.
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
-| Melody fit | every melody note that starts on beat 1 or 3, starts where the chord changes, or is held across a change is a note of the chord's symbol, extensions included (the 9th of Dm9, the 6th of F6) |
-| Clashes | a melody note held a beat or longer sits a half step above a chord tone in the chord part (F held over C major) only when it resolves by step; on every beat, the melody agrees with each note a borrowed or secondary chord changed (C natural over A7 and E natural over A♭maj7 clash) |
+| Melody fit | review accented and held melody notes against the chords, including extensions, suspensions and chosen dissonances; membership in the chord on beats 1 and 3 is not required |
+| Clashes | identify close intervals and altered-note conflicts, such as C natural over A7; keep intentional friction, including an unresolved tone, rather than forcing stepwise resolution |
 | Cadences | phrase ends land on the cadence you planned: open (V, IV, a sus chord) or closed (I) |
-| Voice leading | common tones hold in the same voice; the other upper voices move by a step or a third, a fourth at most; the top voice moves smoothly; voices keep their order |
-| Register | thirds and seconds stay at or above C3 (MIDI 48) — below it only the bass, with fifths or octaves at most; the chord's top voice stays clear of the vocal's notes at the same moment |
-| Bass agreement | the bass note at each chord change is the chord's root, or the bass note its slash symbol names |
+| Voice leading | compare movement with the intended texture: held common tones and small moves suit smooth writing; leaps, parallel shapes and crossings may be deliberate |
+| Register | listen for unwanted low-register blur and vocal competition; C3 (MIDI 48) is a rough voicing guide whose usefulness depends on timbre and texture |
+| Bass agreement | the chart describes intended roots, inversions or pedals; preserve an independent bass line when chosen |
 | Spelling | the chord symbols in the lead sheet are spelled for the key |
 | Range | after a key change, the melody still sits inside the singer's range |
 
@@ -68,7 +68,7 @@ What changed, then " · ", then what was checked:
 - "Bar 4 borrows Fm so the A♭ falls to G under 'stay' · melody fits, bass on F."
 - "Keys re-voiced: common tones held, top line moves by step under the vocal · same chords, clear of the vocal."
 
-When a take is outside the artist's usual chord vocabulary, the line says "outside your usual style".
+Name a new harmonic colour when useful; a requested expansion beyond earlier chord vocabulary needs no style warning.
 
 ## When to ask
 
@@ -87,7 +87,7 @@ The mode decides the rest: in Manual, Ode shows each change for Apply or Skip.
 | Subdominant (predominant) | moving away | IV F, ii Dm | iv Dm, ♭VI F, ii° Bdim |
 | Dominant | tension that wants home | V G, V7 G7, vii° Bdim | V E or E7 (from harmonic minor), v Em, ♭VII G |
 
-- The basic motion is tonic → subdominant → dominant → tonic.
+- A common functional motion is tonic → subdominant → dominant → tonic.
 - Root movement down a fifth (or up a fourth) is the strongest (ii–V–I). Stepwise roots are smooth (IV–V). Roots a third apart share two notes and sound gentle (I–vi).
 - In minor keys, V with its raised leading tone (E7 in A minor, with G♯) gives a strong cadence; v or ♭VII gives a softer, modal one.
 - Seventh chords, modes and longer tables are in `references/chord-vocabulary.md`.
@@ -109,7 +109,7 @@ Match cadences to the melody's phrase endings. An open melodic ending over a clo
 Harmonic rhythm is how often the chords change. Faster changes bring motion and urgency; slower changes bring space, groove and weight.
 
 - One chord per bar is the common default; two per bar builds energy, often in a pre-chorus; one chord over two bars suits sparse verses and fast tempos.
-- Change chords on strong beats. A change pushed early, onto the "and" of 4, is a deliberate anticipation (common in pop, funk and R&B); the bass and drums should push with it.
+- Strong-beat changes give a clear harmonic pulse; off-beat or irregular changes are other options. A change pushed early, onto the "and" of 4, is a deliberate anticipation (common in pop, funk and R&B); the bass and drums should push with it.
 - Contrast sections: if the verse holds each chord for two bars, the pre-chorus can change every bar or half bar.
 - Keep it steady within a phrase, or speed it up into a cadence, which sounds natural.
 
@@ -136,7 +136,7 @@ A secondary dominant is the dominant of one of the key's other chords (ii, iii, 
 | V/vi | E7 | G♯ | Am |
 
 - The added note pulls by a half step towards the target; that pull is the point. Resolve to the target, or deceptively (E7 to F).
-- If the melody sits on the note the secondary dominant alters (C natural over A7), they clash, unless the style uses it as a blue note.
+- If the melody uses the note a secondary dominant alters (C natural over A7), inspect that tension in context; it may be an intended colour rather than an error.
 - Lighter versions: the triad without the seventh; a fuller one: a secondary ii–V (Em7–A7 into Dm7).
 
 ## Modulation
@@ -154,7 +154,7 @@ More modulation routes are in `references/chord-vocabulary.md`.
 
 ## Reharmonization: keep the melody, change the chords
 
-Start from the melody's strong-beat notes. For each one, list the chords that hold it as a chord tone or a good colour tone, then choose by function and by the bass line they make.
+A consonant starting method is to list chords that contain the melody's accented notes as chord or colour tones, then choose by function and bass movement. For a more ambiguous or tense setting, the melody need not belong to each chord.
 
 One melody note, many chords — a melody E4 held for a bar in C major:
 
@@ -230,7 +230,7 @@ Checks: E is the 3rd of Cmaj7; D is the ♭3 of Bm7♭5 and the 7th of E7; C is 
 
 Result line: "Chorus now Cmaj7 – Bm7♭5 E7 – Am7 – F6 G, bass following · every melody note fits, voices move by step, only the bass below C3."
 
-Other takes for Again: `| C | G/B | Am7 | Gsus4 G |` (subtle: a falling bass line and a suspension), or `| Am7 | Dm9 | A♭maj7 | B♭add9 |` (♭VI and ♭VII borrowed from C minor; E is the 5th of Am7, D the root of Dm9, C the 3rd of A♭maj7, D the 3rd of B♭add9; any E natural in bar 3 would clash with A♭maj7's E♭) — outside the usual style for an artist who sticks to diatonic chords, so the result line would say so.
+Other takes for Again: `| C | G/B | Am7 | Gsus4 G |` (subtle: a falling bass line and a suspension), or `| Am7 | Dm9 | A♭maj7 | B♭add9 |` (♭VI and ♭VII borrowed from C minor; E is the 5th of Am7, D the root of Dm9, C the 3rd of A♭maj7, D the 3rd of B♭add9; any E natural in bar 3 would clash with A♭maj7's E♭) — a broader palette than a diatonic take, to describe when useful rather than automatically flag as outside the artist's style.
 
 ## Reference files
 
@@ -245,5 +245,5 @@ Paths are relative to this skill's folder. Read a sub-skill when it applies; it 
 
 | Path | Read when |
 |---|---|
-| `pop/SKILL.md` | The song is pop or pop-leaning (dance-pop, synth-pop, pop-rock, pop ballad, indie-pop, pop R&B), the chords are a repeating loop, or the musician says the progression feels predictable or wants sections to contrast over the same chords. |
+| `pop/SKILL.md` | The song has a pop or pop-leaning direction (dance-pop, synth-pop, pop-rock, pop ballad, indie-pop, pop R&B), or the musician explicitly wants pop chord techniques. Repeating loops, predictability or contrast requests alone do not select pop. |
 | `jazz/SKILL.md` | The song is jazz or jazz-influenced (neo-soul, bossa nova, lounge, jazz-pop, R&B with extended chords), or the musician asks for jazzier or richer chords, extensions and alterations, ii–Vs, tritone substitutions, or jazz piano or guitar voicings. |

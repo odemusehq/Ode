@@ -143,7 +143,7 @@ Other transitions:
 - **Drop-out**: stop the drums after beat 2 of the last bar, or play only a snare pickup on the "and" of 4, so the chorus downbeat lands in contrast.
 - **Kick pickup**: an extra kick on the "a" of 4, leading into the next downbeat.
 - **Snare build** over two or four bars: quarters, then eighths, then sixteenths, velocity rising.
-- Land every fill on the next downbeat with a kick and, at section changes, a crash.
+- A kick and crash on the next downbeat give a clear landing; delayed, displaced or absent landings are other choices.
 
 ## 9. Varying a loop
 

@@ -27,7 +27,7 @@ Work on the kit that is already there: change a pad's sample, its Simpler settin
 | Toms | 60–120 Hz (floor) to 150–300 Hz (rack) | — | 300–600 Hz | 2–5 kHz |
 | 808 | 30–60 Hz fundamental | harmonics 100–500 Hz | — | the attack transient or click |
 
-These are typical regions; find the real ones on the sound itself.
+These are typical regions and the settings below are starting points; find the real response on the sound itself and preserve deliberate roughness, imbalance or overlap.
 
 ## Kick
 
@@ -100,13 +100,13 @@ Describe the hit precisely: drum type, length, pitch, attack, character and spac
 
 These add to the parent skill's checks.
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
-| Kit balance | At the same velocity every hit sits level with the others, and the pad chains' volumes leave headroom on the drum track |
-| Kick and bass | Only one of them carries sub at any moment: the kick ends before the next bass note, or one of them gives way |
-| Tuning | A pitched kick, tom or 808 sits on the key (root, fifth or another chord tone); an 808 follows the notes it plays |
+| Kit balance | Review the intended relative weight of the hits and actual output headroom; equal velocity need not mean equal loudness |
+| Kick and bass | Inspect their audible interaction; shortening, tuning or ducking may help unwanted blur, while deliberate overlap can remain |
+| Tuning | Check sample tuning against the intended notes or texture; a pitched drum need not sit on the tonic or fifth |
 | Clean starts | Every sample starts on its transient, and tails leave the groove clear |
-| Mono | Kick, snare and 808 centred; stereo percussion stays audible when summed |
+| Mono | Review actual summed output for the intended playback goal; centring kick, snare or 808 is a common option rather than a mandatory pan rule |
 
 ## Example
 

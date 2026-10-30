@@ -1,6 +1,6 @@
 ---
 name: drums-house
-description: House drum programming on top of the drums skill, for editing house grooves in place — four-on-the-floor kick, claps and off-beat open hats, swung sixteenth shakers and percussion, changes on 8- and 16-bar boundaries, DJ-friendly intros and outros, breakdowns, clap and snare builds, drops, and how the kick and bass share the beat, each with the check that proves it. Read this whenever the track is house or house-adjacent (deep house, tech house, Afro house, disco-influenced or other four-on-the-floor club music), or the musician wants a club groove, a build and drop, or drums that DJs can mix.
+description: House drum programming on top of the drums skill, for editing house grooves in place — four-on-the-floor kick, claps and off-beat open hats, swung sixteenth shakers and percussion, changes on 8- and 16-bar boundaries, DJ-friendly intros and outros, breakdowns, clap and snare builds, drops, and how the kick and bass share the beat, with practical checks interpreted in the intended musical context. Read this whenever the track is house or house-adjacent (deep house, tech house, Afro house, disco-influenced or other four-on-the-floor club music), or the musician asks specifically for house drum techniques. Club use or a build/drop request alone does not establish house.
 ---
 
 # House drums
@@ -10,7 +10,7 @@ Only what is specific to house. The loop (read, decide, change in place, verify,
 ## Tempo and phrasing
 
 - Usually around 118–128 BPM in 4/4: deep house towards the lower end, tech house around 124–128.
-- Everything happens in 8-, 16- and 32-bar phrases. Elements enter, leave and change on phrase boundaries (bars 17, 33, 49…), because DJs and dancers count in phrases.
+- Eight-, 16- and 32-bar phrases make conventional DJ transitions easier. Off-boundary changes and irregular phrasing remain available when the musician wants them.
 
 ## The core groove
 
@@ -65,14 +65,14 @@ The silent last beat before the drop makes the returning kick hit harder. The bu
 
 ## Checks for house
 
-Run these with the drums skill's checks.
+Use these as references for a conventional house brief alongside the drums skill; they do not override the chosen phrasing, swing or kit.
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
 | Four on the floor | a kick on every beat, or a deliberate drop-out at a phrase end or in a breakdown |
-| Phrases | every change of pattern starts on an 8- or 16-bar boundary (bar 1, 9, 17, 25…) |
-| Swing | hats, shakers and percussion swung around 54–58%; kick and clap on the grid |
-| DJ intro and outro | for club tracks, the first and last 16–32 bars hold only drums and a few elements |
+| Phrases | compare pattern changes with the intended DJ phrasing, retaining deliberate off-boundary changes |
+| Swing | inspect the requested feel; 54–58% hats with straight kick/clap is one starting point |
+| DJ intro and outro | when requested, review mixing room against the DJ brief; 16–32 sparse bars is a conventional option |
 | Kick and bass | where the bass plays the off-beats, every bass note sits between the kicks |
 
 ## Result lines

@@ -49,12 +49,12 @@ Prepare the setting as if a singer were about to read it: every syllable on its 
 
 ### 4. Check the score, then the actual rendered vocal
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
 | Consent | a recording of this artist's own voice is saved with their yes |
-| Syllables | the lyrics-to-melody check gives each line a phrase with as many notes as one of its syllable counts, or melismas chosen on purpose, and the demo uses that same reading |
-| Prosody | the prosody check finds every stressed syllable on a note at least as strong as its unstressed neighbours |
-| Singability | the singability check passes: high held notes are free of closed vowels, very short notes free of consonant clusters |
+| Syllables | review the intended syllable-to-note mapping, including melisma; verify the actual rendered words and setting separately |
+| Prosody | inspect stress findings against intended delivery; preserve deliberate displacement and do not claim the renderer honoured unsupported instructions |
+| Singability | review vowel, consonant and breath findings as advice for this performance, not a gate requiring open vowels or simple consonants |
 | Range | every note sits inside the singer's range; a demo pushed outside it sounds strained and misleads everyone |
 | Pronunciation | words whose pronunciation the checks left unconfirmed are named in the result line and always reported as uncertain |
 | Rights | the singing model allows commercial use and leaves the artist the rights |

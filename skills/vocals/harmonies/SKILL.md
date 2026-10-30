@@ -1,6 +1,6 @@
 ---
 name: vocals-harmonies
-description: Write and fix vocal harmony lines and stacks on top of the vocals skill, as MIDI guides placed in the Set — choosing the interval (thirds, sixths, fourths, fifths, octaves) from the chords and the singer's range, moving harmony notes to chord tones where the parallel line would clash, parallel, oblique and contrary motion, three-part stacks, matching the lead's words and rhythm, and keeping the harmony singable on its own, each with the check that proves it. Read this whenever you are writing a harmony vocal, BV harmonies, a vocal stack or vocal pads, or fixing a harmony that sounds wrong, sits too high or is hard to sing.
+description: Write and fix vocal harmony lines and stacks on top of the vocals skill, as MIDI guides placed in the Set — choosing the interval (thirds, sixths, fourths, fifths, octaves) from the chords and the singer's range, moving harmony notes to chord tones where the parallel line would clash, parallel, oblique and contrary motion, three-part stacks, matching the lead's words and rhythm, and keeping the harmony singable on its own, with practical checks interpreted in the intended musical context. Read this whenever you are writing a harmony vocal, BV harmonies, a vocal stack or vocal pads, or fixing a harmony that sounds wrong, sits too high or is hard to sing.
 ---
 
 # Vocal harmonies
@@ -20,7 +20,7 @@ Decide the interval from the range first: find the lead's highest note in the pa
 
 ## Fit the chord as well as the scale
 
-A harmony that runs exactly parallel to the lead in diatonic thirds sometimes lands on a note that clashes with the chord. On strong beats and long notes, harmony notes should be chord tones (or colour tones the chord part plays). When the parallel note fails:
+A harmony that runs exactly parallel to the lead in diatonic thirds sometimes lands on a note that clashes with the chord. For a consonant blend, chord or colour tones on strong beats and held notes are useful starting points. Keep suspensions, clusters or unresolved dissonance when wanted. If a parallel note creates unwanted tension:
 
 - move it to the nearest chord tone, even if that briefly makes a fourth or a sixth with the lead;
 - hold the previous note while the lead moves (oblique motion);
@@ -45,7 +45,7 @@ A harmony that runs exactly parallel to the lead in diatonic thirds sometimes la
 A harmony line has to work on its own, because someone has to sing it in tune.
 
 - Prefer steps and held notes; smooth out awkward leaps the parallel line inherits (a held note is often better than a sixth up and back).
-- Leave out tritone and major-seventh leaps.
+- Tritone and major-seventh leaps may need rehearsal; retain them when the singer and intended line support them.
 - Keep the whole line inside its singer's range.
 
 ## Three-part stacks
@@ -59,7 +59,7 @@ A harmony line has to work on its own, because someone has to sing it in tune.
 
 - Choruses and hooks first; the title is the natural place for the first harmony in a song.
 - The last line of a verse, to lead into the chorus.
-- Save the fullest stacks for the final chorus; a harmony everywhere stops being special.
+- A late stack can create a final peak; an early peak, continuous harmony or thinning at the end can serve a different arc.
 
 ## Worked example: "add a harmony"
 
@@ -70,7 +70,7 @@ Lead:               | C♯4(1) D4(1) E4(1) C♯4(1) | A3(1) B3(1) C♯4(2) | D4(
 Parallel 3rd above: | E4(1) F♯4(1) G♯4(1) E4(1) | C♯4(1) D4(1) E4(2) | F♯4(1) G♯4(1) A4(1) G♯4(1) | G♯4(4) |
 ```
 
-The parallel line fails in three places, so Ode writes the adjusted line into the harmony clip:
+For this consonant take, Ode changes three places in the parallel line and writes the adjusted line into the harmony clip:
 
 ```
 Harmony:            | E4(1) F♯4(1) A4(1) E4(1) | C♯4(1) D4(1) F♯4(2) | F♯4(1) A4(3) | G♯4(4) |
@@ -89,12 +89,12 @@ Result line: "Harmony above the lead on the chorus, moved to chord tones in bars
 
 Run these with the vocals skill's checks.
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
-| Interval | the line keeps one side of the lead for each phrase (above or below), and a third above the lead's peak was used only if it is inside the range |
-| Chord fit | strong-beat and long harmony notes are chord tones, or colours the chord part plays |
-| Motion | the line stays on its side of the lead, and any stretch of parallel fifths or octaves stays short |
-| Alone | the harmony line is singable by itself: mostly steps and held notes, without tritone or major-seventh leaps |
+| Interval | keep explicit singer bounds and review whether the chosen interval and any crossing serve the texture |
+| Chord fit | inspect accented and held notes against the chosen blend, including intentional suspensions or unresolved tension |
+| Motion | review independence, crossings and parallels against the musician's intention |
+| Alone | review the actual intervals, rhythm and breaths for its singer; steps and held notes can simplify the part when wanted |
 
 ## Result lines
 

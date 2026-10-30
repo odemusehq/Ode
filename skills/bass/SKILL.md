@@ -27,7 +27,7 @@ The bass does three jobs at once: it defines the harmony (the bass note decides 
 
 ### 2. Decide
 
-Choose the approach the request asks for — roots locked to the kick for weight, notes between the kicks for bounce, a melodic line with passing tones, octaves, an 808 with slides — and keep what already works (usually the root on beat 1 and the figure's rhythm) unless asked for something new. The craft below gives the rules.
+Choose the approach the request asks for — roots locked to the kick for weight, notes between the kicks for bounce, a melodic line with passing tones, octaves, an 808 with slides — and keep what already works (usually the root on beat 1 and the figure's rhythm) unless asked for something new. The craft below offers starting points for that approach.
 
 ### 3. Change it in place
 
@@ -39,17 +39,17 @@ Choose the approach the request asks for — roots locked to the kick for weight
 
 ### 4. Verify
 
-Run every check that applies, fix what fails and check again, up to three rounds. If something still fails, the result line says what.
+Run relevant checks, fixing unintended problems up to three rounds. Treat roots, kick placement, register and note lengths as context for the chosen line; preserve deliberate pedals, counter-rhythms and tension.
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
-| Roots | the note at each chord change is the chord's root, or a deliberate inversion or slash bass you can name |
-| Key | every note is in the song's scale, or is a chromatic approach note on a weak position that resolves by a half step into the next note |
-| Kick | when the line locks to the kick: every bar's first note starts with the kick on beat 1 (within a 32nd note), and its other notes start with kick hits too, while passing or approach notes in the last beat before a chord change may fall between kicks; when it plays between the kicks (house off-beats): every note starts between kicks |
+| Roots | review how the bass defines each chord, including roots, inversions, pedals and an intentionally independent line |
+| Key | identify scale departures and their intended colour; blues, chromatic and unresolved notes need not be confined to weak beats |
+| Kick | compare the actual kick notes with the intended bass accents: selected unison starts for weight, gaps for bounce, or independent syncopation; do not impose a beat-1 hit or require every note to coincide |
 | Smear | long bass notes end before any kick they would mask, or hold across it only where the style asks (a held sub under a sparse kick) |
-| Snare | the snare beats carry fewer bass notes than the kick beats, and those that fall there are passing or approach notes |
-| Register | notes between about E1 and C3 (MIDI 28–48); main 808 notes about E1–E2; anything important below E1 has harmonics above it |
-| Low clashes | the bass has its octave to itself at every moment (watch the keys' left hand around C2–C3), and every chord interval below C3 is a fifth or wider |
+| Snare | review the intended interplay; bass and snare may reinforce, alternate or cross one another |
+| Register | inspect the actual instrument and playback goal; E1–C3 (MIDI 28–48), or E1–E2 for an 808, are starting ranges rather than musical limits |
+| Low clashes | inspect simultaneous low parts for unwanted blur; shared registers or close low intervals may be deliberate |
 | 808 | tuned to the key, tails ending before the next hit when a separate kick plays, slides a few per phrase, glide on |
 | Loop | every note ends by the clip's end |
 
@@ -67,7 +67,7 @@ What changed, then " · ", then what was checked:
 - "808 follows the roots with two slides every four bars, glide on · in key, tails end before each kick, lowest note E1."
 - "Approach notes into each chord on beat 4 · on weak beats, each resolves by a half step, roots still with the kick."
 
-When a line is outside the artist's usual style (octaves for someone who always plays roots), the line says "outside your usual style".
+Mention a new bass approach when useful, without warning merely because a requested line differs from earlier songs.
 
 ## When to ask
 
@@ -80,7 +80,7 @@ The mode decides the rest: in Manual, Ode shows each change for Apply or Skip.
 
 ## Following the chords
 
-- Play the root on each chord change, usually on the downbeat. That states the harmony clearly.
+- A root on each change states the harmony clearly; an inversion, pedal or independent line can give a different interpretation.
 - Use chord tones (3rd, 5th, 7th) for movement within a chord, and octaves and fifths for energy without new pitches.
 - Connect chords with passing tones (scale steps between chord tones) and approach notes (a half step below or above the next root, just before it arrives) on weak beats.
 - A pedal point — one bass note held under changing chords — builds tension in intros, pre-choruses and builds.
@@ -108,7 +108,7 @@ Do this deliberately, keep the lead sheet's chord chart in agreement (the harmon
 - Short notes punch and leave room; long notes give weight and warmth. Note length shapes the groove as much as note choice.
 - Syncopation — anticipating a chord change on the "and" of 4, or accenting off-beats — adds drive. Keep beat 1 strong so the listener keeps the downbeat.
 - A repeated one- or two-bar figure (an ostinato or riff) is often stronger than a line that changes every bar.
-- Leave the snare beats lighter than the kick beats; the bass and snare rarely need to hit together.
+- Lighter snare beats can leave space; unison hits or an independent bass rhythm can also define the groove.
 
 ## Register
 
@@ -123,7 +123,7 @@ Do this deliberately, keep the lead sheet's chord chart in agreement (the harmon
 - Diatonic passing tones fill a third between chord roots by step: under `| C | Am |`, C–B–A.
 - Chromatic approach notes lead into the next root from a half step away on the last eighth or quarter of the bar: G♯ into A, D♭ into C.
 - Walking bass (jazz, swing, some blues) plays four quarter notes per bar: chord tones on beats 1 and 3, passing or approach notes on 2 and 4, with an approach note on beat 4 into the next chord.
-- Keep passing notes on weak beats so the strong beats still state the harmony.
+- Weak-beat passing notes preserve a clear harmonic outline; accented passing tones or displaced roots can be intentional.
 
 ## Octaves and fifths
 
@@ -133,7 +133,7 @@ Do this deliberately, keep the lead sheet's chord chart in agreement (the harmon
 
 ## 808 basslines and slides
 
-- An 808 is a long, sine-like bass drum that works as both kick and bass in trap, drill and much modern hip-hop and pop. Its notes must match the key: the long tail is a pitch, and a wrong one clashes with every chord.
+- An 808 is a long, sine-like bass drum that works as both kick and bass in trap, drill and much modern hip-hop and pop. Its long tail carries pitch, so inspect its relationship to the intended harmony; a pedal or chosen dissonance need not follow every chord root.
 - **Note length is the tail**: the length of each MIDI note sets how long the 808 rings. Shorten notes in busy passages, end them before the next hit if a separate kick plays, and let the note before a rest ring out.
 - **Slides (glide)**: with the 808 in mono and glide (portamento) on, overlapping two notes makes the pitch slide from the first to the second. Slide up an octave, or to the fifth, for movement; slide back down to land on the root. Slides are accents: a few per phrase.
 - **Simple lines win**: 808s often follow only the strongest chord roots, or stay on the key's root while the chords move. If the 808 stays on E under a D chord, it makes D/E, a tense, suspended sound; choose that deliberately.
@@ -180,7 +180,7 @@ Checks: roots on every chord change; every note in A minor, with G♯1 the one c
 
 Result line: "More movement: chord tones on beat 3 and a step into each new chord on beat 4 · roots still with the kick, in key, lowest note E1."
 
-On Again, try octaves in eighths with the low notes on the kicks and the snare beats left empty — outside the usual style for an artist who plays roots, so the result line says so.
+On Again, try octaves in eighths with the low notes on the kicks and the snare beats left empty — an octave-based alternative to the root-only take.
 
 ## Reference files
 

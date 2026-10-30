@@ -1,11 +1,13 @@
 ---
 name: harmony-pop
-description: Pop chord craft on top of the harmony skill, for changing pop chords in place — four-chord loops and how to rotate, re-voice and re-bass them, making sections contrast when the chords barely change, pre-chorus lifts, pop colours (add9, sus, slash chords, borrowed ♭VII, ♭VI and iv), modal pop loops, bridges and final-chorus key changes, each with the check that proves it. Read this whenever the song is pop or pop-leaning (dance-pop, synth-pop, pop-rock, pop ballad, indie-pop, pop R&B), or the musician says their loop or chorus chords feel predictable or every section sounds the same.
+description: Pop chord craft on top of the harmony skill, for changing pop chords in place — four-chord loops and how to rotate, re-voice and re-bass them, making sections contrast when the chords barely change, pre-chorus lifts, pop colours (add9, sus, slash chords, borrowed ♭VII, ♭VI and iv), modal pop loops, bridges and final-chorus key changes, with practical checks interpreted in the intended musical context. Read this whenever the song is pop or pop-leaning (dance-pop, synth-pop, pop-rock, pop ballad, indie-pop, pop R&B), or the musician explicitly asks for these pop harmonic techniques. A predictable loop or contrast request alone does not establish pop.
 ---
 
 # Pop harmony
 
 Only what is specific to pop. The loop (read, decide, change in place, verify, let them hear it, report in one line), function, cadences, borrowing, voicing and the general checks are in the harmony skill.
+
+Use these as pop possibilities, not required cadences or a prescription for each section. A static loop, unresolved harmony or unchanged final chorus can be the chosen result.
 
 ## Loops are normal
 
@@ -42,7 +44,7 @@ When "every section sounds the same", change one or two of these per section bou
 ## Chorus
 
 - Starting on I sounds like arrival; starting on IV lifts without fully landing; starting on vi gives a bittersweet weight.
-- If the chorus repeats, end its first pass on V or IV so it turns around; close on I only at the very end of the last chorus, if at all.
+- V or IV can turn a chorus back into its repeat; I can close any pass, and an unresolved ending may remain open through the song.
 
 ## Pop colours
 
@@ -84,17 +86,17 @@ The musician selects the verse keys and types "every section sounds the same": t
 
 Result line: "Verse now over a C pedal with low, close voicings, chorus unchanged · melody fits every chord, verse and chorus differ in bass and register."
 
-Other takes for Again: start the chorus on IV (`| F | C/E | Dm7 | Gsus4 G |`) so it lifts and keeps moving; or a Dorian-coloured verse in A minor, `| Am7 | D9 | Am7 | D9 |` — the D chord's F♯ needs a verse melody free of F natural, and for an artist who always stays in major keys it is outside the usual style, so the result line says so.
+Other takes for Again: start the chorus on IV (`| F | C/E | Dm7 | Gsus4 G |`) so it lifts and keeps moving; or a Dorian-coloured verse in A minor, `| Am7 | D9 | Am7 | D9 |` — the D chord's F♯ creates friction with any F natural in the melody, so inspect whether that colour is wanted. A requested modal take needs no style disclaimer.
 
 ## Checks for pop
 
 Run these with the harmony skill's checks.
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
 | Contrast | neighbouring sections differ beyond the lyric, in start chord, bass, harmonic rhythm, voicing or density |
-| Pre-chorus | it ends open, away from I, so the chorus downbeat is the release |
-| Turnaround | a repeating chorus ends its first pass on V or IV |
+| Pre-chorus | consider whether an open ending supports the chosen arrival; retain another harmonic shape when intended |
+| Turnaround | review how the loop returns, including a tonic, dominant, modal or unresolved ending |
 | Key change | after one, the melody passes the range check in the new key |
 
 ## Result lines

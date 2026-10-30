@@ -16,7 +16,7 @@ A stock-device insertion or MIDI note list is not proof of an audible instrument
 ## The loop
 
 1. **Read.** From the project map: the locators (the sections and their bars), tempo and time signature (unknown in this SDK unless established by the musician; a scene's launch meter is not the current arrangement meter), every track and the clips it plays in each section, which clips and tracks are muted, the hand edits since the last request, and the lead sheet's sections and locked parts. Read the notes of the clips you may change. Work out what plays where (parts down the side, sections across) and rate each section's energy from 1 to 10: flat neighbours, an early peak and crowded spots show at a glance.
-2. **Decide** the cause of what the musician describes ("the drop feels weak": the build before it is as full as the drop) and the smallest set of moves that fixes it, using the levers and rules below. Contrast does most of the work, so before adding to a section, look at what can come out of the one before it. Move several levers together so the change is obvious.
+2. **Decide** the cause of what the musician describes ("the drop feels weak": the build before it is as full as the drop) and the smallest set of moves that fixes it, using the levers below as options. Contrast does most of the work, so before adding to a section, look at what can come out of the one before it. Use as many levers as the requested effect needs; a single subtle move can be enough.
 3. **Change it in place**, as one undo step:
    - Edit the clips already in the section: their notes (a fill in the last bar, hats from eighths to sixteenths, a part doubled an octave up), their mute and their length.
    - Taking a part out of a section (removing or muting its clip there, or clearing a few bars) and bringing a part in (placing its clip on its own track in that section) are arranging, and go ahead without a question. Copying the loop or a part into the sections where it belongs is building the song, and is arranging too.
@@ -32,19 +32,19 @@ A stock-device insertion or MIDI note list is not proof of an audible instrument
 
 **Again** is another take: the Set is back as it was, so switch levers from the last take (register to rhythm, addition to subtraction), with moves as bold as before.
 
-**Outside the usual style.** When a take goes beyond how the artist usually arranges (a stripped-back final chorus, a cold ending new to them) — judged only from their own songs and what they have said — the result line says so.
+**Style context.** Earlier songs can suggest starting points; the current direction governs. Mention an unrequested stripped ending or other departure only when that context helps explain the choice.
 
 ## Checks
 
-| Check | When | Correct when |
+| Check | When | What to review |
 |---|---|---|
 | Energy | Every change | The changed section sits where the plan puts it against its neighbours. Compare what plays, the drums' note density and the highest register in each section. Judge the intended contrast in the actual song; note density/register are clues, not proof. A stripped chorus or an early peak can be intentional |
-| Downbeats | Every change | Section changes, entries and impacts start on beat 1 of the section's first bar; risers and reverse sounds end exactly on it; clip edges sit on the bar grid unless a pickup is meant |
+| Boundaries | Every change | Entries, impacts and transition endings meet the intended boundary, including pickups, off-beat changes and sub-bar sections; do not force the bar grid |
 | Clean edges | Clips cut, shortened or moved | Every note ends at or before a cut (shorten it to end there); audio clips are cut between words and hits |
-| Key | Notes written or moved | Every new note is in the song's key, or is a chromatic note with a reason (a passing note, a chord the song already borrows) |
-| Vocal space | Parts added or doubled | New parts keep clear of the vocal's register while it sings; fills and answers go in the gaps between phrases |
-| Low end | Parts added | One part owns the sub at a time (kick and bass, or the 808) |
-| Length | Sections added, removed or resized | Sections are whole phrases (multiples of 4 or 8 bars, unless the song form says otherwise); in 4/4 the length in seconds is bars × 240 ÷ BPM |
+| Key | Notes written or moved | Review new pitches against the intended harmony, including chosen chromaticism or unresolved dissonance |
+| Vocal space | Parts added or doubled | Review whether overlap supports the desired focus or texture; clear registers and gaps are options for intelligibility |
+| Low end | Parts added | Review actual low-part interaction; a single sub owner can clarify a mix, while shared energy or rough overlap may be intentional |
+| Length | Sections added, removed or resized | Boundaries and lengths agree with the intended form, including irregular phrases; with constant quarter-note BPM, seconds = beats × 60 ÷ BPM |
 
 ## Questions
 
@@ -78,7 +78,7 @@ More forms with section lengths and durations at common tempos are in `reference
 
 ## Adding and removing parts
 
-- **Every section changes something:** a new part, a part removed, a new rhythm, a new register. Listeners notice change and stop noticing repetition.
+- **When variation helps,** try a new part, a part removed, a new rhythm or a new register. An unchanged loop or sustained texture can also be the chosen effect.
 - **Arrange by subtraction from a full loop.** Build the densest section (chorus or drop) first, then derive the others by removing parts; this keeps everything consistent and makes contrast easy.
 - **Arrange by addition from a sparse start.** Start with the core (vocal and one instrument, or drums and bass) and add one element every 4 or 8 bars.
 - **One focal point at a time.** At any moment one thing leads: the vocal, a lead synth, a guitar riff. When two parts compete for attention, let them trade (call and response) or drop one.
@@ -87,7 +87,7 @@ More forms with section lengths and durations at common tempos are in `reference
 
 ## Roles and registers
 
-Give every part one role and a register of its own.
+Roles and registers can clarify a dense arrangement; parts may share or change roles when that serves the texture.
 
 | Role | Typical parts | Usual register |
 |---|---|---|
@@ -123,7 +123,7 @@ A breakdown resets the energy so the song can build again.
 ## Drops and choruses
 
 The arrival delivers what the build promised.
-- Kick and bass come back exactly on the downbeat.
+- For a firm arrival, bring kick and bass back on the downbeat; a delayed or offset return can create a different effect.
 - A short silence or cut just before the downbeat (one beat to half a bar) makes the arrival hit harder.
 - Mark the downbeat: a crash, an impact or a snare hit.
 - The hook in its strongest register, as the clear focal point.
@@ -137,10 +137,10 @@ Prefer transitions made with clips, notes and sounds: a fill, a drop-out, a rise
 
 ## Variation
 
-Repetition makes a hook memorable; unchanged repetition makes a song boring. Keep the hook, vary what surrounds it.
-- Change something every 4 or 8 bars: a fill at the end of each phrase, a part dropped for a bar, a variation of the drum pattern.
+Repetition can make a hook memorable or create a hypnotic plateau. Vary its surroundings when the song needs movement, rather than adding changes by schedule.
+- For regular phrase variation, try a change every 4 or 8 bars: a fill at the end of each phrase, a part dropped for a bar, a variation of the drum pattern.
 - Make verse 2 different from verse 1: a counter-melody, another drum pattern, a half-time feel, fewer or different parts.
-- Make the last chorus the biggest: harmonies or doubles, an octave lift in the instruments, extra percussion, wider stereo; sometimes a stripped-back chorus first, then the full one.
+- If a final peak is wanted, build the last chorus with harmonies or doubles, an octave lift in the instruments, extra percussion, wider stereo; sometimes a stripped-back chorus first, then the full one.
 - Vary repeated loops with small changes: a different last bar, a note held over the bar line, another chord inversion.
 - Decide the ending: a cold final hit, a fade, or parts leaving one by one.
 
@@ -148,10 +148,10 @@ Repetition makes a hook memorable; unchanged repetition makes a song boring. Kee
 
 1. **Name the parts** in the loop and their roles.
 2. **Choose the form and length** from the song's context, the lead sheet's sections when it has them, and the artist's own past songs. For streaming, listeners reach the vocal or hook early; for DJ use, intros and outros of 16–32 bars led by drums make mixing easier. Place locators named the way musicians read them (Intro, Verse 1, Pre-Chorus, Chorus, Drop, Breakdown, Bridge, Outro).
-3. **Build the densest section first** from the full loop, in the Arrangement.
-4. **Derive the other sections by removing parts**, aiming at the energy curve.
+3. **Choose a useful starting section** from the full loop; the densest section is one option, not a required writing order.
+4. **Develop the other sections** by adding, removing or rewriting parts to suit the intended arc.
 5. **Write what is missing** with the matching skill: a part for the breakdown, a fill, a counter-melody for verse 2, transition sounds.
-6. **Add a transition at every section change** and variation inside long sections.
+6. **Add transitions or internal variation where useful.** A plain cut, no new layer or unchanged repetition can be deliberate.
 7. **Check the whole song:** the energy curve, the downbeats, the length.
 
 When the loop lives in Session View, copy its clips into the Arrangement section by section. To lengthen or shorten a section without breaking alignment, change every track over the same bars.
@@ -162,7 +162,7 @@ In 4/4, **seconds = bars × 240 ÷ BPM** (in general, bars × beats per bar × 6
 - 16 bars at 120 BPM = 32 s; 16 bars at 124 BPM ≈ 31 s; 32 bars at 128 BPM = 60 s.
 - A 3:30 song at 100 BPM is about 87.5 bars; a 6-minute track at 124 BPM is about 186 bars.
 
-Round section lengths to musical phrases (usually multiples of 4 or 8 bars) and let the total fall where it falls; a phrase cut short to hit a duration feels wrong.
+Four- or eight-bar phrases are convenient starting points; keep irregular or shortened phrases when the material or duration brief calls for them.
 
 ## Reference files
 

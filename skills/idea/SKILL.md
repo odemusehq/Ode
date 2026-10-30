@@ -15,17 +15,17 @@ An idea is more than a topic. "Heartbreak" is a topic. "Learning to cook for one
    - What Ode remembers about the artist: the themes, points of view and moods they usually write, the images they reach for, what they dislike, and situations from their life they have told you about.
 2. **Decide** with the craft below. Start from what the musician brought: their own phrases first (a striking line in a draft, a word in a hum), then the music, then what they have told you. Choose the one strongest direction, and only that one. Again gives another take, and the version history keeps this one.
 3. **Change in place.** Write into the lead sheet, replacing what was there:
-   - **title:** one to five words;
+   - **title:** the chosen phrase; one to five words is a common starting point;
    - **theme:** what the song means, with the feeling and its complication ("relieved it's over, and guilty about the relief");
-   - **story:** the situation (who, where, when, what just happened, what the singer wants) and where it goes: a phrase each for verse 1, verse 2 and the bridge, and how the last chorus reads differently;
+   - **story:** the situation or organising idea, developed for the sections this song actually has; do not invent verses, a bridge or a final-chorus turn just to fill a template;
    - **point of view:** the person and tense, and who "you" is, without giving anyone a gender or identity beyond what the musician has given;
    - **mood:** in the musician's own terms, kept independent of the key;
    - **hook:** the hook line, usually the title line.
    Idea work changes only the title and what the song is about; the lyrics and the Set stay as they are. Use a title the lyric already sings where you can; writing lines around a new title is lyric work, done when the musician asks ("Write the chorus", "Put the title in the chorus").
 4. **Verify.**
-   - **Syllable and stress check** on the title and the hook line: know the count and where the stresses fall. Good: the stresses fall on the important words, and the word most likely to be held has an open vowel ("go", "down", "stay", "far").
+   - **Syllable and stress check** on the title and the hook line: know the count and where the stresses fall. For a clear, syllabic hook, important words often carry the stress and a held word may suit an open vowel ("go", "down", "stay", "far").
    - **Originality check** on the title and the hook line: clear of clichés and over-used pairs. A stock phrase, or the title of a very famous song, gets replaced, unless it is the musician's own choice: then keep it and say so in the result line.
-   - **Prosody check**, when the title is already sung on notes: its stressed syllables on strong beats.
+   - **Prosody check**, when the title is already sung on notes: review the intended emphasis; retain chosen stress displacement or vowel colour.
    - A word the check marks as uncertain (a name, slang) stays out of what you report as checked.
    Fix and check again, up to three rounds; if something still fails, the result line says what.
 5. **Let them hear it.** A title and what the song is about live in the lead sheet, so the result line is the whole answer. If you also changed lines because the musician asked, the result line names their section, so the musician can play it from the locator named like its label.
@@ -40,7 +40,7 @@ Idea work rarely needs a question. Skip the interview: choose a direction and le
 
 ## What makes an idea strong
 
-Test every direction against these. They explain why some ideas write themselves and others stall at verse two.
+These prompts can develop a narrative idea. A collage, chant, instrumental piece or single static image need not satisfy all of them; follow the musician's chosen premise.
 
 1. **One emotional core.** Name the feeling precisely, ideally with its complication: "relieved it's over and guilty about the relief" says far more than "sad". A precise feeling tells you which details to choose and what the chorus has to say.
 2. **A specific situation.** Who, where, when, what just happened. Specific situations make universal feelings believable; general statements make them forgettable.
@@ -65,7 +65,7 @@ When the musician arrives empty-handed, look here, starting with what they have 
 
 ## From a phrase or a feeling to the lead sheet
 
-Work through these quickly; each step narrows the next, and each fills a field.
+Use the steps that help this starting material, in any order; leave unknown material open rather than filling fields with invented biography.
 
 1. **Name the feeling and its complication** → theme.
 2. **Find the situation:** who is singing, to whom, where, when, what just happened, what the singer wants → story.
@@ -145,7 +145,7 @@ Find the most alive line in the draft, often a specific image buried in verse 2,
 ## Without bias, without copying
 
 - Take everything about the musician from their own words, their songs and what Ode remembers them saying alone; their name, gender, age, nationality and genre stay out of it.
-- Write inside their usual themes and points of view by default. When a direction is outside their usual style (a different point of view, mood or form), the result line says so.
+- Write inside their usual themes and points of view by default. A requested new point of view, mood or form governs; name an unrequested departure only when that helps explain the take.
 - Write new material every time. The examples here and in the references only illustrate the method; keep their titles and lines out of real songs.
 
 Worked examples in the same shape (starting from a bright loop, rescuing a draft without a centre, building out from a title) are in `references/worked-examples.md`.

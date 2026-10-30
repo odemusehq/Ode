@@ -1,6 +1,6 @@
 # Developing motifs and fixing melodies
 
-Notation as in the melody skill: scientific pitch (middle C = C4), lengths in beats of 4/4, `r` = rest.
+Notation as in the melody skill: scientific pitch (middle C = C4), lengths in beats of 4/4, `r` = rest. These are options for a requested effect, not a required motif recipe or musical quality checklist.
 
 ## Contents
 
@@ -47,7 +47,7 @@ The listener hears the same idea six times in different forms, and it feels fres
 | Boring | exact, unvaried repetition; every phrase ends the same way | change one ending; use a sequence; vary one phrase's rhythm or length |
 | Hard to sing | unrecovered leaps; awkward intervals; high for too long; missing breaths | replace leaps with steps or chord-tone thirds; lower the tessitura; add rests; open vowels on high notes |
 | Wordy or rushed | too many syllables per bar at this tempo | cut syllables, or spread the line over more bars with longer notes on key words |
-| Sounds wrong against the chords | unresolved non-chord tones on strong beats; a note a half step above a chord tone | move the strong-beat note to a chord tone, resolve by step, or change the chord (harmony skill) |
+| Unwanted harmonic friction | an accented non-chord tone or close interval may be competing with the intended colour | inspect the actual harmony and delivery; try a chord tone, resolution or reharmonisation only when the tension is unwanted |
 | Wanders | unclear high point, unclear cadences | choose one peak per section; pair phrases as question and answer |
 | Static | repeated notes without rhythmic interest | add syncopation, or one leap to a key word |
 | Busy against the groove | the melody copies the hi-hat subdivision | fewer, longer notes; leave space around the snare |
@@ -60,11 +60,11 @@ Repeated sections should stay recognisable and still feel like progress:
 
 - keep the hook's rhythm and first notes untouched;
 - vary in small ways: a pickup, a passing note, two short notes merged into one held note, the last phrase lifted to a higher ending;
-- in the final chorus, keep the hook as it is and add a higher alternative line or ad-libs above it (the vocals skill covers this);
+- for a final lift, a higher line or ad-libs can surround the retained hook; a lower, stripped or unchanged return is another choice (the vocals skill covers those parts);
 - edit the repeated section's own clip in place, and name the bars that differ in the result line.
 
 ## 5. Countermelodies and riffs
 
 - A countermelody moves while the main melody holds or rests, fills the gaps, and sits in a different register. Contrary motion against the main line keeps the two distinct. Keep its rhythm simpler than the topline so the vocal stays in front.
 - A riff is a one- or two-bar instrumental hook that repeats. Give it a strong rhythm, few pitches (pentatonic notes work over most chords of a loop) and its own register, away from the vocal.
-- Check both against the chords on strong beats and against the vocal, so they keep clear of clashing intervals with it.
+- Review both against the chords and vocal, retaining close intervals or independence when intended rather than requiring chord tones on strong beats.

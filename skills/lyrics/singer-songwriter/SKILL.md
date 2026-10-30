@@ -1,15 +1,15 @@
 ---
 name: lyrics-singer-songwriter
-description: Lyric craft for singer-songwriter, folk, acoustic and story-led songs, for Ode's in-place writing — narrative arcs, specific detail, an intimate conversational voice, verse-refrain forms with a refrain that keeps its words and changes its meaning, last verses that turn, light rhyme, and words that hold up over a sparse arrangement. Read it from the lyrics skill whenever the song is acoustic, folk, Americana, country-leaning, indie-folk or piano-led, the lyric tells a story, a refrain that closes the verses does the job of a chorus, or the words matter most.
+description: Lyric craft for singer-songwriter, folk, acoustic and story-led songs, for Ode's in-place writing — narrative arcs, specific detail, an intimate conversational voice, verse-refrain forms with a refrain that keeps its words and changes its meaning, last verses that turn, light rhyme, and words that hold up over a sparse arrangement. Read it from the lyrics skill whenever the song is acoustic, folk, Americana, country-leaning, indie-folk or piano-led, or the musician explicitly wants these story-led acoustic writing techniques.
 ---
 
 # Singer-songwriter lyrics
 
-With a guitar or piano and one voice, every word is exposed. Listeners lean in to the story and the honesty of the voice, so a weak line shows at once. The lyrics skill covers the loop and the general craft; this file adds what is specific to story-led, acoustic writing.
+With a guitar or piano and one voice, every word is exposed. Listeners lean in to the story and the honesty of the voice, so a weak line shows at once. The lyrics skill covers the loop and the general craft; this file offers story-led acoustic approaches, not obligations to sound conversational, tell a linear story or conceal the moral.
 
 ## Write for exposure
 
-- Every line must stand up spoken aloud. Read the lyric as if telling it to someone across a table; anything that sounds like filler or decoration sounds worse when sung.
+- For a conversational voice, try each line spoken aloud. Read the lyric as if telling it to someone across a table; anything that sounds like filler or decoration sounds worse when sung.
 - Understatement often hits harder than declaration. Trust the listener to feel what the details imply.
 - Leave the moral unspoken at the end. If the story has done its work, the listener already knows.
 
@@ -29,7 +29,7 @@ With a guitar or piano and one voice, every word is exposed. Listeners lean in t
 
 ## The refrain that changes meaning
 
-This is the craft centre of verse-refrain writing: the refrain's words stay exactly the same, and each verse changes what they mean. When you write a verse, write it backwards from the refrain so that its last lines set the refrain up differently; then the refrain goes in, word for word, in the same place as in the other verses.
+This is the craft centre of verse-refrain writing: the refrain's words stay exactly the same, and each verse changes what they mean. Writing backwards from an unchanged refrain is one method: let its setup change the meaning. The musician may instead vary the refrain or write in another order.
 
 **Example (original):** the refrain *I'll be home by nine* (5 syllables).
 - Verse 1 ends with the singer at sixteen, shouting it over their shoulder on the way out: a promise they will break.
@@ -51,7 +51,7 @@ Save something for the end: a time jump, a reveal, new information, or the narra
 ## Rhyme
 
 - Lighter than in pop or rap: near rhymes and ABCB schemes are common, and some lines go unrhymed.
-- A forced rhyme is especially damaging when every word is exposed. If the honest line misses the rhyme, let it go unrhymed where the scheme allows, or re-end the other line.
+- A forced rhyme is especially damaging when every word is exposed. If the honest line misses the rhyme, let it go unrhymed, change the scheme, or re-end the other line.
 - Internal rhyme should be subtle and stay in the background.
 
 ## Words and melody
@@ -68,9 +68,9 @@ Save something for the end: a time jump, a reveal, new information, or the narra
 ## Verify, on top of the lyrics skill's checks
 
 - Every line sounds natural said aloud to the person it is about.
-- A refrain keeps its exact words and position in every verse, and reads differently after each one.
-- The last verse turns or reveals; a middle verse moves the story on.
-- The moral stays unspoken.
+- When an unchanged refrain is intended, keep its words and position; honour a requested variation.
+- Consider whether progression, a last-verse turn or deliberate stasis serves this story.
+- Review whether implication or an explicit statement best serves the chosen voice.
 - Personal details are the musician's own, or plainly part of the song's world.
 
 Example result lines:

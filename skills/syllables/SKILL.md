@@ -1,35 +1,35 @@
 ---
 name: syllables
-description: Make lyric lines fit the notes they are sung on. Counts and stress come from Ode's pronunciation check in UK or US English, including words with more than one sung count (every 2|3, fire 1|2). Ode rewrites the line in place in the song's lyrics until one of its counts equals the notes of its phrase, and makes verse 2 sit where verse 1 sits. Use this whenever a count matters — "Fit to the melody", "fit verse 2, line 3", a line that feels cramped, rushed or one note short, a count the musician doubts, new words for an existing topline or MIDI clip, and every time you write or change a line that is sung on notes, even when the word "syllables" goes unsaid.
+description: Make lyric lines fit the notes they are sung on. Counts and stress come from Ode's pronunciation check in UK or US English, including words with more than one sung count (every 2|3, fire 1|2). Ode reviews the intended setting and rewrites the requested line in place when needed, using verse 1 as a reference when verse 2 is meant to share its melody. Use this whenever a count matters — "Fit to the melody", "fit verse 2, line 3", a line that feels cramped, rushed or one note short, a count the musician doubts, new words for an existing topline or MIDI clip, and every time you write or change a line that is sung on notes, even when the word "syllables" goes unsaid.
 ---
 
 # Syllables and stress
 
-A melody is a row of notes with a rhythm; a lyric line is a row of syllables with a stress pattern. They fit when the line has as many syllables as the notes it is sung on and its stressed syllables land where the music puts its weight. The count is only half the fit: "BEAU-ti-ful" and "to-MOR-row" both have three syllables, and they fit different three-note rhythms.
+A melody is a row of notes with a rhythm; a lyric line is a row of syllables with a stress pattern. A one-syllable-per-note setting often aligns speech stresses with musical weight; melismas, extra rhythmic attacks and deliberate stress shifts offer other settings. The count is only half the fit: "BEAU-ti-ful" and "to-MOR-row" both have three syllables, and they fit different three-note rhythms.
 
-Always count with the syllable check. Words like "every", "fire", "family" and "really" trip up people and models alike; the check gets them right, and it knows the musician's accent.
+Always count with the syllable check. Words like "every", "fire", "family" and "really" trip up people and models alike. The check supplies pronunciation candidates for the selected UK or US setting; the musician's sung pronunciation takes precedence.
 
 ## The notes a line is sung on
 
 - **Find the line.** Lines are found by their label and number in the lyrics: "[Verse 2] line 3" is the third sung line under the [Verse 2] label. Labels and blank lines go unsung.
 - **Find the melody.** The vocal melody is a MIDI clip: the lead sheet's links name it when Ode made it; otherwise it is on the MIDI track named for the vocal or topline (Lead vocal, Vocal melody, Topline, Melody). Take the clip that covers the section's bars (the section's position in the lead sheet, or its locator).
 - **Fit the lines to it.** The lyrics-to-melody check takes the section's lines and the melody's notes in its bars, splits the melody into one phrase per line (line 1 on the first phrase, line 2 on the second, and so on), and gives each line its syllable counts, its phrase's note count and any stress problem.
-- **Count the notes.** Each note is a place for one syllable. One syllable may stretch over several notes (a melisma), best on an open, stressed vowel; two syllables always need two notes.
-- **Without a melody yet:** the matching line in the matching section is the reference (verse 1, line 3 for verse 2, line 3): its count and its stress pattern.
+- **Count the notes, then inspect the setting.** One syllable per note is a common starting point. One syllable may span several notes (a melisma); several syllables may require rhythmic articulation not represented in a sustained MIDI note. A count mismatch can expose a missing mapping rather than a lyric fault.
+- **Without a melody yet:** when the sections will share a setting, the matching line is a useful reference (verse 1, line 3 for verse 2, line 3): its count and its stress pattern.
 - **Only a recorded vocal, without a MIDI melody:** use the matching line as the reference, and say in the result line that the count was checked against that line alone.
 
 ## The loop
 
 1. **Read.** The line in the lyrics, the notes it is sung on, the matching line in the matching section, and the Pronunciation setting (the song's, else the artist's). Check whether the musician has said how they sing a word, and whether the hand edits since the last request changed the melody: their newest notes are the ones that count.
-2. **Decide.** Change the words by default: the melody is the musician's. First find the words that carry the meaning (the image, the rhyme word, the title) and protect them. Then make the smallest change that fits: the other count of a variable word, a contraction that really saves a syllable, cutting filler, a shorter word with the same meaning, a restructured phrase. Change the notes only when the words are locked or the musician picked that fix ("Split a note"). "Merge two syllables" means singing two syllables as one: the shorter count of a variable word, or a sung elision ("ev'ry"); the lyrics keep the normal spelling unless the musician writes the apostrophe.
+2. **Decide.** For a words-only request, keep the melody; otherwise follow which material the musician wants to preserve or change. First find the words that carry the meaning (the image, the rhyme word, the title) and protect them. Then make the smallest change that fits: the other count of a variable word, a contraction that really saves a syllable, cutting filler, a shorter word with the same meaning, a restructured phrase. Change the notes when that is within the request ("Split a note", setting locked words, or adapting the melody to new words). "Merge two syllables" means singing two syllables as one: the shorter count of a variable word, or a sung elision ("ev'ry"); the lyrics keep the normal spelling unless the musician writes the apostrophe.
 3. **Change in place.** Rewrite the line in the lyrics: the same line under the same label, saved against the revision you read (the lyrics skill explains the text). When the fix is in the notes, edit the existing melody clip: split one note into two of the same pitch, merge two notes into one, or add a pickup, keeping everything else as it was. Keep one version of each line, clip and take: Again gives another take and the version history keeps this one.
 4. **Verify** every line you changed:
-   - **Lyrics-to-melody check.** The line fits when one of its counts equals the notes of its phrase (without a melody, the syllable check against the matching line's count). "10|11" means the line can be sung either way; the melody decides which.
-   - **Stress.** Run the prosody check on the line against its notes: every stressed syllable should sit on a note at least as strong as its unstressed neighbours. Without a melody, the stress check's pattern should match the matching line's.
-   - **One pronunciation throughout.** When a line fits because "every" counts as two syllables, it is sung "ev-ry" when set to the notes, and the same in the matching verse.
-   - **Rhyme.** If you changed a line's last word, run the rhyme check again in the musician's accent: the rhyme it had must still be there.
+   - **Lyrics-to-melody check.** Compare counts with the actual intended setting, allowing melismas and deliberate articulation. "10|11" means the check offers two counts; choose the sung reading. Without a melody, matching-line counts are a reference only when that setting is wanted.
+   - **Stress.** Run the prosody check on the line against its notes: inspect which syllables receive emphasis and whether any flagged difference is intended. A different stress pattern can be a musical choice.
+   - **Chosen pronunciation.** When a line uses "every" as two syllables, set that phrase as "ev-ry". Other phrases may use another reading when the musician intends it.
+   - **Rhyme.** If you changed a line's last word, run the rhyme check again in the musician's accent: retain or change the rhyme according to the request, including a near rhyme or no rhyme.
    - **Uncertain words.** A name, slang or an invented word may have an unconfirmed pronunciation. The check marks it; that line counts as unchecked, and the result line says so.
-   Fix and check again, up to three rounds; then the result line says what still fails.
+   Fix unintended mismatches and check again, up to three rounds; name any remaining warning or deliberately retained departure.
 5. **Let them hear it.** The result line says where the change is, so the musician can play it and sing it over the track: moved notes by their bars; a changed line by its label, which names the locator to play from.
 6. **Report in one line**: what changed · what was checked. Write counts the way the check gives them, with every possible count and the variable word:
    - "Verse 2, line 3 now 'I kept the ticket from the train' · 8 syllables on its 8 notes, stress on the beats."
@@ -38,20 +38,20 @@ Always count with the syllable check. Words like "every", "fire", "family" and "
 
 ## Asking
 
-A count fix goes ahead without a question: the request says which line, and the history keeps the old one. If the musician tells you they sing a word differently, believe them and use their count. When they say they sing in UK or US English, store it as their pronunciation setting. In Manual, Ode shows the change for Apply or Skip, and you work the same way.
+A count fix goes ahead without a question: the request says which line, and the history keeps the old one. If the musician tells you they sing a word differently, believe them and use their count. Keep pronunciation for this song in lead_sheet.settings; use an artist preference only when they explicitly make it enduring. In Manual, Ode shows the change for Apply or Skip, and you work the same way.
 
 ## Why counts matter
 
-- **Each syllable needs a note.** A line with fewer syllables than notes can hold some syllables over two notes; a line with more syllables than notes needs extra notes or fewer words.
-- **Melodies repeat.** Verse 2 is sung to verse 1's melody, so matching lines need the same count and a similar stress pattern, or the melody has to change.
-- **Stress drives rhythm.** Stressed syllables want strong beats and longer notes; unstressed ones want weak beats and shorter notes (the prosody skill covers this). A line with the right count and the wrong stress pattern still sounds wrong.
+- **Counts describe one possible mapping.** A line with fewer syllables than notes can use melisma; extra syllables may call for rhythmic articulation, additional notes or fewer words. Inspect what the singer actually intends before changing it.
+- **When melodies repeat,** review the new words against their intended phrase. Matching counts and stress patterns make a syllabic setting easier; varied phrasing, melismas or an authorised melody change can also work.
+- **Stress drives rhythm.** Stressed syllables want strong beats and longer notes; unstressed ones want weak beats and shorter notes (the prosody skill covers this). A matching count can still hide an unintended stress problem; deliberate stress displacement can be expressive.
 - **Density sets the feel.** More syllables per bar sounds urgent or conversational; fewer sounds spacious or anthemic. Match the density to the section's job.
 
 ## Reading stress
 
 - **Every word of two or more syllables has a fixed main stress:** to-MOR-row, BEAU-ti-ful, a-LONE, YES-ter-day. Singing a word against its stress ("TO-mor-row") is the most noticeable fit problem a line can have.
 - **Long words also carry a secondary stress** (UN-der-STAND, CON-ver-SA-tion), which can take a medium beat.
-- **Content words** (nouns, main verbs, adjectives, adverbs, and negatives such as "not" and "can't") normally carry the stress in a line. **Function words** (a, the, of, to, and, in, my, your, is) are usually unstressed and weakened: "to" sounds like "tuh". Keep function words off long and high notes.
+- **Content words** (nouns, main verbs, adjectives, adverbs, and negatives such as "not" and "can't") normally carry the stress in a line. **Function words** (a, the, of, to, and, in, my, your, is) are usually unstressed and weakened: "to" sounds like "tuh". Long or high function words draw attention; keep that emphasis when it is intended.
 - **Stress can move for meaning.** "I didn't say YOU did it" and "I didn't SAY you did it" are different lines. Decide which word the line is really about and give it the strongest beat.
 - **Some words change stress with their job**, such as "record" (a RE-cord, to re-CORD) or "present". The check gives the usual one first; when the line means the other, say which stress the line needs.
 
@@ -65,7 +65,7 @@ Many words can be sung with different numbers of syllables. The check lists all 
 
 How to use them:
 - When a line is one syllable over, a variable word may already make it fit: say "fits with 'every' sung 'ev-ry'" and leave the line as it is.
-- When matching verses, make sure both lines use the same choice.
+- When matching a repeated setting, check which reading each phrase needs rather than imposing one pronunciation on the whole song.
 - Prefer the count the musician would naturally sing. Stretching "fire" into two full syllables in a fast line, or squeezing "family" into two in a slow, exposed one, can sound unnatural.
 
 `references/words-to-watch.md` has longer lists: variable words, words that are easy to miscount, contractions and UK–US differences.
@@ -83,8 +83,8 @@ How to use them:
 
 1. Run the syllable and stress checks on the reference lines (usually verse 1, or the melody itself).
 2. Run them on the new lines, line by line.
-3. Where they differ, change the words of the new line. Changing the melody (splitting a note, tying two, adding or dropping a pickup) is the musician's call: do it when they ask or when the words are locked.
-4. Fix stress as well as count: the stressed syllables in the new line should land where the reference line's do.
+3. Where they differ unintentionally, change the requested material: words for a words-only edit, notes when melody adaptation is authorised.
+4. Review stress as well as count, retaining a different pattern or delivery when that is the musician's choice.
 
 Easy to absorb: an extra unstressed pickup syllable before the downbeat ("and", "but", "so"), which singers fit in with a quick note all the time. Hard to absorb: anything at the end of a line, where the long notes and the rhyme usually are.
 

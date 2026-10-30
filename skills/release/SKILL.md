@@ -27,7 +27,7 @@ Distributors and platforms each have their own requirements, and they change fro
 
 **Again** on cover art makes three or four new images from different briefs and asks again which to use; the earlier ones stay in the folder.
 
-**Outside the usual style.** When a cover departs from the artist's usual artwork (painted where their covers are photographs, bright where they are muted), the result line says so.
+**Style context.** A requested new visual direction needs no warning about past covers. Mention an unrequested departure only when that comparison helps the musician choose.
 
 ## Checks
 

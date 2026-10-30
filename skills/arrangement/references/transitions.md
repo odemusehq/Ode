@@ -1,6 +1,6 @@
 # Transitions
 
-How to build and place common transitions in Live. A transition signals that a change is coming and hides the seam between two sections. Vary them across the song: the same riser before every chorus stops working by the third time.
+How to build and place common transitions in Live. The examples target downbeat arrivals; align to the actual intended boundary for pickups, off-beat changes or irregular sections. A plain cut can need no added transition. A transition signals that a change is coming and hides the seam between two sections. Vary them across the song: the same riser before every chorus stops working by the third time.
 
 ## Contents
 - Placement at a glance

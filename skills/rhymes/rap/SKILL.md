@@ -11,7 +11,7 @@ In rap, rhyme is rhythm: rhymes mark the beat, link bars together and carry the 
 
 - Match the vowel sounds across two or more syllables, often spanning several words: "paperwork" with "major work", "overtime" with "over mine".
 - Vowels matter more than consonants. A multi can change consonants throughout and still hit, as long as the vowels and the stress pattern line up.
-- The stress pattern has to match: the stressed syllables of both phrases fall in the same places, ideally on the same beats.
+- Matching vowel and stress patterns makes a clear multi; displaced stresses or bent delivery can make a looser sound link. Describe that honestly rather than rejecting the artist's flow.
 - Longer multis impress only if the bar still makes sense. A three-syllable rhyme that says something beats an empty five-syllable one.
 - The rhyme check labels multis it can hear as multisyllabic. A rhyme that ends on an unstressed pronoun ("clock it", "drop it") is judged from its last stressed vowel and may come back weaker than it sounds; report what the check says, and add the delivery note.
 
@@ -30,7 +30,7 @@ In rap, rhyme is rhythm: rhymes mark the beat, link bars together and carry the 
 
 ## Punchline rhymes
 
-The payoff word of a punchline carries both the strongest rhyme in the passage and the biggest surprise in meaning. If the punchline's rhyme is weaker than the rhymes around it, the turn loses force.
+A strong rhyme can emphasise a punchline, but a near rhyme, delayed rhyme or unrhymed payoff can also focus attention on meaning.
 
 ## Bent pronunciation
 
@@ -70,11 +70,13 @@ Rap rhymes live on vowels, and vowels are where accents differ most. Judge rhyme
 
 ## Verify, on top of the rhymes skill's checks
 
+Use these to review the intended flow, not as requirements for every rap verse.
+
 - Multis match in vowels and stress pattern, still make sense, and are labelled as the rhyme check labels them.
-- Rhyme sounds switch where the thought changes, usually every two to four bars.
-- The punchline has the strongest rhyme in its passage.
+- Review rhyme switches against the thought and flow; two to four bars is one useful pattern.
+- Check whether the punchline's rhyme placement creates the intended emphasis.
 - Any rhyme that needs bent pronunciation is labelled honestly, with a delivery note.
-- Density per bar matches the musician's verses and suits the tempo.
+- Review density against the requested delivery; the artist may depart from their earlier verses.
 
 Example result lines:
 - "Bars 5–8 now 'paperwork' / 'major work' then 'overtime' / 'over mine' · multisyllabic as checked (US), 12–14 syllables a bar like your verse 1."

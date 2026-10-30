@@ -1,6 +1,6 @@
 # Singability: vowels and consonants
 
-Detail behind the singability section of the prosody skill. The singability check reports problems on the actual melody (closed vowels on long or high notes, consonant clusters on very short notes, phrases without a rest to breathe); use this to understand them and to choose the word or note that fixes them. When a problem remains, the result line names it in plain words.
+Detail behind the singability section of the prosody skill. The singability check reports problems on the actual melody (closed vowels on long or high notes, consonant clusters on very short notes, phrases without a rest to breathe); use this to understand possible delivery demands. The table describes common English singing tendencies, not forbidden vowels or a pass/fail test; retain an intentional sound and name a practical limitation when relevant.
 
 ## Contents
 1. Vowels on long and high notes
@@ -56,7 +56,7 @@ So the first sound decides how the note feels. "Down" holds on an open "ah" and 
 
 ## 5. Melisma
 
-A melisma stretches one syllable over several notes. Put melismas on open vowels and on words that matter emotionally; a melisma on a function word ("the", "to") or a short vowel ("it") draws attention to the wrong place and is harder to sing. When a line has fewer syllables than the melody has notes, choose where the extra notes go as carefully as the words.
+A melisma stretches one syllable over several notes. Put melismas on open vowels and on words that matter emotionally; a melisma on a function word ("the", "to") or a short vowel ("it") draws unusual attention and may need a different delivery. Keep it when that emphasis is intended. When a line has fewer syllables than the melody has notes, choose where the extra notes go as carefully as the words.
 
 ## 6. Word boundaries
 
@@ -64,7 +64,7 @@ Sung words run together, and listeners sometimes hear a different phrase from th
 
 ## 7. Breath
 
-- Every phrase needs to fit in one breath at the song's tempo, with time to breathe before the next.
+- Plan breath points for the actual singer and tempo, including pauses within longer phrases or an intentionally layered performance.
 - Natural breath points are where a comma or full stop would go in speech. Avoid phrases that force a breath in the middle of a word or a tight phrase.
 - High, loud and long phrases use more air. After one, give the singer a shorter phrase or a rest.
 - Dense rapped or fast-sung passages need planned breath points, usually every two to four bars.

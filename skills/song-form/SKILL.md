@@ -1,6 +1,6 @@
 ---
 name: song-form
-description: Plan and fix song structure directly in the Set and the lead sheet. Ode marks each section with a locator on its first downbeat, keeps the lead sheet's sections in step with the Arrangement, decides section lengths and order, and checks that sections run back to back in whole phrases, that names follow the usual section names, that the first chorus arrives in time for the genre and that the energy rises to a final peak, then reports in one line. Use this skill whenever the whole song or the Arrangement is selected, or the musician clicks a suggestion or types anything about structure, sections or locators — "mark the sections", "it drags", "get to the chorus sooner", "add a bridge", "what comes next", "too short", "turn this loop into a song" — whatever words they use.
+description: Plan and fix song structure directly in the Set and the lead sheet. Ode marks actual section starts with locators, keeps the lead sheet's sections in step with the Arrangement, and reviews lengths, order and energy against the musician's intended form, including irregular or unresolved forms, then reports in one line. Use this skill whenever the whole song or the Arrangement is selected, or the musician clicks a suggestion or types anything about structure, sections or locators — "mark the sections", "it drags", "get to the chorus sooner", "add a bridge", "what comes next", "too short", "turn this loop into a song" — whatever words they use.
 ---
 
 # Song form
@@ -19,13 +19,13 @@ Song form decides when the listener hears what: when the story starts, when the 
 ### 2. Decide
 
 - Name each section by its job (the table below), and number repeats in order.
-- Keep lengths in whole phrases, usually 4 or 8 bars, and let the total fall where it falls.
+- Use phrase lengths that serve the material. Four- or eight-bar groups are useful starting points, not required units; retain uneven or sub-bar sections when intended.
 - Give each section an energy level and know what changes between neighbours.
 - When the request changes lengths or order, decide them here; the arrangement skill moves the parts to match.
 
 ### 3. Change it in place
 
-- **Locators.** One on the first downbeat of every section, named with the established section name and a number where it repeats: "Intro", "Verse 1", "Pre-Chorus 1", "Chorus 1", "Post-Chorus 1", "Bridge", "Breakdown", "Build", "Drop 1", "Outro". A pickup belongs to its section musically, but the locator goes on the downbeat so loops and jumps start cleanly. Add a key or tempo change to the name when it helps: "Chorus 3 (up a step)".
+- **Locators.** One at the actual start of each section, normally its first downbeat, named consistently with the song and numbered where useful: "Intro", "Verse 1", "Pre-Chorus 1", "Chorus 1", "Post-Chorus 1", "Bridge", "Breakdown", "Build", "Drop 1", "Outro". For a pickup, an upbeat entry or an irregular section, use the intended boundary rather than snapping the music or locator to a whole bar. Add a key or tempo change to the name when it helps: "Chorus 3 (up a step)".
 - **The musician's locators.** They stay where they are. Where one already marks a section start, rename it in place to that section's name, so the start keeps a single locator; leave the others untouched.
 - **The lead sheet's sections.** Update the existing sections in place to match the Arrangement — kind, name, start beat, length — each keeping its chords. Sections the Arrangement has and the lead sheet lacks are added, and their lyrics stay unwritten; each section appears once.
 - **The lyrics.** Every sung line stays as it is. When a section is renamed, rename its label in the lyrics to match ("[Verse]" → "[Verse 1]"), so the lyrics and the Arrangement name the same sections.
@@ -36,18 +36,18 @@ Song form decides when the listener hears what: when the story starts, when the 
 
 Run every check that applies to the change.
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
-| Lengths | sections run back to back from the song's first bar to its last, each starting where the one before ends, each a whole number of bars (usually a multiple of 2 or 4) |
-| Downbeats | every locator sits on the first beat of a bar: a whole multiple of the bar length in beats (4 in 4/4, 3 in 3/4) from the song's start |
-| Names | established names, numbered in order where they repeat; exactly one locator per section start, each at a time of its own |
+| Lengths | start beats and lengths describe the intended boundaries, including irregular lengths, pickups or deliberate gaps; do not round them to whole bars |
+| Boundaries | each locator marks the intended section start; check downbeat alignment only where that is the chosen boundary |
+| Names | labels are consistent and navigable, retaining the musician's descriptive section names; avoid duplicate locators at the same start |
 | Agreement | the locators, the lead sheet's sections and the Arrangement's parts agree on where each section starts, and every label in the lyrics is the name of a section |
 | Timing | start times follow from the tempo (seconds = bars × beats per bar × 60 ÷ BPM), and the first chorus and the total length suit the genre or the musician's target |
-| Contrast | neighbouring sections differ in at least two ways (melody register, rhythm, chords or harmonic rhythm, density, drum pattern, lyric density); repeats stay recognisable |
-| Energy | rises overall, with a dip before the last peak |
+| Contrast | assess the requested degree of repetition or change in this song; no minimum number of differences is required |
+| Energy | follows the intended arc, which may rise, fall, remain level or peak early; a final peak is optional |
 | Kept | the musician's locators are all still there, renamed at most; locked sections are untouched; every sung line in the lyrics is as it was |
 
-Fix and check again until they pass; if something still fails, the result line says what.
+Fix unintended boundary or agreement errors and check again. Describe artistic effects without treating conventional form or energy as a pass/fail gate.
 
 ### 5. Let them hear it
 
@@ -61,7 +61,7 @@ What changed, then " · ", then what was checked:
 - "Verse 2 halved to 8 bars, so chorus 2 lands at 1:28 · phrases whole, energy still rising into the last chorus."
 - "Form planned: 80 bars, about 3:05, first chorus at 0:37 · 12 locators on downbeats, lead sheet updated."
 
-When the form is outside the artist's usual shape (a chorus-first song from someone who always opens with a verse), the line says "outside your usual style".
+Describe the chosen shape and its effect when useful; a requested new form needs no warning about earlier habits.
 
 ## When to ask
 
@@ -94,7 +94,7 @@ These are habits, and songs bend them. Most sections come in multiples of 2 or 4
 
 ## Bars and time
 
-Seconds = bars × beats per bar × 60 ÷ BPM. At 120 BPM in 4/4 a bar lasts 2 seconds, so 8 bars take 16 seconds; at 96 BPM a bar lasts 2.5 seconds. Live counts positions in beats from the song's start, so bar n begins at beat (n − 1) × beats per bar. Round sections to whole phrases and let the total fall where it falls: a phrase cut short to hit a duration sounds wrong.
+Seconds = bars × beats per bar × 60 ÷ BPM. At 120 BPM in 4/4 a bar lasts 2 seconds, so 8 bars take 16 seconds; at 96 BPM a bar lasts 2.5 seconds. Live counts positions in beats from the song's start, so bar n begins at beat (n − 1) × beats per bar. Choose section boundaries from the material and brief. Whole phrases, a shortened bar or an abrupt cut can each be appropriate; preserve intentional timing.
 
 ## Common forms
 
@@ -116,13 +116,13 @@ Check the song's genre and the artist's own songs, and let the song itself sugge
 
 Energy is how full, loud, high, dense and busy the music feels. Plan it per section on a simple 1–10 scale.
 
-- Rise overall, with local dips: verse 1 lowest after the intro; chorus 1 a clear step up; verse 2 a little above verse 1; a dip in the bridge or breakdown; the final chorus highest; the outro relaxing.
+- One common rising arc puts verse 1 low, successive choruses higher and a dip before the final peak. Try it when that journey is wanted; a descending, static or early-peaking arc is equally available.
 - Energy goes up with more layers, a higher register, faster subdivisions, faster harmonic rhythm, more words or a higher vocal line, louder drums and wider stereo; it comes down when the kick or bass drops out, the chords thin, the feel goes half-time, the register drops or the words thin out.
-- Make energy changes at section boundaries, or build into them. A change in the middle of a section sounds like a mistake unless it is a build.
+- Section boundaries are clear places for an energy change; mid-section shifts, sudden cuts and long plateaus can also be intentional.
 
 ## Contrast between sections
 
-Neighbouring sections should differ in at least two ways: melody register, melodic rhythm, chords or harmonic rhythm, arrangement density, drum pattern, lyric density. A chorus that differs from its verse only in the lyric feels like another verse. Repeated sections should stay recognisable — same melody and chords — with small arrangement changes each time.
+When more contrast is wanted, possible levers include melody register, melodic rhythm, chords or harmonic rhythm, arrangement density, drum pattern, lyric density. A lyric-only change can also define the form when that is the intended repetition. A repeated melody or chord pattern can make sections recognisable; an unchanged return or a larger transformation can also be the chosen form.
 
 ## Intros and outros
 
@@ -132,7 +132,7 @@ Neighbouring sections should differ in at least two ways: melody register, melod
 
 ## When to break form
 
-Break expectations on purpose, and rarely enough that it registers:
+Possible departures include the following; frequent irregularity can itself be the song's language:
 
 - add or remove a bar or two so a line can breathe or the hook arrives early (a 2-bar extension before the last chorus);
 - skip the second pre-chorus or halve verse 2 to reach the chorus sooner;
@@ -169,7 +169,7 @@ Checks: eighty bars back to back in whole phrases, about 3:05; first chorus at 0
 
 Result line: "Form planned: 80 bars, about 3:05, first chorus at 0:37 · 12 locators on downbeats, energy dips at the bridge before the last chorus."
 
-Other takes for Again: open with the post-chorus hook as the intro (chorus at 0:28); or drop the pre-chorus and use a half-time bridge, ending on the post-chorus hook — outside the usual style for an artist who always writes pre-choruses, so the result line says so.
+Other takes for Again: open with the post-chorus hook as the intro (chorus at 0:28); or drop the pre-chorus and use a half-time bridge, ending on the post-chorus hook — useful alternatives when a different shape is wanted.
 
 ## Reference files
 

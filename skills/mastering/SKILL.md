@@ -32,11 +32,11 @@ Do not repeatedly change a chain to make a source-only heuristic pass. Intention
 
 ## Questions
 
-The target comes from the request or from the musician's settings, so take it from there without asking how loud. When the musician says how loud they want their masters (a LUFS figure, "club loud"), store it as their loudness target setting. Mastering changes are edits in place that Undo reverses, and the mode decides whether a change waits for Apply. Ask one line with buttons only when the answer changes what you would do: the fix would mean removing Master processing the musician put there themselves; tuning it goes ahead without a question.
+The target comes from the request or from the musician's settings, so take it from there without asking how loud. Keep this song's loudness target in lead_sheet.settings; use an artist preference only when the musician explicitly makes it enduring. Mastering changes are edits in place that Undo reverses, and the mode decides whether a change waits for Apply. Ask one line with buttons only when the answer changes what you would do: the fix would mean removing Master processing the musician put there themselves; tuning it goes ahead without a question.
 
 ## Preparing the mix
 
-- **Headroom:** the mix peaks around −6 to −3 dBFS with every part below clipping. When it peaks higher, bring the mix levels down first (mixing skill), so the problem is fixed at its source.
+- **Headroom:** peaks around −6 to −3 dBFS are a convenient starting margin, not a required mix level. Inspect the actual chain and processed output before trimming gain; preserve intentional clipping or drive.
 - **Limiting belongs to the master.** Master-bus processing the musician's sound depends on (a clipper or glue compressor they love) stays; the chain goes after it, knowing it is there.
 
 ## The chain
@@ -69,7 +69,7 @@ Third-party mastering plug-ins the musician already added are welcome; the same 
 
 - **Watch the limiter.** Regularly taking off more than about 3–4 dB, it costs punch and clarity. Get loudness earlier (gentle compression, saturation, a clipper, or a mix fix) or accept a lower target.
 - **The drums still hit.** If the kick and snare soften or crackle, back off.
-- **The song keeps its shape.** The chorus still feels bigger than the verse; mastering narrows the gap between peak and average level only a little.
+- **The song keeps its intended shape.** Preserve a bigger chorus when that is the plan, or its deliberately level or falling arc. Judge dynamic change against the artist's goal.
 
 ## Translation
 

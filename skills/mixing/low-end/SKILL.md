@@ -5,7 +5,7 @@ description: Mix the low end in place in Live — decide whether the kick, the b
 
 # Mixing the low end
 
-The low end holds the song up and moves the body, and it is the hardest part of a mix to judge: most rooms and headphones misrepresent bass, low frequencies use most of the mix's energy and headroom, and small speakers lose the sub entirely. That is why the low end is judged on measurements as much as on listening. The loop, the checks and the one-line result are in the parent mixing skill; this file holds what is specific to the low end.
+The low end holds the song up and moves the body, and it is the hardest part of a mix to judge: most rooms and headphones misrepresent bass, low frequencies use most of the mix's energy and headroom, and small speakers lose the sub entirely. That is why the low end is judged on measurements as much as on listening. The loop, the checks and the one-line result are in the parent mixing skill; this file offers low-end approaches. Frequency, level and timing figures are starting points; keep intentional overlap, wide bass or uneven dynamics and judge their consequences in actual output.
 
 ## Decide who owns what
 
@@ -73,13 +73,13 @@ Phones, laptops and small speakers lose the sub, so a bass made only of sub disa
 
 These add to the parent skill's checks.
 
-| Check | Correct when |
+| Check | What to review |
 |---|---|
-| One owner | At any moment, only one of kick and bass (or 808) is strong below about 100 Hz: masking measured where both are audio; for MIDI parts, the bass notes compared against the kick hits |
-| Tuning | The kick's fundamental and the bass notes agree with the key |
+| Interaction | Review actual processed kick/bass overlap for the requested clarity or weight; MIDI starts and spectra alone do not establish masking, and shared sub energy can be intentional |
+| Tuning | Inspect the pitched kick and bass relationship, retaining an intentionally detuned hit or pedal |
 | Polarity | The result line names the polarity setting you kept, so the musician can compare it with the flipped one in Live |
-| Mono | Mono below 100–150 Hz: Utility's Bass Mono, or a mono source, on every wide low part, with a bass's stereo effects above that range |
-| Headroom | Reverbs and the parts that live above the low end are high-passed, and where the kick and bass are audio, the mix check shows their peaks with room below clipping |
+| Mono | Review actual mono output and the intended playback use; centring lows near 100–150 Hz is a starting technique rather than an artistic requirement |
+| Headroom | Measure the actual relevant processed bus or Main output; high-pass settings and independent source peaks do not establish its headroom |
 
 ## Example
 

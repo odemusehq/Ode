@@ -1,11 +1,11 @@
 ---
 name: lyrics
-description: Write and rewrite song lyrics in place in the song's lyrics, the one text the musician and Ode both edit — verses, pre-choruses, choruses, bridges and single lines, found by their label and number ("[Verse 2] line 3") — in the musician's own voice, fitted to the notes they are sung on and checked for syllables, stress, rhyme and clichés before the musician hears them. Use this whenever the request is about words — "Write verse 2", "Less telling", "Fresher images", "Make the chorus hit", a weak, flat, cheesy or wordy line, words for an existing melody, a lyric section selected in Live — and whenever you change a lyric line for any other reason, even if the musician only says "help with the second verse".
+description: Write and rewrite song lyrics in place in the song's lyrics, the one text the musician and Ode both edit — verses, pre-choruses, choruses, bridges and single lines, found by their label and number ("[Verse 2] line 3") — in the musician's own voice, with the intended lyric setting reviewed for syllables, stress, rhyme and familiar phrasing before the musician hears it. Use this whenever the request is about words — "Write verse 2", "Less telling", "Fresher images", "Make the chorus hit", a weak, flat, cheesy or wordy line, words for an existing melody, a lyric section selected in Live — and whenever you change a lyric line for any other reason, even if the musician only says "help with the second verse".
 ---
 
 # Lyrics
 
-A good lyric sounds like a person talking, fits its melody, and makes the listener see and feel something on first hearing. Ode writes and edits the lyric where it lives, in the song's lyrics, in the musician's voice; it checks every line it touches, and the musician plays the section in Live to hear it. The musician keeps going, presses Undo, or asks for Again.
+Conversational phrasing, clear images and a close fit to the melody are useful approaches, not requirements for every lyric. Follow the musician's chosen voice, including ambiguity, unrhymed writing and deliberate stress departures. Ode writes and edits the lyric where it lives, in the song's lyrics, in the musician's voice; it checks every line it touches, and the musician plays the section in Live to hear it. The musician keeps going, presses Undo, or asks for Again.
 
 ## The lyrics
 
@@ -20,10 +20,10 @@ A good lyric sounds like a person talking, fits its melody, and makes the listen
 1. **Read.**
    - The lyrics, and the lead sheet: the title and what the song is about, the sections in order, what is locked, and any notes about the form.
    - The notes each line is sung on: the lyrics-to-melody check splits the vocal melody in the section's bars into one phrase per line and counts each line against its phrase (the syllables skill explains how to find the melody). A section still without a melody takes its matching section's lines as the reference (verse 1 for verse 2).
-   - The matching section: run the syllable, stress and rhyme checks on it to learn the counts, stress patterns and scheme the new lines must follow.
+   - The matching section: run the syllable, stress and rhyme checks on it to understand its counts, stress patterns and scheme; follow them when the requested setting repeats them.
    - The musician's voice: their lines in this song and what Ode remembers about their lyric voice (below).
    - The hand edits since the last request: a line they just typed is their newest intent; keep it unless they asked you to change it.
-   - The settings: spelling and pronunciation (UK or US), and the genre, which tells you which sub-skill to read. When the musician tells you their genre or the accent they write in, store it as their setting.
+   - The settings: spelling and pronunciation (UK or US), and any stated genre, which may make a sub-skill useful. Keep a genre or pronunciation direction for this song in lead_sheet.settings; store it as an artist preference only when they explicitly make it enduring.
 2. **Decide** with the craft below: what the section has to do, what exactly is wrong with the line (meaning, image, sound, fit with the notes, or rhyme), and the smallest change that fixes it. Write inside the musician's habits by default.
 3. **Change in place.**
    - Edit the existing lines in the lyrics: the same line under the same label. New lines go where they are sung: verse 2's lines under a "[Verse 2]" label after verse 1; a new bridge where the bridge is sung.
@@ -33,14 +33,14 @@ A good lyric sounds like a person talking, fits its melody, and makes the listen
    - A chorus is sung more than once: change a chorus line in every copy of the chorus in the text, unless the musician varied the last chorus on purpose.
    - Keep the musician's best words, and change only what the request is about.
 4. **Verify** every line you wrote or changed:
-   - **Lyrics-to-melody check:** one of the line's counts equals the notes of its phrase (without a melody, the syllable check against the matching line's count).
-   - **Prosody check** against its notes: every stressed syllable sits at least as strong as its unstressed neighbours. Without a melody, its stress pattern matches the matching line's.
-   - **Rhyme check** in the musician's accent: each pair you meant to rhyme has the kind you meant, and the section's scheme matches its matching section.
-   - **Singability check:** open vowels on long and high notes, consonant clusters kept off very short notes.
-   - **Originality check** on the new lines: clear of clichés, over-used pairs and anything that looks quoted.
+   - **Lyrics-to-melody check:** inspect the intended syllable-to-note setting, including melismas, pickups or repeated syllables. Equal counts suit syllabic settings; a helper's phrase split or mismatch alone does not establish a bad lyric. Without a melody, compare matching lines only when they are meant to share a setting.
+   - **Prosody check** against its notes: inspect flagged stress differences against the intended delivery. Natural speech alignment is one option; retain deliberate accents and syncopation.
+   - **Rhyme check** in the musician's accent: inspect each intended pair's labelled kind and compare the scheme with the musician's intention, including no rhyme or a changed scheme.
+   - **Singability check:** consider vowel, consonant and breath findings in the singer's delivery; they are practical warnings, not aesthetic gates.
+   - **Originality check** on the new lines: inspect familiar phrases and possible quotations; keep an intentional commonplace or callback, and write fresh material rather than recycle examples.
    - Point of view, tense and who "you" is agree with the lines around it (your own read).
    - A word the checks mark as uncertain stays out of what you report as checked; say "pronunciation uncertain" in the result line.
-   Fix what fails and check again, up to three rounds; then the result line says what still fails.
+   Fix unintended problems and check again, up to three rounds; report remaining findings without rewriting an intentional choice just to clear a check.
 5. **Let them hear it.** The result line names the section of the first changed line, so the musician can play it from the locator named like its label and sing it over the track.
 6. **Report in one line**: what changed · what was checked. For example:
    - "Verse 1, line 4 now 'The station clock is running late' · 8 syllables on its 8 notes, stresses fit, cliché-free."
@@ -57,11 +57,13 @@ Locked lines are fixed: work around them without asking. In Manual, Ode shows ea
 
 ## What each section does
 
+These are common roles to borrow or depart from; a section need not perform all of them.
+
 | Section | Its job | How it usually sounds |
 |---|---|---|
 | Verse | Shows: scene, story, characters, specific detail. Each verse moves forward with new information, time or stakes; verse 2 says something verse 1 left unsaid. | Conversational, detailed, more words per line than the chorus. |
 | Pre-chorus | Lifts: builds tension and sets up the title without saying it. Often moves from detail toward feeling. | Shorter phrases, rising energy, unresolved; it leans into the chorus. |
-| Chorus | Sums up: the emotional point and the hook, with the title in its strongest spot. It must make sense after every verse. | Simpler, more general and more repetitive than the verses; open vowels on long notes. |
+| Chorus | Sums up: the emotional point and the hook, with the title in its strongest spot. It often carries a meaning that holds after several verses. | Simpler, more general and more repetitive than the verses; open vowels on long notes. |
 | Bridge | Contrasts: a new angle such as a realisation, a confession, a time jump, the other person's view or a change of tense. It makes the last chorus mean more. | New line lengths, rhyme scheme and melody. |
 | Refrain | In songs without a separate chorus, a repeated line (usually the title) that opens or closes each verse and gathers its meaning. | The same words, read differently after each verse. |
 
@@ -79,7 +81,7 @@ Read their lines and what Ode remembers about their writing, and notice:
 - **Tone:** earnest, wry, angry, tender, playful.
 - **Line length and how much they repeat.**
 
-Write inside those habits by default. Now and then, and especially on Again, a take may break one habit on purpose (a question where they would use an image, a different point of view); when it does, the result line ends with "outside your usual style:" and the habit it breaks. A habit the musician has said they want to drop stays dropped, and their name, gender, age, nationality and genre stay out of every judgement about their voice.
+Write inside those habits by default. Now and then, and especially on Again, a take may break one habit on purpose (a question where they would use an image, a different point of view); name the change only when that context helps. A requested new voice or direction needs no style warning. A habit the musician has said they want to drop stays dropped, and their name, gender, age, nationality and genre stay out of every judgement about their voice.
 
 Avoid words that make lyrics sound generic or machine-written unless the musician uses them: *echoes, whispers, shadows, shattered, embers, neon, tapestry, symphony, ethereal, ignite, soaring*. Choose the plain, specific word a person would say.
 
@@ -115,7 +117,7 @@ Ways to show: an object, an action or habit, a place at a particular time, a sou
 - Put the title where the melody and rhythm give it the most weight: the first line of the chorus, the last line, or both. In verse-refrain songs, the first or last line of each verse.
 - Make the line before the title set it up, so the title lands as a conclusion or a twist.
 - Repeat it often enough for the listener to learn it.
-- Keep it out of the middle of a line, away from long runs of small words, and off weak beats: the prosody check should find its stressed syllables on strong beats, and its key vowel should be one that can be held.
+- For a prominent title, try an exposed phrase ending, a longer note or a clear accent. A buried, off-beat or unsung title is also a valid choice.
 - Use the title in the verse or pre-chorus only as a deliberate echo.
 
 ## Clichés and filler
@@ -133,7 +135,7 @@ Fix filler by spending the same syllables on meaning: a detail, a stronger verb,
 
 ## Line length and matching sections
 
-- **Matching sections need matching lines.** Verse 2, line 1 needs a count that fits the notes verse 1, line 1 is sung on, and a similar stress pattern, so it sings to the same melody. Change only the words; changing notes is the musician's call (or the prosody skill's, when the words are locked).
+- **When the same setting is wanted,** use verse 1's phrase as a reference for verse 2, including its stresses and any melismas. Matching counts are useful for a syllabic melody, not a requirement for varied verses. Keep notes when the request is only about words; adapt them when that is authorised.
 - **Within a section,** equal line lengths feel steady, a shorter line punches, and lengthening lines build (the prosody skill covers how structure carries feeling).
 - **Keep lines singable in one breath** at the song's tempo, or give long lines a natural pause.
 - **End lines on the important word.** The end of a line is where the ear lands and usually where the rhyme sits.
@@ -158,7 +160,7 @@ Decide what is wrong before changing anything: the meaning, the image, the sound
 7. **Change the point of view, tense or addressee** for a new angle.
 8. **Use a different sense.**
 9. **Say the opposite, or understate.**
-10. **Keep the fit:** a count that equals the notes, stresses where the music puts its weight.
+10. **Keep the intended setting:** review how the words sit on the notes, rather than requiring equal counts or identical stress patterns.
 
 ### Worked example
 
@@ -166,7 +168,7 @@ Verse 1, line 3 (on the lead sheet's locked list): *The kettle clicks, the windo
 
 The musician clicks "Less telling". Ode rewrites verse 2, line 3 in place: *I cook too much and freeze the rest*. The syllable check gives 8 for its 8 notes, the prosody check reports the stresses fit, the originality check comes back clean, and it shows the absence through a habit of cooking for two that carries on. Result line: "Verse 2, line 3 now 'I cook too much and freeze the rest' · 8 syllables on its 8 notes, stresses fit, cliché-free."
 
-On Again, a clearly different take of the same line: *Who gets your Sunday mornings now?* (8 syllables, stresses fit), with "· outside your usual style: a direct question where you'd use an image" if the musician usually writes in images.
+On Again, a clearly different take of the same line: *Who gets your Sunday mornings now?* (8 syllables, stresses fit), described as a direct question if that helps the musician compare the takes.
 
 A fit takes more than a matching count: here the count already matched, and the fix was the stress and the telling. More examples sorted by problem (a cliché, filler, forced word order, a drifting point of view, a buried title, a verse 2 that repeats verse 1, an abstract chorus) are in `references/rewriting-examples.md`.
 
@@ -176,6 +178,6 @@ Paths are relative to this skill's folder. Read a sub-skill when it applies; it 
 
 | Path | Read when |
 |---|---|
-| `pop/SKILL.md` | The song is pop or pop-leaning (dance-pop, synth-pop, pop-rock, pop R&B, electropop), the chorus has to be sung back after one listen, or you're writing words to an existing track or topline. |
+| `pop/SKILL.md` | The musician identifies a pop or pop-leaning direction (dance-pop, synth-pop, pop-rock, pop R&B, electropop), or asks specifically for pop lyric techniques. An existing track, topline or sing-back request alone does not select pop. |
 | `hip-hop/SKILL.md` | You're writing or editing rap verses, bars or hip-hop hooks (boom-bap, trap, drill, grime, or any rapped section in another genre). |
-| `singer-songwriter/SKILL.md` | The song is acoustic, folk, Americana, country-leaning, indie-folk or piano-led, the lyric tells a story, a refrain does the job of a chorus, or the words matter most. |
+| `singer-songwriter/SKILL.md` | The song has a singer-songwriter, folk, Americana, country-leaning or indie-folk direction, or the musician wants those story-led techniques. Acoustic or piano instrumentation alone does not define the lyric style. |
