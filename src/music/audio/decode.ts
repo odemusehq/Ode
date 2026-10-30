@@ -19,7 +19,10 @@ interface PcmBlock {
   encoding: SampleEncoding;
   /** Byte offset of the first frame and number of frames. */
   start: number;
+  end: number;
   frames: number;
+  formatChunk: { start: number; size: number };
+  versionChunk?: { start: number; size: number };
 }
 
 /** WAV format codes. */
@@ -44,25 +47,50 @@ export class AudioFileDecoder {
 
   inspect(bytes: Uint8Array, name: string) {
     const { view, block } = this.block(bytes, name);
+    return AudioFileDecoder.info(view, block);
+  }
+
+  /** Validated frame/chunk locations for lossless local edits, without decoding sample values. */
+  layout(bytes: Uint8Array, name: string) {
+    const { view, block } = this.block(bytes, name);
+    const chunk = ({ start, size }: { start: number; size: number }) => Uint8Array.from(bytes.subarray(start, start + size));
+    return {
+      container: AudioFileDecoder.fourCC(view, 0) === "RIFF" ? "WAV" as const : AudioFileDecoder.fourCC(view, 8) === "AIFC" ? "AIFC" as const : "AIFF" as const,
+      info: AudioFileDecoder.info(view, block),
+      frameOffset: block.start,
+      frameBytes: block.channels * block.encoding.bits / 8,
+      dataBytes: block.end - block.start,
+      littleEndian: block.encoding.littleEndian,
+      formatChunk: chunk(block.formatChunk),
+      ...(block.versionChunk ? { versionChunk: chunk(block.versionChunk) } : {}),
+    };
+  }
+
+  private static info(view: DataView, block: PcmBlock) {
     return { format: AudioFileDecoder.fourCC(view, 0) === "RIFF" ? "WAV" : "AIFF", sampleRate: block.sampleRate, channels: block.channels, channelLayout: block.channels === 1 ? "mono" : block.channels === 2 ? "stereo" : "unknown", frames: block.frames, bitDepth: block.encoding.bits, encoding: block.encoding.kind };
   }
 
   private block(bytes: Uint8Array, name: string): { view: DataView; block: PcmBlock } {
-    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    let view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     if (bytes.byteLength < 12) throw new Error(`${name}: the audio header is incomplete`);
     const form = AudioFileDecoder.fourCC(view, 0);
     const kind = AudioFileDecoder.fourCC(view, 8);
+    if (form !== "RIFF" && form !== "FORM") throw new Error(`${name}: Ode reads WAV and AIFF files; export the audio as WAV`);
+    const end = view.getUint32(4, form === "RIFF") + 8;
+    if (end < 12) throw new Error(`${name}: the audio header is incomplete`);
+    if (end > view.byteLength) throw new Error(`${name}: the audio file is truncated`);
+    // Appended bytes are outside this container and must never become another audio chunk.
+    view = new DataView(bytes.buffer, bytes.byteOffset, end);
     let block: PcmBlock;
     if (form === "RIFF" && kind === "WAVE") block = this.wav(view, name);
     else if (form === "FORM" && (kind === "AIFF" || kind === "AIFC")) block = this.aiff(view, kind === "AIFC", name);
     else throw new Error(`${name}: Ode reads WAV and AIFF files; export the audio as WAV`);
-    if (view.getUint32(4, form === "RIFF") + 8 > view.byteLength) throw new Error(`${name}: the audio file is truncated`);
     return { view, block: AudioFileDecoder.readable(view, block, name) };
   }
 
   /**
    * The block as Ode can read it: one channel or more, a bit depth Ode decodes, a positive sample rate, and at most
-   * the frames the file's bytes hold, so a damaged header gives an error or a shorter file.
+   * the frames the sound chunk holds. Trailing metadata is never sample data.
    */
   private static readable(view: DataView, block: PcmBlock, name: string): PcmBlock {
     const { kind, bits } = block.encoding;
@@ -70,14 +98,14 @@ export class AudioFileDecoder {
     if (!Number.isInteger(block.channels) || block.channels < 1) throw new Error(`${name}: the header names ${block.channels} channels; export the audio as WAV again`);
     if (!depths.includes(bits)) throw new Error(`${name}: ${bits}-bit audio is outside what Ode reads; export as 16- or 24-bit WAV`);
     if (!Number.isFinite(block.sampleRate) || block.sampleRate <= 0) throw new Error(`${name}: the header names a sample rate of ${block.sampleRate}; export the audio as WAV again`);
-    const held = Math.floor(Math.max(0, view.byteLength - block.start) / (block.channels * (bits / 8)));
+    const held = Math.floor(Math.max(0, block.end - block.start) / (block.channels * (bits / 8)));
     const frames = Number.isFinite(block.frames) ? Math.max(0, Math.min(block.frames, held)) : held;
     if (block.frames > held) throw new Error(`${name}: the audio data is truncated`);
     return { ...block, frames };
   }
 
   private wav(view: DataView, name: string): PcmBlock {
-    let format: { code: number; channels: number; sampleRate: number; bits: number } | null = null;
+    let format: { code: number; channels: number; sampleRate: number; bits: number; blockAlign: number; chunk: { start: number; size: number } } | null = null;
     let data: { start: number; size: number } | null = null;
     for (let offset = 12; offset + 8 <= view.byteLength; ) {
       const id = AudioFileDecoder.fourCC(view, offset);
@@ -85,9 +113,16 @@ export class AudioFileDecoder {
       const body = offset + 8;
       if (body + size > view.byteLength) throw new Error(`${name}: the WAV chunk is truncated`);
       if (id === "fmt ") {
+        if (size < 16) throw new Error(`${name}: the WAV format chunk is incomplete`);
         let code = view.getUint16(body, true);
-        if (code === WAV_EXTENSIBLE && size >= 26) code = view.getUint16(body + 24, true);
-        format = { code, channels: view.getUint16(body + 2, true), sampleRate: view.getUint32(body + 4, true), bits: view.getUint16(body + 14, true) };
+        if (code === WAV_EXTENSIBLE) {
+          if (size < 40 || view.getUint16(body + 16, true) < 22) throw new Error(`${name}: the extensible WAV format chunk is incomplete`);
+          // The complete standard subtype GUID matters, not only its first format tag.
+          const suffix = [0, 0, 0, 0, 0x10, 0, 0x80, 0, 0, 0xaa, 0, 0x38, 0x9b, 0x71];
+          if (!suffix.every((value, index) => view.getUint8(body + 26 + index) === value)) throw new Error(`${name}: this extensible WAV subtype is unsupported; export as PCM WAV`);
+          code = view.getUint16(body + 24, true);
+        }
+        format = { code, channels: view.getUint16(body + 2, true), sampleRate: view.getUint32(body + 4, true), bits: view.getUint16(body + 14, true), blockAlign: view.getUint16(body + 12, true), chunk: { start: offset, size: 8 + size + size % 2 } };
       } else if (id === "data") {
         data = { start: body, size: Math.min(size, view.byteLength - body) };
       }
@@ -99,25 +134,32 @@ export class AudioFileDecoder {
     else if (format.code === WAV_PCM) kind = format.bits === 8 ? SampleKind.UnsignedInt : SampleKind.SignedInt;
     else throw new Error(`${name}: this WAV is compressed (format ${format.code}) and Ode reads PCM WAV; export as PCM WAV`);
     const frameBytes = (format.bits / 8) * format.channels;
+    if (format.blockAlign !== frameBytes) throw new Error(`${name}: the WAV channel frame size disagrees with its format`);
     if (Number.isFinite(frameBytes) && frameBytes > 0 && data.size % frameBytes !== 0) throw new Error(`${name}: the WAV data ends in an incomplete channel frame`);
     return {
       channels: format.channels,
       sampleRate: format.sampleRate,
       encoding: { kind, bits: format.bits, littleEndian: true },
       start: data.start,
+      end: data.start + data.size,
       frames: Math.floor(data.size / frameBytes),
+      formatChunk: format.chunk,
     };
   }
 
   private aiff(view: DataView, compressed: boolean, name: string): PcmBlock {
     let common: { channels: number; frames: number; bits: number; sampleRate: number; compression: string } | null = null;
     let soundStart = -1;
+    let soundEnd = -1;
+    let formatChunk: PcmBlock["formatChunk"] | undefined;
+    let versionChunk: PcmBlock["versionChunk"];
     for (let offset = 12; offset + 8 <= view.byteLength; ) {
       const id = AudioFileDecoder.fourCC(view, offset);
       const size = view.getUint32(offset + 4, false);
       const body = offset + 8;
       if (body + size > view.byteLength) throw new Error(`${name}: the AIFF chunk is truncated`);
       if (id === "COMM") {
+        if (size < (compressed ? 22 : 18)) throw new Error(`${name}: the AIFF common chunk is incomplete`);
         common = {
           channels: view.getInt16(body, false),
           frames: view.getUint32(body + 2, false),
@@ -125,12 +167,18 @@ export class AudioFileDecoder {
           sampleRate: AudioFileDecoder.extended(view, body + 8),
           compression: compressed ? AudioFileDecoder.fourCC(view, body + 18) : "NONE",
         };
+        formatChunk = { start: offset, size: 8 + size + size % 2 };
       } else if (id === "SSND") {
+        if (size < 8) throw new Error(`${name}: the AIFF sound chunk is incomplete`);
         soundStart = body + 8 + view.getUint32(body, false);
+        soundEnd = body + size;
+        if (soundStart > soundEnd) throw new Error(`${name}: the AIFF sound offset is outside its sound chunk`);
+      } else if (id === "FVER" && size === 4) {
+        versionChunk = { start: offset, size: 12 };
       }
       offset = body + size + (size % 2);
     }
-    if (!common || soundStart < 0) throw new Error(`${name}: the AIFF file is incomplete`);
+    if (!common || !formatChunk || soundStart < 0) throw new Error(`${name}: the AIFF file is incomplete`);
     const encodings: Record<string, SampleEncoding> = {
       NONE: { kind: SampleKind.SignedInt, bits: common.bits, littleEndian: false },
       sowt: { kind: SampleKind.SignedInt, bits: common.bits, littleEndian: true },
@@ -141,7 +189,7 @@ export class AudioFileDecoder {
     };
     const encoding = encodings[common.compression];
     if (!encoding) throw new Error(`${name}: this AIFF is compressed ("${common.compression}") and Ode reads uncompressed audio; export as WAV`);
-    return { channels: common.channels, sampleRate: common.sampleRate, encoding, start: soundStart, frames: common.frames };
+    return { channels: common.channels, sampleRate: common.sampleRate, encoding, start: soundStart, end: soundEnd, frames: common.frames, formatChunk, ...(versionChunk ? { versionChunk } : {}) };
   }
 
   private static samples(view: DataView, block: PcmBlock, rejectNonfinite: boolean): Float32Array[] {
