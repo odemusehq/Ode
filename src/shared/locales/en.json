@@ -764,7 +764,7 @@
     "stopped": "Stopped.",
     "stoppedPendingWork": "Stopped. Work already issued may have completed.",
     "incompleteAnswer": "The request ended before a complete answer.",
-    "modelCallLimit": "The request reached its model-call limit. Review changes in History.",
+    "modelCallLimit": "Ode paused after a long run. Your changes are saved; send a message to continue.",
     "tokenLimit": "Ode paused at this request's work limit. Your changes are saved; send a message to continue.",
     "compacting": "Condensing earlier work",
     "compactionFailed": "Ode could not condense the conversation safely. Your work is saved; send a message to continue.",

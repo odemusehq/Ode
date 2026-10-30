@@ -140,15 +140,16 @@ test("a long run compacts and continues without replaying edits or losing the mu
     answer(summary),
     answer("Done."),
   ]);
-  const { loop, run, live } = await rig(model, 60_000);
+  const { loop, run, live } = await rig(model, 40_000);
   const history = [{ role: "user" as const, content: "Keep the chorus melody exactly." }];
-  const result = await loop.run(run({ history, prompt: "Finish the arrangement." }));
+  const result = await loop.run(run({ history, prompt: "Finish the arrangement.", request: "Finish the arrangement." }));
   assert.equal(result.reply, "Done.");
   assert.equal(result.tokens, 50, "The summary call shares the request's accounting.");
   assert.equal(live.snapshot().song.tempo, 107);
   assert.equal(live.calls.filter((call) => call.op === "song_set_tempo").length, 1);
   assert.ok(model.turns[1]!.tools.some((tool) => tool.type === "function" && tool.function.name === "device_get"));
   assert.deepEqual(model.turns[3]!.tools, [], "Compaction cannot execute tools.");
+  assert.ok(String(model.turns[3]!.messages.at(-1)?.content).includes('Current musician request: "Finish the arrangement."'));
   const resumed = model.turns[4]!;
   assert.ok(!resumed.tools.some((tool) => tool.type === "function" && tool.function.name === "device_get"));
   assert.ok(resumed.tools.some((tool) => tool.type === "function" && tool.function.name === "midi_clip_set_notes"), "The newest discovered tools remain callable after compaction.");
@@ -157,6 +158,36 @@ test("a long run compacts and continues without replaying edits or losing the mu
   assert.ok(!resumed.messages.some((message) => message.role === "tool" || (message.role === "assistant" && message.tool_calls?.length)));
   assert.ok(JSON.stringify(resumed.messages).length < JSON.stringify(model.turns[3]!.messages).length / 2);
   assert.equal(history.length, 1, "Compaction must not rewrite the saved conversation.");
+});
+
+test("repeated inspections get a continuation reminder without blocking fresh reads", async () => {
+  const model = new ScriptedModel([
+    answer("Read.", [{ id: "one", name: "song_get" }]),
+    answer("Read.", [{ id: "two", name: "song_get" }]),
+    answer("Read.", [{ id: "three", name: "song_get" }]),
+    answer("Done."),
+  ]);
+  const { loop, run, live } = await rig(model);
+  assert.equal((await loop.run(run())).reply, "Done.");
+  assert.equal(live.calls.filter((call) => call.op === "song_get").length, 3);
+  assert.ok(model.turns[3]!.messages.some((message) => message.role === "system" && /repeated.*song_get/.test(String(message.content))));
+});
+
+test("compaction uses the provider's active input count when it exceeds the character estimate", async () => {
+  const model = new ScriptedModel([
+    answer("Read the song.", [{ id: "read", name: "song_get" }]),
+    answer("Tempo is 120; next write the drums."),
+    answer("Done."),
+  ]);
+  const complete = model.complete.bind(model);
+  model.complete = async (turn) => {
+    const reply = await complete(turn);
+    if (model.turns.length === 1) reply.inputTokens = 50_000;
+    return reply;
+  };
+  const { loop, run } = await rig(model, 20_000);
+  assert.equal((await loop.run(run({ history: [{ role: "assistant", content: "Earlier work. ".repeat(1_500) }] }))).reply, "Done.");
+  assert.deepEqual(model.turns[1]!.tools, []);
 });
 
 test("compaction keeps the shared call limit instead of starting a new budget", async () => {

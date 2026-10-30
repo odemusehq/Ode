@@ -42,7 +42,7 @@ export class OpenAiCompatibleText implements TextGenerator {
     const choice = response.choices[0];
     if (!choice?.message) throw new Error(`${this.role.model} sent an empty answer.`);
     const tokens = response.usage?.total_tokens ?? OpenAiCompatibleText.estimate(turn, choice.message.content ?? "");
-    return { message: choice.message, tokens, finishReason: choice.finish_reason ?? "stop" };
+    return { message: choice.message, tokens, inputTokens: response.usage?.prompt_tokens, finishReason: choice.finish_reason ?? "stop" };
   }
 
   /** The provider holds the answer to the strict schema; the role's effort, where set, keeps the reasoning short. */

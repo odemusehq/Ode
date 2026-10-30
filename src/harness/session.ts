@@ -304,6 +304,7 @@ export class OdeSession {
             system: await this.deps.agents.systemPrompt(),
             history: await this.history(),
             prompt: `${hiddenContext}\n\n${request.continuing ? `Continue the task with the latest correction. Earlier work may have partially changed the Set; inspect it before editing. Original task: ${request.continuing}\nLatest message: ` : ""}${request.text}`,
+            request: request.continuing ? `${request.continuing}\nLatest correction: ${request.text}` : request.text,
             conversation: this.conversation.id,
             depth: 0,
             gate: this.gate,

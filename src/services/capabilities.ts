@@ -17,6 +17,8 @@ export interface ChatTurn {
 export interface ChatReply {
   message: ChatCompletionMessage;
   tokens: number;
+  /** The provider's actual active input size, including tool definitions, when reported. */
+  inputTokens?: number;
   /** "length" when the answer reached the turn's token limit and stopped part-way. */
   finishReason: string;
 }

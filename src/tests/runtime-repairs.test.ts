@@ -43,6 +43,19 @@ test("concurrent model calls reserve their turns and tokens before dispatch", ()
   assert.equal(tokens.reserve(1), null);
 });
 
+test("the normal production budget has room beyond sixty model calls but still bounds tokens", () => {
+  const budget = new RequestBudget(limits);
+  for (let index = 0; index < 61; index++) {
+    const admitted = budget.reserve(100);
+    assert.ok(admitted);
+    admitted.settle(100);
+  }
+  assert.equal(budget.reached, null);
+  const bounded = new RequestBudget({ ...limits, tokensPerRequest: 100 });
+  assert.ok(bounded.reserve(1));
+  assert.equal(bounded.reserve(1), null);
+});
+
 test("temporary MIDI material belongs to the parent request and expires immediately on Stop", async () => {
   let active = false, opened = 0, closed = 0;
   let wait: Promise<void> | undefined, enter: () => void = () => undefined;

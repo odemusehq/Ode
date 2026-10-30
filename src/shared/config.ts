@@ -30,7 +30,7 @@ export interface AgentLimits {
   subagentsAtOnce: number;
   /** Subagents one request may start in all, at every depth. */
   subagentsPerRequest: number;
-  /** Model calls one request may make before Ode stops it, subagents' calls included. */
+  /** Emergency backstop for a production request, including compaction and subagents. */
   turnsPerRequest: number;
   /** Tokens, sent and received, one request may use before Ode stops it, subagents' tokens included. */
   tokensPerRequest: number;
