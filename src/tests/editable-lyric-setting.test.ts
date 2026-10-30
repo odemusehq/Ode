@@ -47,6 +47,7 @@ test("editable lyric setting refuses an inferred voice and preserves every other
 });
 
 test("editable lyric selection keeps legato and rejects invalid selections or an incomplete output window", async () => {
+  await assert.rejects(setLyricsToMelodyTool.run({ ...input, notes: [source[2]!] }, context()), /unmuted|select/i);
   const legato = [{ ...source[1]!, duration: 1.5 }, { ...source[3]!, start: 1.11 }, source[2]!];
   const result = await setLyricsToMelodyTool.run({ ...input, notes: legato }, context()) as Setting;
   assert.deepEqual(result.selectedSourceIndices, [0, 1]);

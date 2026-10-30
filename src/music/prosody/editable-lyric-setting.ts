@@ -26,7 +26,7 @@ export function setEditableLyricsToMelody(
   const selectedSourceIndices = sourceIndices === undefined
     ? notes.flatMap((note, index) => note.muted ? [] : [index])
     : [...sourceIndices];
-  if (sourceIndices !== undefined && sourceIndices.length === 0) throw new Error("Select at least one source note index.");
+  if (selectedSourceIndices.length === 0) throw new Error("Select at least one unmuted source note for the vocal line.");
   if (selectedSourceIndices.some((index) => !Number.isInteger(index) || index < 0 || index >= notes.length)) throw new Error("sourceIndices must be integer indices within the original input notes.");
   const selected = new Set(selectedSourceIndices);
   if (selected.size !== selectedSourceIndices.length) throw new Error("Each source note index must be selected once; duplicate indices are ambiguous.");
