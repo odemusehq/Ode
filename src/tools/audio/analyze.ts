@@ -5,6 +5,7 @@ import { TrackRefSchema } from "../live/schemas";
 import { ArrangementAudio, requireRange } from "./arrangement-audio";
 import { measurementReport } from "./report";
 import { audioFileEvidence } from "./file-evidence";
+import { audioExcerpt, samplePeakRegions } from "../../music/audio/excerpt";
 import { MusicAudio } from "../../services/music-audio";
 
 export const audioAnalyze = defineTool({
@@ -13,12 +14,16 @@ export const audioAnalyze = defineTool({
     "Measures a recording: loudness to ITU-R BS.1770-4 and EBU R128 (integrated loudness, momentary maximum, short-term maximum, loudness range), true peak (four-times oversampled), sample peak, and a short spectrum summary.",
     "Use it to check a bounce, a sample, a reference track or a stretch of an Arrangement audio track before giving advice about level or tone; these numbers always come from a measurement.",
     "Inputs: either `path` (a WAV or AIFF file; other formats need exporting as WAV first), or `track` with `start` and `end` in beats to render that Arrangement audio track (its clips before the track's devices and fader; only audio tracks can be rendered).",
-    "Returns { source, durationSeconds, sampleRate, channels, loudness: { integratedLufs, momentaryMaxLufs, shortTermMaxLufs, rangeLu }, truePeakDbtp, samplePeakDbfs, spectrum: { tiltDbPerOctave, strongestBand, regions: [{ region, range, levelDb }] } }.",
+    "For an uploaded file, fromSeconds/toSeconds select a nonempty measurement excerpt (nearest sample boundaries, end exclusive); omit either for the beginning/end. These are file seconds, never Arrangement beats. locatePeaks returns the maximum sample position and at most 32 near-full-scale regions in source-file/capture seconds, for targeted audition. Those regions are not a diagnosis of distortion or interpolated true-peak positions. Arrangement capture times start at zero; no tempo/beat conversion is inferred.",
+    "Returns { source, analyzedRange, sampleLocations?, durationSeconds, sampleRate, channels, loudness: { integratedLufs, momentaryMaxLufs, shortTermMaxLufs, rangeLu }, truePeakDbtp, samplePeakDbfs, spectrum: { tiltDbPerOctave, strongestBand, regions: [{ region, range, levelDb }] } }.",
     "Region levels are average third-octave band levels in dB relative to full scale; the tilt is the slope of the band levels from 100 Hz to 10 kHz (more negative is darker).",
     "Loudness supports established mono/stereo layouts only: for more channels it remains null with an unsupported-layout status, while peaks and spectrum still use every channel. Other readings are null when silent (integrated loudness also needs at least 0.4 s of audio). Read-only.",
   ].join(" "),
   input: {
     path: z.string().min(1).optional().describe("Audio file to measure. Leave out when rendering a track."),
+    fromSeconds: z.number().min(0).optional().describe("File-only excerpt start in seconds, rounded to the nearest sample."),
+    toSeconds: z.number().positive().optional().describe("File-only excerpt end in seconds, rounded to the nearest sample, exclusive."),
+    locatePeaks: z.boolean().optional().describe("Locate sample peaks and bounded near-full-scale regions; these are candidates to audition, not clipping diagnoses."),
     track: TrackRefSchema.optional().describe("Arrangement audio track to render and measure (with start and end)."),
     start: z.number().min(0).optional().describe("Start of the range to render, in beats."),
     end: z.number().min(0).optional().describe("End of the range to render, in beats."),
@@ -29,9 +34,12 @@ export const audioAnalyze = defineTool({
     if (input.path) {
       const path = await ctx.temp.inside(input.path);
       const frozen = await MusicAudio.freeze(path);
-      const measurement = new AudioMeasurement(MusicAudio.decode(frozen).audio);
-      return { source: await audioFileEvidence(path, frozen), ...measurementReport(measurement) };
+      const excerpt = audioExcerpt(MusicAudio.decode(frozen).audio, input.fromSeconds, input.toSeconds);
+      return { source: await audioFileEvidence(path, frozen), analyzedRange: { ...excerpt.range, timeOrigin: "source file start" },
+        ...(input.locatePeaks ? { sampleLocations: samplePeakRegions(excerpt.audio, excerpt.range.firstFrame) } : {}),
+        ...measurementReport(new AudioMeasurement(excerpt.audio)) };
     }
+    if (input.fromSeconds !== undefined || input.toSeconds !== undefined) throw new Error("fromSeconds/toSeconds select an uploaded file excerpt. For Arrangement audio use track/start/end in beats.");
     if (!input.track || input.start === undefined || input.end === undefined) {
       throw new Error("give either path, or track with start and end (beats)");
     }
@@ -41,9 +49,12 @@ export const audioAnalyze = defineTool({
     if ("skipped" in lookup) throw new Error(`${lookup.skipped.track} stays unrendered: ${lookup.skipped.reason}`);
     return arrangement.withRender(lookup.track.ref, input.start, input.end, async (path) => {
       const frozen = await MusicAudio.freeze(path);
-      return { source: { ...frozen.source, track: lookup.track, range: { start: input.start, end: input.end }, retained: false,
+      const excerpt = audioExcerpt(MusicAudio.decode(frozen).audio);
+      return { analyzedRange: { ...excerpt.range, timeOrigin: "capture start; Arrangement beat positions are not inferred" },
+        ...(input.locatePeaks ? { sampleLocations: samplePeakRegions(excerpt.audio) } : {}),
+        source: { ...frozen.source, track: lookup.track, range: { start: input.start, end: input.end }, retained: false,
         availability: "Temporary capture is removed after measurement; use audio_capture to retain a chosen capture." },
-      signalStage: "pre-effects, pre-fader Arrangement source audio", currentness: "captured during this call; later Set currentness unknown", ...measurementReport(new AudioMeasurement(MusicAudio.decode(frozen).audio)) };
+      signalStage: "pre-effects, pre-fader Arrangement source audio", currentness: "captured during this call; later Set currentness unknown", ...measurementReport(new AudioMeasurement(excerpt.audio)) };
     });
   },
 });
