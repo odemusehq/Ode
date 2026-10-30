@@ -222,7 +222,7 @@ function ode_audio_monitor() {
           job.transport.deadline = now + 2000;
           job.transport.startTime = now;
           job.transport.startIssued = true;
-          song.call("start_playing");
+          song.call("continue_playing");
         } else if (now >= job.transport.deadline) throw new Error(ODE_AUDIO_COPY.liveDidNotConfirmTheRequestedPlayback);
         return;
       }

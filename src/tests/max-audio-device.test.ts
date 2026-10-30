@@ -11,7 +11,7 @@ async function fixture(withRouting = false, names = ["Synth"], types = [{ displa
   let now = 0;
   let allocatedFrames = 0;
   const routing = { routing_type: { display_name: "No Input", identifier: "none" }, routing_channel: { display_name: "No Input", identifier: "none" } };
-  const song: Record<string, any> = { is_playing: 0, record_mode: 0, session_record: 0, current_song_time: 12, loop: 1, loop_start: 8, loop_length: 8, tracks: names.flatMap((_, index) => ["id", 20 + index]), return_tracks: [] };
+  const song: Record<string, any> = { is_playing: 0, record_mode: 0, session_record: 0, current_song_time: 12, start_time: 80, loop: 1, loop_start: 8, loop_length: 8, tracks: names.flatMap((_, index) => ["id", 20 + index]), return_tracks: [] };
   class LiveAPI {
     id = 1;
     path: string;
@@ -36,7 +36,12 @@ async function fixture(withRouting = false, names = ["Synth"], types = [{ displa
     }
     call(name: string) {
       transportCalls.push(name);
-      const apply = () => { song.is_playing = name === "start_playing" ? 1 : 0; };
+      const apply = () => {
+        if (name === "start_playing") { song.current_song_time = song.start_time; song.is_playing = 1; }
+        else if (name === "continue_playing") song.is_playing = 1;
+        else if (name === "stop_playing") song.is_playing = 0;
+        else throw new Error(`Unexpected transport command: ${name}`);
+      };
       if (deferTransport) transportWrites.push(apply); else apply();
     }
   }
@@ -178,7 +183,7 @@ test("Max waits for its deferred seek and start before recording", async () => {
   assert.equal(messages.some((item) => item.message.kind === "error"), false, "Its own pending seek is not a manual change");
   assert.deepEqual(transportCalls, []);
   flushTransport(); context.ode_audio_monitor(); context.ode_audio_monitor();
-  assert.deepEqual(transportCalls, ["start_playing"], "Issue start once, after the requested stopped position is confirmed");
+  assert.deepEqual(transportCalls, ["continue_playing"], "Continue once, after the requested stopped position is confirmed");
   assert.equal(controls.some((item) => item[0] === "odeCaptureRecorder" && item[1] === 1), false);
   flushTransport(); context.ode_audio_monitor();
   assert.ok(controls.some((item) => item[0] === "odeCaptureRecorder" && item[1] === 1));
@@ -207,10 +212,25 @@ test("Max startup cleanup cancels queued starts and preserves subsequent manual 
       if (reason === "seek") { flushTransport(); song.current_song_time = 64; }
       context.ode_audio_monitor(); assert.equal(messages.at(-1).message.kind, "error");
     }
-    assert.deepEqual(transportCalls, reason === "stop" ? ["start_playing"] : ["start_playing", "stop_playing"], reason);
+    assert.deepEqual(transportCalls, reason === "stop" ? ["continue_playing"] : ["continue_playing", "stop_playing"], reason);
     flushTransport();
     assert.equal(song.is_playing, 0, "A queued start must not escape after the capture ends");
     assert.equal(song.current_song_time, reason === "seek" ? 64 : reason === "stop" ? 17 : reason === "loop" ? 16 : 12, reason);
     assert.equal(song.loop, 1);
   }
+});
+
+test("Max range capture continues from its seek instead of the unrelated insert marker", async () => {
+  const { context, messages, controls, song, flushTransport, advance } = await fixture(false, undefined, undefined, true);
+  context.ode_audio_command({ kind: "sources", id: "list" });
+  const catalogue = messages.at(-1).message;
+  context.ode_audio_command({ kind: "capture", id: "take", catalogueId: catalogue.catalogueId, sourceId: catalogue.sources[0].id, durationSeconds: 1, startBeat: 16, prerollBeats: 4 });
+  flushTransport(); context.ode_audio_monitor();
+  flushTransport(); context.ode_audio_monitor();
+  assert.equal(song.current_song_time, 12);
+  assert.equal(messages.some((item) => item.message.kind === "error"), false);
+  advance(2500); song.current_song_time = 16; context.ode_audio_monitor();
+  assert.ok(controls.some((item) => item[0] === "odeCaptureRecorder" && item[1] === 1));
+  assert.equal(song.start_time, 80, "The musician's insert marker is preserved.");
+  context.ode_audio_command({ kind: "cancel", id: "take" });
 });
