@@ -22,8 +22,6 @@ var completedIds = [];
 var nextLocalId = 0;
 var browserWidth = 0;
 var browserHeight = 0;
-var windowLayout = "ask";
-var chatWidth = 0;
 
 function status(message) {
   try { odePatcher.getnamed("odeStatus").message("set", message); } catch (_) {}
@@ -48,43 +46,6 @@ function fitWindow() {
     browserWidth = width;
     browserHeight = height;
   } catch (_) { /* A closed patcher may have no native window yet. */ }
-}
-
-function ode_layout(view, left, top, width, height) {
-  if ((view !== "ask" && view !== "lyrics") || view === windowLayout) return;
-  try {
-    var objects = windowObjects();
-    var location = objects.child.wind.location;
-    var size = objects.child.wind.size;
-    var x = Math.round(Number(location[0]));
-    var y = Math.round(Number(location[1]));
-    var currentWidth = Math.round(Number(size[0]));
-    var currentHeight = Math.round(Number(size[1]));
-    if (![x, y, currentWidth, currentHeight].every(Number.isFinite) || currentWidth < 1 || currentHeight < 1) return;
-    var nextWidth;
-    if (view === "lyrics") {
-      chatWidth = currentWidth;
-      nextWidth = Math.max(currentWidth, Math.min(1240, currentWidth + 640));
-    } else nextWidth = chatWidth || currentWidth;
-    var bounds = [left, top, width, height];
-    if (bounds.every(function (value) { return typeof value === "number" && Number.isFinite(value); }) &&
-        Math.abs(left) <= 100000 && Math.abs(top) <= 100000 && width >= 320 && width <= 32768 && height >= 240 && height <= 32768) {
-      left = Math.round(left);
-      top = Math.round(top);
-      width = Math.round(width);
-      height = Math.round(height);
-      nextWidth = Math.min(nextWidth, width);
-      currentHeight = Math.min(currentHeight, height);
-      x = Math.max(left, Math.min(x, left + width - nextWidth));
-      y = Math.max(top, Math.min(y, top + height - currentHeight));
-    }
-    // thispatcher's window size takes global left, top, right, bottom coordinates.
-    objects.control.message("window", "size", x, y, x + nextWidth, y + currentHeight);
-    objects.control.message("window", "exec");
-    windowLayout = view;
-    if (view === "ask") chatWidth = 0;
-    fitWindow();
-  } catch (_) { /* Keep the current window when native geometry is unavailable. */ }
 }
 
 function number(name) {
@@ -254,12 +215,7 @@ function openCommand(command, local) {
     // jweb creates its native renderer when the child window becomes visible.
     frontWindow();
     if (loaded) objects.browser.message("ode_open", command.view, command.url, command.id);
-    else {
-      var url = command.url + "&odeWindowCommand=" + encodeURIComponent(command.id);
-      var width = Number(chatWidth || objects.child.wind.size[0]);
-      if (Number.isFinite(width) && width > 0) url += "&odeChatWidth=" + encodeURIComponent(String(width));
-      objects.browser.message("read", url);
-    }
+    else objects.browser.message("read", command.url + "&odeWindowCommand=" + encodeURIComponent(command.id));
   } catch (_) { finishOpen(command.id, "error", "Ode's window stayed closed. Press Open Ode to retry."); }
 }
 

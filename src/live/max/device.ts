@@ -76,12 +76,12 @@ export class MaxDevice {
     box("window", "newobj", {
       text: "p Ode", varname: "odeWindow", numinlets: 1, numoutlets: 1, outlettype: [""], patching_rect: [250, 400, 65, 22],
       patcher: {
-        fileversion: 1, appversion: MaxDevice.appVersion, classnamespace: "box", rect: [180, 100, 440, 740],
+        fileversion: 1, appversion: MaxDevice.appVersion, classnamespace: "box", rect: [180, 100, 1080, 740],
         openinpresentation: 1, bglocked: 1, locked_bgcolor: [0.13, 0.13, 0.13, 1], bgcolor: [0.13, 0.13, 0.13, 1],
         toolbarvisible: 0, statusbarvisible: 0, enablehscroll: 0, enablevscroll: 0, title: "Ode",
         boxes: [
           { box: { id: "in", maxclass: "inlet", numinlets: 0, numoutlets: 1, outlettype: [""], patching_rect: [20, 800, 30, 30] } },
-          { box: { id: "browser", maxclass: "jweb", varname: "odeBrowser", numinlets: 1, numoutlets: 1, outlettype: [""], patching_rect: [0, 0, 440, 740], presentation: 1, presentation_rect: [0, 0, 440, 740], url: "about:blank", historysize: 0 } },
+          { box: { id: "browser", maxclass: "jweb", varname: "odeBrowser", numinlets: 1, numoutlets: 1, outlettype: [""], patching_rect: [0, 0, 1080, 740], presentation: 1, presentation_rect: [0, 0, 1080, 740], url: "about:blank", historysize: 0 } },
           { box: { id: "control", maxclass: "newobj", text: "thispatcher", varname: "odeWindowControl", numinlets: 1, numoutlets: 2, outlettype: ["", ""], patching_rect: [20, 760, 75, 22] } },
           { box: { id: "out", maxclass: "newobj", text: "outlet", numinlets: 1, numoutlets: 0, patching_rect: [110, 760, 45, 22] } },
         ],

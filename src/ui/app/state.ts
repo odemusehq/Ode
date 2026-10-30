@@ -5,6 +5,7 @@ import type { VersionListItem } from "../../shared/versions";
 import { StreamState, initialState } from "./model";
 import type { AppState } from "./model";
 import { reduceEvent } from "./reducer";
+import type { SidebarView } from "./layout";
 
 /** Holds the app state and tells subscribers when it changes; read it with useSyncExternalStore. */
 export class Store {
@@ -20,8 +21,8 @@ export class Store {
 
   readonly getSnapshot = (): AppState => this.state;
 
-  setLyricsOpen(lyricsOpen: boolean): void {
-    if (lyricsOpen !== this.state.lyricsOpen) this.update({ ...this.state, lyricsOpen });
+  setSidebar(sidebarOpen: boolean, sidebarView: SidebarView = this.state.sidebarView): void {
+    if (sidebarOpen !== this.state.sidebarOpen || sidebarView !== this.state.sidebarView) this.update({ ...this.state, sidebarOpen, sidebarView });
   }
 
   apply(event: UiEvent): void {

@@ -2,6 +2,8 @@ import type { ApprovalRequest } from "../../shared/api";
 import type { ConversationExchange, ResultKind } from "../../shared/events";
 import type { Mode } from "../../shared/personalisation";
 import type { VersionListItem } from "../../shared/versions";
+import { Layout } from "./layout";
+import type { SidebarView } from "./layout";
 
 export enum StreamState {
   /** First connection, still opening. */
@@ -62,8 +64,9 @@ export interface WhyAnswer {
 export interface AppState {
   songId: string | null;
   exchanges: readonly ConversationExchange[];
-  /** The lyrics editor is open beside the chat. */
-  lyricsOpen: boolean;
+  /** A panel is open beside the chat; hiding it keeps the selected panel. */
+  sidebarOpen: boolean;
+  sidebarView: SidebarView;
   stream: StreamState;
   busy: boolean;
   /** Stop can interrupt what Ode is doing now. */
@@ -100,7 +103,8 @@ export function initialState(): AppState {
   return {
     songId: null,
     exchanges: [],
-    lyricsOpen: false,
+    sidebarOpen: false,
+    sidebarView: Layout.Lyrics,
     stream: StreamState.Connecting,
     busy: false,
     stoppable: false,

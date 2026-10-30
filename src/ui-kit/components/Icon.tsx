@@ -5,6 +5,7 @@ export enum IconName {
   Stop = "stop",
   Send = "send",
   Microphone = "microphone",
+  Sidebar = "sidebar",
   Close = "close",
   Check = "check",
   Alert = "alert",
@@ -37,6 +38,8 @@ export function Icon({ name }: IconProps) {
 
 function iconShape(name: IconName): ReactNode {
   switch (name) {
+    case IconName.Sidebar:
+      return <><rect x="2" y="2.5" width="12" height="11" rx="1.5" /><path d="M9.5 2.5v11" /></>;
     case IconName.Send:
       return <path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" />;
     case IconName.Microphone:

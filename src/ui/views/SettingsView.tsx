@@ -26,6 +26,8 @@ const MODEL_INFO =
 const LYRICS_INFO =
   "The model that highlights syllables and rhymes in the Lyrics editor as you type. It marks the lyrics you write; the main model above writes and suggests them.";
 const META_INFO = "Meta's own models use this key: cover art, transcribing recordings and listening to audio.";
+const SAVING_NOTICE = "Wait for Settings to finish saving.";
+const CLOSE_NOTICE = "Save your Settings or choose Cancel before closing Ode.";
 const SERVICE_INFO: Record<OptionalRole, string> = {
   stem_separation: "Splits a recording into the sound you describe and everything else, for samples and remixes.",
   singing_voice: "Sings demo vocals in your own voice, once you agree to it.",
@@ -52,8 +54,14 @@ function draftsFrom(response: SettingsResponse): ServiceDrafts {
   ) as ServiceDrafts;
 }
 
-/** Ode: Settings. The chat provider, its model and key, a Meta key for Meta's own models, and optional services. */
-export function SettingsView() {
+interface SettingsViewProps {
+  embedded?: boolean;
+  active?: boolean;
+  onSaved?: () => void;
+}
+
+/** The chat provider, its model and key, a Meta key, and optional services. */
+export function SettingsView({ embedded = false, active = true, onSaved }: SettingsViewProps) {
   const client = useClient();
   const { api } = client;
   const [loaded, setLoaded] = useState<SettingsResponse | null>(null);
@@ -71,6 +79,12 @@ export function SettingsView() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const finish = (result: DialogResult) => {
+    if (embedded) {
+      void client.navigate(Layout.Ask).then(() => {
+        if (!client.store.getSnapshot().sidebarOpen) document.getElementById("ode-sidebar-toggle")?.focus();
+      });
+      return;
+    }
     if (LiveDialog.modal) { LiveDialog.close(result); return; }
     const url = new URL(window.location.href);
     url.searchParams.set("view", "ask");
@@ -78,6 +92,25 @@ export function SettingsView() {
     window.location.assign(url.href);
   };
   const backToChat = () => { void client.navigate(Layout.Ask); };
+  const resetDraft = (response: SettingsResponse) => {
+    setProvider(response.settings.provider);
+    setModel(response.settings.model);
+    setLyricsProvider(response.settings.lyrics.provider);
+    setLyricsModel(response.settings.lyrics.model);
+    setKey("");
+    setMetaKey("");
+    setLyricsKey("");
+    setServices(draftsFrom(response));
+    const error = client.store.getSnapshot().error;
+    if (error === SAVING_NOTICE || error === CLOSE_NOTICE) client.store.setError(null);
+  };
+  const cancel = () => {
+    if (saving) return;
+    if (loaded) resetDraft(loaded);
+    setProblem(null);
+    setSaved(false);
+    finish(DialogResult.Cancelled);
+  };
 
   const dirty = Boolean(loaded && services && (
     provider !== loaded.settings.provider || model !== loaded.settings.model || key || metaKey || lyricsKey ||
@@ -86,19 +119,19 @@ export function SettingsView() {
   ));
   useEffect(() => client.beforeLeave(() => {
     if (!saving && !dirty) return true;
-    setProblem(saving ? "Wait for Settings to finish saving." : "Save your settings or choose Cancel before changing views.");
+    const message = saving ? SAVING_NOTICE : embedded
+      ? CLOSE_NOTICE
+      : "Save your settings or choose Cancel before changing views.";
+    setProblem(message);
+    if (embedded && !active) client.store.setError(message);
     return false;
-  }), [client, dirty, saving]);
+  }), [client, dirty, saving, embedded, active]);
 
   useEffect(() => {
     api.getSettings().then(
       (response) => {
         setLoaded(response);
-        setProvider(response.settings.provider);
-        setModel(response.settings.model);
-        setLyricsProvider(response.settings.lyrics.provider);
-        setLyricsModel(response.settings.lyrics.model);
-        setServices(draftsFrom(response));
+        resetDraft(response);
       },
       (error: unknown) => setProblem(errorMessage(error)),
     );
@@ -112,37 +145,38 @@ export function SettingsView() {
 
   // Modal lists the musician's own endpoints: ask for them once a key is there, typed or saved.
   useEffect(() => {
+    if (!active) return;
     if (!listsModels || (!key && !savedKeyApplies)) {
       setListed([]);
       return;
     }
-    let active = true;
+    let current = true;
     setListed([]);
     const timer = window.setTimeout(() => {
       api.listModels({ provider, key: key || undefined }).then(
         (found) => {
-          if (!active) return;
+          if (!current) return;
           setProblem(null);
           setListed(found);
           setModel((current) => (found.some((each) => each.id === current) ? current : (found[0]?.id ?? "")));
         },
-        (error: unknown) => active && setProblem(errorMessage(error)),
+        (error: unknown) => current && setProblem(errorMessage(error)),
       );
     }, UI_CONFIG.modelListDelayMs);
     return () => {
-      active = false;
+      current = false;
       window.clearTimeout(timer);
     };
-  }, [api, provider, key, savedKeyApplies, listsModels]);
+  }, [api, provider, key, savedKeyApplies, listsModels, active]);
 
   if (!loaded || !services) {
     return (
-      <div className="settings settings--reading">
-        {!LiveDialog.hosted && <Button variant={ButtonVariant.Quiet} onClick={backToChat}>Back to chat</Button>}
+      <div className={`settings settings--reading${embedded ? " settings--embedded" : ""}`}>
+        {!embedded && !LiveDialog.hosted && <Button variant={ButtonVariant.Quiet} onClick={backToChat}>Back to chat</Button>}
         {problem ? <Notice tone={Tone.Danger}>{problem}</Notice> : "Reading Settings…"}
-        {LiveDialog.hosted && (
+        {(embedded || LiveDialog.hosted) && (
           <div className="settings__actions">
-            <Button variant={ButtonVariant.Secondary} onClick={() => finish(DialogResult.Cancelled)}>
+            <Button variant={ButtonVariant.Secondary} onClick={cancel}>
               Cancel
             </Button>
           </div>
@@ -193,8 +227,10 @@ export function SettingsView() {
   };
 
   const save = async () => {
+    if (saving) return;
     setSaving(true);
     setProblem(null);
+    setSaved(false);
     const update: SettingsUpdate = {
       provider,
       model,
@@ -210,16 +246,13 @@ export function SettingsView() {
     };
     try {
       const settings = await api.saveSettings(update);
-      if (LiveDialog.hosted) finish(DialogResult.Done);
-      else {
-        const response = { ...loaded, settings };
-        setLoaded(response);
-        setKey("");
-        setMetaKey("");
-        setLyricsKey("");
-        setServices(draftsFrom(response));
-        setSaved(true);
-      }
+      const response = { ...loaded, settings };
+      setLoaded(response);
+      resetDraft(response);
+      onSaved?.();
+      await client.refreshStatus().catch((error) => client.store.setError(`Settings were saved, but refreshing Ode stopped: ${errorMessage(error)}`));
+      if (!embedded && LiveDialog.hosted) finish(DialogResult.Done);
+      else setSaved(true);
     } catch (error) {
       setProblem(errorMessage(error));
     } finally {
@@ -229,15 +262,17 @@ export function SettingsView() {
 
   return (
     <form
-      className="settings"
+      className={`settings${embedded ? " settings--embedded" : ""}`}
+      aria-label={embedded ? "Settings" : undefined}
       onSubmit={(event) => {
         event.preventDefault();
         void save();
       }}
     >
-      <h1 className="settings__title">Settings</h1>
-      {!LiveDialog.hosted && <Button variant={ButtonVariant.Quiet} onClick={backToChat}>Back to chat</Button>}
+      {!embedded && <h1 className="settings__title">Settings</h1>}
+      {!embedded && !LiveDialog.hosted && <Button variant={ButtonVariant.Quiet} onClick={backToChat}>Back to chat</Button>}
 
+      <fieldset className="settings__fields" disabled={saving} aria-busy={saving} aria-label="Model and service settings">
       <label className="settings__field">
         <span className="settings__label">Provider</span>
         <Select value={provider} options={loaded.providers.map((each) => ({ value: each.id, label: each.name }))} onChange={chooseProvider} />
@@ -367,12 +402,13 @@ export function SettingsView() {
             </fieldset>
           );
         })}
+      </fieldset>
 
       {problem && <Notice tone={Tone.Danger}>{problem}</Notice>}
-      {saved && <Notice tone={Tone.Success}>Saved. Ode uses these settings from the next request.</Notice>}
+      {saved && !dirty && <Notice tone={Tone.Success}>Saved. Ode uses these settings from the next request.</Notice>}
 
       <div className="settings__actions">
-        <Button variant={ButtonVariant.Secondary} disabled={saving} onClick={() => finish(DialogResult.Cancelled)}>
+        <Button variant={ButtonVariant.Secondary} disabled={saving} onClick={cancel}>
           Cancel
         </Button>
         <Button type="submit" variant={ButtonVariant.Primary} disabled={saving || !provider || !model || needsKey}>

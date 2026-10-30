@@ -29,14 +29,11 @@ export class OdeClient {
   private readonly sending = new Set<AbortController>();
   private readonly pendingIds = new Map<string, string>();
   private readonly maxWindow: MaxWindowClient;
-  private readonly workspace: boolean;
   private leaveCheck: (() => boolean) | null = null;
 
   constructor(readonly layout: Layout) {
-    this.workspace = layout === Layout.Ask || layout === Layout.Lyrics;
-    this.store.setLyricsOpen(layout === Layout.Lyrics);
-    this.maxWindow = new MaxWindowClient(layout, () => this.flushWindow(), (message) => this.store.setError(message),
-      this.workspace ? (view) => this.showWorkspace(view) : undefined);
+    if (layout !== Layout.Ask) this.store.setSidebar(true, layout);
+    this.maxWindow = new MaxWindowClient(() => this.flushWindow(false), (message) => this.store.setError(message), (view) => this.showWorkspace(view));
     this.stream = new EventStream(API.events, {
       onEvent: (event) => this.receive(event),
       onState: (state) => this.store.setStream(state),
@@ -44,25 +41,20 @@ export class OdeClient {
     });
   }
 
-  /** Settings reads its own data; the other dialogs follow Ode's event stream. History first saves what changed in Live by hand. */
+  /** Every panel shares the chat's event stream and composer. */
   start(): void {
     this.maxWindow.start();
-    if (this.layout === Layout.Settings) return;
     this.stream.start();
-    if (this.workspace) window.addEventListener("pagehide", () => this.composer.pagehide());
-    if (this.layout === Layout.History) void this.checkVersions();
+    window.addEventListener("pagehide", () => this.composer.pagehide());
+    if (this.layout === Layout.History) void this.checkVersions().then(() => this.loadVersions());
   }
 
   /**
-   * Reads again what events may have missed: the status, lyrics and conversation in the workspace, or the history in History.
+   * Reads again the status, lyrics and conversation that events may have missed.
    * The server sends the conversation and anything waiting for the musician when the stream opens.
    */
   async refresh(): Promise<void> {
-    const reads = [this.refreshStatus()];
-    if (this.workspace) reads.push(this.lyrics.load(true));
-    if (this.layout === Layout.History) reads.push(this.loadVersions());
-    if (this.workspace) reads.push(this.loadConversation().then(() => this.loadVersions()));
-    await Promise.allSettled(reads);
+    await Promise.allSettled([this.refreshStatus(), this.lyrics.load(true), this.loadConversation().then(() => this.loadVersions())]);
   }
 
   songs(): Promise<SongsResponse> {
@@ -100,38 +92,38 @@ export class OdeClient {
   }
 
   async navigate(view: Layout): Promise<void> {
-    if (!await this.flushWindow()) return;
-    if (this.workspace && (view === Layout.Ask || view === Layout.Lyrics)) {
-      this.showWorkspace(view);
-      return;
-    }
-    const url = new URL(window.location.href);
-    url.searchParams.set("view", view);
-    url.searchParams.delete("odeWindowCommand");
-    window.location.assign(url.href);
+    if (await this.flushWindow(false)) this.showWorkspace(view);
   }
 
-  private showWorkspace(view: Layout.Ask | Layout.Lyrics): void {
-    const lyricsOpen = view === Layout.Lyrics;
-    const unchanged = this.store.getSnapshot().lyricsOpen === lyricsOpen;
-    this.store.setLyricsOpen(lyricsOpen);
+  async toggleSidebar(): Promise<void> {
+    const { sidebarOpen, sidebarView } = this.store.getSnapshot();
+    await this.navigate(sidebarOpen ? Layout.Ask : sidebarView);
+  }
+
+  private showWorkspace(view: Layout): void {
+    const previous = this.store.getSnapshot();
+    const sidebarOpen = view !== Layout.Ask;
+    const sidebarView = view === Layout.Ask ? previous.sidebarView : view;
+    const unchanged = previous.sidebarOpen === sidebarOpen && previous.sidebarView === sidebarView;
+    this.store.setSidebar(sidebarOpen, sidebarView);
     const url = new URL(window.location.href);
     url.searchParams.set("view", view);
     url.searchParams.delete("odeWindowCommand");
     window.history.replaceState(null, "", url.href);
-    if (lyricsOpen) void this.lyrics.load(true);
+    if (view === Layout.Lyrics) void this.lyrics.load(true);
+    if (view === Layout.History && !unchanged) void this.checkVersions().then(() => this.loadVersions());
     if (unchanged) this.maxWindow.ready();
   }
 
   /** A view change never abandons typing that arrived while the other editor was saving. */
-  private async flushWindow(): Promise<boolean> {
-    if (this.leaveCheck && !this.leaveCheck()) return false;
+  private async flushWindow(checkLeave = true): Promise<boolean> {
+    if (checkLeave && this.leaveCheck && !this.leaveCheck()) return false;
     const content = () => JSON.stringify([this.composer.getSnapshot().songId, this.composer.getSnapshot().draft, this.lyrics.getSnapshot().text]);
     for (let attempt = 0; attempt < 3; attempt++) {
       const before = content();
       const saved = await Promise.all([this.composer.flush(), this.lyrics.flush()]);
       if (saved.some((ok) => !ok)) return false;
-      if (content() === before) return this.leaveCheck?.() ?? true;
+      if (content() === before) return !checkLeave || (this.leaveCheck?.() ?? true);
     }
     this.store.setError("Your draft is still changing. Pause typing briefly before changing views.");
     return false;
@@ -337,7 +329,7 @@ export class OdeClient {
   private receive(event: UiEvent): void {
     if (event.type === "conversation" || event.type === "title") this.conversationRead += 1;
     this.store.apply(event);
-    if (event.type === "lyrics" && this.workspace) this.lyrics.receive(event.lyrics);
+    if (event.type === "lyrics") this.lyrics.receive(event.lyrics);
     // Another song is in use: its lyrics and history replace these.
     if (event.type === "title") void this.refresh();
   }
@@ -347,7 +339,7 @@ export class OdeClient {
     try {
       const conversation = await this.api.getConversation();
       if (read === this.conversationRead) this.store.setConversation(conversation.songId, conversation.exchanges);
-      if (read === this.conversationRead && this.workspace) await this.composer.open(conversation.songId, true);
+      if (read === this.conversationRead) await this.composer.open(conversation.songId, true);
     } catch (error) {
       if (read === this.conversationRead) this.store.setError(`Reading the conversation stopped: ${errorMessage(error)}`);
     }

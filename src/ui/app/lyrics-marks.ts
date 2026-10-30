@@ -59,6 +59,13 @@ export class LyricsMarks {
     this.publish(SupportStatus.Ready, "");
   }
 
+  /** A replaced model or closed editor must not start its waiting checks. */
+  dispose(): void {
+    for (const timer of this.timers.values()) window.clearTimeout(timer);
+    this.timers.clear();
+    this.listeners.clear();
+  }
+
   private async check(key: string, lines: string[]): Promise<void> {
     if (this.asking.has(key)) return;
     this.asking.add(key);

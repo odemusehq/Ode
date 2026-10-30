@@ -26,7 +26,7 @@ const SUPPORT_MESSAGES: Readonly<Record<SupportStatus.Setup | SupportStatus.Unre
 };
 
 /** The song's lyrics as sections that the musician and Ode both edit. */
-export function LyricsPanel() {
+export function LyricsPanel({ settingsRevision = 0 }: { settingsRevision?: number }) {
   const client = useClient();
   const { text, stored, saveError, loadError } = useLyrics();
   const titleId = useId();
@@ -38,7 +38,7 @@ export function LyricsPanel() {
         Lyrics
       </h2>
       {stored ? (
-        <LyricsEditor key={stored.songId} text={text} strictRhymes={strictRhymes ?? []} />
+        <LyricsEditor key={stored.songId} text={text} strictRhymes={strictRhymes ?? []} settingsRevision={settingsRevision} />
       ) : loadError ? (
         <ProblemLine message={loadError} onRetry={() => void client.lyrics.load()} />
       ) : (
@@ -51,6 +51,7 @@ export function LyricsPanel() {
 
 interface LyricsEditorProps {
   text: string;
+  settingsRevision: number;
   /** The names of the sections that ask for perfect rhymes. */
   strictRhymes: readonly string[];
 }
@@ -67,7 +68,7 @@ interface SectionIntent { section: string; index: number; names: (string | null)
  * The lyrics as section cards. Every change becomes the whole text again, labels included, so Ode reads and writes the
  * same text the musician sees; sections that share a name are linked copies and change together.
  */
-function LyricsEditor({ text, strictRhymes }: LyricsEditorProps) {
+function LyricsEditor({ text, strictRhymes, settingsRevision }: LyricsEditorProps) {
   const client = useClient();
   const sections = useMemo(() => LyricsSections.parse(text), [text]);
   const [renaming, setRenaming] = useState<number | null>(null);
@@ -76,7 +77,8 @@ function LyricsEditor({ text, strictRhymes }: LyricsEditorProps) {
   const [partners, setPartners] = useState<string | null>(null);
   const list = useRef<HTMLDivElement>(null);
   const indicator = useRef<HTMLDivElement>(null);
-  const marks = useMemo(() => new LyricsMarks(client.api), [client.api]);
+  const marks = useMemo(() => new LyricsMarks(client.api), [client.api, settingsRevision]);
+  useEffect(() => () => marks.dispose(), [marks]);
   const support = useSyncExternalStore(marks.subscribe, marks.getSnapshot);
   const [view, setView] = useState<LyricsView>(() => LyricsViewStore.load());
   const [retries, setRetries] = useState(0);

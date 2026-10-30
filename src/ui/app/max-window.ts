@@ -9,8 +9,8 @@ export class MaxWindowClient {
   private opening = false;
   private pending: string | null = null;
 
-  constructor(private readonly layout: Layout, private readonly save: () => Promise<boolean>, private readonly fail: (message: string) => void,
-    private readonly showWorkspace?: (view: Layout.Ask | Layout.Lyrics) => void) {}
+  constructor(private readonly save: () => Promise<boolean>, private readonly fail: (message: string) => void,
+    private readonly showWorkspace: (view: Layout) => void) {}
 
   start(): void {
     LiveDialog.max?.bindInlet("ode_open", (view, url, id) => { void this.open(view, url, id); });
@@ -39,16 +39,9 @@ export class MaxWindowClient {
       if (url.origin !== current.origin || url.protocol !== "http:" || url.pathname !== "/" || url.username || url.password || url.searchParams.get("view") !== view) {
         throw new Error("Unsupported Ode view address.");
       }
-      if (this.showWorkspace && (view === Layout.Ask || view === Layout.Lyrics)) {
-        if (!await this.save()) { failed("Your draft could not be saved. Resolve the save notice before changing views."); return; }
-        this.pending = id;
-        this.showWorkspace(view);
-        return;
-      }
-      if (view === this.layout) { LiveDialog.max?.outlet("ode_opened", id); return; }
       if (!await this.save()) { failed("Your draft could not be saved. Resolve the save notice before changing views."); return; }
-      url.searchParams.set(COMMAND, id);
-      window.location.assign(url.href);
+      this.pending = id;
+      this.showWorkspace(view as Layout);
     } catch {
       this.pending = null;
       failed("Ode could not change views. Your current window stayed open.");

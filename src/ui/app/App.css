@@ -186,9 +186,17 @@
 }
 
 
-/* The chat keeps its own header and width while the document extends to its right. */
-.app--workspace { flex-direction: row; overflow-x: auto; }
-.app-chat { display: flex; flex: none; flex-direction: column; width: var(--chat-width); min-width: 0; min-height: 0; }
-.app-lyrics { display: flex; flex: 1; min-width: 420px; min-height: 0; border-left: var(--border-width) solid var(--color-border); }
-.app-lyrics[hidden] { display: none; }
-.app-header__nav .ode-button[aria-pressed="true"] { background: var(--color-accent-tint); color: var(--color-accent); }
+/* The frame and toolbar stay still; the optional dock opens inside the body. */
+.app-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 0px; flex: 1; min-height: 0; overflow: hidden; transition: grid-template-columns var(--motion-fast) ease; }
+.app--drawer-open .app-workspace { grid-template-columns: minmax(0, 1fr) min(56%, 640px); }
+.app-chat { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; background: var(--color-surface); }
+.app-chat > .app-footer__credit { flex: none; padding: var(--space-2) var(--space-5); }
+.app-header { flex-wrap: nowrap; }
+.app-header__sidebar[aria-expanded="true"] { background: var(--color-accent-tint); color: var(--color-accent); }
+.workspace-sidebar { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; border-left: var(--border-width) solid var(--color-border); background: var(--color-bg); visibility: hidden; opacity: 0; transform: translateX(12px); transition: transform var(--motion-fast) ease, opacity var(--motion-fast) ease, visibility 0s var(--motion-fast); }
+.app--drawer-open .workspace-sidebar { visibility: visible; opacity: 1; transform: translateX(0); transition-delay: 0s; }
+.sidebar-tabs { display: flex; flex: none; align-items: stretch; min-height: var(--header-height); padding-inline: var(--space-3); border-bottom: var(--border-width) solid var(--color-border); gap: var(--space-2); }
+.sidebar-tabs .ode-button { flex: 1; min-width: 0; padding-inline: var(--space-3); border-radius: 0; border-bottom: 2px solid transparent; color: var(--color-text-muted); }
+.sidebar-tabs .ode-button[aria-selected="true"] { color: var(--color-text); border-bottom-color: var(--color-accent); background: var(--color-accent-tint); }
+.workspace-panel { display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
+.workspace-panel[hidden] { display: none; }

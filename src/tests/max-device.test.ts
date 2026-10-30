@@ -49,53 +49,8 @@ test("the window subpatcher exposes a native inlet for its pcontrol connection",
   const window = objects.find((box: Record<string, any>) => box.id === connection.destination[0]);
   const nativeInlets = window.patcher.boxes.filter(({ box }: { box: Record<string, unknown> }) => box.maxclass === "inlet" || box.text === "inlet");
   assert.ok(nativeInlets.length > connection.destination[1], "Max deletes pcontrol's patchcord when the child has no native inlet");
-});
-
-test("opening lyrics widens the existing window once and closing restores chat width at its current height", async () => {
-  const { MaxDevice } = await import("../live/max/device");
-  const { patcher } = JSON.parse((await MaxDevice.build()).subarray(32, -1).toString());
-  const code = patcher.boxes.find(({ box }: { box: Record<string, unknown> }) => box.maxclass === "v8.codebox").box.code;
-  let rect = [180, 100, 620, 840];
-  const messages: unknown[][] = [];
-  const browser = { rect: [0, 0, 440, 740], message() {} };
-  const control = { message(...args: unknown[]) {
-    messages.push(args);
-    if (args[0] === "window" && args[1] === "size") rect = args.slice(2).map(Number);
-  } };
-  const child = {
-    wind: { visible: true, get location() { return rect.slice(); }, get size() { return [rect[2]! - rect[0]!, rect[3]! - rect[1]!]; } },
-    getnamed: (name: string) => name === "odeBrowser" ? browser : control,
-  };
-  const context = createContext({ patcher: { getnamed: () => ({ subpatcher: () => child }) } });
-  new Script(code).runInContext(context);
-  context.ode_layout("ask");
-  assert.equal(messages.length, 0, "The initial chat mount must preserve the user's window");
-  context.ode_layout("lyrics");
-  assert.deepEqual(rect.slice(0, 2), [180, 100]);
-  assert.ok(rect[2]! - rect[0]! >= 1000, "The right editor needs room beside the existing chat");
-  assert.equal(rect[3], 840);
-  assert.deepEqual(Array.from(browser.rect), [0, 0, rect[2]! - rect[0]!, 740]);
-  const expanded = rect.slice();
-  context.ode_layout("lyrics");
-  assert.deepEqual(rect, expanded, "Duplicate pane signals must not keep enlarging the window");
-  rect = [210, 80, 1410, 980]; // The musician moves and resizes the expanded window.
-  context.ode_layout("lyrics");
-  assert.deepEqual(rect, [210, 80, 1410, 980]);
-  context.ode_layout("ask");
-  assert.deepEqual(rect, [210, 80, 650, 980], "Closing lyrics restores only the remembered chat width");
-  const count = messages.length;
-  context.ode_layout("settings");
-  context.ode_layout("ask");
-  assert.equal(messages.length, count, "Unsupported or duplicate signals must not change native geometry");
-  context.ode_layout("lyrics", 0, 24, 1024, 700);
-  assert.deepEqual(rect, [0, 24, 1024, 724], "Expansion must fit the current display's available rectangle");
-  context.ode_layout("ask", 0, 24, 1024, 700);
-  assert.deepEqual(rect, [0, 24, 440, 724]);
-  context.ode_layout("lyrics", Number.NaN, 0, 1024, 700);
-  assert.equal(rect[0], 0, "Invalid screen bounds must use the position-preserving fallback");
-  assert.equal(rect[1], 24);
-  assert.equal(rect[3], 724);
-  assert.ok(rect[2]! <= 1240);
+  assert.deepEqual(window.patcher.rect.slice(2), [1080, 740], "The workspace starts with room for chat and its docked sidebar");
+  assert.deepEqual(window.patcher.boxes.find(({ box }: { box: Record<string, unknown> }) => box.varname === "odeBrowser").box.presentation_rect, [0, 0, 1080, 740]);
 });
 
 test("embedded Max client consumes bootstrap once and waits for page readiness before acknowledging open", async () => {
@@ -135,8 +90,8 @@ test("embedded Max client consumes bootstrap once and waits for page readiness b
     cancel() {}
     freepeer() { this.freed = true; }
   }
-  const browser = { rect: [0, 0, 440, 740], message: (...args: unknown[]) => page.push(args) };
-  const child = { wind: { visible: true, size: [440, 740] }, getnamed: (name: string) => name === "odeBrowser" ? browser : { message: (...args: unknown[]) => window.push(args) } };
+  const browser = { rect: [0, 0, 1080, 740], message: (...args: unknown[]) => page.push(args) };
+  const child = { wind: { visible: true, size: [1080, 740] }, getnamed: (name: string) => name === "odeBrowser" ? browser : { message: (...args: unknown[]) => window.push(args) } };
   const context = createContext({
     Task, XMLHttpRequest: FakeRequest,
     patcher: { getnamed: (name: string) => name === "odeWindow" ? { subpatcher: () => child } : { getvalueof: () => values.get(name), message: (...args: unknown[]) => { if (name === "odeStatus") statuses.push(String(args[1])); } } },
@@ -163,7 +118,7 @@ test("embedded Max client consumes bootstrap once and waits for page readiness b
   assert.equal(page[0]?.[0], "read");
   const firstPage = new URL(String(page[0]?.[1]));
   assert.equal(firstPage.searchParams.get("odeWindowCommand"), "first");
-  assert.equal(firstPage.searchParams.get("odeChatWidth"), "760", "A new page must know its original native chat width");
+  assert.equal(firstPage.searchParams.has("odeChatWidth"), false, "The workspace must not depend on an automatic native width protocol");
   assert.equal(requests.length, 2, "Reading a page is not evidence it became ready");
   context.tick();
   requests[2]!.reply({ command: { id: "queued", view: "lyrics", url: url.replace("view=ask", "view=lyrics") } });
@@ -180,6 +135,7 @@ test("embedded Max client consumes bootstrap once and waits for page readiness b
   requests[5]!.reply({ command: { id: "second", view: "lyrics", url: url.replace("view=ask", "view=lyrics") } });
   assert.equal(page[1]?.[0], "ode_open", "An existing page must save its drafts before navigating");
   assert.deepEqual(page[1]?.slice(1), ["lyrics", url.replace("view=ask", "view=lyrics"), "second"]);
+  assert.equal(window.some((message) => message[0] === "window" && message[1] === "size"), false, "Opening a sidebar view must leave the native frame unchanged");
   const focused = window.filter((message) => message[0] === "front").length;
   context.ode_open_failed("second", "Save the open draft before switching views.");
   assert.equal(window.filter((message) => message[0] === "front").length, focused + 1, "A failed view change must reveal the existing page's save notice");
@@ -201,11 +157,7 @@ test("embedded Max client consumes bootstrap once and waits for page readiness b
   assert.equal(statuses.at(-1), failure, "A failed bootstrap must retain its actionable notice between polls");
   context.open_ode();
   assert.equal(requests[9]?.url, "http://127.0.0.1:43123/max-window/connect", "Open Ode retries the failed bootstrap");
-  context.chatWidth = 440;
-  child.wind.size = [1080, 680];
   requests[9]!.reply({ session: "c".repeat(48), url: replacementUrl });
-  const reopenedPage = new URL(String(page.findLast((message) => message[0] === "read")?.[1]));
-  assert.equal(reopenedPage.searchParams.get("odeChatWidth"), "440", "A replacement page must retain the original chat width when the native window is expanded");
   context.tick();
   assert.deepEqual(requests[10]?.body, { session: "c".repeat(48) });
   context.stop();
