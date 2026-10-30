@@ -12,6 +12,7 @@ import {
 } from "@ableton-extensions/sdk";
 import type { ClipInfo, ClipSlotInfo, ParameterInfo, TakeLaneInfo } from "../../../shared/live-ops";
 import type { ChainSnapshot, DeviceSnapshot, TrackSnapshot } from "../../../shared/set-snapshot";
+import { isMaxWindowParameter } from "../../../shared/max-window";
 import { Describer } from "../describe";
 import { UnreadableError } from "../errors";
 import { Labels } from "../labels";
@@ -163,6 +164,7 @@ export class SnapshotOperations extends OperationGroup<SnapshotOp> {
   /** A parameter whose value Live withholds keeps its other details. */
   private async parameter(parameter: DeviceParameter<Version>, index: number, device: string): Promise<ParameterInfo> {
     const info = UnreadableError.guard(`parameter ${index + 1} of ${device}`, () => this.describe.parameterDetails(parameter, index));
+    if (isMaxWindowParameter(parameter.name)) return info;
     const value = await parameter.getValue().catch(() => undefined);
     if (value !== undefined) info.value = value;
     return info;

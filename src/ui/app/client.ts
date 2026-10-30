@@ -10,6 +10,7 @@ import type { Decision } from "./model";
 import { SharedLyrics } from "./shared-lyrics";
 import { Store } from "./state";
 import { Composer } from "./composer";
+import { MaxWindowClient } from "./max-window";
 import type { AudioScope } from "./api";
 
 /** Ode as the UI sees it: the server's API, its event stream and the state they feed. */
@@ -27,8 +28,11 @@ export class OdeClient {
   private sendEpoch = 0;
   private readonly sending = new Set<AbortController>();
   private readonly pendingIds = new Map<string, string>();
+  private readonly maxWindow: MaxWindowClient;
+  private leaveCheck: (() => boolean) | null = null;
 
   constructor(readonly layout: Layout) {
+    this.maxWindow = new MaxWindowClient(layout, () => this.flushWindow(), (message) => this.store.setError(message));
     this.stream = new EventStream(API.events, {
       onEvent: (event) => this.receive(event),
       onState: (state) => this.store.setStream(state),
@@ -38,6 +42,7 @@ export class OdeClient {
 
   /** Settings reads its own data; the other dialogs follow Ode's event stream. History first saves what changed in Live by hand. */
   start(): void {
+    this.maxWindow.start();
     if (this.layout === Layout.Settings) return;
     this.stream.start();
     if (this.layout === Layout.Ask) window.addEventListener("pagehide", () => this.composer.pagehide());
@@ -78,9 +83,38 @@ export class OdeClient {
 
   /** Saves the lyrics waiting to be saved, then closes the dialog back to Live; a failed save keeps it open, with the reason on the panel. */
   async close(): Promise<void> {
-    if (!await this.composer.flush()) return;
-    if (!await this.lyrics.flush()) return;
+    if (!await this.flushWindow()) return;
     LiveDialog.close(DialogResult.Done);
+  }
+
+  windowReady(): void { this.maxWindow.ready(); }
+
+  /** A form with explicit Save/Cancel owns whether navigation may discard its current inputs. */
+  beforeLeave(check: () => boolean): () => void {
+    this.leaveCheck = check;
+    return () => { if (this.leaveCheck === check) this.leaveCheck = null; };
+  }
+
+  async navigate(view: Layout): Promise<void> {
+    if (!await this.flushWindow()) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("view", view);
+    url.searchParams.delete("odeWindowCommand");
+    window.location.assign(url.href);
+  }
+
+  /** A view change never abandons typing that arrived while the other editor was saving. */
+  private async flushWindow(): Promise<boolean> {
+    if (this.leaveCheck && !this.leaveCheck()) return false;
+    const content = () => JSON.stringify([this.composer.getSnapshot().songId, this.composer.getSnapshot().draft, this.lyrics.getSnapshot().text]);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const before = content();
+      const saved = await Promise.all([this.composer.flush(), this.lyrics.flush()]);
+      if (saved.some((ok) => !ok)) return false;
+      if (content() === before) return this.leaveCheck?.() ?? true;
+    }
+    this.store.setError("Your draft is still changing. Pause typing briefly before changing views.");
+    return false;
   }
 
   async refreshStatus(): Promise<void> {

@@ -34,6 +34,7 @@ import type {
   TrackSummary,
 } from "../../shared/live-ops";
 import type { LiveSet } from "./live-set";
+import { isMaxWindowParameter } from "../../shared/max-window";
 import { ClipPlace, clipReference, type ClipLocation } from "./locations";
 import { fromLiveNotes } from "./notes";
 import { parametersOf, type ParameterSource } from "./refs";
@@ -204,7 +205,7 @@ export class Describer {
 
   async parameter(parameter: DeviceParameter<Version>, index: number, withValue: boolean): Promise<ParameterInfo> {
     const info = this.parameterDetails(parameter, index);
-    if (withValue) info.value = await parameter.getValue();
+    if (withValue && !isMaxWindowParameter(parameter.name)) info.value = await parameter.getValue();
     return info;
   }
 
@@ -216,7 +217,7 @@ export class Describer {
       min: parameter.min,
       max: parameter.max,
       isQuantized: parameter.isQuantized,
-      defaultValue: parameter.defaultValue,
+      defaultValue: isMaxWindowParameter(parameter.name) ? 0 : parameter.defaultValue,
       valueItems: parameter.valueItems.map((item) => item.name),
     };
   }

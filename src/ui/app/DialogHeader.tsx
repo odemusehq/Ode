@@ -14,10 +14,7 @@ export interface DialogHeaderProps {
 export function DialogHeader({ withMode = false }: DialogHeaderProps) {
   const client = useClient();
   const navigate = async (view: Layout) => {
-    if (!await client.lyrics.flush()) return;
-    const url = new URL(window.location.href);
-    url.searchParams.set("view", view);
-    window.location.assign(url.href);
+    await client.navigate(view);
   };
   return (
     <header className="app-header">

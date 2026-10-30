@@ -35,6 +35,7 @@ const ARRANGEMENT_SCOPES = ["AudioTrack.ArrangementSelection", "MidiTrack.Arrang
 const DIALOG_SCOPES = ["MidiTrack", "AudioTrack", "Scene"] as const satisfies readonly Scope[];
 
 enum CommandId {
+  Open = "ode.open",
   AskOde = "ode.askOde",
   Lyrics = "ode.lyrics",
   History = "ode.history",
@@ -42,6 +43,7 @@ enum CommandId {
 }
 
 enum MenuTitle {
+  Open = "Open Ode",
   AskOde = "Ask Ode",
   Lyrics = "Ode: Lyrics",
   History = "Ode: History",
@@ -58,6 +60,7 @@ export class ContextMenu {
   ) {}
 
   register(): void {
+    this.addDialog(CommandId.Open, MenuTitle.Open, DialogView.Ask);
     for (const scope of OBJECT_SCOPES) this.addAskOde(scope, (arg) => this.pointers.fromObject(scope, arg as Handle));
     this.addAskOde("ClipSlotSelection", (arg) => this.pointers.fromClipSlots("ClipSlotSelection", arg as ClipSlotSelection));
     for (const scope of ARRANGEMENT_SCOPES) {

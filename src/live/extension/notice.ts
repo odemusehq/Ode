@@ -7,10 +7,10 @@ import type { Version } from "./sdk";
 export class Notice {
   constructor(private readonly ui: Ui<Version>) {}
 
-  async show(title: string, message: string, url?: string): Promise<void> {
+  async show(title: string, message: string, url?: string, height: number = OdeConfig.notice.height): Promise<void> {
     try {
       const page = `data:text/html,${encodeURIComponent(Notice.page(title, message, url))}`;
-      await this.ui.showModalDialog(page, OdeConfig.notice.width, OdeConfig.notice.height);
+      await this.ui.showModalDialog(page, OdeConfig.notice.width, height);
     } catch (error) {
       console.error(`Showing "${title}" failed: ${describeError(error)}`);
     }
@@ -26,7 +26,7 @@ export class Notice {
   body { margin: 0; height: 100vh; box-sizing: border-box; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px;
          background: #2f2f2f; color: #e6e6e6; font: 13px/1.45 -apple-system, "Segoe UI", sans-serif; }
   h1 { margin: 0; font-size: 14px; font-weight: 600; }
-  p { margin: 0; flex: 1; color: #cfcfcf; }
+  p { margin: 0; flex: 1; min-height: 0; overflow: auto; white-space: pre-line; color: #cfcfcf; }
   input { width: 100%; box-sizing: border-box; color: #e6e6e6; background: #222; border: 1px solid #777; padding: 6px; }
   button { align-self: flex-end; min-width: 80px; padding: 5px 14px; border: 0; border-radius: 3px;
            background: #f2b233; color: #1c1c1c; font: inherit; cursor: pointer; }

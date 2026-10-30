@@ -7,7 +7,7 @@ import { OdeApp } from "../../server/app";
 import { OdeConfig, type DialogView } from "../../shared/config";
 import type { LivePointer } from "../../shared/live";
 import { Describer } from "./describe";
-import { BrowserWindow } from "./browser-window";
+import { MaxWindow, MaxWindowMissingError } from "./max-window";
 import { describeError } from "./errors";
 import { InProcessLive } from "./in-process-live";
 import { LiveSet } from "./live-set";
@@ -19,9 +19,10 @@ import { PointerBuilder } from "./pointer";
 import { ReferenceResolver } from "./refs";
 import { API_VERSION, type Live } from "./sdk";
 
-/** Ode runs in the extension process; its nonmodal chat page opens in the musician's browser. */
+/** Ode runs in the extension process; its Max device hosts the floating chat window. */
 class OdeExtension implements DialogHost {
   private app: OdeApp | null = null;
+  private window: MaxWindow | null = null;
 
   constructor(private readonly live: Live) {}
 
@@ -38,6 +39,8 @@ class OdeExtension implements DialogHost {
       const app = new OdeApp(new OdeConfig(storageDirectory, tempDirectory), new InProcessLive(operations), new BundledTexts(texts), ui);
       await app.start();
       this.app = app;
+      this.window = new MaxWindow(this.live, app.maxWindow, app.windowPort);
+      this.window.start();
     } catch (error) {
       console.error(`Ode stopped while starting: ${describeError(error)}`);
       await notice.show("Ode stopped while starting", `${describeError(error)}. Restart Live to try again.`);
@@ -51,10 +54,15 @@ class OdeExtension implements DialogHost {
   }
 
   async open(view: DialogView): Promise<void> {
-    if (!this.app) return;
-    const url = this.app.dialogUrl(view);
-    if (await BrowserWindow.open(url).catch(() => false)) return;
-    await new Notice(this.live.ui).show("Open Ode in your browser", "Copy this address into your browser, then close this notice. Keep the chat open while working in Live.", url);
+    if (!this.app || !this.window) return;
+    try { await this.window.open(view); }
+    catch (error) {
+      const missing = error instanceof MaxWindowMissingError && error.reason === "missing";
+      const message = missing
+        ? "First load the Ode device in this Set:\n\n1. Download Ode.amxd from the same Ode release as the extension.\n2. Drag Ode.amxd onto an audio track or the Main track in Live.\n3. Click Open Ode on the device.\n\nYou only need one Ode device per Set. Max for Live must be available in your Live edition."
+        : error instanceof MaxWindowMissingError ? error.message : "The Ode window could not open. Click Open Ode on the Max device, then try again.";
+      await new Notice(this.live.ui).show(missing ? "Load the Ode device first" : "Ode's window stayed closed", message, undefined, 300);
+    }
   }
 }
 

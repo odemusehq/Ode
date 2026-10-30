@@ -40,6 +40,7 @@ import { SongSwitcher } from "./song-switcher";
 import { SongTitle } from "./song-title";
 import { VersionActions } from "./version-actions";
 import { VersionRecorder } from "./version-recorder";
+import { MaxWindowBridge } from "./max-window";
 
 /** Builds every part of Ode inside the extension and connects them. */
 export class OdeApp {
@@ -67,6 +68,7 @@ export class OdeApp {
   readonly sessions: SessionManager;
   readonly songs: SongSwitcher;
   readonly versionActions: VersionActions;
+  readonly maxWindow: MaxWindowBridge;
   private readonly server: OdeServer;
   /** The song title the dialogs were last sent. */
   private title = "";
@@ -177,6 +179,7 @@ export class OdeApp {
       sessions: this.sessions,
       emit,
     });
+    this.maxWindow = new MaxWindowBridge((view) => this.server.url(view));
     this.server = new OdeServer({
       config,
       bus: this.bus,
@@ -195,6 +198,7 @@ export class OdeApp {
       sessions: this.sessions,
       versions: this.versionActions,
       ui,
+      maxWindow: this.maxWindow,
     });
   }
 
@@ -202,10 +206,10 @@ export class OdeApp {
   async start(): Promise<void> {
     await this.songs.openLast();
     await this.server.start();
-    // The address carries this session's token for the development tools (ODE_DEV_SERVER); the server's Host and
-    // Origin checks keep every other page out.
-    console.log(`Ode is ready at ${this.server.url(DialogView.Ask)}`);
+    console.log("Ode is ready.");
   }
+
+  get windowPort(): number { return this.server.listeningPort; }
 
   /** The address a dialog opens: one of Ode's views on the local server, with this session's token. */
   dialogUrl(view: DialogView): string {

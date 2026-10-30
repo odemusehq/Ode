@@ -10,6 +10,8 @@ import { Hono, type Context } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
+import { MAX_WINDOW } from "../shared/max-window";
+import { MaxWindowError, type MaxWindowBridge } from "./max-window";
 import { API, type SongsResponse, type StatusResponse } from "../shared/api";
 import type { UiEvent } from "../shared/events";
 import type { DialogView, OdeConfig } from "../shared/config";
@@ -62,6 +64,7 @@ export interface ServerDeps {
   sessions: SessionManager;
   versions: VersionActions;
   ui: UiFiles;
+  maxWindow?: MaxWindowBridge;
 }
 
 const TextSchema = z.object({ text: z.string().trim().min(1), requestId: z.uuid().optional(), songId: z.string().min(1).optional() });
@@ -76,6 +79,10 @@ const VersionRequestSchema = z.object({ versionId: z.string().min(1) });
 const SongOpenSchema = z.object({ id: z.string().min(1) });
 const SongCreateSchema = z.object({ title: z.string() });
 const RestoreRequestSchema = z.object({ confirmed: z.literal(true) });
+const MaxConnectSchema = z.object({ capability: z.string().regex(/^[a-f0-9]{32}$/) }).strict();
+const MaxPollSchema = z.object({ session: z.string().regex(/^[a-f0-9]{48}$/) }).strict();
+const MaxAckSchema = z.object({ session: z.string().regex(/^[a-f0-9]{48}$/), id: z.uuid(), status: z.enum(["ready", "error"]), error: z.string().max(MAX_WINDOW.errorMaxChars).optional() }).strict();
+const MAX_WINDOW_PATHS: ReadonlySet<string> = new Set(Object.values(MAX_WINDOW.api));
 
 const SEND_VERSION_ID = "Send { versionId } with the id of the change by Ode.";
 
@@ -151,6 +158,7 @@ export class OdeServer {
     this.app.onError((error, c) => c.json({ error: OdeServer.messageOf(error) }, 500));
     this.app.use("*", (c, next) => this.guard(c, next));
     this.app.use("*", (c, next) => this.authorize(c, next));
+    this.routeMaxWindow();
     this.routeApi();
     this.routeSongs();
     this.routeVersions();
@@ -167,6 +175,10 @@ export class OdeServer {
   /** A dialog's address: the view on this server, with the token that lets it in. Live's dialogs load http://localhost. */
   url(view: DialogView): string {
     return `http://localhost:${this.port}/?view=${view}&token=${this.token}`;
+  }
+
+  get listeningPort(): number {
+    return this.port;
   }
 
   /**
@@ -189,7 +201,7 @@ export class OdeServer {
     }
     // Dictation has no song writes. Its captured song id and final check permit switching while ASR runs.
     const composerWrite = COMPOSER_WRITES.has(c.req.path);
-    if (!READS.has(c.req.method) && c.req.path !== API.stop && c.req.path !== API.dictation && c.req.path !== API.audioImport && !composerWrite) {
+    if (!READS.has(c.req.method) && c.req.path !== API.stop && c.req.path !== API.dictation && c.req.path !== API.audioImport && !composerWrite && !MAX_WINDOW_PATHS.has(c.req.path)) {
       const switchesSong = c.req.method === "POST" && (c.req.path === API.songs || c.req.path === API.songsOpen);
       if (this.switchingRequest || this.deps.songs.isSwitching || (switchesSong && this.modifyingRequests > 0)) {
         return c.json({ error: "Ode is switching songs, or a request is still arriving. Wait for it to finish, then try again." }, 409);
@@ -209,6 +221,11 @@ export class OdeServer {
 
   /** Lets in requests that carry the token, in the address (a dialog's first request) or in the cookie it then gets. */
   private async authorize(c: Context, next: () => Promise<void>) {
+    // These exact transport routes check their own one-time bootstrap or private Max session below.
+    if (MAX_WINDOW_PATHS.has(c.req.path)) {
+      if (c.req.method !== "POST") return c.json({ error: "Use POST for Ode's Max window connection." }, 405);
+      return next();
+    }
     if (this.carriesToken(c.req.query("token"))) {
       setCookie(c, TOKEN_COOKIE, this.token, { httpOnly: true, sameSite: "Strict", path: "/" });
       return next();
@@ -221,6 +238,35 @@ export class OdeServer {
   private carriesToken(value: string | undefined): boolean {
     if (value === undefined || value.length !== this.token.length) return false;
     return timingSafeEqual(Buffer.from(value), Buffer.from(this.token));
+  }
+
+  /** Max transports window commands; its credential never authorizes the musical API or the UI itself. */
+  private routeMaxWindow(): void {
+    const limit = bodyLimit({ maxSize: 2_048 });
+    const respond = (c: Context, work: (bridge: MaxWindowBridge) => object) => {
+      c.header("Cache-Control", "no-store");
+      if (!this.deps.maxWindow) return c.json({ error: "Ode's Max window connection is unavailable." }, 503);
+      try { return c.json(work(this.deps.maxWindow)); }
+      catch (error) {
+        if (error instanceof MaxWindowError) return c.json({ error: error.message }, error.status);
+        throw error;
+      }
+    };
+    this.app.post(MAX_WINDOW.api.connect, limit, async (c) => {
+      const parsed = MaxConnectSchema.safeParse(await OdeServer.body(c));
+      if (!parsed.success) return c.json({ error: "Send the Max device's connection capability." }, 403);
+      return respond(c, (bridge) => bridge.connect(parsed.data.capability));
+    });
+    this.app.post(MAX_WINDOW.api.poll, limit, async (c) => {
+      const parsed = MaxPollSchema.safeParse(await OdeServer.body(c));
+      if (!parsed.success) return c.json({ error: "Send the Max device's private session." }, 403);
+      return respond(c, (bridge) => bridge.poll(parsed.data.session));
+    });
+    this.app.post(MAX_WINDOW.api.ack, limit, async (c) => {
+      const parsed = MaxAckSchema.safeParse(await OdeServer.body(c));
+      if (!parsed.success) return c.json({ error: "Send the Max window's command acknowledgement." }, 400);
+      return respond(c, (bridge) => { bridge.acknowledge(parsed.data); return { ok: true }; });
+    });
   }
 
   /** The songs the musician works on with Ode, and moving between them. */

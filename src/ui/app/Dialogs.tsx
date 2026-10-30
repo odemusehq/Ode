@@ -64,7 +64,7 @@ function DialogFooter({ showsErrors = false }: { showsErrors?: boolean }) {
       {showsErrors && error && <Notice tone={Tone.Danger}>{error}</Notice>}
       {credit && <p className="app-footer__credit">{credit}</p>}
       {LiveDialog.hosted && (
-        <Button variant={ButtonVariant.Secondary} disabled={busy} onClick={() => void client.close()}>
+        <Button variant={ButtonVariant.Secondary} disabled={busy && LiveDialog.modal} onClick={() => void client.close()}>
           Close
         </Button>
       )}

@@ -1,4 +1,5 @@
 import type { DeviceParameter } from "@ableton-extensions/sdk";
+import { isMaxWindowParameter } from "../../../shared/max-window";
 import { LiveError } from "../errors";
 import type { Version } from "../sdk";
 import { OperationGroup } from "./group";
@@ -24,11 +25,13 @@ export class DeviceOperations extends OperationGroup<DeviceOp> {
 
   private getParameter({ parameter }: OpArgs<"parameter_get">): OpRun<"parameter_get"> {
     const found = this.refs.parameter(parameter);
+    DeviceOperations.allowParameter(found.parameter);
     return async () => this.describe.parameter(found.parameter, found.index, true);
   }
 
   private setParameter({ parameter, value }: OpArgs<"parameter_set">): OpRun<"parameter_set"> {
     const found = this.refs.parameter(parameter);
+    DeviceOperations.allowParameter(found.parameter);
     const fitted = DeviceOperations.fit(found.parameter, value);
     return async () => {
       await LiveError.guard(found.parameter.setValue(fitted), `set ${found.parameter.name}`);
@@ -39,6 +42,10 @@ export class DeviceOperations extends OperationGroup<DeviceOp> {
   private getMixer({ track }: OpArgs<"mixer_get">): OpRun<"mixer_get"> {
     const target = this.refs.track(track);
     return async () => this.describe.mixer(target.mixer);
+  }
+
+  private static allowParameter(parameter: DeviceParameter<Version>): void {
+    if (isMaxWindowParameter(parameter.name)) throw new LiveError("Ode's window connection is managed by Live and cannot be read or changed as a device parameter.");
   }
 
   /** Keeps the value within the parameter's range; a quantized parameter takes an index into its value items. */

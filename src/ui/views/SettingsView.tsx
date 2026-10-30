@@ -11,6 +11,7 @@ import { errorMessage } from "../app/api";
 import { UI_CONFIG } from "../app/config";
 import { DialogResult, LiveDialog } from "../app/dialog";
 import { useClient } from "../app/hooks";
+import { Layout } from "../app/layout";
 import "./SettingsView.css";
 
 const SERVICE_LABELS: Record<OptionalRole, string> = {
@@ -53,7 +54,8 @@ function draftsFrom(response: SettingsResponse): ServiceDrafts {
 
 /** Ode: Settings. The chat provider, its model and key, a Meta key for Meta's own models, and optional services. */
 export function SettingsView() {
-  const { api } = useClient();
+  const client = useClient();
+  const { api } = client;
   const [loaded, setLoaded] = useState<SettingsResponse | null>(null);
   const [provider, setProvider] = useState("");
   const [model, setModel] = useState("");
@@ -68,11 +70,25 @@ export function SettingsView() {
   const [problem, setProblem] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const backToChat = () => {
+  const finish = (result: DialogResult) => {
+    if (LiveDialog.modal) { LiveDialog.close(result); return; }
     const url = new URL(window.location.href);
     url.searchParams.set("view", "ask");
+    url.searchParams.delete("odeWindowCommand");
     window.location.assign(url.href);
   };
+  const backToChat = () => { void client.navigate(Layout.Ask); };
+
+  const dirty = Boolean(loaded && services && (
+    provider !== loaded.settings.provider || model !== loaded.settings.model || key || metaKey || lyricsKey ||
+    lyricsProvider !== loaded.settings.lyrics.provider || lyricsModel !== loaded.settings.lyrics.model ||
+    JSON.stringify(services) !== JSON.stringify(draftsFrom(loaded))
+  ));
+  useEffect(() => client.beforeLeave(() => {
+    if (!saving && !dirty) return true;
+    setProblem(saving ? "Wait for Settings to finish saving." : "Save your settings or choose Cancel before changing views.");
+    return false;
+  }), [client, dirty, saving]);
 
   useEffect(() => {
     api.getSettings().then(
@@ -126,7 +142,7 @@ export function SettingsView() {
         {problem ? <Notice tone={Tone.Danger}>{problem}</Notice> : "Reading Settings…"}
         {LiveDialog.hosted && (
           <div className="settings__actions">
-            <Button variant={ButtonVariant.Secondary} onClick={() => LiveDialog.close(DialogResult.Cancelled)}>
+            <Button variant={ButtonVariant.Secondary} onClick={() => finish(DialogResult.Cancelled)}>
               Cancel
             </Button>
           </div>
@@ -193,9 +209,17 @@ export function SettingsView() {
       ),
     };
     try {
-      await api.saveSettings(update);
-      if (LiveDialog.hosted) LiveDialog.close(DialogResult.Done);
-      else setSaved(true);
+      const settings = await api.saveSettings(update);
+      if (LiveDialog.hosted) finish(DialogResult.Done);
+      else {
+        const response = { ...loaded, settings };
+        setLoaded(response);
+        setKey("");
+        setMetaKey("");
+        setLyricsKey("");
+        setServices(draftsFrom(response));
+        setSaved(true);
+      }
     } catch (error) {
       setProblem(errorMessage(error));
     } finally {
@@ -348,11 +372,9 @@ export function SettingsView() {
       {saved && <Notice tone={Tone.Success}>Saved. Ode uses these settings from the next request.</Notice>}
 
       <div className="settings__actions">
-        {LiveDialog.hosted && (
-          <Button variant={ButtonVariant.Secondary} onClick={() => LiveDialog.close(DialogResult.Cancelled)}>
-            Cancel
-          </Button>
-        )}
+        <Button variant={ButtonVariant.Secondary} disabled={saving} onClick={() => finish(DialogResult.Cancelled)}>
+          Cancel
+        </Button>
         <Button type="submit" variant={ButtonVariant.Primary} disabled={saving || !provider || !model || needsKey}>
           Save
         </Button>

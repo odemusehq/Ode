@@ -20,12 +20,13 @@ export function App() {
   const busy = useAppState((state) => state.busy);
   useEffect(() => {
     document.title = TITLES[layout];
+    client.windowReady();
   }, [layout]);
   // Escape closes the dialog like its Close or Cancel button, once a menu, a confirmation or a name field has had its turn.
   useEffect(() => {
     if (!LiveDialog.hosted) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !event.defaultPrevented && !busy) void client.close();
+      if (event.key === "Escape" && !event.defaultPrevented && (!busy || !LiveDialog.modal)) void client.close();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
