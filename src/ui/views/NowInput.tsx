@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import type { FormEvent } from "react";
 import { Button, ButtonVariant } from "../../ui-kit";
-import type { AudioAttachment, AudioScope } from "../app/api";
+import type { AudioScope } from "../app/api";
 import { errorMessage } from "../app/api";
 import { useAppState, useClient } from "../app/hooks";
 import { DictationRecorder, dictationSupported } from "../app/dictation";
@@ -22,10 +22,10 @@ export function NowInput() {
   const stoppable = useAppState((state) => state.stoppable);
   const songId = useAppState((state) => state.songId);
   const dictationReady = useAppState((state) => state.dictationReady);
-  const [text, setText] = useState("");
+  const composer = useSyncExternalStore(client.composer.subscribe, client.composer.getSnapshot);
+  const { text, attachments } = composer.draft;
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [attachments, setAttachments] = useState<AudioAttachment[]>([]);
   const [scope, setScope] = useState<AudioScope>("reference");
   const [source, setSource] = useState("");
   const [voicePhase, setVoicePhase] = useState<DictationPhase>("idle");
@@ -56,11 +56,11 @@ export function NowInput() {
   useEffect(() => {
     if (previousSong.current !== null && songId !== previousSong.current) {
       cancelDictation();
-      setText("");
-      setAttachments([]);
     }
     previousSong.current = songId;
   }, [songId, cancelDictation]);
+
+  useEffect(() => { void client.composer.open(songId); }, [client, songId]);
 
   useEffect(() => {
     if (voicePhase === "idle") return;
@@ -98,7 +98,7 @@ export function NowInput() {
       const transcript = result.text.trim();
       if (!transcript) throw new Error("No words were recognised. Record again or type your message.");
       // Functional append preserves edits made while permission, recording or transcription was pending.
-      setText((current) => current + (current && !/\s$/.test(current) ? " " : "") + transcript);
+      client.composer.appendText(transcript);
     } catch (error) {
       if (isCurrentDictation(active)) client.store.setError(`Dictation stopped: ${errorMessage(error)}`);
     } finally {
@@ -112,7 +112,7 @@ export function NowInput() {
 
   const startDictation = async () => {
     const intendedSong = currentSong.current;
-    if (voice.current || !intendedSong || !dictationReady || !supportsDictation || sending || uploading) return;
+    if (voice.current || !intendedSong || !composer.loaded || !dictationReady || !supportsDictation || sending || uploading) return;
     const active: ActiveDictation = {
       songId: intendedSong,
       epoch: ++voiceEpoch.current,
@@ -142,17 +142,9 @@ export function NowInput() {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if ((!text.trim() && attachments.length === 0) || sending || uploading || voice.current) return;
-    const sentText = text;
-    const sentAttachments = attachments;
-    const sentSong = currentSong.current;
-    const audio = sentAttachments.map((file) => `Audio attachment (${file.scope}): ${file.name}\nManaged audio ID: ${file.id} (reopen with library_audio_open if the working path expires)\nManaged path: ${file.path}`).join("\n\n");
-    const request = [sentText, audio].filter(Boolean).join("\n\n");
     setSending(true);
     try {
-      if (await client.send(request) && currentSong.current === sentSong) {
-        setText((current) => current === sentText ? "" : current);
-        setAttachments((current) => current.filter((file) => !sentAttachments.includes(file)));
-      }
+      await client.sendDraft();
     } finally {
       setSending(false);
       field.current?.focus();
@@ -163,11 +155,11 @@ export function NowInput() {
     if (!files?.length || voice.current) return;
     setUploading(true);
     const attachedSong = currentSong.current;
+    if (!attachedSong) { setUploading(false); return; }
     try {
       for (const file of Array.from(files)) {
-        const imported = await client.api.importAudio(file, scope, source);
+        await client.attachAudio(file, scope, source, attachedSong);
         if (currentSong.current !== attachedSong) return;
-        setAttachments((current) => [...current, imported]);
       }
     } catch (error) {
       client.store.setError(`Attaching audio stopped: ${errorMessage(error)}`);
@@ -179,16 +171,16 @@ export function NowInput() {
   return (
     <form className="now__composer" onSubmit={(event) => void submit(event)}>
       {attachments.length > 0 && <ul className="now__attachments" aria-label="Attached audio">
-        {attachments.map((file, index) => <li key={`${file.path}-${index}`}>
+        {attachments.map((file) => <li key={file.entryId}>
           <span>{file.name}</span>
-          <Button variant={ButtonVariant.Quiet} aria-label={`Remove ${file.name}`} onClick={() => setAttachments((current) => current.filter((_, at) => at !== index))}>Remove</Button>
+          <Button variant={ButtonVariant.Quiet} aria-label={`Remove ${file.name}`} onClick={() => client.composer.removeAttachment(file.entryId)}>Remove</Button>
         </li>)}
       </ul>}
       <label htmlFor={inputId} className="ode-visually-hidden">Message Ode</label>
-      <textarea ref={field} id={inputId} className="ode-input now__field" value={text} rows={2}
+      <textarea ref={field} id={inputId} className="ode-input now__field" value={text} rows={2} disabled={!composer.loaded || composer.songId !== songId}
         placeholder={busy ? "Add a detail or change direction…" : "Tell Ode what you want…"}
         aria-describedby={`${inputId}-hint`} autoComplete="off" autoFocus
-        onChange={(event) => setText(event.target.value)}
+        onChange={(event) => client.composer.editText(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
             event.preventDefault();
@@ -203,12 +195,12 @@ export function NowInput() {
               <option value="reference">Reference</option><option value="sample">Sample</option><option value="processed-bounce">Processed bounce</option>
             </select></label>
             <label>Source or bounce details <input className="ode-input" value={source} onChange={(event) => setSource(event.target.value)} placeholder="For example, Main export, bars 1–33, effects included" /></label>
-            <label>WAV or AIFF files <input type="file" accept=".wav,.aif,.aiff" multiple disabled={uploading || voicePhase !== "idle"} onChange={(event) => { void attach(event.target.files); event.target.value = ""; }} /></label>
+            <label>WAV or AIFF files <input type="file" accept=".wav,.aif,.aiff" multiple disabled={uploading || !composer.loaded || voicePhase !== "idle"} onChange={(event) => { void attach(event.target.files); event.target.value = ""; }} /></label>
             <p className="small muted">A supplied bounce is a snapshot. Export a new bounce after changing the sound in Live.</p>
           </div>
         </details>
         <Button variant={ButtonVariant.Quiet}
-          disabled={voicePhase === "permission" || voicePhase === "transcribing" || (voicePhase === "idle" && (!supportsDictation || !dictationReady || !songId || sending || uploading))}
+          disabled={voicePhase === "permission" || voicePhase === "transcribing" || (voicePhase === "idle" && (!supportsDictation || !dictationReady || !songId || !composer.loaded || sending || uploading))}
           aria-pressed={voicePhase === "recording"} aria-label={voicePhase === "recording" ? "Finish dictation" : "Dictate message"}
           title={!supportsDictation ? "Microphone recording is unavailable in this browser. You can type your message." : !dictationReady ? "Add a Meta key in Ode: Settings to transcribe dictated messages." : "Record a message into the draft; Send submits it."}
           onClick={() => { if (voicePhase === "recording") void finishDictation(); else void startDictation(); }}>
@@ -216,9 +208,11 @@ export function NowInput() {
         </Button>
         {voicePhase !== "idle" && <Button variant={ButtonVariant.Quiet} onClick={() => { cancelDictation(); field.current?.focus(); }}>Cancel dictation</Button>}
         <span id={`${inputId}-hint`} className="now__input-hint">{uploading ? "Attaching audio…" : "Shift+Enter for a new line"}</span>
-        {((busy && stoppable) || sending) && <Button variant={ButtonVariant.Secondary} onClick={() => { cancelDictation(); void client.stopRequest(); }}>Stop</Button>}
-        <Button type="submit" variant={ButtonVariant.Primary} disabled={sending || uploading || voicePhase !== "idle" || (!text.trim() && attachments.length === 0)}>{sending ? "Sending…" : "Send"}</Button>
+        {((busy && stoppable) || sending || composer.pending) && <Button variant={ButtonVariant.Secondary} onClick={() => { cancelDictation(); void client.stopRequest(); }}>Stop</Button>}
+        <Button type="submit" variant={ButtonVariant.Primary} disabled={sending || uploading || !composer.loaded || !composer.valid || composer.conflicts.length > 0 || voicePhase !== "idle" || (!text.trim() && attachments.length === 0)}>{sending ? "Sending…" : "Send"}</Button>
       </div>
+      {composer.error && <p className="small" role="status">{composer.error} {composer.conflicts.length === 0 && <Button variant={ButtonVariant.Quiet} onClick={() => { void (composer.loaded ? client.composer.flush() : client.composer.open(songId, true)); }}>Retry</Button>}</p>}
+      {composer.conflicts.length > 0 && <p className="small" role="status">Another draft was saved. <Button variant={ButtonVariant.Quiet} disabled={composer.saving} onClick={() => { void client.composer.resolve("local").catch((error: unknown) => client.store.setError(errorMessage(error))); }}>Keep this draft</Button> <Button variant={ButtonVariant.Quiet} disabled={composer.saving} onClick={() => { void client.composer.resolve("saved").catch((error: unknown) => client.store.setError(errorMessage(error))); }}>Use saved draft</Button></p>}
       {voicePhase !== "idle" && <p className="small muted" role="status">{voicePhase === "permission" ? "Waiting for microphone permission…" : voicePhase === "recording" ? "Recording · up to 60 seconds · Escape cancels" : "Transcribing…"}</p>}
     </form>
   );

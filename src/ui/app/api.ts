@@ -21,6 +21,7 @@ import type { LyricsCheckRequest, LyricsCheckResponse, StrictRhymesRequest } fro
 import type { Mode } from "../../shared/personalisation";
 import type { ChatModelOption, ModelListRequest, SettingsResponse, SettingsUpdate, SettingsView } from "../../shared/settings";
 import type { ConversationExchange } from "../../shared/events";
+import type { ComposerCancel, ComposerDraft, ComposerPrepare, ComposerResolve, ComposerState, ComposerWrite } from "../../shared/composer";
 
 export type AudioScope = "sample" | "reference" | "processed-bounce";
 export interface AudioAttachment {
@@ -28,6 +29,9 @@ export interface AudioAttachment {
   path: string;
   name: string;
   scope: string;
+  entryId?: string;
+  composer?: ComposerState;
+  linked?: boolean;
 }
 
 enum HttpMethod {
@@ -40,6 +44,7 @@ const JSON_TYPE = "application/json";
 
 export interface OkResponse {
   ok: boolean;
+  composer?: ComposerState;
 }
 
 export interface ModeResponse {
@@ -49,7 +54,7 @@ export interface ModeResponse {
 export class ApiError extends Error {
   readonly status: number;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, readonly composer?: ComposerState) {
     super(message);
     this.name = "ApiError";
     this.status = status;
@@ -68,14 +73,48 @@ export class OdeApi {
     return this.request(HttpMethod.Get, API.conversation);
   }
 
-  async importAudio(file: File, scope: AudioScope, sourceDescription: string): Promise<AudioAttachment> {
+  async importAudio(file: File, scope: AudioScope, sourceDescription: string, link?: { songId: string; writerId: string; entryId: string; baseRevision: number; snapshot: ComposerDraft }): Promise<AudioAttachment> {
     const body = new FormData();
     body.set("file", file);
     body.set("scope", scope);
     body.set("sourceDescription", sourceDescription);
+    if (link) for (const [key, value] of Object.entries(link)) body.set(key, typeof value === "object" ? JSON.stringify(value) : String(value));
     const response = await fetch(API.audioImport, { method: HttpMethod.Post, body });
-    if (!response.ok) throw new ApiError(response.status, await readError(response));
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({})) as { error?: string; composer?: ComposerState };
+      throw new ApiError(response.status, result.error ?? "Attaching audio failed.", result.composer);
+    }
     return await response.json() as AudioAttachment;
+  }
+
+  getComposer(songId: string, writerId: string): Promise<ComposerState> {
+    return this.composerRequest(HttpMethod.Get, `${API.composer}?${new URLSearchParams({ songId, writerId })}`);
+  }
+
+  saveComposer(write: ComposerWrite, keepalive = false): Promise<ComposerState> {
+    return this.composerRequest(HttpMethod.Put, API.composer, write, keepalive);
+  }
+
+  prepareComposerSend(write: ComposerPrepare): Promise<ComposerState> {
+    return this.composerRequest(HttpMethod.Post, API.composerSend, write);
+  }
+
+  resolveComposer(write: ComposerResolve): Promise<ComposerState> {
+    return this.composerRequest(HttpMethod.Post, API.composerResolve, write);
+  }
+
+  cancelComposerSend(write: ComposerCancel): Promise<ComposerState> {
+    return this.composerRequest(HttpMethod.Post, API.composerCancel, write);
+  }
+
+  private async composerRequest(method: HttpMethod, path: string, body?: unknown, keepalive = false): Promise<ComposerState> {
+    const response = await fetch(path, { method, keepalive,
+      headers: method === HttpMethod.Get ? undefined : { "Content-Type": JSON_TYPE },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const result = await response.json() as ComposerState & { error?: string; composer?: ComposerState };
+    if (!response.ok) throw new ApiError(response.status, result.error ?? "Saving the draft failed.", result.composer);
+    return result;
   }
   async transcribe(file: File, songId: string, signal?: AbortSignal): Promise<DictationResponse> {
     const body = new FormData();
