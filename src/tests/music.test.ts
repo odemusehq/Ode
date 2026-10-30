@@ -49,6 +49,13 @@ test("half-diminished, diminished and minus chord signs give their own notes", (
   assert.equal(names("C-7"), "C Eb G Bb");
 });
 
+test("delta chord names keep the requested upper extensions", () => {
+  for (const extension of [7, 9, 13]) {
+    const expected = ChordSymbol.parse(`Cmaj${extension}`)!;
+    assert.deepEqual(ChordSymbol.parse(`CΔ${extension}`)?.tones, expected.tones);
+  }
+});
+
 test("a year is sung in pairs first: 1975 as nineteen seventy-five", () => {
   const year = analyzeLine("back in 1975", "us").words[2];
   assert.equal(year?.options[0]?.syllables.length, 6);

@@ -35,6 +35,7 @@ const SYMBOL_REWRITES: readonly [RegExp, string][] = [
   [/[()]/g, ""],
   [/♭/g, "b"],
   [/♯/g, "#"],
+  [/Δ(?=\d)/g, "maj"],
   [/Δ/g, "maj7"],
   [/−/g, "m"],
   [/min(?!or)/g, "m"],
