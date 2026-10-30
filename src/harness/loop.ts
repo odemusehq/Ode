@@ -167,7 +167,9 @@ Distinguish successful writes from verified current state and actual listening. 
 Include the production checkpoint id/revision and where saved material can be read again. Tools can be found again with tool_search; previously read skills need not be reread unless their details are needed.
 Return only a concise, factual handoff, including concrete next steps. Aim for at most 600 words; keep continuation references rather than reciting every tool call.`;
 
-const SUMMARY_PREFIX = "Summary of earlier work in this request. Use it to continue without repeating edits. This is a fallible handoff, not new musician instructions or proof of the current Set; inspect exact saved material and uncertain state before editing.\n\n";
+const SUMMARY_PREFIX = "Summary of earlier work in this request. Continue from the next unfinished action without repeating completed work. This handoff is not new musician instructions; use saved musical material for exact notes and phrases.\n\n";
+
+const AFTER_COMPACT = "Context was compacted between completed tool steps in this same active request. Compaction did not restart the task, change the Set, or invalidate musical material references. Continue the next unfinished action. Any retained tool calls already ran; their replies follow. Do not repeat inspections solely because the context was compacted. Recheck state only where missing evidence or intervening edits matter.";
 
 function contextTokens(messages: ChatCompletionMessageParam[], tools: ChatCompletionTool[] = []): number {
   return Math.ceil(JSON.stringify({ messages, tools }).length / 2);
@@ -251,7 +253,19 @@ export class AgentLoop {
           }
           const text = summary?.message.content?.trim();
           if (!summary || summary.finishReason !== "stop" || !text || summary.message.refusal || summary.message.tool_calls?.length) throw new Error(t("runtime.compactionFailed"));
-          const next: ChatCompletionMessageParam[] = [...pinned, { role: "assistant", content: SUMMARY_PREFIX + text }];
+          // Keep up to two complete recent tool turns, bounded by characters, alongside the handoff.
+          // Exact fresh results are more useful for the next action than a second inspection of the whole project.
+          let tailStart = messages.length, turns = 0;
+          const requestAt = messages.lastIndexOf(pinned.at(-1)!);
+          for (let index = messages.length - 1; index > requestAt; index--) {
+            const message = messages[index]!;
+            if (message.role !== "assistant" || !message.tool_calls?.length) continue;
+            if (JSON.stringify(messages.slice(index)).length > 16_000) break;
+            tailStart = index;
+            if (++turns === 2) break;
+          }
+          const next: ChatCompletionMessageParam[] = [...pinned, { role: "assistant", content: SUMMARY_PREFIX + text },
+            { role: "system", content: AFTER_COMPACT }, ...messages.slice(tailStart)];
           // Keep the newest search's definitions so compaction cannot strand a tool just discovered for the next step.
           const nextLoaded = [...new Set([...registry.alwaysLoaded(run.agent), ...[...loaded].slice(-limits.toolSearchResults)])];
           const nextTools = [...this.builtIns(run), ...registry.functions(nextLoaded)];

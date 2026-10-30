@@ -170,6 +170,28 @@ test("compaction keeps the shared call limit instead of starting a new budget", 
   assert.equal(result.tokens, 20);
 });
 
+test("compaction retains recent complete tool replies so it can continue from exact state", async () => {
+  const model = new ScriptedModel([
+    answer("Earlier work. ".repeat(6_000), [{ id: "old", name: "song_get" }]),
+    answer("Confirm the tempo.", [{ id: "recent", name: "song_get" }]),
+    answer("The song is at 120 BPM. Next: write the bass."),
+    answer("Done."),
+  ]);
+  const { loop, run, limits } = await rig(model, 100_000);
+  const complete = model.complete.bind(model);
+  model.complete = async (turn) => {
+    const reply = await complete(turn);
+    if (model.turns.length === 2) limits.compactAtTokens = 20_000;
+    return reply;
+  };
+  assert.equal((await loop.run(run())).reply, "Done.");
+  const resumed = model.turns[3]!.messages;
+  assert.ok(!resumed.some((message) => message.role === "tool" && message.tool_call_id === "old"));
+  const exact = resumed.find((message) => message.role === "tool" && message.tool_call_id === "recent");
+  assert.match(String(exact?.content), /"tempo":120/);
+  assert.ok(resumed.some((message) => message.role === "assistant" && message.tool_calls?.some((call) => call.id === "recent")));
+});
+
 test("an incomplete compaction does not discard history or execute its tool calls", async () => {
   const model = new ScriptedModel([
     answer("Earlier work. ".repeat(6_000), [{ id: "edit", name: "song_set_tempo", args: { tempo: 107 } }]),
