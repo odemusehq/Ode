@@ -7,6 +7,7 @@ import { OpenAiCompatibleText } from "./adapters/openai-compatible-text";
 import { SelfHostedSingingVoice, SelfHostedSoundGenerator, SelfHostedStemSeparator } from "./adapters/self-hosted";
 import { MetaTranscriber } from "./adapters/transcribers";
 import { Capability, type CapabilityAdapters } from "./capabilities";
+import { KeyGuard } from "./key-guard";
 import { Provider, ProviderName } from "./providers";
 import type { SpeechAudio } from "./speech-audio";
 
@@ -52,6 +53,6 @@ export class AdapterRegistry {
       const supported = Object.keys(AdapterRegistry.TABLE[capability]).join(", ");
       throw new Error(`Provider "${role.provider}" is missing a ${capability} adapter. Supported: ${supported}.`);
     }
-    return factory(role, this.speech);
+    return new KeyGuard(role.apiKey).protect(factory(role, this.speech));
   }
 }

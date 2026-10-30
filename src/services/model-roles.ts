@@ -2,6 +2,7 @@ import { SettingsStore } from "../mneme/settings-store";
 import type { Role, RoleConfig } from "../shared/config";
 import type { ChatModelOption, ModelListRequest, ModelSettings } from "../shared/settings";
 import { OpenAiCompatibleText } from "./adapters/openai-compatible-text";
+import { KeyGuard } from "./key-guard";
 import type { ProviderCatalog } from "./provider-catalog";
 import { Provider } from "./providers";
 import type { RoleSource } from "./types";
@@ -59,7 +60,8 @@ export class ModelRoles implements RoleSource {
     const saved = await this.settings.read();
     const apiKey = request.key ?? (saved.provider === provider.id ? saved.key : "");
     if (!apiKey) return [];
-    const reachable = await new OpenAiCompatibleText({ provider: provider.id, baseUrl: provider.baseUrl, apiKey, model: "" }).models();
+    const lister = new KeyGuard(apiKey).protect(new OpenAiCompatibleText({ provider: provider.id, baseUrl: provider.baseUrl, apiKey, model: "" }));
+    const reachable = await lister.models();
     return reachable.map((id) => ({ id, name: id, credit: provider.credit }));
   }
 }
