@@ -1,4 +1,4 @@
-import { Interval, Mode, Note } from "tonal";
+import { Interval, Mode, Note, ScaleType } from "tonal";
 
 /** A key as Live holds it: root pitch class (0 = C) and scale name. */
 export interface KeySpec {
@@ -12,31 +12,17 @@ const PITCH_CLASSES = 12;
 /** Conventional spellings of each pitch class as a tonic. */
 const MAJOR_SPELLINGS = ["C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 const MINOR_SPELLINGS = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B"];
-const MODES_WITH_MINOR_THIRD = new Set(["dorian", "phrygian", "aeolian", "locrian"]);
-const MODE_NAMES: ReadonlyMap<string, string> = new Map([
-  ["major", "ionian"],
-  ["ionian", "ionian"],
-  ["minor", "aeolian"],
-  ["natural minor", "aeolian"],
-  ["aeolian", "aeolian"],
-  ["dorian", "dorian"],
-  ["phrygian", "phrygian"],
-  ["lydian", "lydian"],
-  ["mixolydian", "mixolydian"],
-  ["locrian", "locrian"],
-]);
-/** Other scale names mapped to the mode their chords are drawn from. */
-const PARENT_MODES: readonly [RegExp, string][] = [
-  [/dorian/, "dorian"],
-  [/phrygian/, "phrygian"],
-  [/mixolydian/, "mixolydian"],
-  [/lydian/, "lydian"],
-  [/locrian/, "locrian"],
-  [/minor|blues|hirajoshi|in-sen|kumoi|iwato/, "aeolian"],
-];
+const MODE_INTERVALS = Mode.names().map((name) => ({ name, intervals: Mode.get(name).intervals.map(Interval.semitones) }));
 
 function modulo(value: number): number {
   return ((value % PITCH_CLASSES) + PITCH_CLASSES) % PITCH_CLASSES;
+}
+
+function checkedIntervals(intervals: readonly number[]): number[] {
+  if (!Array.isArray(intervals) || intervals.length === 0 || intervals.some((interval) => !Number.isInteger(interval) || interval < 0 || interval >= PITCH_CLASSES) || new Set(intervals).size !== intervals.length) {
+    throw new Error("A scale needs a nonempty set of unique integer intervals from 0 to 11. Explicit intervals are not replaced with a guessed parent scale.");
+  }
+  return [...intervals];
 }
 
 /** A key: tonic and mode, with the scale's pitch classes and diatonic stepping. */
@@ -46,29 +32,42 @@ export class MusicalKey {
   /** Pitch classes of the scale, from the tonic up. */
   readonly scale: number[];
   readonly minor: boolean;
+  /** Only an actual matching church-mode pitch set has this functional-harmony vocabulary. */
+  readonly mode: string | null;
+  private readonly live?: { scale: string; intervals: readonly number[] };
 
   /**
-   * `mode` picks the chords; Live's own scale, when given (its name and its steps above the tonic), sets the scale's
-   * notes, so Harmonic Minor keeps its raised seventh and Whole Tone its six notes.
+   * Explicit interval sets set the pitches regardless of their declared name. Functional harmony is available
+   * only when those pitches actually match one of the supported seven modes; no parent scale is guessed.
    */
   constructor(
     root: number,
-    readonly mode: string,
-    private readonly live?: { scale: string; intervals: readonly number[] },
+    mode: string,
+    live?: { scale: string; intervals: readonly number[] },
   ) {
+    if (!Number.isInteger(root)) throw new Error("A key needs a finite integer tonic pitch class.");
+    const intervals = checkedIntervals(live ? live.intervals : Mode.get(mode).intervals.map(Interval.semitones));
+    if (live) this.live = { scale: live.scale, intervals: [...intervals] };
+    const ordered = [...intervals].sort((a, b) => a - b);
+    this.mode = MODE_INTERVALS.find((candidate) => candidate.intervals.length === ordered.length && candidate.intervals.every((interval, index) => interval === ordered[index]))?.name ?? null;
     this.root = modulo(root);
-    this.minor = MODES_WITH_MINOR_THIRD.has(mode);
+    this.minor = intervals.includes(3) && !intervals.includes(4);
     this.tonicName = (this.minor ? MINOR_SPELLINGS : MAJOR_SPELLINGS)[this.root] ?? "C";
-    this.scale = live
-      ? live.intervals.map((interval) => modulo(this.root + interval))
-      : Mode.get(mode).intervals.map((interval) => modulo(this.root + Interval.semitones(interval)));
+    this.scale = ordered.map((interval) => modulo(this.root + interval));
   }
 
   static from(spec: KeySpec): MusicalKey {
-    const name = spec.scale.trim().toLowerCase();
-    const mode = MODE_NAMES.get(name) ?? PARENT_MODES.find(([pattern]) => pattern.test(name))?.[1] ?? "ionian";
-    const live = spec.intervals && spec.intervals.length > 0 ? { scale: spec.scale.trim(), intervals: spec.intervals } : undefined;
-    return new MusicalKey(spec.root, mode, live);
+    const declared = spec.scale.trim();
+    if (!declared) throw new Error("Give a supported scale name or a named explicit interval set.");
+    let intervals: number[];
+    if (spec.intervals !== undefined) intervals = checkedIntervals(spec.intervals);
+    else {
+      const name = declared.toLowerCase();
+      const scale = ScaleType.get(name === "natural minor" ? "minor" : name);
+      if (scale.empty) throw new Error(`Unsupported scale name ${JSON.stringify(declared)}. Give a supported complete name or explicit scale intervals; no parent key was guessed.`);
+      intervals = checkedIntervals(scale.intervals.map(Interval.semitones));
+    }
+    return new MusicalKey(spec.root, declared, { scale: declared, intervals });
   }
 
   static ofMajor(root: number): MusicalKey {
@@ -87,8 +86,9 @@ export class MusicalKey {
   /** The key in Live's form, with Live's scale names, and Live's own steps when the key came with them. */
   get spec(): KeySpec {
     if (this.live) return { root: this.root, scale: this.live.scale, intervals: [...this.live.intervals] };
+    const mode = this.requireMode();
     const scale =
-      this.mode === "ionian" ? "Major" : this.mode === "aeolian" ? "Minor" : this.mode.charAt(0).toUpperCase() + this.mode.slice(1);
+      mode === "ionian" ? "Major" : mode === "aeolian" ? "Minor" : mode.charAt(0).toUpperCase() + mode.slice(1);
     return { root: this.root, scale };
   }
 
@@ -146,10 +146,15 @@ export class MusicalKey {
   }
 
   triads(): string[] {
-    return Mode.triads(this.mode, this.tonicName);
+    return Mode.triads(this.requireMode(), this.tonicName);
   }
 
   sevenths(): string[] {
-    return Mode.seventhChords(this.mode, this.tonicName).map((symbol) => symbol.replace("Maj7", "maj7"));
+    return Mode.seventhChords(this.requireMode(), this.tonicName).map((symbol) => symbol.replace("Maj7", "maj7"));
+  }
+
+  private requireMode(): string {
+    if (this.mode === null) throw new Error(`Automatic functional harmony is unsupported for ${this.label}'s pitch set. Its pitches remain available for melody and explicit chord/MIDI work; no parent mode was guessed.`);
+    return this.mode;
   }
 }

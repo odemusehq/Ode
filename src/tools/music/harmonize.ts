@@ -17,6 +17,7 @@ export const harmonizeTool = defineTool({
     "sequence is scored on fit with the melody, normal chord movement, cadences at phrase ends, variety and the artist's",
     "favoured chords, and the k best are returned.",
     "Use it to harmonise a topline or reharmonise a section; voice the chosen progression with voice_chords.",
+    "This functional vocabulary requires the actual pitch set to match one of the seven diatonic modes. Nonmodal names such as Harmonic Minor or Whole Tone and other custom sets still work for melody and pitch checks; choose their harmony through an explicit chord chart with voice_chords or direct MIDI. A custom label with modal intervals uses those authoritative intervals. Borrowed and secondary chromatic chords remain intentional candidates within the supported modal vocabulary.",
     "Inputs: melody (notes); key (optional, defaults to Live's key when Scale Mode is on, else found from the melody); k (how many",
     "progressions, default 3); style (genre or style such as pop, rock, jazz, soul, folk; defaults to the genre setting);",
     "Without an explicit or observed key, inference needs pitched active notes; muted/probability-zero notes do not establish one. For a new draft choose its key explicitly from the musical brief rather than calling an empty input C major.",

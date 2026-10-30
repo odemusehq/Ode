@@ -33,13 +33,13 @@ export const RangeInput = z
 export const KeyInput = z
   .object({
     root: z.number().int().min(0).max(PITCH_CLASS_MAX).describe("Tonic pitch class: 0 = C, 1 = C#/Db … 11 = B."),
-    scale: z.string().describe('Scale name as in Live: "Major", "Minor", "Dorian", "Mixolydian"…'),
+    scale: z.string().describe('Recognised scale name or alias, such as "Major", "Natural Minor", "Harmonic Minor", "Whole Tone" or "Minor Pentatonic". Unknown names require explicit intervals; no parent scale is guessed.'),
     intervals: z
       .array(z.number().int().min(0).max(PITCH_CLASS_MAX))
       .optional()
-      .describe("The scale's steps above the tonic in semitones, as Live gives them (Harmonic Minor: 0 2 3 5 7 8 11); they set the scale's notes."),
+      .describe("Authoritative nonempty, unique integer semitone offsets 0–11 above the root, as Live provides them (Harmonic Minor: 0 2 3 5 7 8 11). They override the name, may describe any custom pitch set, and need not contain 0 or seven notes. The returned scale label remains declared; the intervals determine the actual notes. Input order is retained in the specification; scale-degree operations use ascending relative offsets."),
   })
-  .describe("Key of the song.");
+  .describe("The song's named scale or explicit pitch set. Melody and note checks use the actual intervals. Automatic functional harmonization supports only an actual pitch set matching one of the seven diatonic modes; use an explicit chord chart or MIDI for other harmonic choices.");
 
 export const TimeSignatureInput = z
   .object({
