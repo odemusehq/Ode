@@ -38,7 +38,8 @@ async function fixture(withRouting = false, names = ["Synth"], types = [{ displa
       transportCalls.push(name);
       const apply = () => {
         if (name === "start_playing") { song.current_song_time = song.start_time; song.is_playing = 1; }
-        else if (name === "continue_playing") song.is_playing = 1;
+        // Live 12.4 beta resumed its earlier stop position despite a confirmed stopped seek.
+        else if (name === "continue_playing") { song.current_song_time = 0; song.is_playing = 1; }
         else if (name === "stop_playing") song.is_playing = 0;
         else throw new Error(`Unexpected transport command: ${name}`);
       };
@@ -183,7 +184,7 @@ test("Max waits for its deferred seek and start before recording", async () => {
   assert.equal(messages.some((item) => item.message.kind === "error"), false, "Its own pending seek is not a manual change");
   assert.deepEqual(transportCalls, []);
   flushTransport(); context.ode_audio_monitor(); context.ode_audio_monitor();
-  assert.deepEqual(transportCalls, ["continue_playing"], "Continue once, after the requested stopped position is confirmed");
+  assert.deepEqual(transportCalls, ["start_playing"], "Start once, after the requested stopped position and marker are confirmed");
   assert.equal(controls.some((item) => item[0] === "odeCaptureRecorder" && item[1] === 1), false);
   flushTransport(); context.ode_audio_monitor();
   assert.ok(controls.some((item) => item[0] === "odeCaptureRecorder" && item[1] === 1));
@@ -212,7 +213,7 @@ test("Max startup cleanup cancels queued starts and preserves subsequent manual 
       if (reason === "seek") { flushTransport(); song.current_song_time = 64; }
       context.ode_audio_monitor(); assert.equal(messages.at(-1).message.kind, "error");
     }
-    assert.deepEqual(transportCalls, reason === "stop" ? ["continue_playing"] : ["continue_playing", "stop_playing"], reason);
+    assert.deepEqual(transportCalls, reason === "stop" ? ["start_playing"] : ["start_playing", "stop_playing"], reason);
     flushTransport();
     assert.equal(song.is_playing, 0, "A queued start must not escape after the capture ends");
     assert.equal(song.current_song_time, reason === "seek" ? 64 : reason === "stop" ? 17 : reason === "loop" ? 16 : 12, reason);
@@ -220,7 +221,7 @@ test("Max startup cleanup cancels queued starts and preserves subsequent manual 
   }
 });
 
-test("Max range capture continues from its seek instead of the unrelated insert marker", async () => {
+test("Max range capture sets its playback marker and restores the musician's marker", async () => {
   const { context, messages, controls, song, flushTransport, advance } = await fixture(false, undefined, undefined, true);
   context.ode_audio_command({ kind: "sources", id: "list" });
   const catalogue = messages.at(-1).message;
@@ -231,6 +232,12 @@ test("Max range capture continues from its seek instead of the unrelated insert 
   assert.equal(messages.some((item) => item.message.kind === "error"), false);
   advance(2500); song.current_song_time = 16; context.ode_audio_monitor();
   assert.ok(controls.some((item) => item[0] === "odeCaptureRecorder" && item[1] === 1));
-  assert.equal(song.start_time, 80, "The musician's insert marker is preserved.");
-  context.ode_audio_command({ kind: "cancel", id: "take" });
+  assert.equal(song.start_time, 12);
+  context.ode_audio_command({ kind: "cancel", id: "take" }); flushTransport();
+  assert.equal(song.start_time, 80);
+  context.ode_audio_command({ kind: "capture", id: "another", catalogueId: catalogue.catalogueId, sourceId: catalogue.sources[0].id, durationSeconds: 1, startBeat: 16 });
+  flushTransport(); context.ode_audio_monitor(); flushTransport();
+  song.start_time = 32;
+  context.ode_audio_command({ kind: "cancel", id: "another" }); flushTransport();
+  assert.equal(song.start_time, 32, "A later manual marker change is preserved.");
 });

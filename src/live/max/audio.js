@@ -169,6 +169,8 @@ function ode_audio_restore(job) {
         }
       }
       if (!recording && (preparing || loopState === 0) && job.transport.loop) song.set("loop", job.transport.loop);
+      var marker = Number(ode_audio_get(song, "start_time"));
+      if (Math.abs(marker - job.transport.seek) < 0.001 || preparing && Math.abs(marker - job.transport.marker) < 0.001) song.set("start_time", job.transport.marker);
     } catch (_) {}
   }
   if (job.buffer) {
@@ -211,18 +213,19 @@ function ode_audio_monitor() {
       var playing = Number(ode_audio_get(song, "is_playing"));
       var recording = Number(ode_audio_get(song, "record_mode")) || Number(ode_audio_get(song, "session_record"));
       var loopState = Number(ode_audio_get(song, "loop"));
+      var marker = Number(ode_audio_get(song, "start_time"));
       if (recording) { job.transport.owned = false; throw new Error(ODE_AUDIO_COPY.recordingStartedDuringOdeSCaptureThe); }
       if (job.transport.phase === "preparing") {
-        if (playing !== 0 || loopState !== 0 && loopState !== job.transport.loop || Math.abs(beat - job.transport.position) >= 0.001 && Math.abs(beat - job.transport.seek) >= 0.001) {
+        if (playing !== 0 || loopState !== 0 && loopState !== job.transport.loop || Math.abs(marker - job.transport.marker) >= 0.001 && Math.abs(marker - job.transport.seek) >= 0.001 || Math.abs(beat - job.transport.position) >= 0.001 && Math.abs(beat - job.transport.seek) >= 0.001) {
           job.transport.owned = false;
           throw new Error(ODE_AUDIO_COPY.theTransportChangedWhileOdeWasPreparing);
         }
-        if (loopState === 0 && Math.abs(beat - job.transport.seek) < 0.001) {
+        if (loopState === 0 && Math.abs(beat - job.transport.seek) < 0.001 && Math.abs(marker - job.transport.seek) < 0.001) {
           job.transport.phase = "starting";
           job.transport.deadline = now + 2000;
           job.transport.startTime = now;
           job.transport.startIssued = true;
-          song.call("continue_playing");
+          song.call("start_playing");
         } else if (now >= job.transport.deadline) throw new Error(ODE_AUDIO_COPY.liveDidNotConfirmTheRequestedPlayback);
         return;
       }
@@ -302,9 +305,9 @@ function ode_audio_capture(command) {
       if (Number(ode_audio_get(song, "is_playing")) || Number(ode_audio_get(song, "record_mode")) || Number(ode_audio_get(song, "session_record"))) throw new Error(ODE_AUDIO_COPY.stopPlaybackAndRecordingBeforeAskingOde);
       if (Number(ode_audio_get(song, "back_to_arranger"))) throw new Error(ODE_AUDIO_COPY.returnToArrangementPlaybackBeforeARange);
       job.startBeat = start; job.prerollBeats = Math.min(start, preroll); job.waiting = true;
-      job.transport = { song: song, owned: true, position: Number(ode_audio_get(song, "current_song_time")), loop: Number(ode_audio_get(song, "loop")), seek: start - job.prerollBeats,
+      job.transport = { song: song, owned: true, position: Number(ode_audio_get(song, "current_song_time")), marker: Number(ode_audio_get(song, "start_time")), loop: Number(ode_audio_get(song, "loop")), seek: start - job.prerollBeats,
         phase: "preparing", deadline: Date.now() + 2000, startIssued: false, lastBeat: null, lastTime: Date.now() };
-      song.set("loop", 0); song.set("current_song_time", job.transport.seek);
+      song.set("loop", 0); song.set("start_time", job.transport.seek); song.set("current_song_time", job.transport.seek);
       job.monitorTask = new Task(ode_audio_monitor, this); job.monitorTask.interval = 20; job.monitorTask.repeat();
       ode_audio_monitor();
     } else {
