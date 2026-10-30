@@ -1,0 +1,91 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { ReferenceResolver } from "../live/extension/refs";
+import { SetLookup } from "../server/set-lookup";
+import { MIXER_INDEX } from "../shared/live";
+import { RefNames } from "../tools/live/ref-names";
+import { FakeLive } from "./fake-live";
+import { TestSets } from "./sets";
+
+test("duplicate track names and tags are refused while explicit full tagged names and indices remain usable", () => {
+  const fake = new FakeLive();
+  const first = fake.midiTrack("Bass ·bass-a");
+  const second = fake.midiTrack("Bass ·bass-b");
+  fake.midiTrack("Bass");
+  const refs = new ReferenceResolver(fake.liveSet());
+  assert.throws(() => refs.track({ name: "Bass" }), /ambiguous/i);
+  assert.throws(() => refs.track({ name: "BASS" }), /ambiguous/i);
+  assert.equal(refs.track({ name: "Bass ·bass-a" }), first);
+  assert.equal(refs.track({ tag: "bass-a" }), first);
+  second.name = "Other ·bass-a";
+  assert.throws(() => refs.track({ tag: "bass-a" }), /ambiguous/i);
+  assert.equal(refs.track({ index: 0 }), first);
+  first.name = "Bass ·bass-a ·extra";
+  second.name = "Bass ·bass-a";
+  assert.equal(refs.track({ name: "Bass ·bass-a" }), second);
+
+  const snapshot = TestSets.small();
+  Object.assign(snapshot.tracks[0]!, { name: "Bass", tag: "bass-a" });
+  Object.assign(snapshot.tracks[1]!, { name: "Bass", tag: "bass-b" });
+  snapshot.tracks[2]!.name = "Bass";
+  const lookup = new SetLookup(snapshot);
+  assert.throws(() => lookup.track({ name: "Bass" }), /ambiguous/i);
+  assert.throws(() => lookup.track({ name: "BASS" }), /ambiguous/i);
+  assert.equal(lookup.track({ name: "Bass ·bass-a" }), snapshot.tracks[0]);
+  assert.equal(new RefNames(snapshot).device({ track: { name: "Bass" }, index: 0 }), "Bass · device 1");
+  snapshot.tracks[1]!.tag = "bass-a";
+  assert.throws(() => lookup.track({ tag: "bass-a" }), /ambiguous/i);
+  assert.throws(() => lookup.track({ name: "Bass ·bass-a" }), /ambiguous/i);
+  assert.equal(new RefNames(snapshot).track({ tag: "bass-a" }), "the track tagged bass-a");
+  assert.equal(lookup.track({ index: 0 }), snapshot.tracks[0]);
+  Object.assign(snapshot.tracks[0]!, { name: "Bass ·bass-a", tag: "extra" });
+  assert.equal(lookup.track({ name: "Bass ·bass-a" }), snapshot.tracks[1]);
+});
+
+test("global clip tags reject copies in Session, Arrangement and take lanes without changing positional references", () => {
+  const fake = new FakeLive();
+  const arranged = fake.midiClip("Hook ·hook", 0);
+  const first = fake.midiTrack("Lead", [arranged]);
+  const second = fake.midiTrack("Double");
+  const session = fake.midiClip("Copy ·hook", 0);
+  Object.assign(second, { clipSlots: [{ clip: session }] });
+  const set = fake.liveSet();
+  Object.defineProperty(set.song.mainTrack, "clipSlots", { get() { throw new Error("Main cannot hold clips"); } });
+  const refs = new ReferenceResolver(set);
+  assert.throws(() => refs.clip({ tag: "hook" }), /ambiguous/i);
+  assert.equal(refs.clip({ track: { index: 0 }, start: 0 }).clip, arranged);
+  assert.equal(refs.clip({ track: { index: 1 }, slot: 0 }).clip, session);
+  Object.assign(second, { clipSlots: [], takeLanes: [{ clips: [session] }] });
+  assert.throws(() => refs.clip({ tag: "hook" }), /ambiguous/i);
+  assert.equal(refs.clip({ track: { index: 1 }, start: 0, lane: 0 }).clip, session);
+  Object.assign(second, { takeLanes: [] });
+  first.arrangementClips.push(fake.midiClip("Another ·hook", 16));
+  assert.throws(() => refs.clip({ tag: "hook" }), /ambiguous/i);
+
+  const snapshot = TestSets.small();
+  snapshot.tracks[0]!.arrangementClips[0]!.tag = "hook";
+  const copy = { ...snapshot.tracks[1]!.arrangementClips[0]!, tag: "hook" };
+  snapshot.tracks[1]!.clipSlots = [{ slot: 0, clip: copy }];
+  const lookup = new SetLookup(snapshot);
+  assert.throws(() => lookup.clip({ tag: "hook" }), /ambiguous/i);
+  assert.equal(new RefNames(snapshot).clip({ tag: "hook" }), "the clip tagged hook");
+  snapshot.tracks[1]!.clipSlots = [];
+  snapshot.tracks[1]!.takeLanes = [{ lane: 0, name: "Take", clips: [copy] }];
+  assert.throws(() => lookup.clip({ tag: "hook" }), /ambiguous/i);
+  assert.equal(lookup.clip({ track: { index: 1 }, start: copy.startTime, lane: 0 })?.clip, copy);
+});
+
+test("native scene, locator and parameter names require one match", () => {
+  const fake = new FakeLive();
+  const track = fake.midiTrack("Voice");
+  Object.defineProperty(track, "mixer", { value: { volume: { name: "Volume" }, panning: { name: "Pan" }, sends: [{ name: "Send" }, { name: "Send" }] } });
+  const set = fake.liveSet();
+  Object.assign(set.song, { scenes: [{ name: "Verse" }, { name: "Verse" }], cuePoints: [{ name: "Chorus", time: 0 }, { name: "Chorus", time: 16 }] });
+  const refs = new ReferenceResolver(set);
+  assert.throws(() => refs.scene({ name: "Verse" }), /ambiguous/i);
+  assert.throws(() => refs.locator({ name: "Chorus" }), /ambiguous/i);
+  assert.throws(() => refs.parameter({ device: { track: { index: 0 }, index: MIXER_INDEX }, parameter: "Send" }), /ambiguous/i);
+  assert.equal(refs.scene({ index: 1 }).index, 1);
+  assert.equal(refs.locator({ time: 16 }).index, 1);
+  assert.equal(refs.parameter({ device: { track: { index: 0 }, index: MIXER_INDEX }, parameter: 3 }).index, 3);
+});

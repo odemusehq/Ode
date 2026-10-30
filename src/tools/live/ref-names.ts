@@ -1,9 +1,10 @@
 import { BEAT_TOLERANCE, MIXER_INDEX, type ClipRef, type DeviceRef, type LocatorRef, type ParameterRef, type SceneRef, type TakeLaneRef, type TrackRef } from "../../shared/live";
-import type { ClipInfo, ParameterInfo } from "../../shared/live-ops";
+import type { ParameterInfo } from "../../shared/live-ops";
 import { noteName } from "../../shared/notes";
 import type { DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../../shared/set-snapshot";
 import { LyricsText } from "../../mneme/lyrics-text";
 import { LyricsWording, SetWording } from "../../mneme/set-diff";
+import { SetLookup } from "../../server/set-lookup";
 
 /** The mixer's parameters, numbered as in DeviceRef: volume, pan, then one send per return track. */
 const VOLUME_PARAMETER = 0;
@@ -54,7 +55,7 @@ export class RefNames {
       return [track, name ? `clip ${name}` : `slot ${ref.slot + 1}`].join(SEPARATOR);
     }
     const start = ref.start;
-    const candidates = owner ? (ref.lane === undefined ? RefNames.clipsOf(owner) : (owner.takeLanes[ref.lane]?.clips ?? [])) : [];
+    const candidates = owner ? (ref.lane === undefined ? owner.arrangementClips : (owner.takeLanes[ref.lane]?.clips ?? [])) : [];
     const clip = candidates.find((candidate) => Math.abs(candidate.startTime - start) <= BEAT_TOLERANCE);
     if (!clip) return [track, `clip at ${this.position(start)}`].join(SEPARATOR);
     const name = SetWording.name(clip);
@@ -142,38 +143,19 @@ export class RefNames {
   }
 
   private findTrack(ref: TrackRef): TrackSnapshot | undefined {
-    const set = this.set;
-    if (!set) return undefined;
-    if ("main" in ref) return set.main;
-    if ("index" in ref) return set.tracks[ref.index];
-    if ("returnIndex" in ref) return set.returnTracks[ref.returnIndex];
-    const every = [...set.tracks, ...set.returnTracks, set.main];
-    if ("tag" in ref) {
-      const tag = ref.tag;
-      return every.find((track) => track.tag === tag);
-    }
-    const name = ref.name;
-    const lower = name.toLowerCase();
-    return (
-      every.find((track) => track.name === name || SetWording.name(track) === name) ??
-      every.find((track) => track.name.toLowerCase() === lower || SetWording.name(track).toLowerCase() === lower)
-    );
-  }
-
-  /** A track's Arrangement clips, then the clips on its take lanes. */
-  private static clipsOf(track: TrackSnapshot): ClipInfo[] {
-    return [...track.arrangementClips, ...track.takeLanes.flatMap((lane) => lane.clips)];
+    if (!this.set) return undefined;
+    try { return new SetLookup(this.set).track(ref); }
+    catch { return undefined; }
   }
 
   private taggedClip(tag: string): string {
-    const set = this.set;
-    for (const track of set ? [...set.tracks, ...set.returnTracks] : []) {
-      const clips = [...track.clipSlots.flatMap((slot) => (slot.clip ? [slot.clip] : [])), ...RefNames.clipsOf(track)];
-      const clip = clips.find((candidate) => candidate.tag === tag);
-      if (!clip) continue;
-      const name = SetWording.name(clip);
-      return [SetWording.name(track) || `track ${track.index + 1}`, name ? `clip ${name}` : "clip"].join(SEPARATOR);
-    }
+    try {
+      const found = this.set && new SetLookup(this.set).clip({ tag });
+      if (found) {
+        const name = SetWording.name(found.clip);
+        return [SetWording.name(found.track) || `track ${found.track.index + 1}`, name ? `clip ${name}` : "clip"].join(SEPARATOR);
+      }
+    } catch { /* An ambiguous reference gets its generic label, never the first object's name. */ }
     return `the clip tagged ${tag}`;
   }
 
@@ -212,8 +194,11 @@ export class RefNames {
   }
 
   private findParameter(ref: ParameterRef): ParameterInfo | undefined {
-    const byName = (parameters: readonly ParameterInfo[]) =>
-      typeof ref.parameter === "string" ? parameters.find((parameter) => parameter.name === ref.parameter) : parameters[ref.parameter];
+    const byName = (parameters: readonly ParameterInfo[]) => {
+      if (typeof ref.parameter === "number") return parameters[ref.parameter];
+      const matches = parameters.filter((parameter) => parameter.name === ref.parameter);
+      return matches.length === 1 ? matches[0] : undefined;
+    };
     if (ref.device.index !== MIXER_INDEX) return byName(this.findDevice(ref.device).device?.parameters ?? []);
     const mixer = this.findTrack(ref.device.track)?.mixer;
     if (!mixer || (ref.device.chain ?? []).length > 0) return undefined;

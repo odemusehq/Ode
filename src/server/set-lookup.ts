@@ -37,23 +37,33 @@ export class SetLookup {
     if ("index" in ref) return this.snapshot.tracks[ref.index];
     if ("returnIndex" in ref) return this.snapshot.returnTracks[ref.returnIndex];
     if ("main" in ref) return this.snapshot.main;
-    if ("tag" in ref) return this.allTracks.find((track) => track.tag === ref.tag);
-    const names = (track: TrackSnapshot) => [track.name, track.tag === undefined ? track.name : `${track.name}${TAG_SEPARATOR}${track.tag}`];
+    if ("tag" in ref) {
+      const matches = this.allTracks.filter((track) => track.tag === ref.tag);
+      if (matches.length > 1) throw new Error(`ambiguous: track tagged "${ref.tag}". Use a track index or a unique tag.`);
+      return matches[0];
+    }
+    const names = this.allTracks.map((track) => {
+      const suffix = track.tag === undefined ? "" : `${TAG_SEPARATOR}${track.tag}`;
+      const plain = suffix && track.name.endsWith(suffix) ? track.name.slice(0, -suffix.length) : track.name;
+      return { track, plain, full: `${plain}${suffix}` };
+    });
+    const full = names.filter(({ track, full }) => track.tag !== undefined && full === ref.name);
+    const exact = full.length > 0 ? full : names.filter(({ plain, full }) => plain === ref.name || full === ref.name);
     const lower = ref.name.toLowerCase();
-    return this.allTracks.find((track) => names(track).includes(ref.name)) ??
-      this.allTracks.find((track) => names(track).some((name) => name.toLowerCase() === lower));
+    const matches = exact.length > 0 ? exact : names.filter(({ plain, full }) => plain.toLowerCase() === lower || full.toLowerCase() === lower);
+    if (matches.length > 1) throw new Error(`ambiguous: track named "${ref.name}". Use a track index or an exact full name with a unique tag.`);
+    return matches[0]?.track;
   }
 
 
   clip(ref: ClipRef): FoundClip | undefined {
     if ("tag" in ref) {
-      for (const track of this.allTracks) {
-        const session = track.clipSlots.find((slot) => slot.clip?.tag === ref.tag)?.clip;
-        if (session) return { track, clip: session, arranged: false };
-        const arranged = SetLookup.arrangedClips(track).find((clip) => clip.tag === ref.tag);
-        if (arranged) return { track, clip: arranged, arranged: true };
-      }
-      return undefined;
+      const matches = this.allTracks.flatMap((track) => [
+        ...track.clipSlots.flatMap((slot) => slot.clip?.tag === ref.tag ? [{ track, clip: slot.clip, arranged: false }] : []),
+        ...SetLookup.arrangedClips(track).filter((clip) => clip.tag === ref.tag).map((clip) => ({ track, clip, arranged: true })),
+      ]);
+      if (matches.length > 1) throw new Error(`ambiguous: clip tagged "${ref.tag}". Use its track and slot or Arrangement position, or give the clips unique tags.`);
+      return matches[0];
     }
     const track = this.track(ref.track);
     if (!track) return undefined;

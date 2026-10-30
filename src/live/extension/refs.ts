@@ -200,8 +200,9 @@ export class ReferenceResolver {
   parameter(ref: ParameterRef): FoundParameter {
     ReferenceResolver.expect(ref, "parameter");
     const parameters = parametersOf(this.parameterSource(ref.device));
-    const index =
-      typeof ref.parameter === "number" ? ref.parameter : parameters.findIndex((parameter) => parameter.name === ref.parameter);
+    const matches = typeof ref.parameter === "string" ? parameters.flatMap((parameter, index) => parameter.name === ref.parameter ? [index] : []) : [];
+    if (matches.length > 1) throw new Error(`ambiguous: ${parameterText(ref)}. Use the parameter's index.`);
+    const index = typeof ref.parameter === "number" ? ref.parameter : matches[0] ?? -1;
     const parameter = parameters[index];
     if (!parameter) throw new NotFoundError(parameterText(ref));
     return { parameter, index };
@@ -249,36 +250,41 @@ export class ReferenceResolver {
     throw new NotFoundError(clipText(ref));
   }
 
-  /** Session clips, Arrangement clips and take-lane clips of every MIDI and audio track. */
+  /** Tags are global: a copied tag in any clip container must not choose the first object. */
   private taggedClip(tag: string): FoundClip {
-    for (const track of this.set.song.tracks) {
-      if (!(track instanceof MidiTrack || track instanceof AudioTrack)) continue;
-      const found = ReferenceResolver.taggedClipOn(track, tag);
-      if (found) return found;
-    }
+    // Group, return and Main tracks cannot hold clips; their SDK clip-list getters may refuse the read.
+    const matches = this.set.tracks().all.flatMap((track) => track instanceof MidiTrack || track instanceof AudioTrack
+      ? ReferenceResolver.taggedClipsOn(track, tag) : []);
+    if (matches.length > 1) throw new Error(`ambiguous: ${clipText({ tag })}. Use its track and slot or Arrangement position, or give the clips unique tags.`);
+    if (matches[0]) return matches[0];
     throw new NotFoundError(clipText({ tag }));
   }
 
-  private static taggedClipOn(track: Track<Version>, tag: string): FoundClip | undefined {
+  private static taggedClipsOn(track: Track<Version>, tag: string): FoundClip[] {
+    const found: FoundClip[] = [];
     const tagged = (clip: Clip<Version>) => TaggedName.carries(clip.name, tag);
-    for (const [slot, clipSlot] of track.clipSlots.entries()) {
+    for (const [slot, clipSlot] of (track.clipSlots ?? []).entries()) {
       const clip = clipSlot.clip;
-      if (clip && tagged(clip)) return { clip, location: { place: ClipPlace.Session, track, slot, clipSlot } };
+      if (clip && tagged(clip)) found.push({ clip, location: { place: ClipPlace.Session, track, slot, clipSlot } });
     }
-    const clip = track.arrangementClips.find(tagged);
-    if (clip) return { clip, location: { place: ClipPlace.Arrangement, track, lane: null } };
-    for (const [lane, takeLane] of track.takeLanes.entries()) {
-      const take = takeLane.clips.find(tagged);
-      if (take) return { clip: take, location: { place: ClipPlace.Arrangement, track, lane } };
+    for (const clip of track.arrangementClips ?? []) {
+      if (tagged(clip)) found.push({ clip, location: { place: ClipPlace.Arrangement, track, lane: null } });
     }
-    return undefined;
+    for (const [lane, takeLane] of (track.takeLanes ?? []).entries()) {
+      for (const clip of takeLane.clips) if (tagged(clip)) found.push({ clip, location: { place: ClipPlace.Arrangement, track, lane } });
+    }
+    return found;
   }
 
   private static findTrack(tracks: TrackDirectory, ref: TrackRef): Track<Version> | undefined {
     if ("index" in ref) return tracks.regular[ref.index];
     if ("returnIndex" in ref) return tracks.returns[ref.returnIndex];
     if ("main" in ref) return tracks.main;
-    if ("tag" in ref) return tracks.all.find((track) => TaggedName.carries(track.name, ref.tag));
+    if ("tag" in ref) {
+      const matches = tracks.all.filter((track) => TaggedName.carries(track.name, ref.tag));
+      if (matches.length > 1) throw new Error(`ambiguous: ${trackText(ref)}. Use a track index or a unique tag.`);
+      return matches[0];
+    }
     if ("name" in ref) {
       const all = tracks.all;
       return all[ReferenceResolver.indexByName(all, ref.name)];
@@ -286,16 +292,19 @@ export class ReferenceResolver {
     throw new Error(`expected a track reference: ${JSON.stringify(ref)}`);
   }
 
-  /** The item whose name, with or without Ode's tag, is `name`: an exact match first, then one ignoring case. */
+  /** An exact full tagged name disambiguates a plain name; every matching tier must otherwise be unique. */
   private static indexByName(items: readonly { name: string }[], name: string): number {
-    const names = items.map((item) => {
+    const names = items.map((item, index) => {
       const fullName = item.name;
-      return { fullName, plain: TaggedName.parse(fullName).name };
+      const parsed = TaggedName.parse(fullName);
+      return { index, fullName, plain: parsed.name, tag: parsed.tag };
     });
-    const exact = names.findIndex(({ fullName, plain }) => fullName === name || plain === name);
-    if (exact >= 0) return exact;
+    const full = names.filter(({ fullName, tag }) => tag !== undefined && fullName === name);
+    const exact = full.length > 0 ? full : names.filter(({ fullName, plain }) => fullName === name || plain === name);
     const lower = name.toLowerCase();
-    return names.findIndex(({ fullName, plain }) => fullName.toLowerCase() === lower || plain.toLowerCase() === lower);
+    const matches = exact.length > 0 ? exact : names.filter(({ fullName, plain }) => fullName.toLowerCase() === lower || plain.toLowerCase() === lower);
+    if (matches.length > 1) throw new Error(`ambiguous name "${name}". Use an index or an exact full name with a unique tag.`);
+    return matches[0]?.index ?? -1;
   }
 
   private static chainSteps(path: readonly number[] | undefined): ChainStep[] {
