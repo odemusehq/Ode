@@ -9,6 +9,8 @@ import { SkillLibrary } from "../harness/skills";
 import { FolderTexts } from "../harness/texts";
 import { ToolLabels } from "../harness/tool-labels";
 import { ConversationStore } from "../mneme/conversations";
+import { AudioDeliveries } from "../mneme/audio-deliveries";
+import { LocalAudioFiles } from "../live/local-audio-files";
 import { Mneme } from "../mneme/artist";
 import { ProductionTaskStore } from "../mneme/production-task";
 import { LyricsStore } from "../mneme/lyrics-store";
@@ -144,7 +146,10 @@ class ScenarioRun {
     const selection = new SelectionState();
     const services = new ModelServices(this.roles);
     const temp = new TempFolder(config.tempDir);
-    const registry = new ToolRegistry({ config, live, song, production: new ProductionTaskStore(song), lyrics, versions, snapshots: reader, questions, mneme, prefs, services, temp, emit });
+    const conversations = new ConversationStore(join(paths.workspace, "conversations"), config.limits.historyExchanges);
+    const deliveries = new AudioDeliveries({ song, audio: new LocalAudioFiles(config.userDir, config.tempDir),
+      attach: async (songId, exchangeId, ref) => { await conversations.log(songId).addDelivery(exchangeId, ref); } });
+    const registry = new ToolRegistry({ config, live, song, production: new ProductionTaskStore(song), deliveries, lyrics, versions, snapshots: reader, questions, mneme, prefs, services, temp, emit });
     const requests = new RequestContext({
       config,
       live,
@@ -163,10 +168,9 @@ class ScenarioRun {
     const labels = new ToolLabels(registry);
     const loop = new AgentLoop({ services, registry, skills, labels, limits: config.limits, subagentPrompt: () => agents.subagentPrompt() });
     const deletions = new DeletionChecker(reader);
-    const conversations = new ConversationStore(join(paths.workspace, "conversations"), config.limits.historyExchanges);
     const session = new OdeSession(
-      { loop, agents, labels, approvals, questions, prefs, requests, deletions, snapshots: reader, emit },
-      conversations.log(this.scenario.name),
+      { loop, agents, labels, approvals, questions, prefs, requests, deliveries, deletions, snapshots: reader, emit },
+      conversations.log(song.songId), song.songId,
     );
     const before = await reader.read();
     selection.point(this.scenario.pointer);

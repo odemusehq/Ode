@@ -13,6 +13,7 @@ import { Mneme } from "../mneme/artist";
 import { ComposerStore } from "../mneme/composer-store";
 import { LocalAudioFiles } from "../live/local-audio-files";
 import { ConversationStore } from "../mneme/conversations";
+import { AudioDeliveries } from "../mneme/audio-deliveries";
 import { ProductionTaskStore } from "../mneme/production-task";
 import { ProductionEvidence } from "../mneme/production-evidence";
 import { ToolObservations } from "../mneme/tool-observations";
@@ -50,6 +51,7 @@ export class OdeApp {
   readonly song: SongStore;
   readonly lyrics: LyricsStore;
   readonly conversations: ConversationStore;
+  readonly deliveries: AudioDeliveries;
   readonly composer: ComposerStore;
   readonly observations: ToolObservations;
   readonly production: ProductionTaskStore;
@@ -84,6 +86,16 @@ export class OdeApp {
     this.lyrics = new LyricsStore(this.song, this.prefs, (lyrics) => emit({ type: "lyrics", lyrics }));
     this.versions = new SongVersions(this.song, config.versions.snapshotEvery);
     this.conversations = new ConversationStore(join(this.paths.workspace, "conversations"), config.limits.historyExchanges);
+    this.deliveries = new AudioDeliveries({
+      song: this.song,
+      audio: new LocalAudioFiles(config.userDir, config.tempDir),
+      attach: async (songId, exchangeId, ref) => {
+        const log = this.conversations.log(songId);
+        if (!await log.addDelivery(exchangeId, ref)) return;
+        const exchanges = await log.all();
+        if (songId === this.song.songId) emit({ type: "conversation", songId, exchanges });
+      },
+    });
     this.composer = new ComposerStore(this.song, this.conversations, new LocalAudioFiles(config.userDir, config.tempDir));
     this.observations = new ToolObservations(this.song);
     this.production = new ProductionTaskStore(this.song, new ProductionEvidence({ song: this.song, observations: this.observations, versions: this.versions, conversations: this.conversations, isRelevantTool: (name) => registry.find(name) !== undefined }).verify);
@@ -102,6 +114,7 @@ export class OdeApp {
       song: this.song,
       lyrics: this.lyrics,
       production: this.production,
+      deliveries: this.deliveries,
       versions: this.versions,
       snapshots: this.reader,
       questions: this.questions,
@@ -147,6 +160,7 @@ export class OdeApp {
         prefs: this.prefs,
         requests,
         production: this.production,
+        deliveries: this.deliveries,
         deletions: new DeletionChecker(this.reader),
         snapshots: this.reader,
         emit,
@@ -169,6 +183,7 @@ export class OdeApp {
       song: this.song,
       songs: this.songs,
       composer: this.composer,
+      deliveries: this.deliveries,
       lyrics: this.lyrics,
       services: this.services,
       lyricsChecker: new LyricsChecker(this.services, texts, config.lyricsSupport),

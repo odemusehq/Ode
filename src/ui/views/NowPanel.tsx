@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from "react";
 import { Button, ButtonVariant } from "../../ui-kit";
-import { useAppState } from "../app/hooks";
+import { useAppState, useClient } from "../app/hooks";
 import { ApplyCard } from "./ApplyCard";
 import { NowInput } from "./NowInput";
 import { QuestionCard } from "./QuestionCard";
@@ -11,6 +11,7 @@ import "./NowPanel.css";
 
 /** The saved dialogue and actual changes, with decisions and the composer always within reach. */
 export function NowPanel() {
+  const client = useClient();
   const exchanges = useAppState((state) => state.exchanges);
   const questions = useAppState((state) => state.questions);
   const approvals = useAppState((state) => state.approvals);
@@ -42,7 +43,15 @@ export function NowPanel() {
             {exchange.request && <div className="now__message now__message--user"><h2>You</h2><p>{exchange.request.replace(/^Managed path: .*$/gm, "").trim()}</p></div>}
             <WorkingSteps steps={exchange.id === activeId ? mergeSteps(exchange.activity ?? [], steps) : exchange.activity ?? []}
               rationale={exchange.id === activeId ? thought ?? exchange.rationale : exchange.rationale} active={exchange.id === activeId} />
-            {exchange.reply && <div className="now__message now__message--assistant"><h2>Ode</h2><p>{exchange.reply}</p></div>}
+            {Boolean(exchange.reply || exchange.deliveries?.length) && <div className="now__message now__message--assistant">
+              <h2>Ode</h2>
+              {exchange.reply && <p>{exchange.reply}</p>}
+              {Boolean(exchange.deliveries?.length) && <ul className="now__deliveries" aria-label="Prepared audio files">
+                {exchange.deliveries?.map((delivery) => <li key={delivery.id}>
+                  <a href={client.api.audioDeliveryUrl(delivery.songId, delivery.id)} download={delivery.name}>Download {delivery.name}</a>
+                </li>)}
+              </ul>}
+            </div>}
             {exchange.versionId && <ActualChanges versionId={exchange.versionId} />}
             {(exchange.status === "failed" || exchange.status === "stopped") && <p className="now__turn-status">{exchange.status === "failed" ? "This request failed." : "This request was stopped."}</p>}
           </article>)}

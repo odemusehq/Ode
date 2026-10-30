@@ -39,6 +39,7 @@ import { RoleCheck } from "../services/roles";
 import { Dictation, DictationError, MAX_DICTATION_BYTES } from "./dictation";
 import { ComposerCancelSchema, ComposerDraftSchema, ComposerPrepareSchema, ComposerResolveSchema, ComposerWriteSchema } from "../shared/composer";
 import { ComposerError, type ComposerStore } from "../mneme/composer-store";
+import { AudioDeliveryError, type AudioDeliveries } from "../mneme/audio-deliveries";
 
 /** The built UI's files by path ("index.html", "assets/index-….js"), each base64-encoded. */
 export type UiFiles = Readonly<Record<string, string>>;
@@ -55,6 +56,7 @@ export interface ServerDeps {
   models: ModelRoles;
   services: Pick<Services, "transcribe">;
   composer: ComposerStore;
+  deliveries: AudioDeliveries;
   approvals: Approvals;
   questions: Questions;
   sessions: SessionManager;
@@ -120,6 +122,13 @@ const SAFETY_HEADERS: Readonly<Record<string, string>> = {
   "Referrer-Policy": "no-referrer",
 };
 const OPEN_FROM_LIVE = "Open Ode from Live's right-click menu.";
+
+/** Keep the supplied Unicode filename while providing a safe fallback for older download clients. */
+function attachmentFilename(name: string): string {
+  const ascii = name.replace(/[^\x20-\x7e]|["\\]/g, "_");
+  const utf8 = encodeURIComponent(name).replace(/[!'()*]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`);
+  return `attachment; filename="${ascii}"; filename*=UTF-8''${utf8}`;
+}
 
 /**
  * The local server inside the extension: the UI that Ode's dialogs load, its API and its event stream. It listens on
@@ -416,6 +425,24 @@ export class OdeServer {
       const data = await readFile(join(song.releaseDir, name)).catch(() => null);
       if (!data) return c.json({ error: "That file is missing from the release folder." }, 404);
       return c.body(data, 200, { "Content-Type": RELEASE_CONTENT_TYPES.get(extname(name).toLowerCase()) ?? OTHER_CONTENT_TYPE });
+    });
+
+    app.get("/api/audio-deliveries/:songId/:id", async (c) => {
+      try {
+        const { ref, bytes, contentType } = await this.deps.deliveries.download(c.req.param("songId"), c.req.param("id"));
+        return c.body(Buffer.from(bytes), 200, {
+          "Content-Type": contentType,
+          "Content-Length": String(bytes.byteLength),
+          "Content-Disposition": attachmentFilename(ref.name),
+          "Cache-Control": "no-store",
+          "X-Content-Type-Options": "nosniff",
+        });
+      } catch (error) {
+        if (error instanceof AudioDeliveryError) return c.json({ error: error.message }, error.status);
+        if (error instanceof z.ZodError) return c.json({ error: "Name a valid song and audio delivery." }, 400);
+        if (error instanceof SongNotFoundError) return c.json({ error: error.message }, 404);
+        throw error;
+      }
     });
 
 

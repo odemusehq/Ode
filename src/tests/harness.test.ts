@@ -10,6 +10,8 @@ import { FolderTexts } from "../harness/texts";
 import { ToolLabels } from "../harness/tool-labels";
 import { Mneme } from "../mneme/artist";
 import { ConversationStore } from "../mneme/conversations";
+import { AudioDeliveries } from "../mneme/audio-deliveries";
+import { LocalAudioFiles } from "../live/local-audio-files";
 import { ProductionTaskStore } from "../mneme/production-task";
 import { LyricsStore } from "../mneme/lyrics-store";
 import { TempFolder, userPaths } from "../mneme/paths";
@@ -78,11 +80,14 @@ async function rig(model: ScriptedModel) {
   const song = new SongStore(paths, () => undefined);
   await song.create("Night Bus");
   const prefs = new PreferencesStore(join(paths.preferences, "preferences.json"));
+  const conversations = new ConversationStore(join(paths.workspace, "conversations"), config.limits.historyExchanges);
   const registry = new ToolRegistry({
     config,
     live,
     song,
     production: new ProductionTaskStore(song),
+    deliveries: new AudioDeliveries({ song, audio: new LocalAudioFiles(config.userDir, config.tempDir),
+      attach: async (songId, exchangeId, ref) => { await conversations.log(songId).addDelivery(exchangeId, ref); } }),
     lyrics: new LyricsStore(song, prefs, () => undefined),
     versions: new SongVersions(song, config.versions.snapshotEvery),
     snapshots: new SnapshotReader(live, song),

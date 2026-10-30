@@ -161,6 +161,8 @@
 .now__message p { white-space: pre-wrap; }
 .now__message--user { align-self: flex-end; max-width: 90%; padding: var(--space-3) var(--space-4); background: var(--color-surface-raised); border-radius: var(--radius-md); }
 .now__message--assistant { padding-inline: var(--space-2); }
+.now__deliveries { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-2); padding: 0; list-style: none; }
+.now__deliveries a { overflow-wrap: anywhere; text-underline-offset: 0.15em; }
 .now__turn-status, .now__feedback { color: var(--color-text-muted); font-size: var(--font-size-sm); }
 .now__result { margin-block: var(--space-3); }
 .now__result-actions { margin-left: 0; }

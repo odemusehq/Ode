@@ -21,6 +21,7 @@ export const API = {
   lyricsCheck: "/api/lyrics/check", // POST LyricsCheckRequest → LyricsCheckResponse (Lyrics support's marks for one section)
   lyricsStrict: "/api/lyrics/strict", // POST StrictRhymesRequest → LyricsState (perfect rhymes on or off for a section name)
   releaseFile: (name: string) => `/api/release/file/${encodeURIComponent(name)}`, // GET a release file (cover art shown in a question)
+  audioDelivery: (songId: string, id: string) => `/api/audio-deliveries/${encodeURIComponent(songId)}/${encodeURIComponent(id)}`, // GET exact retained audio as an attachment
   versions: "/api/versions", // GET → VersionListItem[] (newest first)
   versionsCheck: "/api/versions/check", // POST → VersionListItem | null (saves the musician's hand edits now, when Ode is idle)
   version: (id: string) => `/api/versions/${encodeURIComponent(id)}`, // GET → VersionDetail

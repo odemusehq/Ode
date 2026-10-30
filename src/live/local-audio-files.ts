@@ -272,6 +272,12 @@ export class LocalAudioFiles {
     return (await this.verified(id)).record;
   }
 
+  /** Capture verified original bytes for an explicit persistent copy, without creating a working file. */
+  async readVerified(id: string): Promise<{ record: AudioFileRecord; bytes: Uint8Array }> {
+    const { record, bytes } = await this.verified(id);
+    return { record, bytes };
+  }
+
   /** An exact-byte working copy that existing temp-only analysis and Live import tools may consume. */
   async open(id: string): Promise<ManagedAudio> {
     const { record, bytes } = await this.verified(id);

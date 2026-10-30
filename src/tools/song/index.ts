@@ -11,6 +11,7 @@ import { defineTool, type AnyTool } from "../define";
 import { historyTools } from "./history";
 import { hookRetainTool } from "./hooks";
 import { productionTaskTools } from "./production-task";
+import { audioDeliveryTools } from "./audio-delivery";
 import { SETTING_FIELDS, SettingValue } from "./settings";
 
 /**
@@ -226,4 +227,5 @@ export const songTools: AnyTool[] = [
   ...historyTools,
   hookRetainTool,
   ...productionTaskTools,
+  ...audioDeliveryTools,
 ];
