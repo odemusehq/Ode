@@ -212,6 +212,8 @@ function openCommand(command, local) {
   status("Opening Ode…");
   try {
     var objects = windowObjects();
+    // jweb creates its native renderer when the child window becomes visible.
+    frontWindow();
     if (loaded) objects.browser.message("ode_open", command.view, command.url, command.id);
     else objects.browser.message("read", command.url + "&odeWindowCommand=" + encodeURIComponent(command.id));
   } catch (_) { finishOpen(command.id, "error", "Ode's window stayed closed. Press Open Ode to retry."); }

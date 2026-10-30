@@ -112,6 +112,7 @@ test("embedded Max client consumes bootstrap once and waits for page readiness b
   context.tick();
   assert.deepEqual(requests[1]?.body, { session: "b".repeat(48) });
   requests[1]!.reply({ command: { id: "first", view: "ask", url } });
+  assert.ok(window.some((message) => message[0] === "front"), "Show the native window before waiting for its hidden jweb renderer to load");
   assert.equal(page[0]?.[0], "read");
   assert.match(String(page[0]?.[1]), /odeWindowCommand=first$/);
   assert.equal(requests.length, 2, "Reading a page is not evidence it became ready");
