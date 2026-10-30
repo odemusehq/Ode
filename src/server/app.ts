@@ -173,6 +173,7 @@ export class OdeApp {
       song: this.song,
       songs: this.songs,
       lyrics: this.lyrics,
+      services: this.services,
       lyricsChecker: new LyricsChecker(this.services, texts, config.lyricsSupport),
       prefs: this.prefs,
       settings: this.settings,

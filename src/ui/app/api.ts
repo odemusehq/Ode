@@ -2,6 +2,7 @@ import { API } from "../../shared/api";
 import type {
   ApprovalRequest,
   ChatRequest,
+  DictationResponse,
   LyricsSaved,
   LyricsState,
   LyricsWrite,
@@ -75,6 +76,14 @@ export class OdeApi {
     const response = await fetch(API.audioImport, { method: HttpMethod.Post, body });
     if (!response.ok) throw new ApiError(response.status, await readError(response));
     return await response.json() as AudioAttachment;
+  }
+  async transcribe(file: File, songId: string, signal?: AbortSignal): Promise<DictationResponse> {
+    const body = new FormData();
+    body.set("file", file);
+    body.set("songId", songId);
+    const response = await fetch(API.dictation, { method: HttpMethod.Post, body, signal });
+    if (!response.ok) throw new ApiError(response.status, await readError(response));
+    return await response.json() as DictationResponse;
   }
   chat(request: ChatRequest, signal?: AbortSignal): Promise<OkResponse> {
     return this.request(HttpMethod.Post, API.chat, request, signal);

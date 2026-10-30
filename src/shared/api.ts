@@ -8,6 +8,7 @@ export const API = {
   chat: "/api/chat", // POST ChatRequest → { ok: true } (a typed line, spoken words or a tapped suggestion)
   conversation: "/api/conversation", // GET complete saved transcript
   audioImport: "/api/audio/import", // POST explicit multipart audio upload
+  dictation: "/api/dictation", // POST multipart { songId, file: PCM WAV } → DictationResponse; never submits chat
   stop: "/api/stop", // POST → { ok: true }
   events: "/api/events", // GET server-sent events of UiEvent
   status: "/api/status", // GET → StatusResponse
@@ -46,6 +47,11 @@ export interface ChatRequest {
   text: string;
 }
 
+export interface DictationResponse {
+  songId: string;
+  text: string;
+}
+
 export interface ApprovalRequest {
   decision: "allow" | "deny";
 }
@@ -65,9 +71,11 @@ export interface StatusResponse {
   versionGroupMinutes: number;
   /** The line the chosen model's licence asks Ode to show. */
   credit: string | null;
+  /** Local configuration only; no provider request or microphone permission check is made. */
+  dictationReady?: boolean;
 }
 
-/** Undo, Again and Why? name the change by Ode they are about, and they act only on the newest change. */
+/** Undo/Again name a scoped, guarded change; Why? names the result to explain. */
 export interface VersionRequest {
   versionId: string;
 }

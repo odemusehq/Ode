@@ -35,6 +35,9 @@ import { SetReadError } from "./snapshot-reader";
 import type { SongSwitcher } from "./song-switcher";
 import { SongTitle } from "./song-title";
 import { RefusedError, type VersionActions } from "./version-actions";
+import type { Services } from "../services/types";
+import { RoleCheck } from "../services/roles";
+import { Dictation, DictationError, MAX_DICTATION_BYTES } from "./dictation";
 
 /** The built UI's files by path ("index.html", "assets/index-….js"), each base64-encoded. */
 export type UiFiles = Readonly<Record<string, string>>;
@@ -49,6 +52,7 @@ export interface ServerDeps {
   prefs: PreferencesStore;
   settings: SettingsStore;
   models: ModelRoles;
+  services: Pick<Services, "transcribe">;
   approvals: Approvals;
   questions: Questions;
   sessions: SessionManager;
@@ -165,14 +169,15 @@ export class OdeServer {
     if (!READS.has(c.req.method)) {
       const origin = c.req.header("origin");
       if (origin !== undefined && !hosts.some((host) => origin === `http://${host}`)) return c.text(OPEN_FROM_LIVE, 403);
-      const upload = c.req.path === API.audioImport;
+      const upload = c.req.path === API.audioImport || c.req.path === API.dictation;
       const contentType = c.req.header("content-type") ?? "";
       if (upload && origin === undefined) return c.text(OPEN_FROM_LIVE, 403);
       if (!(upload ? contentType.startsWith("multipart/form-data;") : contentType.startsWith(JSON_TYPE))) {
         return c.json({ error: upload ? "Choose an audio file to attach." : "Send the request as JSON." }, 415);
       }
     }
-    if (!READS.has(c.req.method) && c.req.path !== API.stop) {
+    // Dictation has no song writes. Its captured song id and final check permit switching while ASR runs.
+    if (!READS.has(c.req.method) && c.req.path !== API.stop && c.req.path !== API.dictation) {
       const switchesSong = c.req.method === "POST" && (c.req.path === API.songs || c.req.path === API.songsOpen);
       if (this.switchingRequest || this.deps.songs.isSwitching || (switchesSong && this.modifyingRequests > 0)) {
         return c.json({ error: "Ode is switching songs, or a request is still arriving. Wait for it to finish, then try again." }, 409);
@@ -271,6 +276,31 @@ export class OdeServer {
       }
     });
 
+    app.post(API.dictation, bodyLimit({ maxSize: MAX_DICTATION_BYTES + 64 * 1024,
+      onError: (c) => c.json({ error: "Dictation is limited to 16 MiB and one minute." }, 413),
+    }), async (c) => {
+      const songId = song.songId;
+      const form = await c.req.formData();
+      const file = form.get("file");
+      if (!(file instanceof File) || typeof form.get("songId") !== "string") return c.json({ error: "Send a WAV recording and its songId." }, 400);
+      if (form.get("songId") !== songId || song.songId !== songId) return c.json({ error: "The open song changed. Dictate again in the intended song." }, 409);
+      if (file.size > MAX_DICTATION_BYTES) return c.json({ error: "Dictation is limited to 16 MiB and one minute." }, 413);
+      const role = (await this.deps.models.roles()).transcription;
+      if (song.songId !== songId) return c.json({ error: "The open song changed. Dictate again in the intended song." }, 409);
+      if (!RoleCheck.isConfigured(role)) return c.json({ error: "Add a Meta key in Ode: Settings to use dictation." }, 503);
+      try {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        if (song.songId !== songId) return c.json({ error: "The open song changed. Dictate again in the intended song." }, 409);
+        const text = await new Dictation(this.deps.services, config.tempDir).transcribe(bytes, c.req.raw.signal, () => song.songId === songId);
+        if (song.songId !== songId) return c.json({ error: "The open song changed. The dictation was not submitted." }, 409);
+        return c.json({ songId, text });
+      } catch (error) {
+        if (error instanceof DictationError) return c.json({ error: error.message }, error.status);
+        if (c.req.raw.signal.aborted) return c.json({ error: "Dictation cancelled." }, 408);
+        return c.json({ error: "Dictation could not finish. Try again." }, 502);
+      }
+    });
+
     app.post(API.stop, async (c) => {
       const parsed = z.object({ requestIds: z.array(z.uuid()).max(256).optional() }).safeParse(await OdeServer.body(c) ?? {});
       if (!parsed.success) return c.json({ error: "Send requestIds as an optional list of request ids." }, 400);
@@ -288,6 +318,7 @@ export class OdeServer {
         title: SongTitle.of((await song.read()).title),
         versionGroupMinutes: config.versions.groupMinutes,
         credit: (await this.deps.settings.view()).credit,
+        dictationReady: RoleCheck.isConfigured((await this.deps.models.roles()).transcription),
       };
       return c.json(status);
     });
