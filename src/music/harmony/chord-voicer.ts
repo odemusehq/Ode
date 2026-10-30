@@ -1,6 +1,7 @@
 import type { Note } from "../../shared/live";
 import type { ChordEvent } from "../../shared/song";
 import { ChordSymbol, ChordTone } from "./chord-symbol";
+import { parseChordEvents } from "./chord-timeline";
 import { fitByOctaves, pitchesOfClass, rangeCentre, requirePitchRange, type PitchRange } from "./pitch-range";
 
 /** Keyboard comping range for the upper voices (E3 to G5), used when the register is left out. */
@@ -76,15 +77,16 @@ export class ChordVoicer {
   ) { requirePitchRange(register); }
 
   voice(chords: ChordEvent[]): { notes: Note[]; voicings: Voicing[] } {
-    const events = [...chords]
-      .sort((a, b) => a.beat - b.beat)
-      .map((event) => ({ event, chord: ChordSymbol.parse(event.symbol) }))
+    const chart = parseChordEvents(chords);
+    const events = chart
       .filter((item): item is ParsedEvent => item.chord !== null);
-    if (events.length === 0) return { notes: [], voicings: [] };
     const upper = this.upperVoices(events);
     const bass = this.options.bass === false ? events.map(() => null) : this.bassLine(events);
     const notes: Note[] = [];
-    const voicings: Voicing[] = events.map(({ event, chord }, index) => {
+    let pitchedIndex = 0;
+    const voicings: Voicing[] = chart.map(({ event, chord }) => {
+      if (!chord) return { symbol: event.symbol, beat: event.beat, lengthBeats: event.lengthBeats, bass: null, pitches: [] };
+      const index = pitchedIndex++;
       const pitches = upper[index] ?? [];
       const bassPitch = bass[index] ?? null;
       if (bassPitch !== null) notes.push({ pitch: bassPitch, start: event.beat, duration: event.lengthBeats, velocity: BASS_VELOCITY });

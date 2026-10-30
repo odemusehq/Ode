@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { KeyFinder } from "../../music/harmony/key-finder";
+import { parseChordEvents } from "../../music/harmony/chord-timeline";
 import { MusicalKey } from "../../music/harmony/musical-key";
 import { hookNotesInRange, melodyNoteHash, writeLyricPhrases, type MelodyPhrase } from "../../music/melody/lyric-phrases";
 import { Contour, MAX_DENSITY, MIN_DENSITY, Register, type MelodyPlan } from "../../music/melody/melody-plan";
@@ -9,7 +10,7 @@ import { LyricsText } from "../../mneme/lyrics-text";
 import { SetLookup } from "../../server/set-lookup";
 import type { Note } from "../../shared/live";
 import { TYPICAL_VOCAL_RANGE } from "../../shared/personalisation";
-import { RetainedHookSchema, type RetainedHook } from "../../shared/song";
+import { RetainedHookSchema, type ChordEvent, type RetainedHook } from "../../shared/song";
 import { defineTool, type ToolContext } from "../define";
 import { MelodyPhraseInput, describeSyllables } from "./line-on-notes";
 import { ChordsInput, KeyInput, MAX_BARS, RangeInput, SeedInput, TimeSignatureInput } from "./schemas";
@@ -76,6 +77,7 @@ export const melodyWriteTool = defineTool({
     let hooks = input.retainedHooks ?? [];
     let clipStartBeat = input.clipStartBeat;
     let sectionLength: number | undefined;
+    let sectionChart: { events: ChordEvent[]; offset: number } | undefined;
     let bindings: { lyricsRevision: number; rechecked: string[] } | undefined;
     if (input.sectionId) {
       if (input.lyrics || input.phrases) throw new Error("sectionId reads its saved lyric bindings; use explicit lyrics/phrases instead when deliberately drafting another plan.");
@@ -95,7 +97,10 @@ export const melodyWriteTool = defineTool({
       lines = saved.map((phrase) => phrase.text);
       phrases = saved.map((phrase, index) => ({ line: index + 1, startBeat: section.startBeat + phrase.startBeat - clipStartBeat!,
         lengthBeats: phrase.lengthBeats, motifId: phrase.motifId, hookId: phrase.hookId }));
-      if (!input.chords) chords = section.chords.map((chord) => ({ ...chord, beat: section.startBeat + chord.beat - clipStartBeat! }));
+      if (!input.chords) {
+        parseChordEvents(section.chords);
+        sectionChart = { events: section.chords, offset: clipStartBeat - section.startBeat };
+      }
       if (!input.retainedHooks) hooks = sheet.composition?.hooks ?? [];
     } else if (input.clipStartBeat !== undefined && input.beatOffset === undefined) {
       // Explicit Arrangement placement also gives a concrete metrical origin.
@@ -106,7 +111,15 @@ export const melodyWriteTool = defineTool({
     const lengthBeats = input.lengthBeats ?? barLength ?? sectionLength;
     if (lengthBeats === undefined || lengthBeats <= 0 || !Number.isFinite(lengthBeats) || lengthBeats > MAX_BARS * beatsPerBar) throw new Error(`Give a positive clip length no longer than ${MAX_BARS} bars.`);
     if (input.motifBars !== undefined && input.motifBars * beatsPerBar > lengthBeats + 1e-6) throw new Error("motifBars exceeds the clip length. Choose the intended motif length explicitly.");
-    const key = input.key ?? defaults.key ?? new KeyFinder().find(chords).spec;
+    if (sectionChart) {
+      // Project only the requested clip window; keep saved section timing and its key context intact.
+      const { events, offset } = sectionChart, end = offset + lengthBeats;
+      chords = events.filter((event) => event.beat < end && event.beat + event.lengthBeats > offset).map((event) => {
+        const from = Math.max(offset, event.beat);
+        return { ...event, beat: from - offset, lengthBeats: Math.min(end, event.beat + event.lengthBeats) - from };
+      });
+    }
+    const key = input.key ?? defaults.key ?? new KeyFinder().find(sectionChart?.events ?? chords).spec;
     const plan: MelodyPlan = { bars: lengthBeats / beatsPerBar, lengthBeats, beatOffset: input.beatOffset ?? clipStartBeat ?? 0,
       signature, contour: input.contour, register: input.register, density: input.density, motifBars: input.motifBars, seed: input.seed, key };
     if (!phrases) lines = lines.map((line) => line.trim()).filter(LyricsText.isSung);

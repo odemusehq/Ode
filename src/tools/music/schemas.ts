@@ -21,7 +21,7 @@ export const NotesInput = z.array(NoteInput);
 
 export const ChordsInput = z
   .array(ChordEventSchema)
-  .describe('Chord events: { beat (from the section start), lengthBeats, symbol such as "Am7", "F/C", "Bbsus2" }.');
+  .describe('Nonoverlapping chord events: { beat (from the section start), lengthBeats, symbol such as "Am7", "F/C", "Bbsus2" }. NC or N.C. explicitly means no chord accompaniment/constraint, not a silent lead melody. Unsupported symbols and repeat marks refuse rather than being guessed; use supported spellings or explicit MIDI voicings.');
 
 export const RangeInput = z
   .object({

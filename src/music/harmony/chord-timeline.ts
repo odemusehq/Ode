@@ -11,17 +11,37 @@ export interface TimedChord {
 /** Beats closer than this count as the same moment. */
 const TIME_TOLERANCE = 1e-6;
 
+/** Validate a computational chart without rewriting its saved symbols or timing. Null means explicit NC only. */
+export function parseChordEvents(events: ChordEvent[]): { event: ChordEvent; chord: ChordSymbol | null }[] {
+  const parsed = events.map((event) => {
+    if (!Number.isFinite(event.beat) || event.beat < 0 || !Number.isFinite(event.lengthBeats) || event.lengthBeats <= 0 || !Number.isFinite(event.beat + event.lengthBeats)) {
+      throw new RangeError(`Chord ${JSON.stringify(event.symbol)} at beat ${event.beat} needs a finite nonnegative start and positive finite length.`);
+    }
+    const noChord = ChordSymbol.isNoChord(event.symbol);
+    const chord = noChord ? null : ChordSymbol.parse(event.symbol);
+    if (!noChord && !chord) throw new Error(`Unsupported chord symbol ${JSON.stringify(event.symbol)} at beat ${event.beat}. Use a supported spelling or explicit MIDI notes for the intended harmony. NC/N.C. is only for an intentional no-chord passage.`);
+    return { event, chord };
+  }).sort((a, b) => a.event.beat - b.event.beat);
+  for (let index = 1; index < parsed.length; index++) {
+    const previous = parsed[index - 1]!.event;
+    const current = parsed[index]!.event;
+    if (current.beat < previous.beat + previous.lengthBeats - TIME_TOLERANCE) {
+      throw new Error(`Chord ${JSON.stringify(current.symbol)} at beat ${current.beat} overlaps ${JSON.stringify(previous.symbol)}. Choose the intended nonoverlapping spans explicitly; no notes or chart text were trimmed.`);
+    }
+  }
+  return parsed;
+}
+
 /** Chord events in time order, to ask which chord sounds at a beat. */
 export class ChordTimeline {
   private readonly chords: TimedChord[];
 
   constructor(events: ChordEvent[]) {
-    this.chords = [...events]
-      .sort((a, b) => a.beat - b.beat)
-      .map((event) => ({
+    this.chords = parseChordEvents(events)
+      .map(({ event, chord }) => ({
         start: event.beat,
         end: event.beat + event.lengthBeats,
-        chord: ChordSymbol.parse(event.symbol),
+        chord,
         symbol: event.symbol,
       }));
   }

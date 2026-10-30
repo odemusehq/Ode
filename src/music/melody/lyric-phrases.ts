@@ -3,6 +3,7 @@ import type { Note } from "../../shared/live";
 import type { LineAnalysis } from "../../shared/lyrics";
 import type { ChordEvent, RetainedHook } from "../../shared/song";
 import type { PitchRange } from "../harmony/pitch-range";
+import { parseChordEvents } from "../harmony/chord-timeline";
 import { LyricSetter } from "../prosody/lyric-setter";
 import { Meter } from "../prosody/meter";
 import { melodyLine } from "../prosody/melody-line";
@@ -77,6 +78,7 @@ export function validateMelodyPhrases(phrases: MelodyPhrase[], lineCount: number
  */
 export function writeLyricPhrases(plan: MelodyPlan, chords: ChordEvent[], range: PitchRange,
   lines: { text: string; analysis: LineAnalysis }[], phrases: MelodyPhrase[], hooks: RetainedHook[] = []): { notes: Note[]; phrases: WrittenPhrase[] } {
+  parseChordEvents(chords);
   const meter = new Meter(plan.signature.numerator, plan.signature.denominator);
   const length = plan.lengthBeats ?? plan.bars * meter.barLength;
   validateMelodyPhrases(phrases, lines.length, length);

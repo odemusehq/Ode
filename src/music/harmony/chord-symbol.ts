@@ -21,30 +21,19 @@ export interface ChordToneInfo {
 const NAMING_OCTAVE = 60;
 const PITCH_CLASSES = 12;
 const DIATONIC_STEPS = 7;
-const MAJOR_SECOND = 2;
 const MINOR_THIRD = 3;
-const MAJOR_THIRD = 4;
-const PERFECT_FOURTH = 5;
-const PERFECT_FIFTH = 7;
-const DIMINISHED_SEVENTH = 9;
-const MINOR_SEVENTH = 10;
-const MAJOR_SEVENTH = 11;
 
 /** Common ways of writing chord symbols, rewritten to the forms tonal reads. */
 const SYMBOL_REWRITES: readonly [RegExp, string][] = [
-  [/[()]/g, ""],
   [/♭/g, "b"],
   [/♯/g, "#"],
   [/Δ(?=\d)/g, "maj"],
   [/Δ/g, "maj7"],
-  [/−/g, "m"],
-  [/min(?!or)/g, "m"],
-  // Half-diminished (ø, ø7) and diminished (°, °7) signs, and a minus straight after the root ("C-7").
+  [/−/g, "-"],
+  // Half-diminished (ø, ø7) and diminished (°, °7) signs.
   [/ø7?/g, "m7b5"],
   [/°/g, "dim"],
-  [/^([A-G][#b]?)-/, "$1m"],
 ];
-const ROOT_AND_REST = /^([A-G][#b]?)([^/]*)(?:\/([A-G][#b]?))?$/;
 
 function modulo(value: number): number {
   return ((value % PITCH_CLASSES) + PITCH_CLASSES) % PITCH_CLASSES;
@@ -96,9 +85,14 @@ export class ChordSymbol {
   static parse(symbol: string): ChordSymbol | null {
     const cached = ChordSymbol.cache.get(symbol);
     if (cached !== undefined) return cached;
-    const parsed = ChordSymbol.fromTonal(symbol) ?? ChordSymbol.fromPattern(symbol);
+    const parsed = ChordSymbol.fromTonal(symbol);
     ChordSymbol.cache.set(symbol, parsed);
     return parsed;
+  }
+
+  /** Only these explicit chart spellings denote no chord; unknown/repeat text is not silence. */
+  static isNoChord(symbol: string): boolean {
+    return /^(?:NC|N\.C\.)$/i.test(symbol.trim());
   }
 
   get pitchClasses(): number[] {
@@ -127,12 +121,35 @@ export class ChordSymbol {
     return modulo(pitchClass - this.root);
   }
 
-  private static clean(symbol: string): string {
-    return SYMBOL_REWRITES.reduce((text, [pattern, replacement]) => text.replace(pattern, replacement), symbol.trim());
+  private static clean(symbol: string): string | null {
+    let depth = 0;
+    for (const character of symbol) {
+      if (character === "(") depth++;
+      if (character === ")" && --depth < 0) return null;
+    }
+    if (depth !== 0) return null;
+    const formatted = symbol.trim().replace(/\(\s*/g, "").replace(/\s*\)/g, "");
+    const text = SYMBOL_REWRITES.reduce((value, [pattern, replacement]) => value.replace(pattern, replacement), formatted);
+    const [root, suffix, bass] = Chord.tokenize(text);
+    if (!root) return null;
+    // Tonal takes only the first slash bass, ignoring later components. A quality such as 6/9 has no bass token.
+    if (bass && text.indexOf("/") !== text.lastIndexOf("/")) return null;
+    // Closed spelling compatibility; the complete resulting quality must still exist in Tonal's dictionary.
+    let quality = suffix.trim().replace(/(\d)\s*,\s*(?=[#b]?\d)/g, "$1")
+      .replace(/^(?:minor|min)(?=$|\d|maj)/i, "m")
+      .replace(/^major(?=$|\d)/i, "maj")
+      .replace(/^dom7(?=$|[#b])/i, "7");
+    if (quality.startsWith("m") || quality.startsWith("-")) {
+      const rest = quality.slice(1);
+      if (/^(?:major|maj)(?=$|\d)/i.test(rest)) quality = `m${rest.replace(/^(?:major|maj)(?=$|\d)/i, "Maj")}`;
+    }
+    return `${root}${quality}${bass ? `/${bass}` : ""}`;
   }
 
   private static fromTonal(symbol: string): ChordSymbol | null {
-    const chord = Chord.get(ChordSymbol.clean(symbol));
+    const cleaned = ChordSymbol.clean(symbol);
+    if (cleaned === null) return null;
+    const chord = Chord.get(cleaned);
     if (chord.empty || !chord.tonic) return null;
     const root = Note.chroma(chord.tonic);
     const hasThird = chord.intervals.some((name) => simpleNumber(name) === 3);
@@ -142,34 +159,6 @@ export class ChordSymbol {
       name,
     }));
     const bass = chord.bass ? Note.chroma(chord.bass) : root;
-    return new ChordSymbol(symbol, root, bass, tones);
-  }
-
-  /** Fallback for unusual spellings: root, minor/diminished/augmented/suspended quality, a seventh, a bass note. */
-  private static fromPattern(symbol: string): ChordSymbol | null {
-    const match = ROOT_AND_REST.exec(ChordSymbol.clean(symbol));
-    const rootName = match?.[1];
-    if (!match || !rootName) return null;
-    const root = Note.chroma(rootName);
-    const rest = (match[2] ?? "").toLowerCase();
-    const bassName = match[3];
-    const tone = (interval: number, role: ChordTone): ChordToneInfo => ({
-      pitchClass: modulo(root + interval),
-      role,
-      name: nameOfPitchClass(modulo(root + interval)),
-    });
-    const tones: ChordToneInfo[] = [{ pitchClass: root, role: ChordTone.Root, name: rootName }];
-    const minor = rest.startsWith("m") && !rest.startsWith("maj");
-    if (rest.includes("sus2")) tones.push(tone(MAJOR_SECOND, ChordTone.Suspension));
-    else if (rest.includes("sus")) tones.push(tone(PERFECT_FOURTH, ChordTone.Suspension));
-    else tones.push(tone(minor || rest.includes("dim") ? MINOR_THIRD : MAJOR_THIRD, ChordTone.Third));
-    const flatFifth = rest.includes("dim") || rest.includes("b5");
-    const fifth = flatFifth ? PERFECT_FIFTH - 1 : rest.includes("aug") || rest.includes("+") ? PERFECT_FIFTH + 1 : PERFECT_FIFTH;
-    tones.push(tone(fifth, ChordTone.Fifth));
-    if (rest.includes("maj7")) tones.push(tone(MAJOR_SEVENTH, ChordTone.Seventh));
-    else if (rest.includes("dim7")) tones.push(tone(DIMINISHED_SEVENTH, ChordTone.Seventh));
-    else if (rest.includes("7")) tones.push(tone(MINOR_SEVENTH, ChordTone.Seventh));
-    const bass = bassName ? Note.chroma(bassName) : root;
     return new ChordSymbol(symbol, root, bass, tones);
   }
 }

@@ -1,6 +1,6 @@
 import type { Note } from "../../shared/live";
 import type { ChordEvent } from "../../shared/song";
-import { ChordSymbol } from "./chord-symbol";
+import { parseChordEvents } from "./chord-timeline";
 import { MusicalKey } from "./musical-key";
 
 const PITCH_CLASSES = 12;
@@ -34,15 +34,18 @@ function correlation(values: number[], profile: number[], rotation: number): num
 export class KeyFinder {
   find(chords: ChordEvent[], notes: Note[] = []): MusicalKey {
     const weights = new Array<number>(PITCH_CLASSES).fill(0);
-    const parsed = chords.map((event) => ({ event, chord: ChordSymbol.parse(event.symbol) }));
+    const parsed = parseChordEvents(chords);
     for (const { event, chord } of parsed) {
       if (!chord) continue;
       for (const pitchClass of chord.pitchClasses) {
         weights[pitchClass] = (weights[pitchClass] ?? 0) + event.lengthBeats * (pitchClass === chord.root ? ROOT_WEIGHT : 1);
       }
     }
-    for (const note of notes) weights[note.pitch % PITCH_CLASSES] = (weights[note.pitch % PITCH_CLASSES] ?? 0) + note.duration;
-    if (weights.every((weight) => weight === 0)) return MusicalKey.ofMajor(0);
+    for (const note of notes) {
+      if (note.muted || note.probability === 0 || note.duration <= 0) continue;
+      weights[note.pitch % PITCH_CLASSES] = (weights[note.pitch % PITCH_CLASSES] ?? 0) + note.duration;
+    }
+    if (weights.every((weight) => weight === 0)) throw new Error("There is no pitched chord or active note evidence from which to infer a key. Give an explicit key for the draft instead of treating C major as detected.");
     const first = parsed.find((item) => item.chord)?.chord ?? null;
     const last = [...parsed].reverse().find((item) => item.chord)?.chord ?? null;
     let best = MusicalKey.ofMajor(0);

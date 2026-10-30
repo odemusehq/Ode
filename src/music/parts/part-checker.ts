@@ -98,20 +98,21 @@ export class PartChecker {
   private chordTones(notes: Note[], chords: ChordTimeline): NonNullable<PartCheck["chordTones"]> {
     const meter = this.meter;
     if (!meter) throw new Error("Checking chord tones on strong beats needs an explicit or observed time signature.");
-    const strong = notes.filter((note) => meter.weightAt(note.start) >= METRICAL_WEIGHT.middleBeat);
+    const strong = notes.filter((note) => meter.weightAt(note.start) >= METRICAL_WEIGHT.middleBeat && chords.at(note.start) !== null);
     const offChord = strong.flatMap((note) => {
       const chord = chords.at(note.start);
       return chord && !chord.contains(note.pitch) ? [{ ...PartChecker.placed(note), chord: chord.symbol, checkedAt: note.start }] : [];
     });
     let heldAtChanges = 0;
     for (const event of chords.entries()) {
+      if (!event.chord) continue;
       for (const note of notes) {
         if (note.start >= event.start || note.start + note.duration <= event.start) continue;
         heldAtChanges++;
         if (event.chord && !event.chord.contains(note.pitch)) offChord.push({ ...PartChecker.placed(note), chord: event.symbol, checkedAt: event.start });
       }
     }
-    return { strongBeatNotes: strong.length, heldAtChanges, offChord, note: "Strong onsets and notes held across chord changes only. Non-chord tones can be intentional; this does not judge resolution, ensemble clashes or musical quality." };
+    return { strongBeatNotes: strong.length, heldAtChanges, offChord, note: "Strong onsets and notes held into pitched chord changes only. NC/N.C. and gaps impose no chord constraint and are excluded from these counts. Non-chord tones can be intentional; this does not judge resolution, ensemble clashes or musical quality." };
   }
 
   private static lock(notes: Note[], targets: Note[]): NonNullable<PartCheck["lock"]> {

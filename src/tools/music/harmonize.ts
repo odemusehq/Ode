@@ -19,6 +19,7 @@ export const harmonizeTool = defineTool({
     "Use it to harmonise a topline or reharmonise a section; voice the chosen progression with voice_chords.",
     "Inputs: melody (notes); key (optional, defaults to Live's key when Scale Mode is on, else found from the melody); k (how many",
     "progressions, default 3); style (genre or style such as pop, rock, jazz, soul, folk; defaults to the genre setting);",
+    "Without an explicit or observed key, inference needs pitched active notes; muted/probability-zero notes do not establish one. For a new draft choose its key explicitly from the musical brief rather than calling an empty input C major.",
     "harmonicRhythmBeats (beats per chord, default one bar); favour (Roman numerals or chord symbols the artist likes);",
     "timeSignature (optional).",
     'Returns { key, progressions }: each progression has chords (events { beat, lengthBeats, symbol } from beat 0) and',

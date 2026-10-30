@@ -17,6 +17,7 @@ export const basslineWriteTool = defineTool({
     '"arpeggio" (chord tones up and down in eighths). Slash chords put their bass note in the bassline.',
     "Use it after the chords and drums exist; pass the drum notes so the bass follows the kick's exact onset times, including off-grid feel. kickPitch defaults to MIDI 36; give the actual mapped pitch for a custom Drum Rack. Other pitches, muted notes and probability 0 notes are ignored; conditional kicks remain potential triggers, not guaranteed playback events. No reference timing is quantized. Chord-change attacks and the chosen style's deliberate subdivisions/anticipations remain.",
     "Inputs: chords (events from beat 0); kick (optional drum notes); kickPitch (optional); style; seed (optional).",
+    "NC/N.C. emits no bass in that span; approaches only lead into a contiguous following pitched chord, never across a gap or no-chord stop. Unsupported symbols and overlapping chord events refuse instead of dropping or guessing them.",
     "Returns { style, kickPitch, notes }: notes in bass range (E1–G3; C1–D3 for 808) from beat 0.",
   ].join(" "),
   input: {

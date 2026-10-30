@@ -1,7 +1,7 @@
 import type { Note } from "../../shared/live";
 import type { ChordEvent } from "../../shared/song";
 import { ChordTone, type ChordSymbol } from "../harmony/chord-symbol";
-import { ChordTimeline, type TimedChord } from "../harmony/chord-timeline";
+import { ChordTimeline } from "../harmony/chord-timeline";
 import { pitchesOfClass, type PitchRange } from "../harmony/pitch-range";
 import { DrumNote } from "./drum-kit";
 import { SeededRandom } from "./random";
@@ -68,13 +68,17 @@ export class BasslineWriter {
   }
 
   write(chords: ChordEvent[], kick: Note[], kickPitch: number = DrumNote.Kick): Note[] {
-    const events = new ChordTimeline(chords)
-      .entries()
-      .filter((entry): entry is TimedChord & { chord: ChordSymbol } => entry.chord !== null)
-      .map((entry) => ({ start: entry.start, end: entry.end, chord: entry.chord }));
+    const events = new ChordTimeline(chords).entries();
     const kicks = this.kickTimes(kick, kickPitch);
     const notes: Note[] = [];
-    events.forEach((event, index) => notes.push(...this.forChord(event, events[index + 1], kicks)));
+    events.forEach((event, index) => {
+      if (!event.chord) return;
+      const next = events[index + 1];
+      const contiguous = next?.chord && Math.abs(next.start - event.end) <= EPSILON
+        ? { start: next.start, end: next.end, chord: next.chord }
+        : undefined;
+      notes.push(...this.forChord({ start: event.start, end: event.end, chord: event.chord }, contiguous, kicks));
+    });
     return this.style === BassStyle.EightOhEight ? this.addSlides(notes) : notes;
   }
 

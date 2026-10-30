@@ -13,6 +13,7 @@ export const voiceChordsTool = defineTool({
     "with smooth voice leading (least movement between chords, wide spacing low down, few parallel fifths and octaves),",
     "plus a bass note that uses roots and inversions for a smooth bass line.",
     "Use it to turn a chord chart into a playable part; write the notes into a clip with the MIDI tools.",
+    "NC/N.C. keeps an explicit empty voicing record and emits no accompaniment there. Unsupported symbols or overlapping chord events refuse the complete draft instead of omitting or guessing harmony.",
     `Inputs: chords (events from beat 0); register (optional MIDI low/high for the upper voices, default E3–G5,`,
     "MIDI 52–79); voices (optional 3 or 4); bass (optional, default true).",
     'Returns { notes, voicings }: voicings lists each chord\'s symbol (with "/bass" added when an inversion was chosen),',
