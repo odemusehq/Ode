@@ -3,11 +3,12 @@ import { mkdtemp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { audioHash } from "../services/music-audio";
+import { audioHash, MusicAudio } from "../services/music-audio";
 import { OpenAiCompatibleAudioUnderstander } from "../services/adapters/openai-compatible-audio";
 import { encodeWav } from "../music/audio/wav";
 import { LocalAudioFiles } from "../live/local-audio-files";
 import { TempFolder } from "../mneme/paths";
+import { JsonFile } from "../mneme/json-file";
 import { mediaTools } from "../tools/media";
 import type { ToolContext } from "../tools/define";
 
@@ -63,5 +64,19 @@ test("listening evidence stays bound to sent bytes, and only explicit Arrangemen
     assert.equal(reopened.sha256, audioHash(bytes));
     assert.equal(reopened.currentness, "unknown");
     await assert.rejects(tool.run({ path: supplied, track: { tag: "voice" }, start: 0, end: 4, question: "Describe it" }, ctx), /one source|mixed/i);
+    const persisted = (await readdir(join(root, "Audio"))).sort(), stopRead = new AbortController();
+    const freeze = MusicAudio.freeze;
+    try {
+      MusicAudio.freeze = async (path) => { const frozen = await freeze(path); stopRead.abort(); return frozen; };
+      await assert.rejects(capture.run({ track: { tag: "voice" }, start: 0, end: 4 }, { ...ctx, signal: stopRead.signal }), /abort/i);
+    } finally { MusicAudio.freeze = freeze; }
+    assert.equal(await stat(rendered).then(() => true, () => false), false);
+    assert.deepEqual((await readdir(join(root, "Audio"))).sort(), persisted, "Stop during capture reading must not retain another asset.");
+    const stopPublish = new AbortController(), publish = JsonFile.writeAtomically;
+    try {
+      JsonFile.writeAtomically = async (...args) => { stopPublish.abort(); return publish(...args); };
+      await assert.rejects(new LocalAudioFiles(root, temp).add({ name: "Stopped.wav", bytes, purpose: "reference" }, stopPublish.signal), /abort/i);
+    } finally { JsonFile.writeAtomically = publish; }
+    assert.deepEqual((await readdir(join(root, "Audio"))).sort(), persisted, "Stopped publication must remove its staged binary too.");
   } finally { globalThis.fetch = originalFetch; await rm(root, { recursive: true, force: true }); }
 });

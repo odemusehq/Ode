@@ -92,14 +92,17 @@ export const mediaTools: AnyTool[] = [
     input: { track: TrackRefSchema, start: z.number().min(0), end: z.number().positive(), name: z.string().min(1).max(200).optional() },
     describe: ({ track, start, end }, names) => `Keep an audio capture · ${names.track(track)} · ${names.span(start, end)}`,
     run: (input, ctx) => withAudio(input, ctx, async (path) => {
+      ctx.signal?.throwIfAborted();
       const frozen = await MusicAudio.freeze(path);
+      ctx.signal?.throwIfAborted();
       MusicAudio.decode(frozen);
       if (!frozen.source.frames) throw new Error("The capture has zero sample frames; no audio was retained.");
       const library = new LocalAudioFiles(ctx.config.userDir, ctx.config.tempDir);
       const record = await library.add({ name: `${input.name ?? "Arrangement capture " + new Date().toISOString().replaceAll(":", "-")}.${frozen.source.format === "AIFF" ? "aiff" : "wav"}`,
         bytes: frozen.bytes, purpose: "reference", provenance: "sdk-pre-fx-capture", range: { start: input.start, end: input.end },
-        source: `SDK pre-effects, pre-fader Arrangement source audio; track ${JSON.stringify(input.track)}. Current processed Set and effect tails are unverified.` });
-      return { ...await library.open(record.id), retained: true, signalStage: "pre-effects, pre-fader Arrangement source audio",
+        source: `SDK pre-effects, pre-fader Arrangement source audio; track ${JSON.stringify(input.track)}. Current processed Set and effect tails are unverified.` }, ctx.signal);
+      // An already-issued publication can finish during Stop. Keep its real acknowledgement without starting a working copy.
+      return { ...(ctx.signal?.aborted ? record : await library.open(record.id)), retained: true, signalStage: "pre-effects, pre-fader Arrangement source audio",
         availability: "Managed capture; reopen its id with library_audio_open if this working path expires." };
     }),
   }),

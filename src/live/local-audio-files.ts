@@ -141,7 +141,8 @@ export class LocalAudioFiles {
     this.root = join(storageDirectory, "Audio");
   }
 
-  async add(input: AudioFileInput): Promise<AudioFileRecord> {
+  async add(input: AudioFileInput, signal?: AbortSignal): Promise<AudioFileRecord> {
+    signal?.throwIfAborted();
     const name = basename(input.name.replaceAll("\\", "/"));
     if (!AUDIO_SUFFIX.test(name)) throw new Error("Choose an audio file: WAV, AIFF, FLAC, MP3, Ogg or M4A.");
     if (input.bytes.byteLength === 0 || input.bytes.byteLength > MAX_AUDIO_UPLOAD_BYTES) {
@@ -157,13 +158,16 @@ export class LocalAudioFiles {
     await mkdir(this.root, { recursive: true });
     await this.inside(this.root, true);
     const file = this.file(record);
-    await writeFile(file, input.bytes, { flag: "wx" });
+    let created = false, published = false;
     try {
-      await writeFile(this.metadata(record.id), JSON.stringify(record), { flag: "wx" });
-    } catch (error) {
-      await rm(file, { force: true });
-      throw error;
-    }
+      signal?.throwIfAborted();
+      const handle = await open(file, "wx", 0o600); created = true;
+      try { signal?.throwIfAborted(); await handle.writeFile(input.bytes); signal?.throwIfAborted(); await handle.sync(); }
+      finally { await handle.close(); }
+      signal?.throwIfAborted();
+      await JsonFile.writeAtomically(this.metadata(record.id), JSON.stringify(record), 0o600, signal);
+      published = true;
+    } finally { if (created && !published) await rm(file, { force: true }); }
     return record;
   }
 
