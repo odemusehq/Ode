@@ -5,7 +5,7 @@ import type { PlannedCall } from "./restore-planner";
 import { SetLookup } from "./set-lookup";
 
 /** Match only effects of the step just issued. A later planned write cannot explain an earlier manual edit. */
-export function restoreStepExplains(call: PlannedCall, change: SetChange, before: SetSnapshot): boolean {
+export function restoreStepExplains(call: PlannedCall, change: SetChange, before: SetSnapshot, step: readonly PlannedCall[] = [call]): boolean {
   const args = call.args as Record<string, any>;
   const target = change.target;
   const lookup = new SetLookup(before);
@@ -66,7 +66,17 @@ export function restoreStepExplains(call: PlannedCall, change: SetChange, before
     case "track_delete_device": case "chain_delete_device": return target.scope === "device" && target.field === "present" && change.kind === ChangeKind.Removed && sameDevice(args.device);
     case "rack_insert_chain": case "drum_pad_set_note": case "simpler_replace_sample":
       return target.scope === "device" && target.field === "present" && sameDevice(args.device);
-    // Empty take lanes have no separate fields in the supported snapshot diff.
+    case "track_create_take_lane": case "take_lane_rename":
+      if (target.scope !== "track" || target.field !== "takeLanes" || !sameTrack(args.track ?? args.lane?.track, target.track) ||
+        !Array.isArray(change.before) || !Array.isArray(change.after)) return false;
+      const names: (string | undefined)[] = change.before.map((lane) => lane.name);
+      for (const related of step) {
+        const fields = related.args as Record<string, any>;
+        if (related.op === "take_lane_rename" && sameTrack(fields.lane?.track, target.track)) names[fields.lane.lane] = fields.name;
+        if (related.op === "track_create_take_lane" && sameTrack(fields.track, target.track)) names.push(fields.name);
+      }
+      return names.length === change.after.length && change.after.every((lane, index) =>
+        lane.lane === index && (names[index] === undefined || lane.name === names[index]));
     default: return false;
   }
 }

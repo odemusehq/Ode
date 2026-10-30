@@ -32,7 +32,7 @@ export interface TrackKey {
 export type ClipKey = { slot: number } | { start: number; lane?: number };
 
 export type SongField = "tempo" | "key" | "signature" | "locators" | "scenes";
-export type TrackField = "present" | "name" | "mute" | "solo" | "arm" | "color";
+export type TrackField = "present" | "name" | "mute" | "solo" | "arm" | "color" | "position" | "takeLanes";
 export type ClipField = "present" | "notes" | "name" | "muted" | "color" | "loop" | "audio";
 export type DeviceField = "present" | "parameter";
 /** The lead sheet: the lyrics text, one section (its chords, name or place), or everything else in it. */

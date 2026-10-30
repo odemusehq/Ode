@@ -2,8 +2,9 @@ import { t } from "../shared/i18n";
 import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { BEAT_TOLERANCE, MIXER_INDEX, type ClipRef, type DeviceRef, type ExtensionOp, type LoopSettings, type Note, type TrackRef } from "../shared/live";
-import type { AudioClipInfo, ClipInfo, LocatorInfo, MixerInfo, SceneInfo } from "../shared/live-ops";
+import type { AudioClipInfo, ClipInfo, LocatorInfo, MixerInfo, SceneInfo, TakeLaneInfo } from "../shared/live-ops";
 import type { DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
+import { sameDeviceParameters } from "../shared/set-snapshot";
 import { ChangeKind, TrackList, type ClipField, type ClipKey, type SetChange, type TrackField, type TrackKey } from "../shared/versions";
 import type { ClipAudio, ClipLoop } from "../mneme/set-diff";
 import { SetLookup } from "./set-lookup";
@@ -65,6 +66,7 @@ const DEVICE_CLASSES: ReadonlyMap<string, string> = new Map([
 const EDIT_OPS: ReadonlySet<string> = new Set([
   "song_set_tempo",
   "track_set",
+  "take_lane_rename",
   "clip_set",
   "midi_clip_set_notes",
   "audio_clip_set",
@@ -308,6 +310,23 @@ export class RestorePlanner {
 
   private planTrackField(change: SetChange, key: TrackKey, field: TrackField): void {
     if (this.coveredTrack(key)) return;
+    if (field === "takeLanes") {
+      const before = change.before as Pick<TakeLaneInfo, "lane" | "name">[];
+      const after = change.after as Pick<TakeLaneInfo, "lane" | "name">[];
+      if (!Array.isArray(before) || !Array.isArray(after) || before.length !== after.length) {
+        this.skipped.push(t("server.restorePlanner.trackStructureInLive", { label: change.label }));
+        return;
+      }
+      after.forEach((lane, index) => {
+        if (before[index]?.name === lane.name) return;
+        this.staged.add(Stage.Values, { op: "take_lane_rename", args: { lane: { track: RestorePlanner.currentRef(key), lane: index }, name: lane.name }, label: change.label });
+      });
+      return;
+    }
+    if (field === "position") {
+      this.skipped.push(t("server.restorePlanner.trackStructureInLive", { label: change.label }));
+      return;
+    }
     if (!SETTABLE_TRACK_FIELDS.has(field) || change.after === undefined) {
       this.skipped.push(change.label);
       return;
@@ -669,8 +688,7 @@ export class RestorePlanner {
     const before = change.before as DeviceSnapshot | undefined;
     const after = change.after as DeviceSnapshot | undefined;
     if (!RestorePlanner.isDevice(before) || !RestorePlanner.isDevice(after)) return false;
-    const names = (device: DeviceSnapshot) => device.parameters.map((parameter) => parameter.name).join("\n");
-    return names(before) !== names(after);
+    return !sameDeviceParameters(before, after);
   }
 
   private static chainsChanged(before: DeviceSnapshot, after: DeviceSnapshot): boolean {

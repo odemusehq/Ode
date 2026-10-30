@@ -4,7 +4,7 @@ import type { Note } from "../../shared/live";
 import type { SetChange } from "../../shared/versions";
 import { Notice, PianoRoll, Tone, cx, pitchRangeOf } from "../../ui-kit";
 import { useClient, useRequest } from "../app/hooks";
-import { isLyricsChange, labelUnder, lyricsHunks, notesChange, notesEnd } from "./change-values";
+import { changeValues, isLyricsChange, labelUnder, lyricsHunks, notesChange, notesEnd, previewChanges } from "./change-values";
 
 // Persisted labels keep their original prefixes even when the catalogue headings are edited.
 const SAVED_SONG_HEADING = "Song";
@@ -73,7 +73,7 @@ function ChangePart({ title, savedHeading = title, changes, beatsPerBar, track }
     <section className={cx("history-detail__part", track && "history-detail__part--track")} aria-label={title}>
       <h3 className="history-detail__title">{title}</h3>
       <ul className="history-detail__changes">
-        {changes.map((change, index) => (
+        {previewChanges(changes).map((change, index) => (
           <ChangeItem key={index} change={change} heading={savedHeading} beatsPerBar={beatsPerBar} />
         ))}
       </ul>
@@ -90,9 +90,18 @@ interface ChangeItemProps {
 function ChangeItem({ change, heading, beatsPerBar }: ChangeItemProps) {
   const label = labelUnder(change.label, heading);
   const notes = notesChange(change);
+  const values = changeValues(change);
   return (
     <li className="history-change">
       <p className="history-change__label">{label}</p>
+      {values && <>
+        <dl className="history-change__values" title={values.rawParameter ? t("history.preview.liveValue") : undefined}>
+          {(["before", "after"] as const).map((side) => <div key={side} className={`history-change__value history-change__value--${side}`}>
+            <dt className="history-change__caption">{t(`common.${side}`)}</dt>
+            <dd>{values[side].map((line, index) => <span key={index}>{line}</span>)}</dd>
+          </div>)}
+        </dl>
+      </>}
       {notes && <NotesBeforeAfter label={label} before={notes.before} after={notes.after} beatsPerBar={beatsPerBar} />}
     </li>
   );

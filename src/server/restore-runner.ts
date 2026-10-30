@@ -47,7 +47,7 @@ export class RestoreRunner {
       if (failed.length === 0) {
         if (this.readFresh) {
           const actual = await this.readFresh();
-          const unexpected = SetDiff.between(last, actual).filter((change) => !step.some((call) => restoreStepExplains(call, change, last)));
+          const unexpected = SetDiff.between(last, actual).filter((change) => !step.some((call) => restoreStepExplains(call, change, last, step)));
           if (unexpected.length) return { complete: false, skipped: [...skipped,
             t("server.restoreRunner.theSetChangedOutsideTheRestoreStep", { details: (unexpected.map((change) => change.label).join("; ")) })] };
           last = actual;

@@ -7,6 +7,17 @@ export interface DeviceSnapshot extends Omit<DeviceInfo, "chains"> {
   chains?: ChainSnapshot[];
 }
 
+/** Numeric parameter addresses are compatible only while the controls and their ranges still match. */
+export function sameDeviceParameters(before: DeviceSnapshot, after: DeviceSnapshot): boolean {
+  return before.className === after.className && before.parameters.length === after.parameters.length &&
+    before.parameters.every((parameter, index) => {
+      const next = after.parameters[index];
+      return next !== undefined && parameter.index === next.index && parameter.name === next.name &&
+        parameter.min === next.min && parameter.max === next.max && parameter.isQuantized === next.isQuantized &&
+        JSON.stringify(parameter.valueItems) === JSON.stringify(next.valueItems);
+    });
+}
+
 export interface ChainSnapshot extends Omit<ChainInfo, "devices"> {
   devices: DeviceSnapshot[];
   /** Absent in histories recorded before chain mixers were captured. */

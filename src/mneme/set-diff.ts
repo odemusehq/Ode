@@ -5,6 +5,7 @@ import { MIXER_INDEX, TAG_SEPARATOR, type Note, type TrackRef } from "../shared/
 import type { AudioClipInfo, ClipInfo, LocatorInfo, MixerInfo, ParameterInfo, SceneInfo, TimeSignature } from "../shared/live-ops";
 import { NOTE_NAMES, noteName } from "../shared/notes";
 import type { ChainSnapshot, DeviceSnapshot, SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
+import { sameDeviceParameters } from "../shared/set-snapshot";
 import type { LeadSheet, Section } from "../shared/song";
 import {
   ChangeKind,
@@ -285,7 +286,8 @@ export class LyricsWording {
  * When both snapshots have a lead sheet, its lyrics are one change (the text on each side), its sections match by id
  * (the Section on each side: chords, name, kind and place) and everything else in it is one details change
  * (SheetDetails); applying writes the lyrics text, keeps the sheet's settings, version and lyrics revision, and orders
- * sections by start beat. Track order, groups, take lane names and the grid sit outside every field, so they go unrecorded.
+ * sections by start beat. Track positions describe reordering, not the shifts caused by added or removed tracks;
+ * takeLanes holds lane numbers and names, with clips recorded separately. Groups and the grid are not recorded.
  */
 export class SetDiff {
   static between(from: SetSnapshot, to: SetSnapshot): SetChange[] {
@@ -819,12 +821,18 @@ class DiffBuilder {
   }
 
   private trackList(list: TrackList, before: readonly TrackSnapshot[], after: readonly TrackSnapshot[], pairing: Pairing): void {
+    const pairs = pairing.pairs();
+    const reordered = pairs.some(([, partner], index) => index > 0 && partner < pairs[index - 1]![1]);
     before.forEach((track, index) => {
       const key = DiffBuilder.key(list, index, track);
       const partner = pairing.toOf(index);
       if (partner === undefined) {
         this.add(ChangeKind.Removed, { scope: "track", track: key, field: "present" }, t("changes.trackRemoved", { name: key.name }), track, undefined);
       } else {
+        if (reordered && index !== partner) {
+          this.add(ChangeKind.Changed, { scope: "track", track: key, field: "position" },
+            t("changes.trackPosition", { name: key.name, before: index + 1, after: partner + 1 }), index, partner);
+        }
         this.track(track, itemAt(after, partner), key);
       }
     });
@@ -850,6 +858,13 @@ class DiffBuilder {
   }
 
   private clips(before: TrackSnapshot, after: TrackSnapshot, track: TrackKey): void {
+    const laneNames = (owner: TrackSnapshot) => owner.takeLanes.map(({ lane, name }) => ({ lane, name }));
+    const lanesBefore = laneNames(before);
+    const lanesAfter = laneNames(after);
+    if (!Values.same(lanesBefore, lanesAfter)) {
+      this.add(ChangeKind.Changed, { scope: "track", track, field: "takeLanes" },
+        t("changes.takeLanes", { name: track.name }), lanesBefore, lanesAfter);
+    }
     const slots = Math.max(before.clipSlots.length, after.clipSlots.length);
     for (let slot = 0; slot < slots; slot++) {
       this.clip(track, { slot }, before.clipSlots[slot]?.clip ?? null, after.clipSlots[slot]?.clip ?? null);
@@ -1027,6 +1042,11 @@ class DiffBuilder {
       parameter === undefined
         ? { scope: "device", track, chain: [...place.from], index: place.fromIndex, field }
         : { scope: "device", track, chain: [...place.from], index: place.fromIndex, field, parameter };
+    if (!sameDeviceParameters(before, after)) {
+      this.add(ChangeKind.Changed, target("present"),
+        DiffBuilder.words(track, [...context, before.name], t("changes.deviceControlsChanged")), before, after);
+      return;
+    }
     const itself = DiffBuilder.deviceWords(before, after);
     if (itself.length > 0) {
       this.add(ChangeKind.Changed, target("present"), DiffBuilder.words(track, [...context, before.name], itself.join(", ")), before, after);
@@ -1182,6 +1202,7 @@ class SnapshotPatcher {
     for (const change of changes) this.changeSong(change);
     this.changeSheet(changes);
     this.addTracks(changes);
+    this.reorderTracks(changes);
     this.renumber();
     this.addClips(changes);
     this.addDevices(changes);
@@ -1225,6 +1246,11 @@ class SnapshotPatcher {
     else if (field === "solo" && typeof value === "boolean") track.solo = value;
     else if (field === "arm" && typeof value === "boolean") track.arm = value;
     else if (field === "color" && typeof value === "number") track.color = value;
+    else if (field === "takeLanes" && Array.isArray(value)) {
+      track.takeLanes = value.filter(isRecord).map((lane, index) => ({
+        lane: index, name: typeof lane.name === "string" ? lane.name : "", clips: track.takeLanes[index]?.clips ?? [],
+      }));
+    }
   }
 
   private static setClipField(clip: ClipInfo, field: ClipField, value: unknown): void {
@@ -1247,7 +1273,14 @@ class SnapshotPatcher {
       return;
     }
     const device = SnapshotPatcher.findDevice(track, target.chain, target.index);
-    if (device && isRecord(value)) SnapshotPatcher.reshape(device, value as unknown as DeviceSnapshot);
+    if (device && isRecord(value)) {
+      const after = value as unknown as DeviceSnapshot;
+      if (sameDeviceParameters(device, after)) SnapshotPatcher.reshape(device, after);
+      else {
+        const devices = SnapshotPatcher.deviceList(track, target.chain);
+        if (devices) devices[target.index] = structuredClone(after);
+      }
+    }
   }
 
   /** Takes the device's name, sample and chains from `after`; chains it already had keep their devices. */
@@ -1475,6 +1508,32 @@ class SnapshotPatcher {
       if (track.mixer.sends.length !== count) continue;
       track.mixer.sends.splice(index, 0, structuredClone(fresh));
       Sends.renumber(track);
+    }
+  }
+
+  /** Reorder after additions/removals, while the original track objects still identify their owners. */
+  private reorderTracks(changes: readonly SetChange[]): void {
+    for (const list of [TrackList.Tracks, TrackList.Returns]) {
+      const positions = new Map<TrackSnapshot, number>();
+      for (const change of changes) {
+        const target = change.target;
+        const track = this.owners.get(change);
+        if (target.scope === "track" && target.field === "position" && target.track.list === list && track && typeof change.after === "number") {
+          positions.set(track, change.after);
+        }
+      }
+      if (positions.size === 0) continue;
+      const tracks = this.listOf(list);
+      const previous = [...tracks];
+      tracks.sort((a, b) => (positions.get(a) ?? a.index) - (positions.get(b) ?? b.index));
+      if (list === TrackList.Returns) {
+        for (const track of this.everyTrack()) {
+          if (track.mixer.sends.length !== previous.length) continue;
+          const sends = track.mixer.sends;
+          track.mixer.sends = tracks.map((owner) => sends[previous.indexOf(owner)]!);
+          Sends.renumber(track);
+        }
+      }
     }
   }
 

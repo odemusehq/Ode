@@ -10,6 +10,7 @@ import { SongStore, SongVersions } from "../mneme/song-store";
 import { SetDiff } from "../mneme/set-diff";
 import { RestorePlanner } from "../server/restore-planner";
 import { RestoreRunner } from "../server/restore-runner";
+import { restoreStepExplains } from "../server/restore-change-scope";
 import { SetReadError, SnapshotReader } from "../server/snapshot-reader";
 import { VersionRecorder } from "../server/version-recorder";
 import type { DeviceSnapshot, SetSnapshot } from "../shared/set-snapshot";
@@ -19,6 +20,44 @@ import { FakeSetLive } from "./fake-set-live";
 import { TestSets } from "./sets";
 
 const at = TestSets.at;
+
+test("a changed device parameter layout is recorded whole and never restored by numeric index", () => {
+  for (const field of ["name", "range", "count"] as const) {
+    const before = TestSets.small();
+    const after = structuredClone(before);
+    const device = at(at(after.tracks, 1).devices, 0);
+    const parameter = at(device.parameters, 0);
+    if (field === "name") parameter.name = "Another control";
+    if (field === "range") parameter.max = 2000;
+    if (field === "count") device.parameters.pop();
+    parameter.value = 600;
+    const changes = SetDiff.between(before, after);
+    assert.deepEqual(TestSets.contents(SetDiff.apply(before, changes)), TestSets.contents(after));
+    const plan = new RestorePlanner(after).plan(SetDiff.between(after, before));
+    assert.equal(plan.steps.flat().some((call) => call.op === "parameter_set"), false);
+    assert.ok(plan.skipped.length > 0);
+  }
+});
+
+test("take-lane names can be restored while unsupported lane structure is explicit", () => {
+  const current = TestSets.small();
+  at(current.tracks, 1).takeLanes = [{ lane: 0, name: "Comp A", clips: [] }];
+  const target = structuredClone(current);
+  at(at(target.tracks, 1).takeLanes, 0).name = "Chosen take";
+  const renamed = new RestorePlanner(current).plan(SetDiff.between(current, target));
+  assert.deepEqual(renamed.steps.flat().map(({ op, args }) => ({ op, args })), [
+    { op: "take_lane_rename", args: { lane: { track: { index: 1 }, lane: 0 }, name: "Chosen take" } },
+  ]);
+  assert.deepEqual(renamed.skipped, []);
+  const call = renamed.steps.flat()[0]!;
+  const change = SetDiff.between(current, target)[0]!;
+  assert.equal(restoreStepExplains(call, change, current), true);
+  assert.equal(restoreStepExplains(call, { ...change, after: [{ lane: 0, name: "Another hand edit" }] }, current), false);
+  at(target.tracks, 1).takeLanes = [];
+  const removed = new RestorePlanner(current).plan(SetDiff.between(current, target));
+  assert.equal(removed.steps.length, 0);
+  assert.ok(removed.skipped.some((reason) => reason.includes("restore this structure in Live")));
+});
 
 async function tempDir(): Promise<string> {
   return mkdtemp(join(tmpdir(), "ode-restore-"));

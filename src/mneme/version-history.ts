@@ -22,7 +22,7 @@ import { SetDiff, SetWording, TouchedTracks } from "./set-diff";
 import { isMutationReceipt, type MutationReceipt, type RecoveryReceipt } from "../shared/mutation-receipt";
 
 const SONG_FIELDS = ["tempo", "key", "signature", "locators", "scenes"] as const satisfies readonly SongField[];
-const TRACK_FIELDS = ["present", "name", "mute", "solo", "arm", "color"] as const satisfies readonly TrackField[];
+const TRACK_FIELDS = ["present", "name", "mute", "solo", "arm", "color", "position", "takeLanes"] as const satisfies readonly TrackField[];
 const CLIP_FIELDS = ["present", "notes", "name", "muted", "color", "loop", "audio"] as const satisfies readonly ClipField[];
 const DEVICE_FIELDS = ["present", "parameter"] as const satisfies readonly DeviceField[];
 const SHEET_FIELDS = ["lyrics", "section", "details"] as const satisfies readonly SheetField[];

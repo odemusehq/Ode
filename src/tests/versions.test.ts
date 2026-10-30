@@ -56,6 +56,27 @@ test("applying a diff gives the later Set", () => {
   assert.deepEqual(contents(SetDiff.apply(before, SetDiff.between(before, after))), contents(after));
 });
 
+test("track order and empty take lanes survive saved history and delta reconstruction", async () => {
+  const dir = await tempDir();
+  const history = new VersionHistory(dir, 20);
+  const before = TestSets.small();
+  await history.record(before, VersionAuthor.Musician, "Opened");
+  const after = structuredClone(before);
+  after.tracks = [at(after.tracks, 1), at(after.tracks, 0), at(after.tracks, 2)];
+  after.tracks.forEach((track, index) => {
+    track.index = index;
+    for (const clip of track.arrangementClips) clip.ref = { track: { index }, start: clip.startTime };
+  });
+  at(after.tracks, 0).takeLanes.push({ lane: 0, name: "Comp A", clips: [] });
+  const version = await history.record(after, VersionAuthor.Musician, "Reordered and added a take");
+  assert.ok(version);
+  assert.equal(version.changes.filter((change) => change.target.field === "position").length, 2);
+  assert.ok(version.changes.some((change) => change.target.field === "takeLanes"));
+  const reopened = new VersionHistory(dir, 20);
+  assert.deepEqual(contents(await reopened.snapshotAt(version.id)), contents(after));
+  assert.deepEqual(contents(SetDiff.apply(after, SetDiff.between(after, before))), contents(before));
+});
+
 test("a lyric rewrite is one change, labelled by its lines, that applies back", () => {
   const sheet = TestSets.sheet();
   const rewritten = { ...sheet, lyrics: sheet.lyrics.replace("I count the windows going by", "I count the streetlights one by one") };
