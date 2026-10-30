@@ -1,4 +1,5 @@
-import { Notice, Tone } from "../../ui-kit";
+import { useEffect, useState } from "react";
+import { Notice, Tone, type CSSVariables } from "../../ui-kit";
 import { HistoryView } from "../views/HistoryView";
 import { LyricsPanel } from "../views/LyricsPanel";
 import { NowPanel } from "../views/NowPanel";
@@ -10,18 +11,30 @@ import { StatusBar } from "./StatusBar";
 export function AskDialog() {
   const lyricsOpen = useAppState((state) => state.lyricsOpen);
   const [lyricsSeen, setLyricsSeen] = useState(lyricsOpen);
+  const [chatWidth, setChatWidth] = useState(() => {
+    const native = Number(new URLSearchParams(window.location.search).get("odeChatWidth"));
+    return Number.isFinite(native) && native > 0 && native <= 32768 ? native : window.innerWidth;
+  });
+  useEffect(() => {
+    if (lyricsOpen) return;
+    const resized = () => setChatWidth(window.innerWidth);
+    window.addEventListener("resize", resized);
+    return () => window.removeEventListener("resize", resized);
+  }, [lyricsOpen]);
   useEffect(() => { if (lyricsOpen) setLyricsSeen(true); }, [lyricsOpen]);
   return (
-    <div className={lyricsOpen ? "app app--lyrics" : "app"}>
-      <DialogHeader withMode />
-      <div className="app-body">
-        <NowPanel />
-        <div className="app-lyrics" hidden={!lyricsOpen}>
-          {(lyricsOpen || lyricsSeen) && <LyricsPanel />}
+    <div className={lyricsOpen ? "app app--workspace app--lyrics" : "app app--workspace"} style={{ "--chat-width": `${chatWidth}px` } as CSSVariables}>
+      <div className="app-chat">
+        <DialogHeader withMode />
+        <div className="app-body">
+          <NowPanel />
         </div>
+        <DialogFooter />
+        <StatusBar />
       </div>
-      <DialogFooter />
-      <StatusBar />
+      <div className="app-lyrics" hidden={!lyricsOpen}>
+        {(lyricsOpen || lyricsSeen) && <LyricsPanel />}
+      </div>
     </div>
   );
 }
@@ -57,4 +70,3 @@ function DialogFooter({ showsErrors = false }: { showsErrors?: boolean }) {
     </footer>
   );
 }
-import { useEffect, useState } from "react";

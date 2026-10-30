@@ -254,7 +254,12 @@ function openCommand(command, local) {
     // jweb creates its native renderer when the child window becomes visible.
     frontWindow();
     if (loaded) objects.browser.message("ode_open", command.view, command.url, command.id);
-    else objects.browser.message("read", command.url + "&odeWindowCommand=" + encodeURIComponent(command.id));
+    else {
+      var url = command.url + "&odeWindowCommand=" + encodeURIComponent(command.id);
+      var width = Number(chatWidth || objects.child.wind.size[0]);
+      if (Number.isFinite(width) && width > 0) url += "&odeChatWidth=" + encodeURIComponent(String(width));
+      objects.browser.message("read", url);
+    }
   } catch (_) { finishOpen(command.id, "error", "Ode's window stayed closed. Press Open Ode to retry."); }
 }
 

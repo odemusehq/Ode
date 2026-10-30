@@ -161,7 +161,9 @@ test("embedded Max client consumes bootstrap once and waits for page readiness b
   requests[1]!.reply({ command: { id: "first", view: "ask", url } });
   assert.ok(window.some((message) => message[0] === "front"), "Show the native window before waiting for its hidden jweb renderer to load");
   assert.equal(page[0]?.[0], "read");
-  assert.match(String(page[0]?.[1]), /odeWindowCommand=first$/);
+  const firstPage = new URL(String(page[0]?.[1]));
+  assert.equal(firstPage.searchParams.get("odeWindowCommand"), "first");
+  assert.equal(firstPage.searchParams.get("odeChatWidth"), "760", "A new page must know its original native chat width");
   assert.equal(requests.length, 2, "Reading a page is not evidence it became ready");
   context.tick();
   requests[2]!.reply({ command: { id: "queued", view: "lyrics", url: url.replace("view=ask", "view=lyrics") } });
@@ -199,7 +201,11 @@ test("embedded Max client consumes bootstrap once and waits for page readiness b
   assert.equal(statuses.at(-1), failure, "A failed bootstrap must retain its actionable notice between polls");
   context.open_ode();
   assert.equal(requests[9]?.url, "http://127.0.0.1:43123/max-window/connect", "Open Ode retries the failed bootstrap");
+  context.chatWidth = 440;
+  child.wind.size = [1080, 680];
   requests[9]!.reply({ session: "c".repeat(48), url: replacementUrl });
+  const reopenedPage = new URL(String(page.findLast((message) => message[0] === "read")?.[1]));
+  assert.equal(reopenedPage.searchParams.get("odeChatWidth"), "440", "A replacement page must retain the original chat width when the native window is expanded");
   context.tick();
   assert.deepEqual(requests[10]?.body, { session: "c".repeat(48) });
   context.stop();

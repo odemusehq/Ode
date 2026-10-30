@@ -186,13 +186,9 @@
 }
 
 
-/* Lyrics opens beside the continuing chat, like a document beside an editor sidebar. */
-.app--lyrics .app-body > .now { flex: 0 0 clamp(280px, 32%, 380px); border-right: var(--border-width) solid var(--color-border); }
-.app-lyrics { display: flex; flex: 1; min-width: 0; min-height: 0; }
+/* The chat keeps its own header and width while the document extends to its right. */
+.app--workspace { flex-direction: row; overflow-x: auto; }
+.app-chat { display: flex; flex: none; flex-direction: column; width: var(--chat-width); min-width: 0; min-height: 0; }
+.app-lyrics { display: flex; flex: 1; min-width: 420px; min-height: 0; border-left: var(--border-width) solid var(--color-border); }
 .app-lyrics[hidden] { display: none; }
 .app-header__nav .ode-button[aria-pressed="true"] { background: var(--color-accent-tint); color: var(--color-accent); }
-@media (max-width: 700px) {
-  .app--lyrics .app-body { overflow-x: auto; }
-  .app--lyrics .app-body > .now { flex-basis: 280px; }
-  .app--lyrics .app-body > .app-lyrics { min-width: 420px; }
-}
