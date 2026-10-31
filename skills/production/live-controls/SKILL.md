@@ -18,6 +18,8 @@ Read the actual Set before choosing an operation. Discover only the tool schemas
 
 ## Samples and drums
 
+Use `sample_folders_get` to discover the musician's configured folders, then `sample_files_search` to explore a bounded page with actual folder, format and kind filters. These are filesystem facts rather than Live Browser tags. Narrow a partial scan into a subfolder; use its file cursor or navigation offset to continue a useful page. `sample_file_open` makes an unchanged managed copy of one selected audio result for supported model listening. `import_into_project` brings chosen audio into the Set's project before native clip/Simpler loading. Preset, device, groove and MIDI file discovery does not add a loader for those files. Preview audio, including files under Ableton Folder Info, does not constitute the playable instrument or preset itself.
+
 `groove_pool_get` reads grooves already loaded in this Set's native Groove Pool. To assign or clear one, read `clip_get_native`, then use `clip_set_groove` with its current token and the returned groove id/name, or null. Live performs the groove processing. This does not load `.agr` files, extract grooves or commit them into notes. If the pool lacks the intended groove, request its precise loading step in Live, then read it again. Native groove assignment is outside Ode's saved-state restoration.
 
 - `simpler_replace_sample` loads an actual available file using the SDK. Native sample loading is not sample generation, source separation or automatic discovery of the factory library.
