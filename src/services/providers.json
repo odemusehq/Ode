@@ -52,7 +52,7 @@
   ],
   "meta": {
     "baseUrl": "https://api.meta.ai/v1",
-    "audioUnderstanding": "muse-spark-1.3",
+    "audioUnderstanding": "muse-spark-1.2",
     "transcription": "muse-voice-transcribe-1.0",
     "imageGeneration": "muse-image-1.0"
   },

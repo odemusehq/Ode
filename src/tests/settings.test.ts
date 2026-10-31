@@ -38,6 +38,7 @@ test("each role reaches its provider's endpoint, with Meta's models for cover ar
   assert.equal(onModal.image_generation.apiKey, "meta-key");
   assert.equal(onModal.image_generation.model, "muse-image-1.0");
   assert.equal(onModal.stem_separation.provider, "");
+  assert.equal(onModal.audio_understanding.model, "muse-spark-1.2");
 
   await settings.update({ provider: "meta", model: "muse-spark-1.3", key: "meta-main", services: {} });
   assert.equal((await roles.roles()).transcription.apiKey, "meta-main");
