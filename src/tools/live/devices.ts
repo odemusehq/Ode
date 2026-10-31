@@ -21,7 +21,7 @@ export const deviceTools = [
     op: "parameter_set",
     changes: "set",
     description:
-      "Set a device parameter, or a mixer level (device index -1: parameter 0 volume, 1 pan, 2+ sends). Values are in the parameter's own range (see parameter_get); switches and choosers take the index of the option. Values outside the range are clamped.",
+      "Set a device parameter, or a mixer level (device index -1: parameter 0 volume, 1 pan, 2+ sends). Values are in the parameter's own range (see parameter_get); switches and choosers take the index of the option. Continuous 0–1 controls can be nonlinear: min/max alone do not establish a mapping to dB, Hz or time. Do not guess that mapping or claim an exact physical setting without a verified display value or documented conversion. Values outside the range are clamped.",
     input: { parameter: ParameterRefSchema, value: z.number() },
     describe: ({ parameter, value }, names) => t("toolActivity.setParameter", { parameter: names.parameter(parameter), parameter2: names.value(parameter, value) }),
   }),
