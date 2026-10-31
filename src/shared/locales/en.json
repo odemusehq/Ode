@@ -890,6 +890,9 @@
     "capturing": "Wait for the current Ode audio capture before changing native controls.",
     "inspectCreated": "Live accepted the creation command. Read the current Set before continuing; do not repeat the creation.",
     "activityRouting": "{target} · Set routing",
-    "activityReturn": "Add return track"
+    "activityReturn": "Add return track",
+    "activityClip": "{clip} · Edit clip",
+    "activityWarp": "{clip} · Edit warp marker",
+    "activityShowClip": "{clip} · Open in Live"
   }
 }

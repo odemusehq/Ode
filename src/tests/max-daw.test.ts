@@ -88,3 +88,28 @@ test("track routing uses offered native identifiers and meters stay in native un
   assert.equal(meters.output_meter_level, 0.65);
   assert.equal(meters.input_meter_right, null);
 });
+
+test("native clip edits preserve the source and refuse stale or recording clips", async () => {
+  const { run, objects, writes } = await nativeDawFixture();
+  const path = "live_set tracks 0 arrangement_clips 0";
+  objects[path] = { id: "9", type: "Clip", name: "Vocal", is_audio_clip: 1, is_recording: 0, file_path: "/song/voice.wav", start_time: 16,
+    gain: 0.5, gain_display_string: "0 dB", pitch_coarse: 0, pitch_fine: 0, start_marker: 0, end_marker: 8, loop_start: 0, loop_end: 8,
+    warping: 1, warp_markers: { warp_markers: [{ beat_time: 0, sample_time: 0 }] } };
+  const address = { path, guards: [{ path: "live_set tracks 0", name: "Lead" }, { path, name: "Vocal" }], clip: { startTime: 16, filePath: "/song/voice.wav" } };
+  const read = run("clip_read", {}, address);
+  assert.equal(read.ok, true, read.error);
+  assert.equal(read.result.gain_display_string, "0 dB");
+  assert.equal(run("clip_set", { readToken: read.result.readToken, field: "pitch_coarse", value: 2 }, address).ok, true);
+  assert.deepEqual(writes.at(-1), [path, "pitch_coarse", 2]);
+  assert.equal(objects[path].file_path, "/song/voice.wav");
+  const stale = run("clip_read", {}, address).result.readToken;
+  objects[path].gain = 0.4;
+  assert.equal(run("clip_set", { readToken: stale, field: "gain", value: 0.6 }, address).ok, false);
+  const recording = run("clip_read", {}, address).result.readToken;
+  objects[path].is_recording = 1;
+  assert.equal(run("clip_set", { readToken: recording, field: "gain", value: 0.6 }, address).ok, false);
+  objects[path].is_recording = 0;
+  const token = run("clip_read", {}, address).result.readToken;
+  assert.equal(run("clip_warp", { readToken: token, action: "move", beatTime: 0, distance: 0.25 }, address).ok, true);
+  assert.deepEqual(writes.at(-1), [path, "move_warp_marker", 0, 0.25]);
+});

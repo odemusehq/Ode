@@ -1,8 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { t } from "../shared/i18n";
-import { DAW_OPERATIONS, MAX_DAW, type DawOperation, type MaxDaw, type MaxDawCommand, type MaxDawMessage } from "../shared/max-daw";
-import type { MaxParameterAddress } from "../shared/max-parameters";
+import { DAW_OPERATIONS, MAX_DAW, type DawOperation, type MaxDawAddress, type MaxDaw, type MaxDawCommand, type MaxDawMessage } from "../shared/max-daw";
 import { MaxWindowError, type MaxWindowBridge } from "./max-window";
 
 const messageSchema = z.discriminatedUnion("ok", [
@@ -25,7 +24,7 @@ export class MaxDawControl implements MaxDaw {
   private readonly completed = new Map<string, { session: string; message: string }>();
   constructor(private readonly window: MaxWindowBridge) { window.attachDaw(this); }
 
-  async run(op: DawOperation, address: MaxParameterAddress | null, args: Record<string, unknown>, scope: string, signal?: AbortSignal): Promise<Record<string, unknown>> {
+  async run(op: DawOperation, address: MaxDawAddress | null, args: Record<string, unknown>, scope: string, signal?: AbortSignal): Promise<Record<string, unknown>> {
     signal?.throwIfAborted();
     if (!this.window.supportsDaw) throw new Error(t("maxDaw.unavailable"));
     if (!DAW_OPERATIONS.includes(op) || !scope.trim()) throw new Error(t("maxDaw.invalid"));

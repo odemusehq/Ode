@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { Chain, Device, DeviceParameter, RackDevice } from "@ableton-extensions/sdk";
 import { DeviceOperations } from "../live/extension/ops/devices";
+import { MaxTargetOperations } from "../live/extension/ops/max-target";
 import { ReferenceResolver } from "../live/extension/refs";
 import { ToolRegistry } from "../tools";
 import type { ToolContext } from "../tools/define";
@@ -51,4 +52,16 @@ test("native display tools forward exact addresses and values to Max without uni
   assert.equal(written.ok, true, written.text);
   assert.equal(JSON.parse(written.text).after.displayValue, 1200);
   assert.deepEqual(calls, ["parameter_get", [address, "request", undefined], "parameter_get", [address, "request", "native-read", 1200, false, undefined]]);
+});
+
+test("native clip addresses are resolved from the current SDK list, not SDK handle IDs", async () => {
+  const fake = new FakeLive();
+  const clip = fake.midiClip("Hook", 16), track = fake.midiTrack("Lead", [clip]);
+  const set = fake.liveSet();
+  const operation = new MaxTargetOperations({ set, refs: new ReferenceResolver(set), live: {} as never, describe: {} as never }).table().max_target;
+  const address = await operation.prepare({ clip: { track: { index: 0 }, start: 16 } }, {} as never)();
+  assert.equal(address.path, "live_set tracks 0 arrangement_clips 0");
+  assert.equal(address.clip?.startTime, 16);
+  assert.equal(address.guards[0]?.name, track.name);
+  assert.equal(address.guards.at(-1)?.name, clip.name);
 });

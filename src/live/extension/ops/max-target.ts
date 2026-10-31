@@ -1,5 +1,8 @@
-import type { DeviceRef, TrackRef } from "../../../shared/live";
+import type { ClipRef, DeviceRef, TrackRef } from "../../../shared/live";
+import type { MaxDawAddress } from "../../../shared/max-daw";
 import type { MaxParameterAddress } from "../../../shared/max-parameters";
+import { ClipPlace } from "../locations";
+import { indexOfObject } from "../sdk";
 import { OperationGroup } from "./group";
 import type { OperationTable } from "./operation";
 
@@ -7,10 +10,24 @@ import type { OperationTable } from "./operation";
 export class MaxTargetOperations extends OperationGroup<"max_target"> {
   table(): OperationTable<"max_target"> {
     return { max_target: { prepare: (args) => {
-      if (Number(args.track !== undefined) + Number(args.device !== undefined) !== 1) throw new Error("Give exactly one native target.");
-      const address = args.device ? this.device(args.device) : this.track(args.track!);
+      if (Number(args.track !== undefined) + Number(args.device !== undefined) + Number(args.clip !== undefined) !== 1) throw new Error("Give exactly one native target.");
+      const address = args.device ? this.device(args.device) : args.clip ? this.clip(args.clip) : this.track(args.track!);
       return async () => address;
     } } };
+  }
+  private clip(ref: ClipRef): MaxDawAddress {
+    const { clip, location } = this.refs.clip(ref);
+    const track = this.track(this.set.tracks().position(location.track).ref), guards = [...track.guards];
+    let path = track.path;
+    if (location.place === ClipPlace.Session) path += ` clip_slots ${location.slot} clip`;
+    else {
+      const lane = location.lane === null ? null : location.track.takeLanes[location.lane]!;
+      if (lane) { path += ` take_lanes ${location.lane}`; guards.push({ path, name: lane.name }); }
+      path += ` arrangement_clips ${indexOfObject(lane ? lane.clips : location.track.arrangementClips, clip)}`;
+    }
+    guards.push({ path, name: clip.name });
+    const filePath = "filePath" in clip && typeof clip.filePath === "string" ? clip.filePath : undefined;
+    return { path, guards, clip: { ...(location.place === ClipPlace.Arrangement ? { startTime: clip.startTime } : {}), ...(filePath ? { filePath } : {}) } };
   }
   private track(ref: TrackRef): MaxParameterAddress {
     const track = this.refs.track(ref), position = this.set.tracks().position(track);

@@ -1,3 +1,5 @@
+import { nativeClipWrites } from "./actions/clip-native";
+import { nativeClipReads } from "./state/clip-native";
 import { routingWrites } from "./actions/routing";
 import { routingReads } from "./state/routing";
 import { pluginWrites } from "./actions/plugins";
@@ -10,5 +12,5 @@ import { listeningTools } from "./state/listening";
 import { parameterDisplayReads } from "./state/parameter-display";
 import { processedAudioTools } from "./state/processed-audio";
 import { projectTools } from "./state/project";
-export const dawActionTools = [...nativeOperations.filter(tool => tool.changes === "set"), applyAsOneUndoStep, ...parameterDisplayWrites, ...pluginWrites, ...routingWrites];
-export const dawStateTools = [...nativeOperations.filter(tool => tool.changes === "none"), ...parameterDisplayReads, ...processedAudioTools, ...listeningTools, setDependencies, ...projectTools, ...pluginReads, ...routingReads];
+export const dawActionTools = [...nativeOperations.filter(tool => tool.changes === "set"), applyAsOneUndoStep, ...parameterDisplayWrites, ...pluginWrites, ...routingWrites, ...nativeClipWrites];
+export const dawStateTools = [...nativeOperations.filter(tool => tool.changes === "none"), ...parameterDisplayReads, ...processedAudioTools, ...listeningTools, setDependencies, ...projectTools, ...pluginReads, ...routingReads, ...nativeClipReads];
