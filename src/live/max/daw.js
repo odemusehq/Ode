@@ -32,8 +32,11 @@ function ode_daw_check(command, target, state) {
   delete odeDaw.reads[command.args.readToken];
   if (!saved || saved.scope !== command.scope || saved.address !== JSON.stringify(command.address) || saved.ids !== JSON.stringify(target.ids) || saved.state !== JSON.stringify(state)) throw new Error(ODE_DAW_COPY.changed);
 }
+function ode_daw_device_kind(target, type, className) {
+  return target.api.type === type || ode_daw_optional(target.api, "class_name") === className;
+}
 function ode_daw_plugin(target) {
-  if (target.api.type !== "PluginDevice") throw new Error(ODE_DAW_COPY.notPlugin);
+  if (!ode_daw_device_kind(target, "PluginDevice", "PluginDevice")) throw new Error(ODE_DAW_COPY.notPlugin);
   var presets = target.api.get("presets");
   if (!Array.isArray(presets) || !presets.every(function (name) { return typeof name === "string"; })) throw new Error(ODE_DAW_COPY.unsupported);
   return { name: String(ode_daw_get(target.api, "name")), presets: presets, selectedPresetIndex: ode_daw_get(target.api, "selected_preset_index"), editorOpen: ode_daw_get(target.api, "is_editor_open") === 1 };
@@ -49,7 +52,7 @@ function ode_daw_dictionary(api, key) {
   return value[key] || value;
 }
 function ode_daw_routes(target, compressor) {
-  if (target.api.type !== (compressor ? "CompressorDevice" : "Track")) throw new Error(ODE_DAW_COPY.unsupported);
+  if (compressor ? !ode_daw_device_kind(target, "CompressorDevice", "Compressor2") : target.api.type !== "Track") throw new Error(ODE_DAW_COPY.unsupported);
   var result = { name: String(ode_daw_get(target.api, "name")) };
   var fields = ["input_routing_type", "input_routing_channel"].concat(compressor ? [] : ["output_routing_type", "output_routing_channel"]);
   fields.forEach(function (field) {
@@ -151,11 +154,70 @@ function ode_daw_transport_command(command) {
   } else throw new Error(ODE_DAW_COPY.unsupported);
   return { before: state, after: Object.assign(ode_daw_transport(target), { current_song_time: ode_daw_optional(api, "current_song_time") }), restoration: ODE_DAW_COPY.transportRestoration };
 }
+function ode_daw_simpler(target) {
+  if (!ode_daw_device_kind(target, "SimplerDevice", "OriginalSimpler")) throw new Error(ODE_DAW_COPY.unsupported);
+  var state = {};
+  ["multi_sample_mode", "playback_mode", "retrigger", "voices", "pad_slicing", "slicing_playback_mode"].forEach(function (field) { state[field] = ode_daw_optional(target.api, field); });
+  var sample = new LiveAPI(null, target.path + " sample");
+  state.sample = null;
+  if (sample.id && String(sample.id) !== "0") {
+    state.sample = { id: String(sample.id) };
+    ["file_path", "length", "sample_rate", "start_marker", "end_marker", "gain", "warping", "warp_mode", "slicing_style", "slicing_sensitivity", "slicing_beat_division", "slicing_region_count"].forEach(function (field) { state.sample[field] = ode_daw_optional(sample, field); });
+    try { state.sample.slices = sample.get("slices"); } catch (_) { state.sample.slices = null; }
+  }
+  return state;
+}
+function ode_daw_simpler_edit(command, target) {
+  var before = ode_daw_simpler(target), args = command.args;
+  ode_daw_check(command, target, before);
+  if (ode_daw_recording()) throw new Error(ODE_DAW_COPY.recording);
+  if (before.multi_sample_mode !== 0) throw new Error(ODE_DAW_COPY.unsupported);
+  var sample = new LiveAPI(null, target.path + " sample");
+  if (command.op === "simpler_slice") {
+    if (!before.sample || before.sample.slicing_style !== 3 || before.playback_mode !== 2) throw new Error(ODE_DAW_COPY.unsupported);
+    if (!Number.isInteger(args.frame) || args.frame < 0 || args.frame >= before.sample.length) throw new Error(ODE_DAW_COPY.invalid);
+    if (args.action === "insert") sample.call("insert_slice", args.frame);
+    else if (args.action === "remove") sample.call("remove_slice", args.frame);
+    else if (args.action === "move" && Number.isInteger(args.destinationFrame) && args.destinationFrame >= 0 && args.destinationFrame < before.sample.length) sample.call("move_slice", args.frame, args.destinationFrame);
+    else throw new Error(ODE_DAW_COPY.invalid);
+  } else {
+    var sampleField = typeof args.field === "string" && args.field.indexOf("sample.") === 0;
+    var field = sampleField ? args.field.slice(7) : args.field;
+    var allowed = sampleField ? ["start_marker", "end_marker", "gain", "warping", "warp_mode", "slicing_style", "slicing_sensitivity", "slicing_beat_division", "slicing_region_count"] : ["playback_mode", "retrigger", "voices", "pad_slicing", "slicing_playback_mode"];
+    var old = sampleField ? before.sample : before;
+    if (!old || allowed.indexOf(field) === -1 || old[field] === null || old[field] === undefined) throw new Error(ODE_DAW_COPY.unsupported);
+    var booleanField = field === "warping" || field === "retrigger" || field === "pad_slicing";
+    if (booleanField ? typeof args.value !== "boolean" : typeof args.value !== "number" || !Number.isFinite(args.value)) throw new Error(ODE_DAW_COPY.invalid);
+    if (["playback_mode", "slicing_playback_mode"].indexOf(field) !== -1 && (!Number.isInteger(args.value) || args.value < 0 || args.value > 2)) throw new Error(ODE_DAW_COPY.invalid);
+    if (field === "voices" && (!Number.isInteger(args.value) || args.value < 1) || field === "slicing_style" && (!Number.isInteger(args.value) || args.value < 0 || args.value > 3) || field === "slicing_sensitivity" && (args.value < 0 || args.value > 1)) throw new Error(ODE_DAW_COPY.invalid);
+    if ((field === "start_marker" || field === "end_marker") && (!Number.isInteger(args.value) || args.value < 0 || args.value > old.length || field === "start_marker" && args.value >= old.end_marker || field === "end_marker" && args.value <= old.start_marker)) throw new Error(ODE_DAW_COPY.invalid);
+    (sampleField ? sample : target.api).set(field, booleanField ? args.value ? 1 : 0 : args.value);
+  }
+  return { before: before, after: ode_daw_simpler(target), restoration: ODE_DAW_COPY.nativeUndo };
+}
+function ode_daw_drum_chain(command, rack) {
+  if (!ode_daw_device_kind(rack, "DrumRack", "DrumGroupDevice") || !Number.isInteger(command.args.chain) || command.args.chain < 0) throw new Error(ODE_DAW_COPY.unsupported);
+  var api = new LiveAPI(null, rack.path + " chains " + command.args.chain);
+  if (!api.id || String(api.id) === "0") throw new Error(ODE_DAW_COPY.changed);
+  var target = { api: api, ids: rack.ids.concat(String(api.id)), path: rack.path }, state = {};
+  ["name", "in_note", "out_note", "choke_group"].forEach(function (field) { state[field] = ode_daw_optional(api, field); });
+  if (command.op === "drum_chain_read") return ode_daw_remember(command, target, state);
+  ode_daw_check(command, target, state);
+  if (ode_daw_recording()) throw new Error(ODE_DAW_COPY.recording);
+  var field = command.args.field, value = command.args.value;
+  if (["out_note", "choke_group"].indexOf(field) === -1 || state[field] === null || !Number.isInteger(value) || value < 0 || value > (field === "out_note" ? 127 : 16)) throw new Error(ODE_DAW_COPY.unsupported);
+  api.set(field, value);
+  var after = Object.assign({}, state); after[field] = ode_daw_get(api, field);
+  return { before: state, after: after, restoration: ODE_DAW_COPY.nativeUndo };
+}
 function ode_daw_execute(command) {
   if (typeof odeAudio !== "undefined" && odeAudio.job && !/(_read|_meters)$/.test(command.op)) throw new Error(ODE_DAW_COPY.capturing);
   if (command.op === "return_create") return ode_daw_return(command.args);
   if (command.op === "transport_read" || command.op === "transport_set") return ode_daw_transport_command(command);
   var target = ode_daw_target(command.address), args = command.args;
+  if (command.op === "simpler_read") return ode_daw_remember(command, target, ode_daw_simpler(target));
+  if (command.op === "simpler_set" || command.op === "simpler_slice") return ode_daw_simpler_edit(command, target);
+  if (command.op === "drum_chain_read" || command.op === "drum_chain_set") return ode_daw_drum_chain(command, target);
   if (command.op === "clip_read") return ode_daw_remember(command, target, ode_daw_clip(target));
   if (command.op === "clip_set" || command.op === "clip_warp") return ode_daw_clip_edit(command, target);
   if (command.op === "clip_show") {
@@ -191,7 +253,7 @@ function ode_daw_execute(command) {
   if (command.op === "device_show") {
     if (!/ devices \d+$/.test(target.path)) throw new Error(ODE_DAW_COPY.invalid);
     if (args.editor === true) {
-      if (target.api.type !== "PluginDevice") throw new Error(ODE_DAW_COPY.notPlugin);
+      if (!ode_daw_device_kind(target, "PluginDevice", "PluginDevice")) throw new Error(ODE_DAW_COPY.notPlugin);
       target.api.set("is_editor_open", 1);
       return { editorOpen: ode_daw_get(target.api, "is_editor_open") === 1 };
     }

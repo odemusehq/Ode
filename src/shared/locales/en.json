@@ -895,6 +895,7 @@
     "activityWarp": "{clip} · Edit warp marker",
     "activityShowClip": "{clip} · Open in Live",
     "activityTransport": "Set playback or recording",
-    "transportRestoration": "Transport state is not restored by Ode History. A completed recording or playback command remains active until changed in Live."
+    "transportRestoration": "Transport state is not restored by Ode History. A completed recording or playback command remains active until changed in Live.",
+    "activityInstrument": "{device} · Set instrument controls"
   }
 }

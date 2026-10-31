@@ -128,3 +128,25 @@ test("transport reads tolerate playback progress but recording prevents seeking"
   assert.equal(run("transport_set", { readToken: moving, action: "stop" }, null).ok, true);
   assert.deepEqual(writes.at(-1), ["live_set", "stop_playing"]);
 });
+
+test("Simpler and Drum Rack edits use their native sample and chain controls", async () => {
+  const { run, objects, writes, address } = await nativeDawFixture();
+  Object.assign(objects[address.path], { type: "Device", class_name: "OriginalSimpler", playback_mode: 0, voices: 8, retrigger: 1, multi_sample_mode: 0 });
+  const samplePath = address.path + " sample";
+  objects[samplePath] = { id: "10", type: "Sample", file_path: "/song/kick.wav", start_marker: 0, end_marker: 48000, length: 48000, sample_rate: 48000, slices: [0, 24000] };
+  const read = run("simpler_read");
+  assert.equal(read.ok, true, read.error);
+  assert.equal(read.result.sample.length, 48000);
+  assert.equal(run("simpler_set", { readToken: read.result.readToken, field: "sample.start_marker", value: 256 }).ok, true);
+  assert.deepEqual(writes.at(-1), [samplePath, "start_marker", 256]);
+  const stale = run("simpler_read").result.readToken;
+  objects[samplePath].id = "11";
+  assert.equal(run("simpler_set", { readToken: stale, field: "sample.start_marker", value: 512 }).ok, false);
+  Object.assign(objects[address.path], { type: "Device", class_name: "DrumGroupDevice" });
+  const chainPath = address.path + " chains 0";
+  objects[chainPath] = { id: "12", type: "DrumChain", name: "Hat", in_note: 42, out_note: 60, choke_group: 0 };
+  const chain = run("drum_chain_read", { chain: 0 });
+  assert.equal(chain.ok, true, chain.error);
+  assert.equal(run("drum_chain_set", { chain: 0, readToken: chain.result.readToken, field: "choke_group", value: 1 }).ok, true);
+  assert.deepEqual(writes.at(-1), [chainPath, "choke_group", 1]);
+});
