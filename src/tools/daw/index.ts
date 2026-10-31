@@ -1,3 +1,5 @@
+import { routingWrites } from "./actions/routing";
+import { routingReads } from "./state/routing";
 import { pluginWrites } from "./actions/plugins";
 import { pluginReads } from "./state/plugins";
 import { applyAsOneUndoStep } from "./actions/batch";
@@ -8,5 +10,5 @@ import { listeningTools } from "./state/listening";
 import { parameterDisplayReads } from "./state/parameter-display";
 import { processedAudioTools } from "./state/processed-audio";
 import { projectTools } from "./state/project";
-export const dawActionTools = [...nativeOperations.filter(tool => tool.changes === "set"), applyAsOneUndoStep, ...parameterDisplayWrites, ...pluginWrites];
-export const dawStateTools = [...nativeOperations.filter(tool => tool.changes === "none"), ...parameterDisplayReads, ...processedAudioTools, ...listeningTools, setDependencies, ...projectTools, ...pluginReads];
+export const dawActionTools = [...nativeOperations.filter(tool => tool.changes === "set"), applyAsOneUndoStep, ...parameterDisplayWrites, ...pluginWrites, ...routingWrites];
+export const dawStateTools = [...nativeOperations.filter(tool => tool.changes === "none"), ...parameterDisplayReads, ...processedAudioTools, ...listeningTools, setDependencies, ...projectTools, ...pluginReads, ...routingReads];

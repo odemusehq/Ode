@@ -37,8 +37,70 @@ function ode_daw_plugin(target) {
   if (!Array.isArray(presets) || !presets.every(function (name) { return typeof name === "string"; })) throw new Error(ODE_DAW_COPY.unsupported);
   return { name: String(ode_daw_get(target.api, "name")), presets: presets, selectedPresetIndex: ode_daw_get(target.api, "selected_preset_index"), editorOpen: ode_daw_get(target.api, "is_editor_open") === 1 };
 }
+function ode_daw_dictionary(api, key) {
+  var value = api.get(key);
+  if (Array.isArray(value) && value[0] === "dictionary") value = JSON.parse(new Dict(String(value[1])).stringify());
+  else {
+    value = ode_daw_scalar(value);
+    if (typeof value === "string") value = value.indexOf("dictionary ") === 0 ? JSON.parse(new Dict(value.slice(11)).stringify()) : JSON.parse(value);
+  }
+  if (!value || typeof value !== "object") throw new Error(ODE_DAW_COPY.unsupported);
+  return value[key] || value;
+}
+function ode_daw_routes(target, compressor) {
+  if (target.api.type !== (compressor ? "CompressorDevice" : "Track")) throw new Error(ODE_DAW_COPY.unsupported);
+  var result = { name: String(ode_daw_get(target.api, "name")) };
+  var fields = ["input_routing_type", "input_routing_channel"].concat(compressor ? [] : ["output_routing_type", "output_routing_channel"]);
+  fields.forEach(function (field) {
+    try { result[field] = ode_daw_dictionary(target.api, field); } catch (_) { result[field] = null; }
+    try { result["available_" + field + "s"] = ode_daw_dictionary(target.api, "available_" + field + "s"); } catch (_) { result["available_" + field + "s"] = null; }
+  });
+  return result;
+}
+function ode_daw_recording() {
+  var song = new LiveAPI(null, "live_set");
+  return ode_daw_optional(song, "record_mode") === 1 || ode_daw_optional(song, "session_record") === 1;
+}
+function ode_daw_route_set(command, target, compressor) {
+  var before = ode_daw_routes(target, compressor), args = command.args;
+  ode_daw_check(command, target, before);
+  if (ode_daw_recording()) throw new Error(ODE_DAW_COPY.recording);
+  var fields = ["input_routing_type", "input_routing_channel"].concat(compressor ? [] : ["output_routing_type", "output_routing_channel"]);
+  if (fields.indexOf(args.field) === -1) throw new Error(ODE_DAW_COPY.invalid);
+  var offered = before["available_" + args.field + "s"];
+  if (!Array.isArray(offered)) throw new Error(ODE_DAW_COPY.unsupported);
+  var selected = offered.filter(function (value) { return value && value.identifier === args.identifier; });
+  if (selected.length !== 1) throw new Error(ODE_DAW_COPY.changed);
+  target.api.set(args.field, JSON.stringify(selected[0]));
+  return { before: before, after: ode_daw_routes(target, compressor), restoration: ODE_DAW_COPY.nativeUndo };
+}
+function ode_daw_ids(value) {
+  if (!Array.isArray(value)) value = [value];
+  return value.filter(function (part) { return /^\d+$/.test(String(part)) && Number(part) > 0; }).map(Number);
+}
+function ode_daw_return(args) {
+  if (ode_daw_recording()) throw new Error(ODE_DAW_COPY.recording);
+  var song = new LiveAPI(null, "live_set"), before = ode_daw_ids(song.get("return_tracks"));
+  song.call("create_return_track");
+  var after = ode_daw_ids(song.get("return_tracks"));
+  var created = after.filter(function (id) { return before.indexOf(id) === -1; });
+  if (created.length !== 1) return { created: true, warning: ODE_DAW_COPY.inspectCreated };
+  var track = new LiveAPI(null, "id " + created[0]);
+  if (args.name !== undefined) track.set("name", args.name);
+  return { created: true, track: { returnIndex: after.indexOf(created[0]) }, name: String(ode_daw_get(track, "name")) };
+}
 function ode_daw_execute(command) {
+  if (typeof odeAudio !== "undefined" && odeAudio.job && !/(_read|_meters)$/.test(command.op)) throw new Error(ODE_DAW_COPY.capturing);
+  if (command.op === "return_create") return ode_daw_return(command.args);
   var target = ode_daw_target(command.address), args = command.args;
+  if (command.op === "track_routing_read" || command.op === "compressor_routing_read") return ode_daw_remember(command, target, ode_daw_routes(target, command.op === "compressor_routing_read"));
+  if (command.op === "track_routing_set" || command.op === "compressor_routing_set") return ode_daw_route_set(command, target, command.op === "compressor_routing_set");
+  if (command.op === "track_meters") {
+    if (target.api.type !== "Track") throw new Error(ODE_DAW_COPY.unsupported);
+    var meters = { observedAt: new Date().toISOString(), units: "native 0..1; peak/hold meters, not dBFS, LUFS, true peak or gain reduction" };
+    ["input_meter_left", "input_meter_right", "input_meter_level", "output_meter_left", "output_meter_right", "output_meter_level"].forEach(function (field) { meters[field] = ode_daw_optional(target.api, field); });
+    return meters;
+  }
   if (command.op === "plugin_read") {
     var state = ode_daw_plugin(target), result = ode_daw_remember(command, target, state);
     var offset = Number.isInteger(args.offset) && args.offset >= 0 ? args.offset : 0;

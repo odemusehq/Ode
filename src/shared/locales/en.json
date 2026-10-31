@@ -885,6 +885,11 @@
     "nativeUndo": "This control is outside Ode's saved-state restoration. Use Live's Undo where supported, or restore it in the device.",
     "tooLarge": "The native reply is too large. Read a smaller page before continuing; inspect Live before retrying a change.",
     "activityPreset": "{device} · Choose preset",
-    "activityShow": "{device} · Open in Live"
+    "activityShow": "{device} · Open in Live",
+    "recording": "Stop recording before changing this native control.",
+    "capturing": "Wait for the current Ode audio capture before changing native controls.",
+    "inspectCreated": "Live accepted the creation command. Read the current Set before continuing; do not repeat the creation.",
+    "activityRouting": "{target} · Set routing",
+    "activityReturn": "Add return track"
   }
 }

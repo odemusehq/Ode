@@ -69,3 +69,22 @@ test("loaded plugin presets use native values, stale guards and replay protectio
   objects[address.path].type = "Operator";
   assert.equal(run("plugin_read").ok, false);
 });
+
+test("track routing uses offered native identifiers and meters stay in native units", async () => {
+  const { run, objects, writes } = await nativeDawFixture();
+  const path = "live_set tracks 0";
+  const address = { path, guards: [{ path, name: "Lead" }] };
+  const first = { display_name: "Ext. In", identifier: "external" }, next = { display_name: "Resampling", identifier: "resample" };
+  Object.assign(objects[path], { available_input_routing_types: JSON.stringify({ available_input_routing_types: [first, next] }), input_routing_type: JSON.stringify(first),
+    input_meter_level: 0.25, output_meter_left: 0.6, output_meter_right: 0.5, output_meter_level: 0.65 });
+  const read = run("track_routing_read", {}, address);
+  assert.equal(read.ok, true, read.error);
+  assert.equal(read.result.available_input_routing_types[1].identifier, "resample");
+  assert.equal(run("track_routing_set", { readToken: read.result.readToken, field: "input_routing_type", identifier: "invented" }, address).ok, false);
+  const token = run("track_routing_read", {}, address).result.readToken;
+  assert.equal(run("track_routing_set", { readToken: token, field: "input_routing_type", identifier: "resample" }, address).ok, true);
+  assert.deepEqual(JSON.parse(writes.at(-1)[2]), next);
+  const meters = run("track_meters", {}, address).result;
+  assert.equal(meters.output_meter_level, 0.65);
+  assert.equal(meters.input_meter_right, null);
+});
