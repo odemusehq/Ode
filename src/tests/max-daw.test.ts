@@ -122,11 +122,19 @@ test("native clip edits preserve the source and refuse stale or recording clips"
 
 test("transport reads tolerate playback progress but recording prevents seeking", async () => {
   const { run, objects, writes } = await nativeDawFixture();
-  objects.live_set = { id: "80", type: "Song", is_playing: 0, record_mode: 0, session_record: 0, current_song_time: 16, loop_start: 0, loop_length: 16, back_to_arranger: 0 };
+  objects.live_set = { id: "80", type: "Song", is_playing: 0, record_mode: 0, session_record: 0, current_song_time: 16, start_time: 0, loop_start: 0, loop_length: 16, back_to_arranger: 0 };
   const first = run("transport_read", {}, null);
   assert.equal(first.ok, true, first.error);
   assert.equal(run("transport_set", { readToken: first.result.readToken, action: "record_mode", value: true }, null).ok, false);
   assert.equal(writes.length, 0);
+  const unprepared = run("transport_read", {}, null).result.readToken;
+  assert.equal(run("transport_set", { readToken: unprepared, action: "play" }, null).ok, false);
+  const seek = run("transport_read", {}, null).result.readToken;
+  assert.equal(run("transport_set", { readToken: seek, action: "current_song_time", value: 48 }, null).ok, true);
+  assert.deepEqual(writes.slice(-2), [["live_set", "start_time", 48], ["live_set", "current_song_time", 48]]);
+  const rehearsal = run("transport_read", {}, null).result.readToken;
+  assert.equal(run("transport_set", { readToken: rehearsal, action: "play" }, null).ok, true);
+  assert.deepEqual(writes.at(-1), ["live_set", "start_playing"], "Rehearsal starts from the confirmed insert marker.");
   objects.live_set.record_mode = 1; // The musician operates Live's Record control.
   const recording = run("transport_read", {}, null).result.readToken;
   assert.equal(run("transport_set", { readToken: recording, action: "current_song_time", value: 0 }, null).ok, false);

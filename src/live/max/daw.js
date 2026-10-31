@@ -131,7 +131,7 @@ function ode_daw_clip_edit(command, target) {
 }
 function ode_daw_transport(target) {
   var state = {};
-  ["is_playing", "is_counting_in", "record_mode", "session_record", "session_automation_record", "arrangement_overdub", "loop", "loop_start", "loop_length", "metronome", "punch_in", "punch_out", "back_to_arranger", "signature_numerator", "signature_denominator"].forEach(function (field) { state[field] = ode_daw_optional(target.api, field); });
+  ["is_playing", "is_counting_in", "record_mode", "session_record", "session_automation_record", "arrangement_overdub", "start_time", "loop", "loop_start", "loop_length", "metronome", "punch_in", "punch_out", "back_to_arranger", "signature_numerator", "signature_denominator"].forEach(function (field) { state[field] = ode_daw_optional(target.api, field); });
   return state;
 }
 function ode_daw_transport_command(command) {
@@ -143,10 +143,16 @@ function ode_daw_transport_command(command) {
   if (action === "record_mode" || ode_daw_recording()) throw new Error(ODE_DAW_COPY.recording);
   if (action === "play" || action === "stop") {
     if (state.is_playing !== 0 && state.is_playing !== 1) throw new Error(ODE_DAW_COPY.unsupported);
+    if (action === "play") {
+      var position = ode_daw_optional(api, "current_song_time");
+      if (state.is_playing !== 0 || state.start_time === null || position === null || Math.abs(state.start_time - position) >= 0.001) throw new Error(ODE_DAW_COPY.preparePlayback);
+    }
     api.call(action === "play" ? "start_playing" : "stop_playing");
   } else if (action === "current_song_time") {
     if (state.is_playing !== 0 || ode_daw_recording()) throw new Error(ODE_DAW_COPY.recording);
     if (typeof args.value !== "number" || !Number.isFinite(args.value) || args.value < 0) throw new Error(ODE_DAW_COPY.invalid);
+    if (state.start_time === null) throw new Error(ODE_DAW_COPY.unsupported);
+    api.set("start_time", args.value);
     api.set(action, args.value);
   } else if (["metronome", "punch_in", "punch_out", "loop", "back_to_arranger"].indexOf(action) !== -1) {
     if (typeof args.value !== "boolean" || state[action] === null) throw new Error(ODE_DAW_COPY.unsupported);

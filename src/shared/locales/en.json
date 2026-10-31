@@ -895,7 +895,8 @@
     "activityWarp": "{clip} · Edit warp marker",
     "activityShowClip": "{clip} · Open in Live",
     "activityTransport": "Set rehearsal playback",
-    "transportRestoration": "Transport state is not restored by Ode History. A completed recording or playback command remains active until changed in Live.",
+    "transportRestoration": "Transport state and the rehearsal insert marker are not restored by Ode History. Read transport again to confirm a completed command.",
+    "preparePlayback": "Stop playback, set current_song_time to the requested rehearsal beat, then read transport to confirm both position and start_time before Play.",
     "activityInstrument": "{device} · Set instrument controls",
     "meterUnits": "native 0..1; peak/hold meters, not dBFS, LUFS, true peak or gain reduction"
   }
