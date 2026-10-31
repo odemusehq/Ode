@@ -553,6 +553,10 @@
     "saveDraft": "Save the open draft, then retry."
   },
   "maxAudio": {
+    "invalidTrackSelection": "Choose current track or group Post Mixer sources for a Main Post Mixer range capture.",
+    "captureCleanupUnconfirmed": "Max has not confirmed capture cleanup. Check the track controls before continuing.",
+    "automatedExcludedSend": "An excluded track has an automated send. Capture individual sources instead to preserve its automation.",
+    "trackSelectionChanged": "The track selection or its mixer controls changed during capture; the take was cancelled. Conflicting edits are preserved.",
     "liveDidNotExposeItsRoutingDictionary": "Live did not expose its routing dictionary.",
     "waitForTheCurrentAudioCaptureTo": "Wait for the current audio capture to finish.",
     "liveSAudioEngineStoppedDuringCapture": "Live's audio engine stopped during capture.",

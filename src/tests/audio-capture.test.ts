@@ -12,6 +12,18 @@ import { LocalAudioFiles } from "../live/local-audio-files";
 import { buildLibraryProfile } from "../audio/library-profile";
 import { encodeWav } from "../audio/wav";
 import type { ToolContext } from "../tools/define";
+import { MaxCaptureEvidenceSchema } from "../shared/audio-library";
+
+test("retained Max capture metadata preserves selected-track identities", () => {
+  const source = { id: "main", name: "Main", kind: "main", stage: "post-mixer" };
+  const includedSources = [{ id: "keys", name: "Keys", kind: "track", stage: "post-mixer" }];
+  const requested = { sourceId: source.id, includeSourceIds: ["keys"], durationSeconds: 1, startBeat: 0 };
+  const capture = MaxCaptureEvidenceSchema.parse({ capturedAt: new Date().toISOString(), source, includedSources, requested,
+    host: { trackName: "Ode", deviceName: "Ode" }, timing: { startedBeat: 0, endedBeat: 2, prerollBeats: 0, rangeUncertainty: "Message-thread timing" },
+    frames: 8000, channels: 2, sampleRate: 8000, durationSeconds: 1 });
+  assert.deepEqual(capture, { capturedAt: capture.capturedAt, source, includedSources, requested, host: capture.host, timing: capture.timing,
+    frames: 8000, channels: 2, sampleRate: 8000, durationSeconds: 1 });
+});
 
 test("Arrangement capture retains identity through track reordering and refuses duplicate names/tags", async () => {
   let tracks = [{ index: 0, kind: "audio", name: "Voice", tag: "voice" }, { index: 1, kind: "audio", name: "Guitar", tag: "guitar" }];

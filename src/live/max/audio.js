@@ -1,5 +1,5 @@
 /* Embedded Max 9.1 capture. Only the extension writes files; audio travels as bounded JSON PCM. */
-var odeAudio = { rate: 0, dsp: false, beat: null, sample: null, flags: 0, bufferName: "", catalogue: null, serial: 0, job: null, done: [] };
+var odeAudio = { rate: 0, dsp: false, beat: null, sample: null, flags: 0, bufferName: "", catalogue: null, serial: 0, job: null, cleanup: null, restored: null, cancelled: null, done: [] };
 
 function ode_audio_rate(value) { odeAudio.rate = Number(value); }
 function ode_audio_dsp(value) { odeAudio.dsp = Number(value) === 1; }
@@ -78,7 +78,7 @@ function ode_audio_tracks() {
   function append(list, kind) {
     ode_audio_ids(list).forEach(function (id) {
       var api = new LiveAPI(null, "id " + id);
-      tracks.push({ name: String(ode_audio_get(api, "name")), kind: kind === "track" && Number(ode_audio_get(api, "is_foldable")) ? "group" : kind });
+      tracks.push({ id: id, name: String(ode_audio_get(api, "name")), kind: kind === "track" && Number(ode_audio_get(api, "is_foldable")) ? "group" : kind });
     });
   }
   append(song.get("tracks"), "track");
@@ -123,7 +123,7 @@ function ode_audio_sources(id) {
           var stage = label === "post fx" ? "post-fx" : label === "post mixer" ? "post-mixer" : null;
           if (!stage || !type.identifier || !channel.identifier) return;
           add({ name: candidates[0].name + " · " + channel.display_name, kind: candidates[0].kind, stage: stage, trackName: candidates[0].name },
-            { busId: buses[1], type: type, channel: channel });
+            { busId: buses[1], type: type, channel: channel, trackId: candidates[0].id, trackName: candidates[0].name, kind: candidates[0].kind, stage: stage });
         });
       });
     } finally {
@@ -134,6 +134,109 @@ function ode_audio_sources(id) {
   odeAudio.catalogue = catalogue;
   ode_audio_remember(id);
   ode_audio_send({ kind: "sources", id: id, catalogueId: catalogue.catalogueId, host: host, sources: catalogue.sources });
+}
+
+// Live does the summing. This changes only native audibility and excluded sends for one take.
+function ode_audio_select_tracks(job, command, catalogue) {
+  if (command.includeSourceIds === undefined) return;
+  if (job.target.kind !== "main" || job.target.stage !== "post-mixer" || command.startBeat === undefined || !Array.isArray(command.includeSourceIds) || !command.includeSourceIds.length || command.includeSourceIds.length > 64) throw new Error(ODE_AUDIO_COPY.invalidTrackSelection);
+  var selected = command.includeSourceIds.map(function (id) {
+    var target = catalogue.targets[id];
+    if (!target || !target.trackId || target.stage !== "post-mixer" || target.kind !== "track" && target.kind !== "group") throw new Error(ODE_AUDIO_COPY.invalidTrackSelection);
+    if (String(ode_audio_get(new LiveAPI(null, "id " + target.trackId), "name")) !== target.trackName) throw new Error(ODE_AUDIO_COPY.invalidTrackSelection);
+    return target.trackId;
+  });
+  var song = job.songApi;
+  if (Number(ode_audio_get(song, "is_playing")) || Number(ode_audio_get(song, "record_mode")) || Number(ode_audio_get(song, "session_record"))) throw new Error(ODE_AUDIO_COPY.stopPlaybackAndRecordingBeforeAskingOde);
+  var ids = ode_audio_ids(song.get("tracks")), returns = ode_audio_ids(song.get("return_tracks"));
+  if (selected.some(function (id) { return ids.indexOf(id) === -1; })) throw new Error(ODE_AUDIO_COPY.invalidTrackSelection);
+  var rows = ids.map(function (id) {
+    var api = new LiveAPI(null, "id " + id);
+    return { id: id, api: api, parent: ode_audio_ids(api.get("group_track"))[0] || 0 };
+  });
+  function ancestors(row) {
+    var chain = [], parent = row.parent;
+    while (parent) {
+      if (chain.indexOf(parent) !== -1 || chain.length >= 64) throw new Error(ODE_AUDIO_COPY.trackSelectionChanged);
+      chain.push(parent);
+      var found = rows.filter(function (item) { return item.id === parent; })[0];
+      if (!found) throw new Error(ODE_AUDIO_COPY.trackSelectionChanged);
+      parent = found.parent;
+    }
+    return chain;
+  }
+  var audible = selected.slice();
+  rows.forEach(function (row) { if (ancestors(row).some(function (parent) { return selected.indexOf(parent) !== -1; })) audible.push(row.id); });
+  rows.forEach(function (row) { if (audible.indexOf(row.id) !== -1) ancestors(row).forEach(function (parent) { if (audible.indexOf(parent) === -1) audible.push(parent); }); });
+  var controls = [];
+  function control(api, key, wanted) {
+    var previous = Number(ode_audio_get(api, key));
+    if (!Number.isFinite(previous) || !Number.isFinite(wanted)) throw new Error(ODE_AUDIO_COPY.invalidTrackSelection);
+    controls.push({ api: api, key: key, previous: previous, wanted: wanted, changed: Math.abs(previous - wanted) > 0.000001, issued: false });
+  }
+  rows.forEach(function (row) {
+    var included = audible.indexOf(row.id) !== -1;
+    control(row.api, "mute", included ? 0 : 1); control(row.api, "solo", 0);
+    if (!included) {
+      var mixer = ode_audio_ids(row.api.get("mixer_device"))[0];
+      if (!mixer) throw new Error(ODE_AUDIO_COPY.invalidTrackSelection);
+      var sends = ode_audio_ids(new LiveAPI(null, "id " + mixer).get("sends"));
+      sends.forEach(function (id) {
+        var api = new LiveAPI(null, "id " + id);
+        if (Number(ode_audio_get(api, "automation_state")) !== 0) throw new Error(ODE_AUDIO_COPY.automatedExcludedSend);
+        control(api, "value", Number(ode_audio_get(api, "min")));
+      });
+    }
+  });
+  returns.forEach(function (id) { control(new LiveAPI(null, "id " + id), "solo", 0); });
+  // Read every required property before writing any. Keep the rollback journal before issuing writes.
+  job.selection = { controls: controls, rows: rows, tracks: ids.join(","), returns: returns.join(","), preparing: true, deadline: Date.now() + 2000 };
+  controls.forEach(function (item) { if (item.changed) { item.issued = true; item.api.set(item.key, item.wanted); } });
+}
+function ode_audio_selection_ready(job, force) {
+  var selection = job.selection;
+  if (!selection) return true;
+  // Transport needs frequent checks for its start beat; a whole Set's mixer does not.
+  if (!selection.preparing && !force && Date.now() < selection.nextCheck) return true;
+  selection.nextCheck = Date.now() + 250;
+  if (ode_audio_ids(job.songApi.get("tracks")).join(",") !== selection.tracks || ode_audio_ids(job.songApi.get("return_tracks")).join(",") !== selection.returns || selection.rows.some(function (row) { return (ode_audio_ids(row.api.get("group_track"))[0] || 0) !== row.parent; })) throw new Error(ODE_AUDIO_COPY.trackSelectionChanged);
+  var ready = true;
+  selection.controls.forEach(function (item) {
+    var value = Number(ode_audio_get(item.api, item.key));
+    if (Math.abs(value - item.wanted) <= 0.000001) return;
+    if (selection.preparing && Date.now() < selection.deadline && Math.abs(value - item.previous) <= 0.000001) { ready = false; return; }
+    throw new Error(ODE_AUDIO_COPY.trackSelectionChanged);
+  });
+  if (ready) selection.preparing = false;
+  return ready;
+}
+function ode_audio_restore_selection(job) {
+  if (!job.selection) return;
+  var selection = job.selection;
+  job.selection = null;
+  odeAudio.restored = { id: job.id, controls: selection.controls };
+  selection.controls.slice().reverse().forEach(function (item) {
+    if (!item.issued) return;
+    try {
+      var value = Number(ode_audio_get(item.api, item.key));
+      if (Math.abs(value - item.wanted) <= 0.000001 || selection.preparing && Math.abs(value - item.previous) <= 0.000001) { item.restoring = true; item.api.set(item.key, item.previous); }
+    } catch (_) {}
+  });
+}
+function ode_audio_cancel_ready() {
+  var cleanup = odeAudio.cleanup;
+  if (!cleanup) return;
+  releaseTask(cleanup.task);
+  var waiting = false;
+  cleanup.controls.forEach(function (item) {
+    if (!item.restoring) return;
+    try { var value = Number(ode_audio_get(item.api, item.key)); if (!Number.isFinite(value) || Math.abs(value - item.wanted) <= 0.000001) waiting = true; }
+    catch (_) { waiting = true; }
+  });
+  if (waiting && Date.now() < cleanup.deadline) { cleanup.task = ode_audio_task(ode_audio_cancel_ready, 50); return; }
+  odeAudio.cancelled = { kind: "cancelled", id: cleanup.id, restored: !waiting };
+  odeAudio.cleanup = null;
+  ode_audio_send(odeAudio.cancelled);
 }
 
 function ode_audio_restore(job) {
@@ -174,6 +277,7 @@ function ode_audio_restore(job) {
       if (Math.abs(marker - job.transport.seek) < 0.001 || preparing && Math.abs(marker - job.transport.marker) < 0.001) song.set("start_time", job.transport.marker);
     } catch (_) {}
   }
+  ode_audio_restore_selection(job);
   if (job.buffer) {
     try { job.buffer.freepeer(); } catch (_) {}
     try { odePatcher.getnamed("odeCaptureBuffer").message("sizeinsamps", 1); } catch (_) {}
@@ -185,6 +289,8 @@ function ode_audio_stop() {
   odeAudio.job = null;
   odeAudio.catalogue = null;
   odeAudio.done = [];
+  if (odeAudio.cleanup) releaseTask(odeAudio.cleanup.task);
+  odeAudio.cleanup = null; odeAudio.restored = null; odeAudio.cancelled = null;
   if (job) ode_audio_restore(job);
 }
 function ode_audio_error(id, error) {
@@ -197,17 +303,18 @@ function ode_audio_observed_beat(job) {
   try { var beat = Number(ode_audio_get(job.songApi, "current_song_time")); return Number.isFinite(beat) ? beat : null; }
   catch (_) { return null; }
 }
-function ode_audio_check(job) {
+function ode_audio_check(job, force) {
   if (!odeAudio.dsp) throw new Error(ODE_AUDIO_COPY.liveSAudioEngineStoppedDuringCapture);
   if (odeAudio.rate !== job.rate) throw new Error(ODE_AUDIO_COPY.liveSSampleRateChangedDuringCapture);
   if (ode_audio_host_identity(job) !== job.hostIdentity) throw new Error(ODE_AUDIO_COPY.odeSHostTrackOrDeviceChain);
   if (job.bus && (ode_audio_routing(job.bus, "routing_type").identifier !== job.target.type.identifier || ode_audio_routing(job.bus, "routing_channel").identifier !== job.target.channel.identifier)) throw new Error(ODE_AUDIO_COPY.theCaptureSourceOrRoutingStageChanged);
+  return ode_audio_selection_ready(job, force);
 }
 function ode_audio_monitor() {
   var job = odeAudio.job;
   if (!job) return;
   try {
-    ode_audio_check(job);
+    if (!ode_audio_check(job)) return;
     if (job.transport) {
       var song = job.transport.song;
       var now = Date.now();
@@ -267,7 +374,7 @@ function ode_audio_start_recording(job) {
   job.finishTask = ode_audio_task(ode_audio_recorded, job.frames / job.rate * 1000 + 25);
 }
 function ode_audio_capture(command) {
-  if (odeAudio.job) throw new Error(ODE_AUDIO_COPY.waitForTheCurrentAudioCaptureTo);
+  if (odeAudio.job || odeAudio.cleanup) throw new Error(ODE_AUDIO_COPY.waitForTheCurrentAudioCaptureTo);
   var catalogue = odeAudio.catalogue;
   if (!catalogue || command.catalogueId !== catalogue.catalogueId || !catalogue.targets[command.sourceId]) throw new Error(ODE_AUDIO_COPY.readTheCurrentAudioSourcesAgainBefore);
   var rate = odeAudio.rate;
@@ -276,6 +383,7 @@ function ode_audio_capture(command) {
   if (!odeAudio.dsp || !Number.isFinite(rate) || rate < 8000 || rate > 384000) throw new Error(ODE_AUDIO_COPY.liveSAudioEngineIsNotReady);
   if (!Number.isFinite(duration) || duration <= 0 || duration > ODE_AUDIO.maxDurationSeconds || frames > ODE_AUDIO.maxFrames) throw new Error(ODE_AUDIO_COPY.chooseAnAudioDurationWithinTheBounded);
   var job = { id: command.id, catalogueId: command.catalogueId, sourceId: command.sourceId, target: catalogue.targets[command.sourceId], hostIdentity: catalogue.hostIdentity, frames: frames, rate: rate, offset: 0, startedBeat: null, endedBeat: null, prerollBeats: 0 };
+  odeAudio.restored = null;
   odeAudio.job = job;
   try {
     // Reuse handles during monitoring; re-read the actual parent chain on every check.
@@ -304,6 +412,7 @@ function ode_audio_capture(command) {
     if (!odeAudio.bufferName) throw new Error(ODE_AUDIO_COPY.maxSCaptureBufferIsNotInitialised);
     job.buffer = new Buffer(odeAudio.bufferName);
     if (job.buffer.channelcount() !== 2 || job.buffer.framecount() !== frames) throw new Error(ODE_AUDIO_COPY.maxCouldNotAllocateTheRequestedStereo);
+    ode_audio_select_tracks(job, command, catalogue);
     if (command.startBeat !== undefined) {
       var start = Number(command.startBeat), preroll = Number(command.prerollBeats || 0);
       if (!Number.isFinite(start) || start < 0 || !Number.isFinite(preroll) || preroll < 0 || preroll > 64) throw new Error(ODE_AUDIO_COPY.chooseANonnegativeStartBeatAndPreroll);
@@ -326,7 +435,7 @@ function ode_audio_capture(command) {
 function ode_audio_recorded() {
   var job = odeAudio.job;
   if (!job || !job.recording) return;
-  try { ode_audio_check(job); } catch (error) { ode_audio_error(job.id, error); return; }
+  try { ode_audio_check(job, true); } catch (error) { ode_audio_error(job.id, error); return; }
   releaseTask(job.finishTask); job.finishTask = null;
   ode_audio_object("odeCaptureRecorder", 0);
   job.recording = false; job.endedBeat = ode_audio_observed_beat(job);
@@ -379,7 +488,15 @@ function ode_audio_pcm(channels, count) {
 function ode_audio_command(command) {
   if (!command || typeof command.id !== "string" || command.id.length > 512) return;
   if (command.kind === "cancel") {
-    if (odeAudio.job && odeAudio.job.id === command.id) { var job = odeAudio.job; odeAudio.job = null; ode_audio_restore(job); }
+    if (odeAudio.cleanup && odeAudio.cleanup.id === command.id) return;
+    if (odeAudio.cancelled && odeAudio.cancelled.id === command.id) { ode_audio_send(odeAudio.cancelled); return; }
+    var controls = odeAudio.restored && odeAudio.restored.id === command.id ? odeAudio.restored.controls : [];
+    if (odeAudio.job && odeAudio.job.id === command.id) {
+      var job = odeAudio.job;
+      controls = job.selection ? job.selection.controls : controls;
+      odeAudio.job = null; ode_audio_restore(job);
+    }
+    odeAudio.cleanup = { id: command.id, controls: controls, deadline: Date.now() + 2000, task: ode_audio_task(ode_audio_cancel_ready, 50) };
     ode_audio_remember(command.id); return;
   }
   if (odeAudio.done.includes(command.id) || odeAudio.job && odeAudio.job.id === command.id) return;

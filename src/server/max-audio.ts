@@ -23,9 +23,10 @@ const messageSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("pcm"), id, offset: z.number().int().min(0), data: z.string().min(4).max(Math.ceil(MAX_AUDIO.pcmChunkFrames * 8 / 3) * 4) }).strict(),
   z.object({ kind: z.literal("complete"), id, frames: z.number().int().min(1).max(MAX_AUDIO.maxFrames), timing }).strict(),
   z.object({ kind: z.literal("error"), id, error: z.string().min(1).max(1000) }).strict(),
+  z.object({ kind: z.literal("cancelled"), id, restored: z.boolean() }).strict(),
 ]);
 const requestSchema = z.object({ sourceId: text, durationSeconds: z.number().positive().max(MAX_AUDIO.maxDurationSeconds),
-  startBeat: z.number().min(0).optional(), prerollBeats: z.number().min(0).max(64).optional() }).strict();
+  startBeat: z.number().min(0).optional(), prerollBeats: z.number().min(0).max(64).optional(), includeSourceIds: z.array(text).min(1).max(64).optional() }).strict();
 
 interface Pending {
   command: Exclude<MaxAudioCommand, { kind: "cancel" }>;
@@ -38,6 +39,7 @@ interface Pending {
   acknowledged: boolean;
   pcm?: { sampleRate: number; frames: number; offset: number; channels: [Float32Array, Float32Array] };
   finishing?: boolean;
+  cancelling?: Error;
 }
 
 /** One bounded job in the paired device. Only this service chooses and writes output paths. */
@@ -65,12 +67,18 @@ export class MaxAudioCapture {
     const request = requestSchema.parse(input);
     if (request.startBeat === undefined && request.prerollBeats) throw new Error(t("server.maxAudio.preRollNeedsAnArrangementStartBeat"));
     if (!this.catalogue?.sources.some((item) => item.id === request.sourceId)) throw new Error(t("server.maxAudio.readTheAvailableMaxAudioSourcesBefore"));
+    if (request.includeSourceIds) {
+      if (!this.window.supportsAudioSelection) throw new Error(t("server.maxAudio.loadTheUpdatedOdeMaxDeviceTo"));
+      const selected = this.catalogue.sources.find((item) => item.id === request.sourceId)!;
+      if (request.startBeat === undefined || selected.kind !== "main" || selected.stage !== "post-mixer" || new Set(request.includeSourceIds).size !== request.includeSourceIds.length || request.includeSourceIds.some((id) => !this.catalogue!.sources.some((item) => item.id === id && item.stage === "post-mixer" && (item.kind === "track" || item.kind === "group")))) throw new Error(t("maxAudio.invalidTrackSelection"));
+    }
     return this.queue({ kind: "capture", id: randomUUID(), catalogueId: this.catalogue.catalogueId, ...request },
       request.durationSeconds * 1000 + Math.min(request.prerollBeats ?? 0, request.startBeat ?? 0) * 3000 + 120_000,
       signal) as Promise<MaxAudioResult>;
   }
 
   poll(): MaxAudioCommand | null {
+    if (this.pending?.cancelling) return { kind: "cancel", id: this.pending.command.id };
     if (this.cancellation) { const command = this.cancellation; this.cancellation = null; return command; }
     return this.pending && !this.pending.acknowledged ? this.pending.command : null;
   }
@@ -89,6 +97,14 @@ export class MaxAudioCapture {
     if (job.session && job.session !== session) throw new MaxWindowError(t("server.maxAudio.thatMaxAudioJobBelongsToAnother"), 403);
     job.session = session;
     job.acknowledged = true;
+    if (job.cancelling) {
+      if (message.kind === "cancelled") {
+        this.clear(job);
+        this.cancellation = null;
+        job.reject(message.restored ? job.cancelling : new Error(`${job.cancelling.message} ${t("maxAudio.captureCleanupUnconfirmed")}`));
+      }
+      return;
+    }
     try {
       if (message.kind === "error") throw new Error(message.error);
       if (job.finishing) throw new Error(t("server.maxAudio.theMaxAudioCaptureIsAlreadyBeing"));
@@ -149,7 +165,8 @@ export class MaxAudioCapture {
         const { kind: _kind, id: _id, catalogueId: _catalogueId, ...requested } = job.command;
         this.finish(job, { path: filePath, sha256: createHash("sha256").update(written).digest("hex"), bytes: written.length,
           frames: pcm.frames, sampleRate: pcm.sampleRate, channels: 2, durationSeconds: pcm.frames / pcm.sampleRate,
-          source: selected, host: catalogue.host, timing: message.timing, requested });
+          source: selected, ...(requested.includeSourceIds ? { includedSources: requested.includeSourceIds.map((id) => catalogue.sources.find((source) => source.id === id)!) } : {}),
+          host: catalogue.host, timing: message.timing, requested });
       } catch (error) { await rm(filePath, { force: true }); throw error; }
     } catch (error) {
       const failure = error instanceof Error ? error : new Error(String(error));
@@ -192,6 +209,15 @@ export class MaxAudioCapture {
   private fail(error: Error, sendCancel = true): void {
     const job = this.pending;
     if (!job) return;
+    if (sendCancel && job.command.kind === "capture" && job.command.includeSourceIds && this.window.supportsAudioSelection) {
+      if (job.cancelling) return;
+      job.cancelling = error;
+      clearTimeout(job.timer);
+      // Keep the device busy until it acknowledges cleanup, even if acknowledgement times out.
+      job.timer = setTimeout(() => job.reject(new Error(`${error.message} ${t("maxAudio.captureCleanupUnconfirmed")}`)), 4000);
+      job.timer.unref?.();
+      return;
+    }
     if (sendCancel) this.cancellation = { kind: "cancel", id: job.command.id };
     this.clear(job);
     job.reject(error);

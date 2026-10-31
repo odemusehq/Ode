@@ -42,7 +42,8 @@ export class MaxWindowBridge {
 
   attachAudio(audio: { poll(): MaxAudioCommand | null; invalidate(): void }): void { this.audio = audio; }
 
-  get supportsAudio(): boolean { return this.connected && (this.device?.session?.audioVersion === 1 || this.device?.session?.audioVersion === MAX_AUDIO.version); }
+  get supportsAudio(): boolean { return this.connected && [1, 2, MAX_AUDIO.version].includes(this.device?.session?.audioVersion ?? 0); }
+  get supportsAudioSelection(): boolean { return this.connected && this.device?.session?.audioVersion === MAX_AUDIO.version; }
 
   attachParameters(parameters: { poll(session: string): MaxParameterCommand | null; invalidate(): void }): void { this.parameters = parameters; }
   get supportsParameters(): boolean { return this.connected && this.device?.session?.parametersVersion === 1; }
