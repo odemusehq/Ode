@@ -115,6 +115,8 @@ test("large native note reads reach clip creation without model reserialization"
     const clip = r.track.arrangementClips.find((item) => item.startTime === 16) as unknown as { notes: unknown };
     assert.deepEqual(clip.notes, toLiveNotes(notes));
     assert.equal(r.registry.available("subagent").some((tool) => tool.name === "midi_material_list"), true);
+    assert.equal(r.registry.group("midi_material_read"), "daw_read");
+    assert.ok(r.registry.search("read MIDI material notes", "main", 8, "daw_read").some((tool) => tool.name === "midi_material_read"));
     assert.equal(r.registry.available("subagent").some((tool) => tool.name === "midi_clip_set_notes"), false);
   } finally { r.close(); }
 });

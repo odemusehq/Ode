@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineTool } from "../define";
+import { defineTool } from "../../define";
 
 export const midiMaterialTools = [
   defineTool({
