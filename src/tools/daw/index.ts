@@ -19,5 +19,6 @@ import { listeningTools } from "./state/listening";
 import { parameterDisplayReads } from "./state/parameter-display";
 import { processedAudioTools } from "./state/processed-audio";
 import { projectTools } from "./state/project";
+import { sampleFolderTools } from "./state/sample-folders";
 export const dawActionTools = [...nativeOperations.filter(tool => tool.changes === "set"), applyAsOneUndoStep, ...parameterDisplayWrites, ...pluginWrites, ...routingWrites, ...nativeClipWrites, ...transportWrites, ...instrumentWrites, ...grooveWrites];
-export const dawStateTools = [...nativeOperations.filter(tool => tool.changes === "none"), ...parameterDisplayReads, ...processedAudioTools, ...listeningTools, setDependencies, ...projectTools, ...pluginReads, ...routingReads, ...nativeClipReads, ...transportReads, ...instrumentReads, ...midiMaterialTools, ...grooveReads];
+export const dawStateTools = [...nativeOperations.filter(tool => tool.changes === "none"), ...parameterDisplayReads, ...processedAudioTools, ...listeningTools, setDependencies, ...projectTools, ...pluginReads, ...routingReads, ...nativeClipReads, ...transportReads, ...instrumentReads, ...midiMaterialTools, ...grooveReads, ...sampleFolderTools];

@@ -1,8 +1,12 @@
-import { join } from "node:path";
+import { realpath, stat } from "node:fs/promises";
+import { homedir } from "node:os";
+import { isAbsolute, join } from "node:path";
 import type { ProviderCatalog } from "../services/provider-catalog";
 import { Provider } from "../services/providers";
+import { t } from "../shared/i18n";
 import {
   ModelSettingsSchema,
+  SampleFoldersSchema,
   type ModelSettings,
   type SettingsUpdate,
   type SettingsView,
@@ -30,6 +34,7 @@ export class SettingsStore {
   }
 
   async update(change: SettingsUpdate): Promise<SettingsView> {
+    const sampleFolders = change.sampleFolders === undefined ? undefined : await this.approvedFolders(change.sampleFolders);
     // A saved key stays with the provider it belongs to: choosing another provider starts with that provider's key.
     const next = await this.file.update((current) => ({
       ...current,
@@ -37,6 +42,7 @@ export class SettingsStore {
       model: change.model,
       key: change.key ?? (change.provider === current.provider ? current.key : ""),
       metaKey: change.metaKey ?? current.metaKey,
+      sampleFolders: sampleFolders ?? current.sampleFolders,
       lyrics: change.lyrics
         ? {
             provider: change.lyrics.provider,
@@ -56,7 +62,24 @@ export class SettingsStore {
   }
 
   private initial(): ModelSettings {
-    return { ...this.catalog.firstChoice(), key: "", metaKey: "", lyrics: { ...this.catalog.lyricsDefault(), key: "" } };
+    return { ...this.catalog.firstChoice(), key: "", metaKey: "", lyrics: { ...this.catalog.lyricsDefault(), key: "" }, sampleFolders: [] };
+  }
+
+  private async approvedFolders(folders: string[]): Promise<string[]> {
+    const approved: string[] = [];
+    for (const folder of SampleFoldersSchema.parse(folders)) {
+      const expanded = folder.startsWith("~/") ? join(homedir(), folder.slice(2)) : folder;
+      if (!isAbsolute(expanded)) throw new Error(t("settings.sampleFolderAbsolute"));
+      let resolved: string;
+      try {
+        resolved = await realpath(expanded);
+        if (!(await stat(resolved)).isDirectory()) throw new Error("directory required");
+      } catch {
+        throw new Error(t("settings.sampleFolderUnavailable", { folder }));
+      }
+      if (!approved.includes(resolved)) approved.push(resolved);
+    }
+    return approved;
   }
 
   private toView(settings: ModelSettings): SettingsView {
@@ -72,6 +95,7 @@ export class SettingsStore {
         keySet: SettingsStore.lyricsKey(settings, lyrics.provider.id).length > 0,
       },
       credit: this.catalog.credit(settings.provider, settings.model),
+      sampleFolders: [...settings.sampleFolders],
     };
   }
 }

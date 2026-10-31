@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import type { MidiMaterialScope } from "../harness/midi-materials";
 import type { SkillLibrary } from "../harness/skills";
+import type { SampleFolders } from "../live/sample-folders";
 import type { Mneme } from "../mneme/artist";
 import type { LyricsStore } from "../mneme/lyrics-store";
 import type { TempFolder } from "../mneme/paths";
@@ -64,6 +65,8 @@ export interface ToolContext {
   /** Actual displayed units and native control state through the paired Max device. */
   maxParameters?: MaxParameters;
   maxDaw?: MaxDaw;
+  /** Read-only discovery within the musician's Settings-approved real sample folders. */
+  sampleFolders?: SampleFolders;
   /** Where generated and rendered files go. */
   temp: TempFolder;
   emit: (event: UiEvent) => void;

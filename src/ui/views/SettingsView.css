@@ -66,6 +66,10 @@
   font-size: var(--font-size-sm);
 }
 
+.settings__folders {
+  resize: vertical;
+}
+
 .settings__service {
   display: flex;
   flex-direction: column;

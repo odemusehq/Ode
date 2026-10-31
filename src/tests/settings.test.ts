@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp } from "node:fs/promises";
+import { mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -55,4 +55,27 @@ test("Settings lists each provider's models, and Modal lists its endpoints once 
     ["meta-models/muse-spark-open-1026"],
   );
   assert.deepEqual(await roles.models({ provider: "modal" }), []);
+});
+
+test("approved sample folders persist without exposing or replacing saved keys and unknown settings", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "ode-sample-settings-"));
+  try {
+    const file = join(folder, "settings.json");
+    const settings = new SettingsStore(folder, ProviderCatalog.bundled);
+    assert.deepEqual((await settings.view()).sampleFolders, []);
+    await settings.update({ provider: "meta", model: "muse-spark-1.3", key: "protected-key" });
+    await writeFile(file, JSON.stringify({ ...JSON.parse(await readFile(file, "utf8")), futureSetting: { enabled: true } }));
+    const view = await settings.update({ provider: "meta", model: "muse-spark-1.3", sampleFolders: [folder, folder] });
+    assert.deepEqual(view.sampleFolders, [await realpath(folder)]);
+    assert.equal(JSON.stringify(view).includes("protected-key"), false);
+    assert.equal((await settings.read()).key, "protected-key");
+    assert.deepEqual((await settings.read()).futureSetting, { enabled: true });
+    await settings.update({ provider: "meta", model: "muse-spark-1.3" });
+    assert.deepEqual((await settings.view()).sampleFolders, view.sampleFolders);
+    const before = await readFile(file, "utf8");
+    await assert.rejects(settings.update({ provider: "meta", model: "muse-spark-1.3", sampleFolders: ["relative-folder"] }));
+    assert.equal(await readFile(file, "utf8"), before);
+    await settings.update({ provider: "meta", model: "muse-spark-1.3", sampleFolders: [] });
+    assert.deepEqual((await new SettingsStore(folder, ProviderCatalog.bundled).view()).sampleFolders, []);
+  } finally { await rm(folder, { recursive: true, force: true }); }
 });

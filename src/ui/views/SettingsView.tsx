@@ -37,6 +37,7 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
   const [lyricsProvider, setLyricsProvider] = useState("");
   const [lyricsModel, setLyricsModel] = useState("");
   const [lyricsKey, setLyricsKey] = useState("");
+  const [sampleFolders, setSampleFolders] = useState("");
   const [listed, setListed] = useState<ChatModelOption[]>([]);
   const [problem, setProblem] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -63,6 +64,7 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
     setKey("");
     setMetaKey("");
     setLyricsKey("");
+    setSampleFolders(response.settings.sampleFolders.join("\n"));
     const error = client.store.getSnapshot().error;
     if (error === SAVING_NOTICE || error === CLOSE_NOTICE) client.store.setError(null);
   };
@@ -76,7 +78,8 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
 
   const dirty = Boolean(loaded && (
     provider !== loaded.settings.provider || model !== loaded.settings.model || key || metaKey || lyricsKey ||
-    lyricsProvider !== loaded.settings.lyrics.provider || lyricsModel !== loaded.settings.lyrics.model
+    lyricsProvider !== loaded.settings.lyrics.provider || lyricsModel !== loaded.settings.lyrics.model ||
+    sampleFolders !== loaded.settings.sampleFolders.join("\n")
   ));
   useEffect(() => client.beforeLeave(() => {
     if (!saving && !dirty) return true;
@@ -189,6 +192,7 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
       key: key || undefined,
       metaKey: metaKey || undefined,
       lyrics: { provider: lyricsProvider, model: lyricsModel, key: lyricsKey || undefined },
+      sampleFolders: sampleFolders.split(/\r?\n/).map((folder) => folder.trim()).filter(Boolean),
     };
     try {
       const settings = await api.saveSettings(update);
@@ -301,6 +305,19 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
           {lyricsChosen && <span className="settings__hint">{lyricsChosen.keyHint}</span>}
         </label>
       </fieldset>
+
+      <label className="settings__field">
+        <span className="settings__label">{t("settings.sampleFolders")}</span>
+        <textarea
+          className="ode-input settings__folders"
+          rows={3}
+          value={sampleFolders}
+          placeholder={t("settings.sampleFoldersPlaceholder")}
+          aria-describedby="settings-sample-folders-hint"
+          onChange={(event) => setSampleFolders(event.target.value)}
+        />
+        <span id="settings-sample-folders-hint" className="settings__hint">{t("settings.sampleFoldersHint")}</span>
+      </label>
 
       </fieldset>
 

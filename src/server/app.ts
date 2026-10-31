@@ -12,6 +12,7 @@ import { ToolLabels } from "../harness/tool-labels";
 import { Mneme } from "../mneme/artist";
 import { ComposerStore } from "../mneme/composer-store";
 import { LocalAudioFiles } from "../live/local-audio-files";
+import { SampleFolders } from "../live/sample-folders";
 import { ConversationStore } from "../mneme/conversations";
 import { ProductionTaskStore } from "../mneme/production-task";
 import { ProductionEvidence } from "../mneme/production-evidence";
@@ -125,6 +126,7 @@ export class OdeApp {
       maxAudio: this.maxAudio,
       maxParameters: this.maxParameters,
       maxDaw: this.maxDaw,
+      sampleFolders: new SampleFolders(this.settings),
       temp: this.temp,
       emit,
     };

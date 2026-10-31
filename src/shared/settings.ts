@@ -8,6 +8,9 @@ export const LyricsSupportSchema = z.object({
 });
 export type LyricsSupport = z.infer<typeof LyricsSupportSchema>;
 
+/** Explicitly approved local folders; saving resolves each to its real directory. */
+export const SampleFoldersSchema = z.array(z.string().trim().min(1).max(4096)).max(16);
+
 /** Model choices and protected local keys. Unknown saved fields survive updates but are never exposed in SettingsView. */
 export const ModelSettingsSchema = z.object({
   provider: z.string(),
@@ -17,6 +20,7 @@ export const ModelSettingsSchema = z.object({
   metaKey: z.string(),
   /** Empty provider and model mean the catalog's default; settings saved before Lyrics support start that way. */
   lyrics: LyricsSupportSchema.default({ provider: "", model: "", key: "" }),
+  sampleFolders: SampleFoldersSchema.default([]),
 }).passthrough();
 export type ModelSettings = z.infer<typeof ModelSettingsSchema>;
 
@@ -30,6 +34,7 @@ export interface SettingsView {
   lyrics: { provider: string; model: string; keySet: boolean };
   /** The line the chosen model's licence asks Ode to show. */
   credit: string | null;
+  sampleFolders: string[];
 }
 
 /** A change from the Settings dialog. A key left out keeps the saved one; an empty key clears it. */
@@ -39,6 +44,7 @@ export const SettingsUpdateSchema = z.object({
   key: z.string().optional(),
   metaKey: z.string().optional(),
   lyrics: z.object({ provider: z.string(), model: z.string(), key: z.string().optional() }).optional(),
+  sampleFolders: SampleFoldersSchema.optional(),
 });
 export type SettingsUpdate = z.infer<typeof SettingsUpdateSchema>;
 

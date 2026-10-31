@@ -598,7 +598,11 @@ export class OdeServer {
     app.put(API.settings, async (c) => {
       const parsed = SettingsUpdateSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: t("server.http.sendProviderAndModel") }, 400);
-      return c.json(await settings.update(parsed.data));
+      try {
+        return c.json(await settings.update(parsed.data));
+      } catch (error) {
+        return c.json({ error: OdeServer.messageOf(error) }, 400);
+      }
     });
 
     app.post(API.settingsModels, async (c) => {
