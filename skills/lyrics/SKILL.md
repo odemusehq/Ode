@@ -5,6 +5,8 @@ description: Write and rewrite song lyrics in place in the song's lyrics, the on
 
 # Lyrics
 
+Use `lyricist`, the model selected in Settings, for all lyric writing, rewriting, analysis and word-to-note alignment described here. Give it the current text, actual melody notes, relevant artist memory and the musician's directions. The main agent reads and saves the chosen result; it does not supply its own wording or run local language rules. These craft ideas are optional guidance for Lyricist, and the artist's intentional choices take priority.
+
 Conversational phrasing, clear images and a close fit to the melody are useful approaches, not requirements for every lyric. Follow the musician's chosen voice, including ambiguity, unrhymed writing and deliberate stress departures. Ode writes and edits the lyric where it lives, in the song's lyrics, in the musician's voice; it checks every line it touches, and the musician plays the section in Live to hear it. The musician keeps going, presses Undo, or asks for Again.
 
 ## The lyrics
@@ -19,31 +21,31 @@ Conversational phrasing, clear images and a close fit to the melody are useful a
 
 1. **Read.**
    - The lyrics, and the lead sheet: the title and what the song is about, the sections in order, what is locked, and any notes about the form.
-   - The notes each line is sung on: the lyrics-to-melody check splits the vocal melody in the section's bars into one phrase per line and counts each line against its phrase (the syllables skill explains how to find the melody). A section still without a melody takes its matching section's lines as the reference (verse 1 for verse 2).
-   - The matching section: run the syllable, stress and rhyme checks on it to understand its counts, stress patterns and scheme; follow them when the requested setting repeats them.
+   - The actual melody notes and any known phrase spans. Give these to `lyricist` with the lyric text; it assesses the intended setting without assuming equal phrases or one syllable per note. Where no melody exists, include a matching section only when its setting is meant to repeat.
+   - The matching section: run Lyricist's syllable, stress and rhyme assessments on it to understand its counts, stress patterns and scheme; follow them when the requested setting repeats them.
    - The musician's voice: their lines in this song and what Ode remembers about their lyric voice (below).
    - The hand edits since the last request: a line they just typed is their newest intent; keep it unless they asked you to change it.
    - The settings: spelling and pronunciation (UK or US), and any stated genre, which may make a sub-skill useful. Keep a genre or pronunciation direction for this song in lead_sheet.settings; store it as an artist preference only when they explicitly make it enduring.
-2. **Decide** with the craft below: what the section has to do, what exactly is wrong with the line (meaning, image, sound, fit with the notes, or rhyme), and the smallest change that fixes it. Write inside the musician's habits by default.
-3. **Change in place.**
+2. **Ask Lyricist to decide** with the craft below: what the section has to do, what exactly is wrong with the line (meaning, image, sound, fit with the notes, or rhyme), and the smallest change that fixes it. Write inside the musician's habits by default.
+3. **Apply Lyricist's chosen text in place.**
    - Edit the existing lines in the lyrics: the same line under the same label. New lines go where they are sung: verse 2's lines under a "[Verse 2]" label after verse 1; a new bridge where the bridge is sung.
    - Write a single version of each line, and keep alternatives out of the text, the clips and the takes. Again gives another take, and the version history keeps every earlier one.
    - Leave a line the lead sheet lists as locked exactly as it is. If it causes a problem (its count, its rhyme), work around it in the lines you may change, and say so in the result line.
    - Sections that share a label (two "[Chorus]" sections) are linked copies: change one copy and the save writes the change into the others.
    - A chorus is sung more than once: change a chorus line in every copy of the chorus in the text, unless the musician varied the last chorus on purpose.
    - Keep the musician's best words, and change only what the request is about.
-4. **Verify** every line you wrote or changed:
-   - **Lyrics-to-melody check:** inspect the intended syllable-to-note setting, including melismas, pickups or repeated syllables. Equal counts suit syllabic settings; a helper's phrase split or mismatch alone does not establish a bad lyric. Without a melody, compare matching lines only when they are meant to share a setting.
-   - **Prosody check** against its notes: inspect flagged stress differences against the intended delivery. Natural speech alignment is one option; retain deliberate accents and syncopation.
-   - **Rhyme check** in the musician's accent: inspect each intended pair's labelled kind and compare the scheme with the musician's intention, including no rhyme or a changed scheme.
-   - **Singability check:** consider vowel, consonant and breath findings in the singer's delivery; they are practical warnings, not aesthetic gates.
-   - **Originality check** on the new lines: inspect familiar phrases and possible quotations; keep an intentional commonplace or callback, and write fresh material rather than recycle examples.
+4. **Ask Lyricist to review** every changed line against its actual setting. Cover the relevant issues together in one request, reusing a review already returned for this exact text and melody:
+   - **Lyricist alignment review:** inspect the intended syllable-to-note setting, including melismas, pickups or repeated syllables. Equal counts suit syllabic settings; a helper's phrase split or mismatch alone does not establish a bad lyric. Without a melody, compare matching lines only when they are meant to share a setting.
+   - **Lyricist prosody review** against its notes: inspect flagged stress differences against the intended delivery. Natural speech alignment is one option; retain deliberate accents and syncopation.
+   - **Lyricist rhyme review** in the musician's accent: inspect each intended pair's labelled kind and compare the scheme with the musician's intention, including no rhyme or a changed scheme.
+   - **Lyricist singability review:** consider vowel, consonant and breath findings in the singer's delivery; they are practical warnings, not aesthetic gates.
+   - **Lyricist familiarity review** on the new lines: inspect familiar phrases and possible quotations; keep an intentional commonplace or callback, and write fresh material rather than recycle examples.
    - Point of view, tense and who "you" is agree with the lines around it (your own read).
    - A word the checks mark as uncertain stays out of what you report as checked; say "pronunciation uncertain" in the result line.
    Fix unintended problems and check again, up to three rounds; report remaining findings without rewriting an intentional choice just to clear a check.
 5. **Let them hear it.** The result line names the section of the first changed line, so the musician can play it from the locator named like its label and sing it over the track.
 6. **Report in one line**: what changed · what was checked. For example:
-   - "Verse 1, line 4 now 'The station clock is running late' · 8 syllables on its 8 notes, stresses fit, cliché-free."
+   - "Verse 1, line 4 now 'The station clock is running late' · 8 syllables on its 8 notes, stresses fit, familiar phrasing reviewed."
    - "Bridge written: the night you finally called, in the past tense · four lines on the bridge melody, every count fits its notes, ABAB, fresh rhyme pairs."
    - "Chorus line 2 now 'You leave the hall light on for me' in both choruses · 8 syllables on its 8 notes, perfect rhyme with 'sea' (UK) · outside your usual style: a plain statement said straight to them."
 
@@ -164,9 +166,9 @@ Decide what is wrong before changing anything: the meaning, the image, the sound
 
 ### Worked example
 
-Verse 1, line 3 (on the lead sheet's locked list): *The kettle clicks, the window shakes*: 8 syllables, stressed on KET-, CLICKS, WIN- and SHAKES, every stress on a beat. Verse 2, line 3 is sung on the same 8 notes: *I'm feeling lonely without you*. Its count fits, but the prosody check finds the unstressed "you" on the line's long final note, and it tells the feeling outright. The verse is ABCB, so line 3 is free to stay unrhymed.
+Verse 1, line 3 (on the lead sheet's locked list): *The kettle clicks, the window shakes*: 8 syllables, stressed on KET-, CLICKS, WIN- and SHAKES, every stress on a beat. Verse 2, line 3 is sung on the same 8 notes: *I'm feeling lonely without you*. Its count fits, but Lyricist's prosody review finds the unstressed "you" on the line's long final note, and it tells the feeling outright. The verse is ABCB, so line 3 is free to stay unrhymed.
 
-The musician clicks "Less telling". Ode rewrites verse 2, line 3 in place: *I cook too much and freeze the rest*. The syllable check gives 8 for its 8 notes, the prosody check reports the stresses fit, the originality check comes back clean, and it shows the absence through a habit of cooking for two that carries on. Result line: "Verse 2, line 3 now 'I cook too much and freeze the rest' · 8 syllables on its 8 notes, stresses fit, cliché-free."
+The musician clicks "Less telling". Ode rewrites verse 2, line 3 in place: *I cook too much and freeze the rest*. Lyricist's syllable assessment gives 8 for its 8 notes, Lyricist's prosody review reports the stresses fit, Lyricist flags no obvious familiar phrasing, and it shows the absence through a habit of cooking for two that carries on. Result line: "Verse 2, line 3 now 'I cook too much and freeze the rest' · 8 syllables on its 8 notes, stresses fit, familiar phrasing reviewed."
 
 On Again, a clearly different take of the same line: *Who gets your Sunday mornings now?* (8 syllables, stresses fit), described as a direct question if that helps the musician compare the takes.
 

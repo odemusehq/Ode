@@ -10,7 +10,7 @@ import { AudioDeliveries } from "../mneme/audio-deliveries";
 import { JsonFile } from "../mneme/json-file";
 import { userPaths } from "../mneme/paths";
 import { SongStore } from "../mneme/song-store";
-import { encodeWav, WavBitDepth } from "../music/audio/wav";
+import { encodeWav, WavBitDepth } from "../audio/wav";
 import { OdeServer, type ServerDeps } from "../server/http";
 import { audioHash } from "../services/music-audio";
 import { API } from "../shared/api";

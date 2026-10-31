@@ -13,13 +13,13 @@ Each example names a problem, says why it weakens the lyric, and shows the chang
 
 ## 1. A cliché
 
-**Line:** *Tears in my eyes since you've been gone*: 8 syllables. The originality check flags "tears in my eyes".
+**Line:** *Tears in my eyes since you've been gone*: 8 syllables. Lyricist's familiarity review flags "tears in my eyes".
 
 **Why it's weak:** the listener has heard this image so often that it leaves them cold, and it tells the feeling outright.
 
-**The change:** find what the line is for (grief that is still stuck) and show it through something the singer is unable to do: *I still can't throw your letters out*. 8 syllables for the same 8 notes, originality check clean.
+**The change:** find what the line is for (grief that is still stuck) and show it through something the singer is unable to do: *I still can't throw your letters out*. 8 syllables for the same 8 notes, Lyricist: no familiar phrasing flagged.
 
-**Result line:** "Verse 1, line 2 now 'I still can't throw your letters out', replacing 'tears in my eyes' · 8 syllables on its 8 notes, cliché-free."
+**Result line:** "Verse 1, line 2 now 'I still can't throw your letters out', replacing 'tears in my eyes' · 8 syllables on its 8 notes, familiar phrasing reviewed."
 
 **On Again:** the same feeling through a habit, *I drive the long way past your flat* (8 syllables).
 
@@ -31,7 +31,7 @@ Each example names a problem, says why it weakens the lyric, and shows the chang
 
 **The change:** spend the same syllables on meaning, adding stakes and a deadline: *I want you here before the last train leaves tonight*. Still 12 syllables, so it sings on the same notes.
 
-**Result line:** "Chorus line 3 now 'I want you here before the last train leaves tonight' · 12 syllables on its 12 notes, filler gone, cliché-free."
+**Result line:** "Chorus line 3 now 'I want you here before the last train leaves tonight' · 12 syllables on its 12 notes, filler gone, familiar phrasing reviewed."
 
 **On Again:** the same wish made physical and a little funny, *I want you here, your cold feet on my legs tonight* (12 syllables).
 
@@ -41,7 +41,7 @@ Each example names a problem, says why it weakens the lyric, and shows the chang
 
 **Why it's weak:** "silent stayed my phone" is unnatural word order, there only to put "day" at the end, and "that day" repeats the first line. Listeners hear forced order instantly; it breaks the spell of someone talking.
 
-**The change, when the scheme needs the rhyme:** re-end the first line so the rhyme comes naturally: *I kept my phone face-up till ten / It died. I charged it up again.* (8 and 8 syllables). The rhyme check calls "ten" / "again" perfect, using the "a-GEN" way of saying "again"; the result line says so, because a singer who says "a-GAIN" loses the rhyme.
+**The change, when the scheme needs the rhyme:** re-end the first line so the rhyme comes naturally: *I kept my phone face-up till ten / It died. I charged it up again.* (8 and 8 syllables). Lyricist's rhyme assessment calls "ten" / "again" perfect, using the "a-GEN" way of saying "again"; the result line says so, because a singer who says "a-GAIN" loses the rhyme.
 
 **The change, when the rhyme is optional** (in an ABCB verse, line 1 stays unrhymed and line 2 rhymes with line 4): drop the rhyme and say something true: *I kept my phone face-up all day / The only text was from the bank* (8 and 8 syllables). Honest and specific beats forced.
 
@@ -67,7 +67,7 @@ If the switch to "you" is meant as a reveal (the singer finally addresses her), 
 
 **Why it's weak:** the title sits in the middle of a long line, on an arbitrary beat, after a run of small words. Listeners come away unsure what the song is called.
 
-**The change:** put the title where the ear lands, at the end of a chorus line, with the words before it leading in: *…however long it takes, there's a spare room* (10 syllables). Then check that SPARE and ROOM land on strong beats with the prosody check, and that the long note falls on "room", whose "oo" vowel can be held in the middle of the range.
+**The change:** put the title where the ear lands, at the end of a chorus line, with the words before it leading in: *…however long it takes, there's a spare room* (10 syllables). Then check that SPARE and ROOM land on strong beats with Lyricist's prosody review, and that the long note falls on "room", whose "oo" vowel can be held in the middle of the range.
 
 **Result line:** "Chorus line 1 now ends on the title, '…however long it takes, there's a spare room' · 10 syllables on its 10 notes, SPARE and ROOM on strong beats."
 
@@ -84,14 +84,14 @@ If the switch to "you" is meant as a reveal (the singer finally addresses her), 
 
 Each new line keeps a count that fits its notes and the scheme of verse 1.
 
-**Result line:** "Verse 2 rewritten: a year later, same café, and you're the one who's late · every line fits verse 1's melody, ABCB like verse 1, cliché-free."
+**Result line:** "Verse 2 rewritten: a year later, same café, and you're the one who's late · every line fits verse 1's melody, ABCB like verse 1, familiar phrasing reviewed."
 
 ## 7. An abstract chorus
 
 **Chorus draft:** *Our love is stronger than the pain / We'll make it through the storm and rain*
 
-**Why it's weak:** every noun is abstract or stock ("love", "pain", "storm", "rain"), and the originality check flags "pain" / "rain" as an over-used pair.
+**Why it's weak:** every noun is abstract or stock ("love", "pain", "storm", "rain"), and Lyricist's familiarity review flags "pain" / "rain" as an over-used pair.
 
-**The change:** a chorus may tell, but it should tell in the song's own world. If verse 1 described a leaking roof in a damp first flat, bring that back: the chorus drops the metaphorical storm and promises to fix the roof, for example *The roof still drips onto the bed / We'll patch it up in May, you said* (8 and 8 syllables). One concrete image tied to the verses turns a stock statement into this song's statement, and "bed" / "said" is a fresh pair that the rhyme check calls perfect in UK and US English.
+**The change:** a chorus may tell, but it should tell in the song's own world. If verse 1 described a leaking roof in a damp first flat, bring that back: the chorus drops the metaphorical storm and promises to fix the roof, for example *The roof still drips onto the bed / We'll patch it up in May, you said* (8 and 8 syllables). One concrete image tied to the verses turns a stock statement into this song's statement, and "bed" / "said" is a fresh pair that Lyricist's rhyme assessment calls perfect in UK and US English.
 
 **Result line:** "Chorus now drops the storm and promises to patch the roof · 8 syllables a line on the notes, 'bed' / 'said' perfect (UK), fresh rhyme pairs."

@@ -79,7 +79,6 @@ export interface ReleaseSettings {
 
 export interface ServiceSettings {
   /** The sample rate speech models expect, in Hz (16 or 24 kHz). */
-  speechSampleRate: number;
   /** The longest answer to a one-off text request, in tokens. */
   textMaxTokens: number;
   /** The longest answer about a recording, in tokens; reasoning shares it, so a low limit gives an empty answer. */

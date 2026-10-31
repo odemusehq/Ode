@@ -2,8 +2,8 @@ import { mkdir, open, readFile, readdir, rm } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { join, resolve } from "node:path";
 import { z } from "zod";
-import { encodeWav, WavBitDepth } from "../music/audio/wav";
-import { AudioFileDecoder } from "../music/audio/decode";
+import { encodeWav, WavBitDepth } from "../audio/wav";
+import { AudioFileDecoder } from "../audio/decode";
 import { MusicAudio, audioHash } from "../services/music-audio";
 import { JsonFile } from "./json-file";
 

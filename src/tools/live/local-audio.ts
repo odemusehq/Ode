@@ -1,12 +1,11 @@
 import { t } from "../../shared/i18n";
 import { z } from "zod";
 import { LocalAudioFiles, type AudioFileRecord } from "../../live/local-audio-files";
-import { buildLibraryProfile } from "../../music/audio/library-profile";
+import { buildLibraryProfile } from "../../audio/library-profile";
 import { LibraryAnnotationsPatchSchema, LibraryProfileLevelSchema, LibrarySearchSchema } from "../../shared/audio-library";
 import { defineTool, type AnyTool, type ToolContext } from "../define";
-import { audioExcerptTool } from "./audio-excerpt";
 
-const detailSections = z.enum(["source", "annotations", "profile", "report"]);
+const detailSections = z.enum(["source", "annotations", "profile"]);
 type DetailSection = z.infer<typeof detailSections>;
 const fingerprint = z.string().regex(/^[0-9a-f]{64}$/);
 
@@ -30,11 +29,6 @@ function summary(record: AudioFileRecord) {
       measuredAtPreview: profile.measuredAt.slice(0, 40), format: profile.format, sampleRate: profile.sampleRate,
       channels: profile.channels, channelLayout: profile.channelLayout, frames: profile.frames,
       durationSeconds: profile.durationSeconds, sampleValues: profile.sampleValues,
-      measurements: profile.measurements && {
-        integratedLufs: profile.measurements.integratedLufs, truePeakDbtp: profile.measurements.truePeakDbtp,
-        samplePeakDbfs: profile.measurements.samplePeakDbfs, tiltDbPerOctave: profile.measurements.tiltDbPerOctave,
-        loudnessStatusPreview: profile.measurements.loudnessStatus.slice(0, 120),
-      },
     },
   };
 }
@@ -56,7 +50,6 @@ function writeAcknowledgement(record: AudioFileRecord, limit: number) {
 
 function sectionValue(record: AudioFileRecord, section: DetailSection): unknown {
   if (section === "annotations") return record.annotations ?? null;
-  if (section === "report") return record.profile?.report ?? null;
   if (section === "profile") {
     const { report, ...profile } = record.profile ?? {};
     return record.profile ? profile : null;
@@ -69,7 +62,7 @@ function details(record: AudioFileRecord, section: DetailSection, detailHash: st
   const value = sectionValue(record, section), json = JSON.stringify(value);
   if (offset > json.length) throw new Error("That metadata offset is past the selected section. Read it again from offset 0.");
   const header = { id: record.id, section, detailHash, annotationsStatus: record.annotationsStatus, profileStatus: record.profileStatus,
-    ...(section === "profile" ? { reportAvailable: record.profile?.report !== undefined } : {}) };
+    ...(section === "profile" ? { reportAvailable: false } : {}) };
   const full = { ...header, format: "json", value };
   if (offset === 0 && (requested === undefined || json.length <= requested) && fits(full, limit)) return full;
   const fragment = (end: number) => ({ ...header, format: "json-fragment", json: json.slice(offset, end),
@@ -85,13 +78,12 @@ function details(record: AudioFileRecord, section: DetailSection, detailHash: st
 }
 
 export const localAudioTools: AnyTool[] = [
-  audioExcerptTool,
   defineTool({
     name: "library_audio_search",
     description: [
       "Find explicitly attached audio and deliberately retained audio_capture files in Ode's managed catalogue. Never scans the native Browser, Packs or arbitrary folders.",
       "query uses case-insensitive AND substrings across filename, declared source, purpose, labels, role, kind, notes and declared key. Use declaredBpm for tempo filtering. labels requires all exact normalised labels; role, kind, purpose and declaredKey are structured filters. declaredBpm/declaredKey are Ode-entered declarations, never measured tempo or key.",
-      "durationSeconds, channels, integratedLufs, truePeakDbtp and tiltDbPerOctave filter saved whole-file profiles; bounds are inclusive and use unrounded values. Unknown or unsupported readings cannot match a requested numeric filter. profileDetail is minimum detail: metadata accepts metadata or full profiles; full requires full. No audio is decoded, measured or written during search.",
+      "durationSeconds and channels filter saved whole-file header metadata; bounds are inclusive and use exact values. Unknown metadata cannot match a requested numeric filter. No audio is decoded, measured or written during search. Historical custom signal analyses are not exposed or used for search.",
       "Returns compact discovery items with explicit text/label previews and counts, total, offset, nextOffset, coverage and selectionFingerprint. Read exact selected metadata with library_audio_read; reports and long text are not included here. limit defaults to 20, at most 100, and the actual page may be smaller to fit the result window. Sorts newest import first with id as tie-breaker. Continue with nextOffset and expectedSelectionFingerprint; a changed matching list refuses and requires a fresh offset 0 search. This token guards membership/order, not an atomic snapshot of mutable card values. Coverage distinguishes unprofiled, unknown-excluded and unreadable records, so no matches need not mean no suitable audio exists.",
       "Cached profiles bind bytes when measured; search does not recheck stored audio integrity. library_audio_open or library_audio_profile verifies the asset before use. Provenance and current processed Set sound remain separate; unchanged bytes do not prove currentness. Read-only.",
     ].join(" "),
@@ -113,7 +105,7 @@ export const localAudioTools: AnyTool[] = [
     name: "library_audio_read",
     changes: "none",
     description: [
-      "Read exact saved metadata for one managed audio id without opening/copying, hashing or decoding the audio. section defaults to source (identity and declared source); annotations returns full declarations and revision; profile returns exact technical/profile fields without report; report returns the full saved DSP report. Invalid/stale advisory data stays explicitly unavailable.",
+      "Read exact saved metadata for one managed audio id without opening/copying, hashing or decoding the audio. section defaults to source (identity and declared source); annotations returns full declarations and revision; profile returns exact header metadata. Historical custom signal analyses are not exposed. Invalid/stale advisory data stays explicitly unavailable.",
       "A fitting section returns format json and value. An oversized section returns format json-fragment, exact serialized JSON text in json, offset, nextOffset and totalChars; concatenate fragments in order before parsing. Offsets/limit are UTF-16 code units of that JSON text, not audio frames or bytes. limit optionally bounds a fragment (at most 20000); the actual fragment may be smaller to fit its escaped JSON envelope.",
       "Every result includes detailHash, a fingerprint of the observed metadata file, not the audio hash. For every later offset give that same detailHash; metadata changes refuse instead of combining revisions. Read-only cached metadata does not verify current stored audio bytes or processed Set sound; use library_audio_open before analysis/import.",
     ].join(" "),
@@ -148,13 +140,13 @@ export const localAudioTools: AnyTool[] = [
     name: "library_audio_profile",
     description: [
       "Verify and save a whole-file profile for one explicitly managed audio id. level defaults to metadata: inspect WAV/AIFF headers for exact frames, sample rate, channels, format and duration without examining sample values.",
-      "Choose full explicitly to decode finite samples and measure whole-file loudness, peaks, stereo and spectrum using Ode's existing local DSP. Unknown multichannel layout has unsupported loudness; silent or unavailable readings remain null with status. No tempo, key, role or one-shot/loop classification is inferred.",
-      "Returns a compact updated summary with profile level, method/version and exact source hash/bytes; library_audio_read gives full metadata and report. The profile covers the complete asset, never an excerpt, and saves no temporary path. Unsupported codecs require a WAV/AIFF export; no provider or Live call runs. Annotation edits are preserved. Changes persistent memory and follows Manual Apply.",
+      "No signal analysis, pitch detection, loudness measurement or musical inference runs here. Use supported Ableton/Max operations, an installed plug-in or the configured listening model for those tasks.",
+      "Returns a compact updated summary with profile level, method/version and exact source hash/bytes; library_audio_read gives exact header metadata. The profile covers the complete asset, never an excerpt, and saves no temporary path. Unsupported codecs require a WAV/AIFF export; no provider or Live call runs. Annotation edits are preserved. Changes persistent memory and follows Manual Apply.",
     ].join(" "),
     input: { id: z.uuid(), level: LibraryProfileLevelSchema.optional() },
     changes: "memory",
     mainAgentOnly: true,
-    describe: ({ level }) => level === "full" ? t("toolActivity.audioLibraryMeasureFullFile") : t("toolActivity.audioLibraryInspectFileMetadata"),
+    describe: () => t("toolActivity.audioLibraryInspectFileMetadata"),
     run: async ({ id, level }, ctx) => {
       ctx.signal?.throwIfAborted();
       const limit = windowSize(ctx);
@@ -170,7 +162,7 @@ export const localAudioTools: AnyTool[] = [
   }),
   defineTool({
     name: "library_audio_open",
-    description: "Open a file id returned by library_audio_search as an exact-byte managed working copy. Returns exact path for audio_analyze, audio_describe or import_into_project and a compact identity/declaration/profile summary. library_audio_read gives exact metadata/report without copying. WAV/AIFF support local analysis; convert other formats to WAV in the DAW first. A processed-bounce declaration does not establish its routing, effects, range, tails or currentness. This does not capture or export Live audio.",
+    description: "Open a file id returned by library_audio_search as an exact-byte managed working copy. Returns an exact path for audio_describe or import_into_project and a compact identity/declaration/header summary. library_audio_read gives exact metadata without copying. WAV/AIFF support the listening payload adapter; convert other formats to WAV in the DAW first. A processed-bounce declaration does not establish its routing, effects, range, tails or currentness. This does not capture or export Live audio.",
     input: { id: z.string().uuid() },
     changes: "none",
     run: async ({ id }, ctx) => {

@@ -3,8 +3,8 @@ import { join } from "node:path";
 import type { RoleConfig } from "../../shared/config";
 import type { SeparatedStems, SingingVoiceSynthesizer, SoundGenerator, StemSeparator } from "../capabilities";
 import type { DemoVocalInput } from "../types";
-import { AudioFileDecoder, decode } from "../../music/audio/decode";
-import { encodeWav, WavBitDepth } from "../../music/audio/wav";
+import { AudioFileDecoder, decode } from "../../audio/decode";
+import { encodeWav, WavBitDepth } from "../../audio/wav";
 
 /**
  * Ode's contract for self-hosted open models. A server implements any of these endpoints

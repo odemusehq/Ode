@@ -1,6 +1,6 @@
 # Words to watch
 
-These lists help you anticipate where a count or stress might surprise you, so you choose words well the first time. They guide your choices; counting stays with the syllable check, which is always the authority and knows the accent in the settings. If the check disagrees with anything here, trust the check, and use the count it gives in the result line.
+These lists help you anticipate where a count or stress might surprise you, so you choose words well the first time. They guide your choices; counting stays with Lyricist's syllable assessment, which is always the authority and knows the accent in the settings. If the check disagrees with anything here, trust the check, and use the count it gives in the result line.
 
 ## Contents
 1. Words with more than one sung count
@@ -82,7 +82,7 @@ They become stressed when the meaning demands it ("I said THE song, not a song",
 |---|---|---|
 | cemetery | CEM-e-ter-y (4) | CEM-e-try (3) |
 | February | FEB-ru-ar-y (4) | FEB-ru-ry (3) or FEB-ru-ar-y (4) |
-| secretary, dictionary, territory, military, necessary | full -ar-y / -or-y ending | the check gives the full count too; UK singers often shorten it in speech |
+| secretary, dictionary, territory, military, necessary | full -ar-y / -or-y ending | ask Lyricist to consider the full count and the shortened spoken reading |
 
 **Stress:**
 

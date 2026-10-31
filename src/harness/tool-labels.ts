@@ -34,7 +34,7 @@ export class ToolLabels {
     return `${target ? `${target} · ` : ""}${ToolLabels.plain(name)}`;
   }
 
-  /** "midi_clip_get_notes" → "Reading MIDI clip notes"; "prosody_check" → "Checking prosody". */
+  /** "midi_clip_get_notes" → "Reading MIDI clip notes"; "parameter_get" → "Reading parameter". */
   static plain(name: string): string {
     const words = name.split("_").map((word) => PROGRESS_WORDS.get(word) ?? word);
     const verbAt = words.findIndex((word) => PROGRESS_VERBS.has(word));

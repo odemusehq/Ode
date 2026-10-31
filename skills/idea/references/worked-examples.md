@@ -21,9 +21,9 @@ Three examples of the idea loop: what Ode reads, what it decides, what it writes
 - **Mood:** busy, warm, bittersweet.
 - **Hook:** Every room was loud.
 
-**Checks.** The syllable check gives 5|6 ("every" is 2 or 3); the stresses fall on EV-, ROOM and LOUD, and "loud" holds the open "ow" vowel. The originality check comes back clean.
+**Checks.** Lyricist's syllable assessment gives 5|6 ("every" is 2 or 3); the stresses fall on EV-, ROOM and LOUD, and "loud" holds the open "ow" vowel. Lyricist flags no obvious familiar phrasing.
 
-**Result line:** "Title: 'Every Room Was Loud': the family clearing your grandmother's house, with the bright loop as the noise it used to hold · 5|6 syllables ('every' 2|3), open 'ow' on 'loud', cliché-free."
+**Result line:** "Title: 'Every Room Was Loud': the family clearing your grandmother's house, with the bright loop as the noise it used to hold · 5|6 syllables ('every' 2|3), open 'ow' on 'loud', familiar phrasing reviewed."
 
 **On Again**, a clearly different take: *I'll Keep the Marks* (4 syllables), where the house itself sings and promises to keep the pencil marks of the children's heights on the door frame. It breaks the musician's first-person habit, so the result line ends "· outside your usual style: the house is the singer."
 
@@ -50,7 +50,7 @@ Three examples of the idea loop: what Ode reads, what it decides, what it writes
 The musician clicks "Find a title".
 
 **What to notice.**
-- Verse 1 and the chorus are general statements and stock phrases; they could belong to any song. The originality check also flags "way" / "day", an over-used pair.
+- Verse 1 and the chorus are general statements and stock phrases; they could belong to any song. Lyricist's familiarity review also flags "way" / "day", an over-used pair.
 - Verse 2 is alive: a place, a day, an object, an action, and a choice the singer is stuck on. The song's real centre is sitting outside someone's house, unable to decide whether to knock.
 - The title is already in the draft: *Engine Running*. It holds the situation (parked outside), the feeling (ready to leave at any moment) and the stakes (go in, or drive away).
 - Keep who "you" is open (an ex, a friend, a sibling). The draft leaves it unsaid, and the song can work for all three.
@@ -65,9 +65,9 @@ The musician clicks "Find a title".
 
 The lyrics stay as the musician wrote them; rewriting verse 1 and the chorus around the new centre is lyric work, for when they ask.
 
-**Checks.** "Engine Running" is 4 syllables, stressed on EN- and RUN-; the hook line *I left the engine running* is 7. The originality check comes back clean on both.
+**Checks.** "Engine Running" is 4 syllables, stressed on EN- and RUN-; the hook line *I left the engine running* is 7. Lyricist flags no obvious familiar phrasing in either.
 
-**Result line:** "Title: 'Engine Running', from your verse 2: parked outside their parents' place, unsure whether to knock · 4 syllables, cliché-free; verse 1 and the chorus tell what verse 2 shows, and 'way' / 'day' is an over-used pair."
+**Result line:** "Title: 'Engine Running', from your verse 2: parked outside their parents' place, unsure whether to knock · 4 syllables, familiar phrasing reviewed; verse 1 and the chorus tell what verse 2 shows, and 'way' / 'day' is an over-used pair."
 
 ## 3. A title the musician typed
 
@@ -83,6 +83,6 @@ Each answer gets a home in the story: verse 1 the first rent day alone; verse 2 
 
 **What Ode writes into the lead sheet:** the title *Half the Rent*; the theme (practical worries standing in for grief); the story as above; the point of view (first person, present tense, to "you", ungendered); the mood (wry, tired, tender); the hook *You left me half the rent*.
 
-**Checks.** The title is 3 syllables, stressed on HALF and RENT; the hook is 6, stressed on LEFT, HALF and RENT. The originality check comes back clean.
+**Checks.** The title is 3 syllables, stressed on HALF and RENT; the hook is 6, stressed on LEFT, HALF and RENT. Lyricist flags no obvious familiar phrasing.
 
-**Result line:** "Your title 'Half the Rent' now has a song: the first rent day after a flatmate moves out, told wry · hook 'You left me half the rent', 6 syllables, stress on LEFT, HALF and RENT, cliché-free."
+**Result line:** "Your title 'Half the Rent' now has a song: the first rent day after a flatmate moves out, told wry · hook 'You left me half the rent', 6 syllables, stress on LEFT, HALF and RENT, familiar phrasing reviewed."

@@ -8,7 +8,7 @@ import type { AudioTimeRange, MusicAudioSource } from "./music-audio";
 
 /** Model-backed services: each role's capability, served by the adapter for the provider chosen in Settings. */
 export class ModelServices implements Services {
-  private readonly registry = new AdapterRegistry(new SpeechAudio(OdeConfig.services.speechSampleRate));
+  private readonly registry = new AdapterRegistry(new SpeechAudio());
   /** Adapters by role, rebuilt when the role's settings change. */
   private readonly cache = new Map<Role, { settings: string; adapter: unknown }>();
 

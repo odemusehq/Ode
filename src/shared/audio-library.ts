@@ -3,7 +3,7 @@ import { z } from "zod";
 const boundedText = (max: number) => z.string().trim().min(1).max(max);
 const finiteOrNull = z.number().finite().nullable();
 export const LibraryKindSchema = z.enum(["one-shot", "loop", "recording"]);
-export const LibraryProfileLevelSchema = z.enum(["metadata", "full"]);
+export const LibraryProfileLevelSchema = z.literal("metadata");
 export type LibraryProfileLevel = z.infer<typeof LibraryProfileLevelSchema>;
 
 export const AudioProvenanceSchema = z.enum(["user-supplied", "sdk-pre-fx-capture", "max-device-capture", "local-excerpt"]);
@@ -28,11 +28,6 @@ export const AudioExcerptFactsSchema = z.object({
   bitDepth: z.number().int().positive(), encoding: boundedText(80),
 });
 export type AudioExcerptFacts = z.infer<typeof AudioExcerptFactsSchema>;
-export const AudioExcerptSelectionSchema = z.discriminatedUnion("unit", [
-  z.object({ unit: z.literal("seconds"), from: z.number().finite().min(0), to: z.number().finite().positive() }).strict(),
-  z.object({ unit: z.literal("frames"), firstFrame: z.number().int().min(0), endFrame: z.number().int().positive() }).strict(),
-]);
-export type AudioExcerptSelection = z.infer<typeof AudioExcerptSelectionSchema>;
 
 /** One parent reference, never copied recursive ancestry or a declaration of Arrangement beat positions. */
 export const AudioExcerptDerivationSchema = z.object({
@@ -53,15 +48,6 @@ export const AudioExcerptDerivationSchema = z.object({
   if ((value.container === "WAV") !== (value.output.format === "WAV")) ctx.addIssue({ code: "custom", message: "The excerpt container must match its inspected format." });
 });
 export type AudioExcerptDerivation = z.infer<typeof AudioExcerptDerivationSchema>;
-
-/** Builder facts are validated against the captured input and inspected output before publication. */
-export interface AudioExcerptBuild {
-  bytes: Uint8Array;
-  source: unknown;
-  selection: { firstFrame: number; endFrame: number };
-  output: unknown;
-  container: unknown;
-}
 
 /** Declarations entered by Ode from the conversation, never a claim that audio analysis established them. */
 export const LibraryAnnotationsPatchSchema = z.object({
@@ -88,7 +74,7 @@ export const LibraryProfileSchema = z.object({
   measuredAt: z.string().datetime(),
   sha256: z.string().regex(/^[0-9a-f]{64}$/),
   bytes: z.number().int().positive(),
-  level: LibraryProfileLevelSchema,
+  level: z.enum(["metadata", "full"]),
   format: z.enum(["WAV", "AIFF"]),
   sampleRate: z.number().finite().positive(),
   channels: z.number().int().positive(),
@@ -133,9 +119,6 @@ export const LibrarySearchSchema = z.object({
   durationSeconds: bounds.optional(),
   channels: z.number().int().positive().optional(),
   profileDetail: LibraryProfileLevelSchema.optional(),
-  integratedLufs: bounds.optional(),
-  truePeakDbtp: bounds.optional(),
-  tiltDbPerOctave: bounds.optional(),
   limit: z.number().int().min(1).max(100).optional(),
   offset: z.number().int().min(0).max(100000).optional(),
   expectedSelectionFingerprint: z.string().regex(/^[0-9a-f]{64}$/).optional(),

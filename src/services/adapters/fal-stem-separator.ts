@@ -2,8 +2,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createFalClient } from "@fal-ai/client";
 import type { RoleConfig } from "../../shared/config";
-import { decode } from "../../music/audio/decode";
-import { encodeWav } from "../../music/audio/wav";
+import { decode } from "../../audio/decode";
+import { encodeWav } from "../../audio/wav";
 import type { SeparatedStems, StemSeparator } from "../capabilities";
 
 interface FalSeparationResult {

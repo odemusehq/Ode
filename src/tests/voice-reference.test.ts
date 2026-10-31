@@ -5,12 +5,35 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { VoiceReference } from "../mneme/voice-reference";
 import { JsonFile } from "../mneme/json-file";
-import { encodeWav, WavBitDepth } from "../music/audio/wav";
-import { AudioFileDecoder } from "../music/audio/decode";
+import { encodeWav, WavBitDepth } from "../audio/wav";
+import { AudioFileDecoder } from "../audio/decode";
 import { audioHash } from "../services/music-audio";
+import { TempFolder, userPaths } from "../mneme/paths";
+import { mediaTools } from "../tools/media";
+import type { ToolContext } from "../tools/define";
 
 const source = { track: { tag: "voice" }, start: 0, end: 8 };
 const recording = (value: number) => encodeWav({ sampleRate: 8000, channels: [new Float32Array(400).fill(value)] }, WavBitDepth.Float32);
+
+test("vocal rendering only calls the singing backend and leaves assessment to explicit model tools", async () => {
+  const root = await mkdtemp(join(tmpdir(), "ode-vocal-backend-"));
+  try {
+    const input = join(root, "input.wav");
+    await writeFile(input, recording(0.25));
+    await new VoiceReference(userPaths(root).voice).save(input, source);
+    const calls: string[] = [];
+    const ctx = { config: { userDir: root }, temp: new TempFolder(join(root, "temp")), services: {
+      singDemoVocal: async (_input: unknown, path: string) => { calls.push("sing"); await writeFile(path, recording(0.25)); return path; },
+      available: async () => ({ audio_understanding: true, transcription: true }),
+      describeAudio: async () => { calls.push("listen"); return {}; },
+      transcribe: async () => { calls.push("transcribe"); return {}; },
+    } } as unknown as ToolContext;
+    const tool = mediaTools.find((entry) => entry.name === "demo_vocal_render")!;
+    const result = await tool.run({ tempo: 100, lines: [{ text: "Stay", notes: [{ pitch: 60, start: 0, duration: 1 }] }] }, ctx) as any;
+    assert.deepEqual(calls, ["sing"]);
+    assert.equal(result.verification.status, "not auditioned");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 
 test("voice readiness needs positive consent and legacy consent remains explicit", async () => {
   const root = await mkdtemp(join(tmpdir(), "ode-voice-legacy-"));

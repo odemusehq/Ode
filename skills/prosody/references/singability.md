@@ -1,6 +1,6 @@
 # Singability: vowels and consonants
 
-Detail behind the singability section of the prosody skill. The singability check reports problems on the actual melody (closed vowels on long or high notes, consonant clusters on very short notes, phrases without a rest to breathe); use this to understand possible delivery demands. The table describes common English singing tendencies, not forbidden vowels or a pass/fail test; retain an intentional sound and name a practical limitation when relevant.
+Detail behind the singability section of the prosody skill. Lyricist's singability review reports problems on the actual melody (closed vowels on long or high notes, consonant clusters on very short notes, phrases without a rest to breathe); use this to understand possible delivery demands. The table describes common English singing tendencies, not forbidden vowels or a pass/fail test; retain an intentional sound and name a practical limitation when relevant.
 
 ## Contents
 1. Vowels on long and high notes

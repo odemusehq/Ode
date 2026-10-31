@@ -67,7 +67,7 @@ export const mediaTools: AnyTool[] = [
     name: "audio_describe",
     changes: "none",
     description:
-      "Listen to a supported WAV/AIFF recording and answer a musical question. File-only fromSeconds/toSeconds select the passage physically sent to the model, with exact source-frame bounds retained in evidence; omit for the full file. These are file seconds, never Arrangement beats. Otherwise give track with start/end beats, never mixed file/track selectors. Returns answer and evidence binding the whole source hash, selected frames, actual payload hash, criterion, model, gain/representation and times. Arrangement listening hears pre-FX, pre-fader audio tracks only; its temporary capture is removed and has no reusable path. Use audio_capture separately to retain a supported capture. For measured pitch/loudness use hum_to_midi/audio_analyze.",
+      "Listen to a supported WAV/AIFF recording and answer a musical question. File-only fromSeconds/toSeconds select the passage physically sent to the model, with exact source-frame bounds retained in evidence; omit for the full file. These are file seconds, never Arrangement beats. Otherwise give track with start/end beats, never mixed file/track selectors. Returns answer and evidence binding the whole source hash, selected frames, actual payload hash, criterion, model, gain/representation and times. Arrangement listening hears pre-FX, pre-fader audio tracks only; its temporary capture is removed and has no reusable path. Use audio_capture separately to retain a supported capture. For pitch or loudness measurements use an actual supported Live/Max/plugin analyser; this tool asks the configured listening model for an assessment.",
     input: { ...audioSource, ...fileRange, question: z.string().min(1) },
     run: async (input, ctx) => {
       if (!input.path && (input.fromSeconds !== undefined || input.toSeconds !== undefined)) throw new Error("fromSeconds/toSeconds select a file passage. For Arrangement audio use track/start/end in beats.");
@@ -89,7 +89,7 @@ export const mediaTools: AnyTool[] = [
     name: "audio_capture",
     changes: "memory",
     mainAgentOnly: true,
-    description: "Explicitly retain one Arrangement audio track's pre-FX, pre-fader source capture in Ode's managed audio catalogue. Give track/start/end in quarter-note beats, and an optional name. Returns persistent id, source hash and a managed working path for audio_describe/audio_analyze/audio_compare; library_audio_open reopens its id later. This changes persistent memory and follows Manual Apply. No model listening runs here. Only Arrangement audio tracks are supported; this does not capture MIDI instruments, processing, returns or Main, and unchanged bytes do not prove current processed Set sound.",
+    description: "Explicitly retain one Arrangement audio track's pre-FX, pre-fader source capture in Ode's managed audio catalogue. Give track/start/end in quarter-note beats, and an optional name. Returns persistent id, source hash and a managed working path for audio_describe/audio_compare; library_audio_open reopens its id later. This changes persistent memory and follows Manual Apply. No model listening runs here. Only Arrangement audio tracks are supported; this does not capture MIDI instruments, processing, returns or Main, and unchanged bytes do not prove current processed Set sound.",
     input: { track: TrackRefSchema, start: z.number().min(0), end: z.number().positive(), name: z.string().min(1).max(200).optional() },
     describe: ({ track, start, end }, names) => t("toolActivity.keepAnAudioCapture", { track: names.track(track), start: names.span(start, end) }),
     run: (input, ctx) => withAudio(input, ctx, async (path) => {
@@ -110,21 +110,21 @@ export const mediaTools: AnyTool[] = [
   defineTool({
     name: "audio_compare",
     changes: "none",
-    description: "Compare two retained managed WAV/AIFF files for a stated musical criterion. Both recordings are sent as A then B in one WAV with a 0.5 second gap and labelled time ranges, preserving channels/rate. levelMatch defaults to true and attenuates the louder integrated-loudness file; set false when balance is the question. Optional aRange/bRange select exact file-second excerpts physically sent, with source-frame selections and separate playback positions retained in evidence. Level matching measures the selected excerpts. Requires matching mono/stereo layouts and sample rates; unknown multichannel layouts are refused. This does not capture the current processed Set or prove common musical alignment/currentness.",
-    input: { a: z.string().min(1), b: z.string().min(1), aRange: z.object(fileRange).optional(), bRange: z.object(fileRange).optional(), question: z.string().min(1), levelMatch: z.boolean().optional() },
+    description: "Compare two retained managed WAV/AIFF files for a stated musical criterion. Both recordings are sent as A then B in one WAV with a 0.5 second gap and labelled time ranges, preserving channels/rate. The files retain their levels. levelMatch must be false; level matching needs a supported Live/Max/plugin operation before capture. Optional aRange/bRange select exact file-second excerpts physically sent, with source-frame selections and separate playback positions retained in evidence. Requires matching mono/stereo layouts and sample rates; unknown multichannel layouts are refused. This does not capture the current processed Set or prove common musical alignment/currentness.",
+    input: { a: z.string().min(1), b: z.string().min(1), aRange: z.object(fileRange).optional(), bRange: z.object(fileRange).optional(), question: z.string().min(1), levelMatch: z.literal(false).optional().describe("Ode does not implement level matching. Match in Live or a supported plugin before capture.") },
     run: async ({ a, b, aRange, bRange, question, levelMatch }, ctx) => {
       if (!ctx.services.compareAudio) throw new Error("The configured service has no paired-audio comparison path.");
       const [first, second] = await Promise.all([ctx.temp.inside(a), ctx.temp.inside(b)]);
       const [one, two] = await Promise.all([MusicAudio.freeze(first), MusicAudio.freeze(second)]);
       const [firstEvidence, secondEvidence] = await Promise.all([audioFileEvidence(first, one), audioFileEvidence(second, two)]);
-      return { ...(await ctx.services.compareAudio(one, two, question, levelMatch ?? true, ctx.signal, { a: aRange, b: bRange })), a: firstEvidence, b: secondEvidence, note: "The listener heard both files sequentially. Artistic preference and model fidelity remain unvalidated; assess the stated criterion in Live." };
+      return { ...(await ctx.services.compareAudio(one, two, question, levelMatch ?? false, ctx.signal, { a: aRange, b: bRange })), a: firstEvidence, b: secondEvidence, note: "The listener heard both files sequentially. Artistic preference and model fidelity remain unvalidated; assess the stated criterion in Live." };
     },
   }),
   defineTool({
     name: "vocal_transcribe",
     changes: "none",
     description:
-      "Transcribe sung or spoken words with approximate speech-detection times in seconds, bound to the exact source and mono/resampled speech payload. Give path alone or an Arrangement audio track/start/end; captures hear pre-FX, pre-fader audio and are removed after transcription. Seconds remain canonical, not verified musical boundaries. Optional assumedTempoBpm gives separate constant-tempo beat estimates; tempo automation and current Set alignment are unknown, so these estimates do not authorise positioning notes or lyrics.",
+      "Requires already-prepared mono 16-bit PCM WAV at 16 or 24 kHz. Ode does not downmix or resample; native captures at other formats need preparation in Ableton, Max or a supported plug-in first. Transcribe sung or spoken words with approximate speech-detection times in seconds, bound to the exact source and unchanged provider-ready speech payload. Give path alone or an Arrangement audio track/start/end; captures hear pre-FX, pre-fader audio and are removed after transcription. Seconds remain canonical, not verified musical boundaries. Optional assumedTempoBpm gives separate constant-tempo beat estimates; tempo automation and current Set alignment are unknown, so these estimates do not authorise positioning notes or lyrics.",
     input: { ...audioSource, assumedTempoBpm: z.number().min(LIVE_TEMPO.min).max(LIVE_TEMPO.max).optional().describe("Explicit constant tempo assumption for separate approximate beat estimates; omit to keep only detection seconds.") },
     run: (input, ctx) =>
       withAudio(input, ctx, async (path) => {
@@ -189,7 +189,7 @@ export const mediaTools: AnyTool[] = [
     name: "demo_vocal_render",
     changes: "none",
     description:
-      "Sing lyrics on a melody in the artist's own voice, so they can hear a demo vocal before recording. Give each lyric line with only the notes it is sung on (beats from the start of the demo, in order). From set_lyrics_to_melody use melody.notes and melody.alignment, whose zero-based note indices address that vocal subset; its top-level notes and alignment include preserved clip material and are for MIDI editing. lyrics_fit_melody returns each line's vocal notes and alignment. Needs a saved recording of the artist's voice (voice_reference_set). Returns a WAV file to import into the project and place on an audio track.",
+      "Sing lyrics on a melody in the artist's own voice, so they can hear a demo vocal before recording. Give each lyric line with only the notes it is sung on (beats from the start of the demo, in order). Ask Lyricist for the intended syllable-to-note alignment against the exact vocal notes. Do not include accompaniment notes or invent a local lyric fitting rule. Needs a saved recording of the artist's voice (voice_reference_set). Returns a WAV file to import into the project and place on an audio track.",
     input: {
       lines: z.array(z.object({ text: z.string().min(1), notes: z.array(NoteSchema).min(1), pronunciation: z.string().optional(), alignment: z.array(z.object({ syllable: z.number().int().min(0), note: z.number().int().min(0) })).optional(), delivery: z.string().optional() })).min(1),
       tempo: z.number().min(LIVE_TEMPO.min).max(LIVE_TEMPO.max).optional().describe("Default: the Set's tempo"),
@@ -206,19 +206,7 @@ export const mediaTools: AnyTool[] = [
       const { path, reference } = rendered;
       const frozen = await MusicAudio.freeze(path);
       const source = await audioFileEvidence(path, frozen);
-      const available = await ctx.services.available();
-      const verification: Record<string, unknown> = { status: "not auditioned", note: "A generated file is not a verified vocal performance." };
-      if (available.audio_understanding) {
-        try {
-          verification.listening = await ctx.services.describeAudio(frozen, "Check this demo against the requested words, entrances, endings, breath and pronunciation. Report missing words or synthesis artefacts and uncertainty; do not certify artistic quality. Requested lyrics: " + lines.map((line) => line.text).join(" / "), ctx.signal);
-          verification.status = "model listening completed; musical quality remains unconfirmed";
-        }
-        catch (error) { ctx.signal?.throwIfAborted(); verification.listeningError = error instanceof Error ? error.message : String(error); }
-      }
-      if (available.transcription) {
-        try { verification.transcript = await ctx.services.transcribe(frozen, ctx.signal); }
-        catch (error) { ctx.signal?.throwIfAborted(); verification.transcriptionError = error instanceof Error ? error.message : String(error); }
-      }
+      const verification = { status: "not auditioned", note: "The singing service returned this file. Use explicit listening tools for audio assessment and Lyricist for lyric assessment." };
       return { path, tempo: bpm, source, voiceReference: reference, verification };
     },
   }),

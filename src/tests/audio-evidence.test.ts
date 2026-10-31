@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { audioHash, MusicAudio } from "../services/music-audio";
 import { OpenAiCompatibleAudioUnderstander } from "../services/adapters/openai-compatible-audio";
-import { encodeWav } from "../music/audio/wav";
+import { encodeWav } from "../audio/wav";
 import { LocalAudioFiles } from "../live/local-audio-files";
 import { TempFolder } from "../mneme/paths";
 import { JsonFile } from "../mneme/json-file";

@@ -1,7 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import type { RoleConfig } from "../../shared/config";
 import type { SoundGenerator } from "../capabilities";
-import { AudioFileDecoder } from "../../music/audio/decode";
+import { AudioFileDecoder } from "../../audio/decode";
 
 /** Sound generation with ElevenLabs sound effects (model id from .env). */
 export class ElevenLabsSoundGenerator implements SoundGenerator {

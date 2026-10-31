@@ -296,8 +296,8 @@
       "singing_voice": "Sings demo vocals in your own voice, once you agree to it.",
       "sound_generation": "Makes new one-shots and textures from a description."
     },
-    "modelInfo": "Ode''s main model handles lyrics, chords, melodies, drums and sounds, arranging, mixing and your questions.",
-    "lyricsInfo": "Highlights syllables and rhymes in the Lyrics editor as you type. The main model above writes and suggests lyrics.",
+    "modelInfo": "Ode''s main model directs composition, arrangement and production through Live, Max for Live and your installed plug-ins.",
+    "lyricsInfo": "Lyricist writes, revises and reviews lyrics, including syllables, rhymes and their fit to the melody. It also supplies the editor''s annotations.",
     "metaInfo": "Meta''s models use this key for cover art, transcribing recordings and listening to audio.",
     "savingNotice": "Wait for Settings to finish saving.",
     "closeNotice": "Save your settings or choose Cancel before closing Ode.",
@@ -316,7 +316,7 @@
     "key": "Key",
     "metaKey": "Meta key for cover art, transcription and listening",
     "optional": "Optional",
-    "lyricsSupport": "Lyrics support",
+    "lyricsSupport": "Lyricist",
     "moreServices": "More services",
     "off": "Off",
     "address": "Address",
@@ -337,7 +337,7 @@
     "dictation": {
       "theRecordingIsEmptyDictateAShort": "The recording is empty. Dictate a short message and try again.",
       "dictationIsLimitedTo16MiBAnd": "Dictation is limited to 16 MiB and one minute.",
-      "useMonoOrStereoPCMWAVRecorded": "Use mono or stereo PCM WAV recorded at 8–192 kHz.",
+      "useMonoOrStereoPCMWAVRecorded": "Use mono 16-bit PCM WAV recorded at 16 or 24 kHz.",
       "theRecordingHasNoAudioFrames": "The recording has no audio frames.",
       "dictationIsLimitedToOneMinute": "Dictation is limited to one minute.",
       "theRecordingIsUnreadableTryDictatingAgain": "The recording is unreadable. Try dictating again.",

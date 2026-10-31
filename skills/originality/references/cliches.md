@@ -1,6 +1,6 @@
 # Clichés: what's underneath and where to find something fresh
 
-Use these lists to recognise stock language quickly and to find the real feeling it is standing in for. The originality check has its own list of stock phrases and over-used pairs; this one is for your own read too, and covers forms the check can miss (it looks for "broken heart", so "my heart is broken" can slip past).
+These examples give `lyricist` optional context for discussing familiar wording and more specific alternatives. They are not an executable phrase blacklist, a rule for rewriting an artist's deliberate choices or a plagiarism detector. Consider the line's meaning and the musician's requested voice.
 
 Every phrase here is allowed: a musician may keep one on purpose, and an everyday phrase given a twist can make a great title. When one turns up in a line you are writing or fixing, replace it in place with a detail from the song's world; when it stays (the musician's title, a locked line, a deliberate choice), the result line names it.
 

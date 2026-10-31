@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { test } from "node:test";
 import { MidiMaterials, type MidiMaterialScope } from "../harness/midi-materials";
-import { AgentLoop, LoopEnd, LoopTool } from "../harness/loop";
 import { Describer } from "../live/extension/describe";
 import { toLiveNotes } from "../live/extension/notes";
 import { MidiNoteOperations } from "../live/extension/ops/midi-notes";
@@ -12,15 +11,12 @@ import type { AnyOperation, OperationTable, RegularOp } from "../live/extension/
 import { ReferenceResolver } from "../live/extension/refs";
 import { TaggedName } from "../live/extension/tags";
 import type { Live } from "../live/extension/sdk";
-import { Contour, Register } from "../music/melody/melody-plan";
 import { OdeConfig } from "../shared/config";
 import type { Note } from "../shared/live";
 import type { MidiMaterialRef } from "../shared/midi-material";
 import { emptyLeadSheet } from "../shared/song";
 import { ToolRegistry, type ToolOutcome } from "../tools";
 import type { ToolContext } from "../tools/define";
-import { drumGrooveWriteTool } from "../tools/music/drum-groove-write";
-import { melodyWriteTool } from "../tools/music/melody-write";
 import { FakeLive } from "./fake-live";
 import { TestSets } from "./sets";
 
@@ -104,49 +100,22 @@ test("MIDI material scopes keep exact detached notes and bound metadata, capacit
   assert.throws(() => scope.resolve(ref), /expired|request/i);
 });
 
-test("large helper material stays valid JSON and reaches native clip creation without model reserialization", async () => {
+test("large native note reads reach clip creation without model reserialization", async () => {
   const r = rig();
   try {
-    const drumInput = { genre: "house", section: "chorus" as const, bars: 64, energy: 0.8, seed: 1, timeSignature: signature };
-    const raw = await drumGrooveWriteTool.run(drumInput, r.ctx) as { notes: Note[] };
-    const outcome = await r.run("drum_groove_write", drumInput), draft = result(outcome);
+    const notes: Note[] = Array.from({ length: 1024 }, (_, index) => ({ pitch: 60, start: index * 0.125, duration: 0.09, velocity: 87 }));
+    (r.source as unknown as { notes: ReturnType<typeof toLiveNotes> }).notes = toLiveNotes(notes);
+    const outcome = await r.run("midi_clip_get_notes", { clip: { track: { index: 0 }, start: 0 } });
+    const read = result(outcome);
     assert.ok(outcome.text.length <= r.ctx.config.limits.toolResultMaxChars);
-    assert.equal(draft.notes.kind, "midi-material");
-    assert.equal(draft.notes.count, raw.notes.length);
-    assert.deepEqual(await r.exactNotes(draft.notes), clean(raw.notes));
-    const created = await r.run("track_create_midi_clip", { track: { index: 0 }, start: 16, length: 256, notes: draft.notes, name: "Long groove" });
+    assert.equal(read.notes.kind, "midi-material");
+    assert.deepEqual(await r.exactNotes(read.notes), clean(notes));
+    const created = await r.run("track_create_midi_clip", { track: { index: 0 }, start: 16, length: 256, notes: read.notes, name: "Copied performance" });
     assert.equal(created.ok, true, created.text);
-    const newClip = r.track.arrangementClips.find((clip) => clip.startTime === 16) as unknown as { notes: unknown };
-    assert.deepEqual(newClip.notes, toLiveNotes(raw.notes));
-    const lyricInput = { bars: 32, lyrics: Array.from({ length: 32 }, () => "I will follow you home"), contour: Contour.Arch,
-      register: Register.Mid, density: 1, seed: 1, key: { root: 0, scale: "Major" }, range: { low: 60, high: 72 }, timeSignature: signature };
-    const rawLyrics = await melodyWriteTool.run(lyricInput, r.ctx) as { notes: Note[]; phrases: { syllables: unknown; alignment: unknown }[] };
-    assert.ok(JSON.stringify(rawLyrics).length > 60_000);
-    const lyricsOutcome = await r.run("melody_write", lyricInput), lyrics = result(lyricsOutcome);
-    assert.ok(lyricsOutcome.text.length <= 60_000);
-    assert.deepEqual(await r.exactNotes(lyrics.notes), clean(rawLyrics.notes));
-    let metadata = "", metadataOffset: number | null = 0, metadataHash: string | undefined;
-    while (metadataOffset !== null) {
-      const outcome = await r.run("midi_material_read", { id: lyrics.notes.id, section: "metadata", offset: metadataOffset, expectedHash: metadataHash });
-      const page = result(outcome); assert.ok(outcome.text.length <= 60_000);
-      metadata += page.text; metadataOffset = page.nextOffset; metadataHash = page.sha256;
-    }
-    const exactMetadata = JSON.parse(metadata);
-    assert.deepEqual(exactMetadata.phrases[0].syllables, clean(rawLyrics.phrases[0]!.syllables));
-    assert.deepEqual(exactMetadata.phrases.at(-1).alignment, rawLyrics.phrases.at(-1)!.alignment);
-    const listed = result(await r.run("midi_material_list", { resultId: lyrics.midiMaterials.resultId, limit: 100 }));
-    assert.ok(listed.items.some((item: any) => item.ref.id === lyrics.notes.id && item.sourceTool === "melody_write"));
-    assert.equal(listed.scope.exchangeId, r.exchangeId);
+    const clip = r.track.arrangementClips.find((item) => item.startTime === 16) as unknown as { notes: unknown };
+    assert.deepEqual(clip.notes, toLiveNotes(notes));
     assert.equal(r.registry.available("subagent").some((tool) => tool.name === "midi_material_list"), true);
     assert.equal(r.registry.available("subagent").some((tool) => tool.name === "midi_clip_set_notes"), false);
-    const source = result(await r.run("midi_clip_get_notes", { clip: { track: { index: 0 }, start: 0 } }));
-    const hookInput = { ...lyricInput, bars: 2, lyrics: ["hello"], range: { low: 60, high: 79 },
-      phrases: [{ line: 1, startBeat: 0, lengthBeats: 8, hookId: "kept" }],
-      retainedHooks: [{ id: "kept", lengthBeats: 8, notes: source.notes }] };
-    const hooked = result(await r.run("melody_write", hookInput));
-    assert.deepEqual(await r.exactNotes(hooked.notes), clean(r.initial));
-    assert.equal((await r.run("melody_write", { ...hookInput, retainedHooks: [{ id: "kept", lengthBeats: 1, notes: source.notes }] })).ok, false,
-      "Original hook-boundary validation still runs after resolving a nested reference.");
   } finally { r.close(); }
 });
 
@@ -154,7 +123,7 @@ test("read-derived material keeps its original native guard while copies and rev
   const r = rig(), sourceRef = { track: { index: 0 }, start: 0 }, destinationRef = { track: { index: 0 }, start: 8 };
   try {
     const read = result(await r.run("midi_clip_get_notes", { clip: sourceRef }));
-    const varied = result(await r.run("melody_vary", { notes: read.notes, how: "rhythm", seed: 1, timeSignature: signature, key: { root: 0, scale: "Major" } }));
+    const varied = read;
     const expected = await r.exactNotes(varied.notes);
     const sourceWrite = await r.run("midi_clip_set_notes", { clip: sourceRef, notes: varied.notes, expected: { token: read.recoveryToken } });
     assert.equal(sourceWrite.ok, true, sourceWrite.text);
@@ -209,92 +178,25 @@ test("read-derived material keeps its original native guard while copies and rev
   } finally { r.close(); }
 });
 
-test("a child draft, precise edit and whole-part transform remain exact through parent placement", async () => {
-  const r = rig(); r.close();
-  const input = { genre: "house", section: "chorus" as const, bars: 64, energy: 0.8, seed: 1, timeSignature: signature };
-  const expected = await drumGrooveWriteTool.run(input, r.ctx) as { notes: Note[] };
-  const call = (id: string, name: string, args: unknown) => ({ id, type: "function", function: { name, arguments: JSON.stringify(args) } });
-  let mainRound = 0, childRound = 0, approvals = 0, writerChars = 0;
-  let discovered: MidiMaterialRef | undefined;
-  const loop = new AgentLoop({ registry: r.registry, limits: r.ctx.config.limits, labels: { for: () => "Draft or place MIDI" },
-    skills: {}, subagentPrompt: async () => "Draft only; the parent applies.",
-    services: { chat: async (agent: string) => ({ complete: async ({ messages }: { messages: { role: string; tool_call_id?: string; content?: string }[] }) => {
-      let message: unknown;
-      if (agent === "subagent") {
-        const round = childRound++;
-        if (round === 0) message = { tool_calls: [call("child-search", LoopTool.ToolSearch, { query: "drum_groove_write notes_edit notes_transform" })] };
-        else if (round === 1) message = { tool_calls: [call("draft", "drum_groove_write", input)] };
-        else if (round === 2) {
-          const draft = JSON.parse(messages.findLast((item) => item.tool_call_id === "draft")!.content!);
-          message = { tool_calls: [call("precise", "notes_edit", { notes: draft.notes, updates: [{ index: 0, set: { velocity: 72 } }] })] };
-        } else if (round === 3) {
-          const precise = JSON.parse(messages.findLast((item) => item.tool_call_id === "precise")!.content!);
-          message = { tool_calls: [call("whole-part", "notes_transform", { notes: precise.notes, transposeSemitones: 12, timeScale: 0.5, timeOffsetBeats: 0.031 })] };
-        } else message = { content: "The draft is ready." };
-      } else {
-        const round = mainRound++;
-        if (round === 0) message = { tool_calls: [call("child", LoopTool.Subagent, { task: "Draft a 64-bar house chorus." })] };
-        else if (round === 1) message = { tool_calls: [call("inventory", "midi_material_list", {}),
-          call("writer-search", LoopTool.ToolSearch, { query: "track_create_midi_clip" })] };
-        else if (round === 2) {
-          const inventory = JSON.parse(messages.findLast((item) => item.tool_call_id === "inventory")!.content!);
-          discovered = inventory.items.find((item: any) => item.sourceTool === "notes_transform").ref;
-          const args = { track: { index: 0 }, start: 32, length: 256, notes: discovered, name: "Child groove" };
-          writerChars = JSON.stringify(args).length;
-          message = { tool_calls: [call("place", "track_create_midi_clip", args)] };
-        } else message = { content: "Placed." };
-      }
-      return { message, tokens: 1, finishReason: "stop" };
-    } }) },
-  } as never);
-  const end = await loop.run({ agent: "main", system: "", history: [], prompt: "Draft and place the groove", conversation: "fixture", depth: 0,
-    exchangeId: r.exchangeId, signal: new AbortController().signal,
-    gate: { check: async (tool) => { if (tool.changes === "set") approvals++; return null; } },
-    events: { thought() {}, toolStarted() {}, toolFinished() {}, subagentStarted() {}, subagentFinished() {} } });
-  assert.equal(end.end, LoopEnd.Reply);
-  assert.equal(approvals, 1);
-  assert.ok(discovered && writerChars < 1000);
-  const placed = r.track.arrangementClips.find((clip) => clip.startTime === 32) as unknown as { notes: unknown };
-  assert.deepEqual(placed.notes, toLiveNotes(expected.notes.map((note, index) => ({ ...note, ...(index === 0 ? { velocity: 72 } : {}),
-    pitch: note.pitch + 12, start: note.start * 0.5 + 0.031, duration: note.duration * 0.5 }))));
-  assert.equal((await r.run("midi_material_read", { id: discovered.id, section: "notes" })).ok, false);
-});
-
-test("a tiny dense-clip edit preserves all other notes and must reconcile intervening manual changes", async () => {
+test("explicit model note edits use the native guard and preserve unrelated notes", async () => {
   const r = rig(), clip = { track: { index: 0 }, start: 0 };
   try {
-    const dense: Note[] = Array.from({ length: 1024 }, (_, index) => ({ pitch: 60 + index % 12, start: index * 0.125 + 0.003,
-      duration: 0.09, velocity: 87, muted: index % 17 === 0, probability: index % 19 === 0 ? 0 : 0.7, velocityDeviation: 3, releaseVelocity: 45 }));
-    const held = r.source as unknown as { notes: ReturnType<typeof toLiveNotes> }; held.notes = toLiveNotes(dense);
     const read = result(await r.run("midi_clip_get_notes", { clip }));
-    const edit = { notes: read.notes, updates: [{ index: 998, set: { pitch: 65, velocity: 72 } }] };
-    assert.ok(JSON.stringify(edit).length < 1000);
-    const beforeCalls = r.calls.length, draft = result(await r.run("notes_edit", edit));
-    assert.equal(r.calls.length, beforeCalls, "Drafting an edit must not call the host.");
-    assert.equal(r.registry.find("notes_edit")?.changes, "none");
-    assert.equal(r.registry.available("subagent").some((tool) => tool.name === "notes_edit"), true);
-    const expected = dense.map((note, index) => index === 998 ? { ...note, pitch: 65, velocity: 72 } : note);
-    assert.deepEqual(await r.exactNotes(draft.notes), clean(expected));
-    const transformation = { transposeSemitones: 2, timeScale: 0.5, timeOffsetBeats: 0.125 };
-    const transformInput = { notes: draft.notes, ...transformation };
-    assert.ok(JSON.stringify(transformInput).length < 1000);
-    const transformed = result(await r.run("notes_transform", transformInput));
-    const mapNote = (note: Note) => ({ ...note, pitch: note.pitch + 2, start: note.start * 0.5 + 0.125, duration: note.duration * 0.5 });
-    assert.deepEqual(await r.exactNotes(transformed.notes), clean(expected.map(mapNote)));
-    assert.equal(r.calls.length, beforeCalls);
-    assert.equal(r.registry.available("subagent").some((tool) => tool.name === "notes_transform"), true);
-    const manual = { pitch: 79, startTime: 200.37, duration: 0.29, velocity: 101, probability: 0.6 };
+    const source = await r.exactNotes(read.notes);
+    const edited = structuredClone(source);
+    edited[1]!.velocity = 72;
+    const held = r.source as unknown as { notes: ReturnType<typeof toLiveNotes> };
+    const manual = { pitch: 79, startTime: 6.37, duration: 0.29, velocity: 101, probability: 0.6 };
     held.notes.push(manual);
-    const fresh = result(await r.run("midi_clip_get_notes", { clip }));
-    const stale = await r.run("midi_clip_set_notes", { clip, notes: transformed.notes, expected: { token: fresh.recoveryToken } });
-    assert.equal(stale.ok, false, "The inherited source guard must survive precise editing and whole-part transformation.");
+    const stale = await r.run("midi_clip_set_notes", { clip, notes: edited, expected: { token: read.recoveryToken } });
+    assert.equal(stale.ok, false);
     assert.deepEqual(held.notes.at(-1), manual);
+    const fresh = result(await r.run("midi_clip_get_notes", { clip }));
     const current = await r.exactNotes(fresh.notes);
-    const reconciled = result(await r.run("notes_edit", { ...edit, notes: fresh.notes }));
-    const reconciledTransform = result(await r.run("notes_transform", { notes: reconciled.notes, ...transformation }));
-    const applied = await r.run("midi_clip_set_notes", { clip, notes: reconciledTransform.notes, expected: { token: fresh.recoveryToken } });
+    current[1]!.velocity = 72;
+    const applied = await r.run("midi_clip_set_notes", { clip, notes: current, expected: { token: fresh.recoveryToken } });
     assert.equal(applied.ok, true, applied.text);
-    assert.deepEqual(held.notes, toLiveNotes(current.map((note, index) => mapNote(index === 998 ? { ...note, pitch: 65, velocity: 72 } : note))));
-    assert.deepEqual(await r.exactNotes(read.notes), clean(dense), "The original captured material remains immutable after application.");
+    assert.deepEqual(held.notes, toLiveNotes(current));
+    assert.deepEqual(await r.exactNotes(read.notes), clean(source));
   } finally { r.close(); }
 });

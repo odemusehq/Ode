@@ -1,7 +1,7 @@
 import { t } from "../shared/i18n";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { AudioFileDecoder } from "../music/audio/decode";
+import { AudioFileDecoder } from "../audio/decode";
 import type { Transcript } from "../services/types";
 
 export const MAX_DICTATION_BYTES = 16 * 1024 * 1024;
@@ -21,13 +21,11 @@ export class Dictation {
     try {
       const decoder = new AudioFileDecoder();
       const info = decoder.inspect(bytes, t("server.dictation.recording"));
-      if (info.format !== "WAV" || info.encoding !== "signed int" || info.bitDepth < 16 || info.channels > 2 || info.sampleRate < 8000 || info.sampleRate > 192000) {
+      if (info.format !== "WAV" || info.encoding !== "signed int" || info.bitDepth !== 16 || info.channels !== 1 || ![16000, 24000].includes(info.sampleRate)) {
         throw new Error(t("server.dictation.useMonoOrStereoPCMWAVRecorded"));
       }
       if (info.frames === 0) throw new Error(t("server.dictation.theRecordingHasNoAudioFrames"));
       if (info.frames / info.sampleRate > MAX_DICTATION_SECONDS) throw new Error(t("server.dictation.dictationIsLimitedToOneMinute"));
-      // Validate sample data as well as container metadata before any service receives it.
-      decoder.decode(bytes, t("server.dictation.recording"));
     } catch (error) {
       throw new DictationError(error instanceof Error ? error.message : t("server.dictation.theRecordingIsUnreadableTryDictatingAgain"), 400);
     }

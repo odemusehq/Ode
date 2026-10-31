@@ -29,6 +29,7 @@ export class LyricsMarks {
   private readonly asking = new Set<string>();
   private readonly listeners = new Set<() => void>();
   private snapshot: MarksSnapshot = { status: SupportStatus.Ready, detail: "", version: 0 };
+  private generation = 0;
 
   constructor(private readonly api: OdeApi) {}
 
@@ -51,26 +52,40 @@ export class LyricsMarks {
     const key = LyricsMarks.key(sung);
     if (sung.length === 0 || this.sections.has(key)) return;
     const lines = [...sung];
-    this.timers.set(slot, window.setTimeout(() => void this.check(key, lines), UI_CONFIG.lyricsCheckDelayMs));
+    const generation = this.generation;
+    this.timers.set(slot, window.setTimeout(() => {
+      this.timers.delete(slot);
+      void this.check(key, lines, generation);
+    }, UI_CONFIG.lyricsCheckDelayMs));
   }
 
-  /** Clears the notice so the editor asks again, after Settings changed or the model came back. */
+  /** A changed model starts with no marks or pending requests from its predecessor. */
   retry(): void {
+    this.invalidate();
     this.publish(SupportStatus.Ready, "");
   }
 
   /** A replaced model or closed editor must not start its waiting checks. */
   dispose(): void {
-    for (const timer of this.timers.values()) window.clearTimeout(timer);
-    this.timers.clear();
+    this.invalidate();
     this.listeners.clear();
   }
 
-  private async check(key: string, lines: string[]): Promise<void> {
-    if (this.asking.has(key)) return;
+  private invalidate(): void {
+    this.generation++;
+    for (const timer of this.timers.values()) window.clearTimeout(timer);
+    this.timers.clear();
+    this.asking.clear();
+    this.sections.clear();
+    this.lines.clear();
+  }
+
+  private async check(key: string, lines: string[], generation: number): Promise<void> {
+    if (generation !== this.generation || this.asking.has(key)) return;
     this.asking.add(key);
     try {
       const answer = await this.api.checkLyrics({ lines });
+      if (generation !== this.generation) return;
       if (answer.status === "ok") {
         this.sections.set(key, answer.check.lines);
         answer.check.lines.forEach((line, index) => this.keepLine(lines[index] ?? "", line));
@@ -81,9 +96,9 @@ export class LyricsMarks {
         this.publish(SupportStatus.Unreachable, answer.detail);
       }
     } catch (error) {
-      this.publish(SupportStatus.Unreachable, errorMessage(error));
+      if (generation === this.generation) this.publish(SupportStatus.Unreachable, errorMessage(error));
     } finally {
-      this.asking.delete(key);
+      if (generation === this.generation) this.asking.delete(key);
     }
   }
 

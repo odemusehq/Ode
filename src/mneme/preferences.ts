@@ -12,15 +12,12 @@ import {
 } from "../shared/personalisation";
 import type { LeadSheet } from "../shared/song";
 import { JsonFile } from "./json-file";
-import { LyricsText } from "./lyrics-text";
-import { SpellingDetector } from "./spelling";
 
 export type DetectableValue<K extends keyof Personalisation> = Personalisation[K] extends Detectable<infer T> ? T : never;
 
 /** Artist-level settings (genre, spelling, pronunciation, vocal range, loudness target) and the mode Ode works in. */
 export class PreferencesStore {
   private readonly file: JsonFile<PreferencesFile>;
-  private readonly spelling = new SpellingDetector();
 
   constructor(path: string) {
     this.file = new JsonFile(path, PreferencesFileSchema as z.ZodType<PreferencesFile>, () => structuredClone(DEFAULT_PREFERENCES));
@@ -57,11 +54,11 @@ export class PreferencesStore {
     });
   }
 
-  /** The settings in force for a song: song overrides, then artist settings, then detection. */
+  /** The settings in force for a song: song overrides, then artist settings and model-recorded preferences, then locale defaults. */
   async effective(sheet: LeadSheet): Promise<ResolvedPersonalisation> {
     const artist = (await this.file.read()).personalisation;
     const merged: Personalisation = { ...artist, ...sheet.settings } as Personalisation;
-    const spelling = this.resolveAccent(merged.spelling, LyricsText.sung(sheet.lyrics));
+    const spelling = this.resolveAccent(merged.spelling);
     return {
       genre: this.resolveOptional(merged.genre),
       spelling,
@@ -71,10 +68,10 @@ export class PreferencesStore {
     };
   }
 
-  private resolveAccent(setting: Detectable<Accent>, lyrics: readonly string[]): Accent {
+  private resolveAccent(setting: Detectable<Accent>): Accent {
     if (setting.mode === "set") return setting.value;
     if (setting.detected) return setting.detected.value;
-    return this.spelling.detect(lyrics)?.value ?? this.spelling.fromLocale() ?? "us";
+    return Intl.DateTimeFormat().resolvedOptions().locale.toLowerCase() === "en-gb" ? "uk" : "us";
   }
 
   private resolveOptional<T>(setting: Detectable<T>): T | null {

@@ -54,7 +54,6 @@
     }
   },
   "services": {
-    "speechSampleRate": 24000,
     "textMaxTokens": 4000,
     "audioMaxTokens": 4000,
     "imageRequestSize": "1024x1024",

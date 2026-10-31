@@ -13,11 +13,11 @@ In rap, rhyme is rhythm: rhymes mark the beat, link bars together and carry the 
 - Vowels matter more than consonants. A multi can change consonants throughout and still hit, as long as the vowels and the stress pattern line up.
 - Matching vowel and stress patterns makes a clear multi; displaced stresses or bent delivery can make a looser sound link. Describe that honestly rather than rejecting the artist's flow.
 - Longer multis impress only if the bar still makes sense. A three-syllable rhyme that says something beats an empty five-syllable one.
-- The rhyme check labels multis it can hear as multisyllabic. A rhyme that ends on an unstressed pronoun ("clock it", "drop it") is judged from its last stressed vowel and may come back weaker than it sounds; report what the check says, and add the delivery note.
+- Lyricist's rhyme assessment labels multis it can hear as multisyllabic. A rhyme that ends on an unstressed pronoun ("clock it", "drop it") is judged from its last stressed vowel and may come back weaker than it sounds; report what the check says, and add the delivery note.
 
 ## Internal rhymes and holding a rhyme sound
 
-- **Internal rhymes** inside the bar, especially landing on the snare (beats 2 and 4), add punch and density. The rhyme check lists the internal rhymes it finds.
+- **Internal rhymes** inside the bar, especially landing on the snare (beats 2 and 4), add punch and density. Lyricist's rhyme assessment lists the internal rhymes it finds.
 - **Hold a rhyme sound** for two to four bars, then switch. The switch tells the listener a new thought has started.
 - **Make the sound clear early.** The first bar that uses a rhyme sound should make it obvious, so the following bars land as deliberate payoffs.
 - **Echoes:** a rhyme sound from earlier in the verse can come back later to tie the verse together.
@@ -36,7 +36,7 @@ A strong rhyme can emphasise a punchline, but a near rhyme, delayed rhyme or unr
 
 Rappers often bend vowels or stretch words so that a rhyme lands. That's part of the style; report it honestly:
 
-- The rhyme check judges words as normally pronounced in the musician's accent, so a bent rhyme usually shows as a near rhyme or assonance. Report it with the check's label.
+- Lyricist's rhyme assessment judges words as normally pronounced in the musician's accent, so a bent rhyme usually shows as a near rhyme or assonance. Report it with the check's label.
 - Say how it has to be delivered: "works if 'pen' is rapped like 'pin' to meet 'win'".
 - Prefer rhymes that work without bending; save bending for when the bar is worth it.
 
@@ -63,7 +63,7 @@ Rap rhymes live on vowels, and vowels are where accents differ most. Judge rhyme
 > *They pay for the hours, I'm done with the overtime*
 > *Every bar that I write on the bus is over mine*
 
-- **End rhymes:** "paperwork" / "major work", then "overtime" / "over mine": the rhyme check (US) labels both pairs multisyllabic, and the sound switches after two bars, where the thought turns from the job to the writing.
+- **End rhymes:** "paperwork" / "major work", then "overtime" / "over mine": Lyricist's rhyme assessment (US) labels both pairs multisyllabic, and the sound switches after two bars, where the thought turns from the job to the writing.
 - **Internal rhyme:** "eight" / "break" in bar 1 (near), with "wait" echoing it in bar 2.
 - **Wordplay:** "over mine" answers "overtime": the hours on the bus are the writer's own.
 - **Density:** 12 to 14 syllables a bar, and everything stays on one subject, so the rhymes keep the verse on topic.
@@ -72,7 +72,7 @@ Rap rhymes live on vowels, and vowels are where accents differ most. Judge rhyme
 
 Use these to review the intended flow, not as requirements for every rap verse.
 
-- Multis match in vowels and stress pattern, still make sense, and are labelled as the rhyme check labels them.
+- Multis match in vowels and stress pattern, still make sense, and are labelled as Lyricist's rhyme assessment labels them.
 - Review rhyme switches against the thought and flow; two to four bars is one useful pattern.
 - Check whether the punchline's rhyme placement creates the intended emphasis.
 - Any rhyme that needs bent pronunciation is labelled honestly, with a delivery note.

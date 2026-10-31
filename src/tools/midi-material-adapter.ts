@@ -12,37 +12,13 @@ const INPUTS: Readonly<Record<string, readonly Pattern[]>> = {
   track_create_midi_clip: TOP_NOTES,
   take_lane_create_midi_clip: TOP_NOTES,
   clip_slot_create_midi_clip: TOP_NOTES,
-  melody_vary: TOP_NOTES,
-  notes_edit: TOP_NOTES,
-  notes_transform: TOP_NOTES,
-  set_lyrics_to_melody: TOP_NOTES,
-  lyrics_fit_melody: TOP_NOTES,
-  prosody_check: TOP_NOTES,
-  singability_check: TOP_NOTES,
-  notes_check: [["notes"], ["lockTo"]],
-  harmonize: [["melody"]],
-  harmony_vocals_write: [["melody"]],
-  bassline_write: [["kick"]],
+  lyricist: TOP_NOTES,
   demo_vocal_render: [["lines", "*", "notes"]],
-  melody_write: [["retainedHooks", "*", "notes"]],
 };
 
-/** Complete result collections, never arbitrary numeric arrays or checker findings. */
+/** Retain notes actually read from Live, without generating or transforming them. */
 const OUTPUTS: Readonly<Record<string, readonly Pattern[]>> = {
   midi_clip_get_notes: TOP_NOTES,
-  drum_groove_write: TOP_NOTES,
-  bassline_write: TOP_NOTES,
-  voice_chords: TOP_NOTES,
-  melody_vary: TOP_NOTES,
-  notes_edit: TOP_NOTES,
-  notes_transform: TOP_NOTES,
-  melody_write: [["notes"], ["phrases", "*", "notes"], ["retainedHooks", "*", "notes"]],
-  harmony_vocals_write: [["parts", "*", "notes"]],
-  set_lyrics_to_melody: [["notes"], ["melody", "notes"]],
-  lyrics_fit_melody: [["lines", "*", "notes"], ["lines", "*", "phrase"], ["unassignedNotes"]],
-  prosody_check: TOP_NOTES,
-  singability_check: TOP_NOTES,
-  hum_to_midi: TOP_NOTES,
 };
 
 function visit(value: unknown, pattern: Pattern, apply: (parent: Record<string | number, unknown>, key: string | number, path: (string | number)[]) => void, path: (string | number)[] = []): void {
@@ -116,13 +92,13 @@ export function midiLabelInput(name: string, input: Record<string, unknown>): Re
 
 export function midiOutputPaths(name: string, result: unknown, input: Record<string, unknown>, noteOrigins: readonly string[] = []): MidiMaterialOutput[] {
   const outputs: MidiMaterialOutput[] = [];
-  const collect = (tool: string, value: unknown, prefix: Path = [], inherited: readonly string[] = []) => {
+  const collect = (tool: string, value: unknown, prefix: Path = []) => {
     for (const pattern of OUTPUTS[tool] ?? []) visit(value, pattern, (parent, key, path) => {
       if (!Array.isArray(parent[key])) return;
       const object = value as Record<string, unknown>;
       const tokens = tool === "midi_clip_get_notes" && typeof object.recoveryToken === "string"
         ? [object.recoveryToken]
-        : (tool === "melody_vary" || tool === "set_lyrics_to_melody" || tool === "notes_edit" || tool === "notes_transform") && path.length === 1 && path[0] === "notes" ? inherited : [];
+        : [];
       outputs.push({ path: [...prefix, ...path], ...(tokens.length ? { originReadTokens: [...tokens] } : {}) });
     });
   };
@@ -130,6 +106,6 @@ export function midiOutputPaths(name: string, result: unknown, input: Record<str
     const calls = input.calls as { op: string }[];
     const results = (result as { results?: unknown[] }).results ?? [];
     calls.forEach((call, index) => collect(call.op, results[index], ["results", index]));
-  } else collect(name, result, [], noteOrigins);
+  } else collect(name, result);
   return outputs;
 }

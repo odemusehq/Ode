@@ -3,11 +3,11 @@ import { mkdir, open, readFile, readdir, realpath, rm, stat, writeFile } from "n
 import { basename, dirname, extname, join, resolve, sep } from "node:path";
 import { z } from "zod";
 import { JsonFile } from "../mneme/json-file";
-import { AudioFileDecoder } from "../music/audio/decode";
+import { AudioFileDecoder } from "../audio/decode";
 import {
-  AudioProvenanceSchema, MaxCaptureEvidenceSchema, AudioExcerptFactsSchema, AudioExcerptDerivationSchema, AudioExcerptSelectionSchema,
+  AudioProvenanceSchema, MaxCaptureEvidenceSchema, AudioExcerptDerivationSchema,
   LibraryAnnotationsPatchSchema, LibraryAnnotationsSchema, LibraryProfileSchema, LibrarySearchSchema,
-  type AudioExcerptBuild, type AudioExcerptDerivation, type AudioExcerptSelection,
+  type AudioExcerptDerivation,
   type LibraryAnnotations, type LibraryAnnotationsPatch, type LibraryProfile, type LibraryProfileLevel, type LibrarySearch, type LibrarySearchCoverage,
 } from "../shared/audio-library";
 
@@ -36,7 +36,7 @@ export type AudioFileRecord = z.infer<typeof BaseRecordSchema> & {
   annotations?: LibraryAnnotations;
   profile?: LibraryProfile;
   annotationsStatus?: "invalid";
-  profileStatus?: "invalid-or-unsupported" | "stale";
+  profileStatus?: "invalid-or-unsupported" | "stale" | "legacy-analysis";
   derivation?: AudioExcerptDerivation;
   derivationStatus?: "invalid";
 };
@@ -65,26 +65,6 @@ function hash(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
-/** Mediate the raw-copy contract independently of a builder's reported header facts. */
-function assertRawExcerpt(sourceBytes: Uint8Array, outputBytes: Uint8Array, source: ReturnType<AudioFileDecoder["layout"]>,
-  output: ReturnType<AudioFileDecoder["layout"]>, firstFrame: number, endFrame: number): void {
-  const format = (layout: ReturnType<AudioFileDecoder["layout"]>) => {
-    const chunk = Uint8Array.from(layout.formatChunk);
-    if (layout.container !== "WAV") new DataView(chunk.buffer).setUint32(10, 0, false); // COMM frame count changes with the selection.
-    return Buffer.from(chunk);
-  };
-  if (source.container !== output.container || source.frameBytes !== output.frameBytes || source.littleEndian !== output.littleEndian ||
-    !format(source).equals(format(output)) || source.container === "AIFC" && (!source.versionChunk || !output.versionChunk || !Buffer.from(source.versionChunk).equals(Buffer.from(output.versionChunk)))) {
-    throw new Error("The excerpt must preserve the complete source sample format and byte order.");
-  }
-  const length = (endFrame - firstFrame) * source.frameBytes;
-  if (output.dataBytes !== length) throw new Error("The excerpt payload must contain exactly the selected source frames.");
-  const start = source.frameOffset + firstFrame * source.frameBytes;
-  const selected = Buffer.from(sourceBytes.buffer, sourceBytes.byteOffset + start, length);
-  const actual = Buffer.from(outputBytes.buffer, outputBytes.byteOffset + output.frameOffset, length);
-  if (!selected.equals(actual)) throw new Error("The excerpt payload must preserve exactly the selected source sample bytes.");
-}
-
 const normal = (text: string) => text.trim().toLowerCase();
 const updates = new Map<string, Promise<unknown>>();
 
@@ -111,12 +91,14 @@ function storedRecord(input: unknown): { raw: Record<string, unknown>; record: A
     if (annotations.success) record.annotations = annotations.data;
     else record.annotationsStatus = "invalid";
   } else if (raw.annotationsStatus === "invalid") record.annotationsStatus = "invalid";
-  if (raw.profile !== undefined) {
-    const profile = LibraryProfileSchema.safeParse(raw.profile);
+  const storedProfile = raw.metadataProfile ?? raw.profile;
+  if (storedProfile !== undefined) {
+    const profile = LibraryProfileSchema.safeParse(storedProfile);
     if (!profile.success) record.profileStatus = "invalid-or-unsupported";
     else if (profile.data.sha256 !== record.sha256 || profile.data.bytes !== record.bytes) record.profileStatus = "stale";
+    else if (profile.data.level === "full") record.profileStatus = "legacy-analysis";
     else record.profile = profile.data;
-  } else if (raw.profileStatus === "invalid-or-unsupported" || raw.profileStatus === "stale") record.profileStatus = raw.profileStatus;
+  } else if (raw.profileStatus === "invalid-or-unsupported" || raw.profileStatus === "stale" || raw.profileStatus === "legacy-analysis") record.profileStatus = raw.profileStatus;
   if (raw.derivation !== undefined) {
     const derivation = AudioExcerptDerivationSchema.safeParse(raw.derivation);
     if (derivation.success && record.provenance === "local-excerpt" && derivation.data.sourceAudioId !== record.id) record.derivation = derivation.data;
@@ -173,81 +155,6 @@ export class LocalAudioFiles {
       published = true;
     } finally { if (created && !published) await rm(file, { force: true }); }
     return record;
-  }
-
-  /** Publish a new raw-frame excerpt. The original and its declarations remain untouched. */
-  async excerpt(input: { audioId: string; name: string; selection: AudioExcerptSelection; exchangeId: string },
-    build: (bytes: Uint8Array, firstFrame: number, endFrame: number) => AudioExcerptBuild | Promise<AudioExcerptBuild>,
-    options: { signal?: AbortSignal; maxResultChars?: number } = {}): Promise<AudioFileRecord> {
-    const request = z.object({ audioId: ID, name: z.string().min(1).max(255), selection: AudioExcerptSelectionSchema,
-      exchangeId: z.string().min(1).max(1000) }).parse(input);
-    const { signal } = options;
-    signal?.throwIfAborted();
-    if (basename(request.name.replaceAll("\\", "/")) !== request.name || /[\u0000-\u001f\u007f]/.test(request.name) || !ANALYSIS_SUFFIX.test(request.name)) {
-      throw new Error("Give a new WAV/AIFF filename without a path or control characters.");
-    }
-    const captured = await this.verified(request.audioId);
-    signal?.throwIfAborted();
-    if (extname(request.name).toLowerCase() !== extname(captured.record.name).toLowerCase()) throw new Error("Keep the original source extension in the excerpt name; this operation does not convert formats.");
-    const bytes = Uint8Array.from(captured.bytes);
-    const decoder = new AudioFileDecoder();
-    const sourceLayout = decoder.layout(bytes, "Excerpt source");
-    const source = AudioExcerptFactsSchema.parse(sourceLayout.info);
-    const selected = request.selection;
-    if (selected.unit === "seconds" && (selected.to <= selected.from || selected.to > source.frames / source.sampleRate)) throw new Error("Choose a nonempty time range within the source recording.");
-    const firstFrame = selected.unit === "frames" ? selected.firstFrame : Math.round(selected.from * source.sampleRate);
-    const endFrame = selected.unit === "frames" ? selected.endFrame : Math.round(selected.to * source.sampleRate);
-    if (endFrame <= firstFrame || endFrame > source.frames) throw new Error("Choose a nonempty exclusive frame range within the source recording.");
-    const built = await build(bytes, firstFrame, endFrame);
-    signal?.throwIfAborted();
-    if (hash(bytes) !== captured.record.sha256 || JSON.stringify(AudioExcerptFactsSchema.parse(built.source)) !== JSON.stringify(source) ||
-      built.selection.firstFrame !== firstFrame || built.selection.endFrame !== endFrame) throw new Error("The excerpt builder does not match the captured source and selected frames.");
-    const outputBytes = Uint8Array.from(built.bytes);
-    if (!outputBytes.length || outputBytes.length > MAX_AUDIO_UPLOAD_BYTES || !hasAudioHeader(request.name, outputBytes)) throw new Error("The excerpt needs a matching WAV/AIFF filename and must fit the 128 MiB managed audio limit.");
-    const outputLayout = decoder.layout(outputBytes, "Derived excerpt");
-    const output = AudioExcerptFactsSchema.parse(outputLayout.info);
-    if (JSON.stringify(AudioExcerptFactsSchema.parse(built.output)) !== JSON.stringify(output)) throw new Error("The excerpt output header differs from its builder evidence.");
-    const container = outputLayout.container;
-    if (built.container !== container || container !== sourceLayout.container) throw new Error("The excerpt must preserve its source container and match its builder evidence.");
-    assertRawExcerpt(bytes, outputBytes, sourceLayout, outputLayout, firstFrame, endFrame);
-    const derivation = AudioExcerptDerivationSchema.parse({ kind: "local-excerpt", version: 1,
-      sourceAudioId: captured.record.id, sourceSha256: captured.record.sha256, sourceBytes: captured.record.bytes,
-      sourceProvenance: captured.record.provenance, source, firstFrame, endFrame, output, container, exchangeId: request.exchangeId });
-    const record: AudioFileRecord = { ...BaseRecordSchema.parse({ id: randomUUID(), name: request.name, purpose: "library",
-      sha256: hash(outputBytes), bytes: outputBytes.length, importedAt: new Date().toISOString(), provenance: "local-excerpt",
-      currentness: "unknown", analysisSupported: true }), derivation };
-    if (options.maxResultChars !== undefined && JSON.stringify({ id: record.id, saved: true }).length > options.maxResultChars) throw new Error("The excerpt acknowledgement exceeds the tool result limit. Increase that limit before publishing.");
-    const root = await this.inside(this.root, true);
-    signal?.throwIfAborted();
-    return updateAsset(root, async () => {
-      signal?.throwIfAborted();
-      // A repeated accepted operation reuses its exact prior output, without a new asset or metadata rewrite.
-      for (const entry of await readdir(root)) {
-        if (!entry.endsWith(".json") || !ID.safeParse(entry.slice(0, -5)).success) continue;
-        let previous: AudioFileRecord;
-        try { previous = await this.readRecord(entry.slice(0, -5)); } catch { continue; }
-        signal?.throwIfAborted();
-        if (previous.name === record.name && JSON.stringify(previous.derivation) === JSON.stringify(derivation)) {
-          const reused = await this.verified(previous.id);
-          signal?.throwIfAborted();
-          if (reused.record.sha256 !== record.sha256 || reused.record.bytes !== record.bytes) throw new Error("The prior excerpt differs from this operation. Choose another name rather than replacing it.");
-          return { ...BaseRecordSchema.parse(reused.record), derivation: reused.record.derivation };
-        }
-      }
-      const target = this.file(record), metadata = this.metadata(record.id);
-      try { await stat(metadata); throw new Error("That audio identifier already exists; the earlier asset was kept. Retry the excerpt."); }
-      catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
-      let created = false, published = false;
-      try {
-        signal?.throwIfAborted();
-        const file = await open(target, "wx", 0o600); created = true;
-        try { signal?.throwIfAborted(); await file.writeFile(outputBytes); signal?.throwIfAborted(); await file.sync(); } finally { await file.close(); }
-        signal?.throwIfAborted();
-        await JsonFile.writeAtomically(metadata, JSON.stringify(record), 0o600, signal);
-        published = true;
-      } finally { if (created && !published) await rm(target, { force: true }); }
-      return record;
-    });
   }
 
   /** Compatible array result for existing callers. Searches never decode or write managed assets. */
@@ -313,12 +220,9 @@ export class LocalAudioFiles {
       const profile = validProfile(record);
       if (profile) coverage.profiled++; else coverage.unprofiled++;
       const measured = [
-        !filters.profileDetail ? true : profile ? filters.profileDetail === "metadata" || profile.level === "full" : null,
+        !filters.profileDetail ? true : profile ? profile.level === "metadata" : null,
         inBounds(profile ? profile.frames / profile.sampleRate : undefined, filters.durationSeconds),
         filters.channels === undefined ? true : profile ? profile.channels === filters.channels : null,
-        inBounds(profile?.measurements?.integratedLufs, filters.integratedLufs),
-        inBounds(profile?.measurements?.truePeakDbtp, filters.truePeakDbtp),
-        inBounds(profile?.measurements?.tiltDbPerOctave, filters.tiltDbPerOctave),
       ];
       if (measured.includes(false)) continue;
       if (measured.includes(null)) { coverage.excludedUnknown++; continue; }
@@ -358,6 +262,7 @@ export class LocalAudioFiles {
   /** Compute outside the update queue, then merge only a verified whole-file profile into the latest annotations. */
   async profile(id: string, level: LibraryProfileLevel, build: (bytes: Uint8Array, level: LibraryProfileLevel) => LibraryProfile | Promise<LibraryProfile>, signal?: AbortSignal): Promise<AudioFileRecord> {
     signal?.throwIfAborted();
+    if (level !== "metadata") throw new Error("Only header metadata is supported; signal measurements require a native or plug-in backend.");
     const captured = await this.verified(id);
     signal?.throwIfAborted();
     const profile = LibraryProfileSchema.parse(await build(captured.bytes, level));
@@ -370,9 +275,8 @@ export class LocalAudioFiles {
       const current = await this.verified(id);
       signal?.throwIfAborted();
       if (current.record.sha256 !== profile.sha256 || current.record.bytes !== profile.bytes) throw new Error("The stored audio changed while it was profiled; profile the original again.");
-      const existing = validProfile(current.record);
-      // A later cheap inspection must not discard already measured levels for the same exact bytes.
-      const next = { ...current.raw, profile: existing?.level === "full" && profile.level === "metadata" ? existing : profile };
+      // Historical custom analyses remain untouched on disk and are not exposed as native observations.
+      const next = { ...current.raw, metadataProfile: profile };
       const path = await this.inside(this.metadata(id));
       signal?.throwIfAborted();
       await JsonFile.writeAtomically(path, JSON.stringify(next), undefined, signal);

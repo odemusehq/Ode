@@ -1,11 +1,10 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { AudioFileDecoder } from "../music/audio/decode";
-import { audioExcerpt, type AudioTimeRange } from "../music/audio/excerpt";
-export type { AudioTimeRange } from "../music/audio/excerpt";
-import { loudness } from "../music/audio/loudness";
-import type { AudioData } from "../music/audio/types";
-import { encodeWav, WavBitDepth } from "../music/audio/wav";
+import { AudioFileDecoder } from "../audio/decode";
+import { audioExcerpt, type AudioTimeRange } from "../audio/excerpt";
+export type { AudioTimeRange } from "../audio/excerpt";
+import type { AudioData } from "../audio/types";
+import { encodeWav, WavBitDepth } from "../audio/wav";
 
 export interface FrozenMusicAudio {
   readonly bytes: Uint8Array;
@@ -16,7 +15,7 @@ export type AudioListeningSource = FrozenMusicAudio["source"] & { selection: Ret
 export interface ListeningPayload {
   sha256: string;
   bytes: number;
-  representation: { encoding: "PCM24 WAV"; channels: number; sampleRate: number; frames: number; gainDb: number };
+  representation: { encoding: "Float32 WAV"; channels: number; sampleRate: number; frames: number; gainDb: number };
 }
 
 export function audioHash(bytes: Uint8Array): string { return createHash("sha256").update(bytes).digest("hex"); }
@@ -59,7 +58,8 @@ export class MusicAudio {
     return { bytes, sources: [{ ...captured.source, selection: excerpt.range }], payload: MusicAudio.payload(bytes, excerpt.audio) };
   }
 
-  async comparison(a: MusicAudioSource, b: MusicAudioSource, levelMatch: boolean, ranges?: { a?: AudioTimeRange; b?: AudioTimeRange }) {
+  async comparison(a: MusicAudioSource, b: MusicAudioSource, levelMatch = false, ranges?: { a?: AudioTimeRange; b?: AudioTimeRange }) {
+    if (levelMatch) throw new Error("Level matching needs a supported Ableton or plug-in backend. Prepare matched recordings there, then compare with levelMatch:false.");
     const [firstSource, secondSource] = await Promise.all([typeof a === "string" ? MusicAudio.freeze(a) : a, typeof b === "string" ? MusicAudio.freeze(b) : b]);
     const firstCaptured = MusicAudio.decode(firstSource), secondCaptured = MusicAudio.decode(secondSource);
     MusicAudio.requireSamples(firstCaptured.audio);
@@ -69,23 +69,19 @@ export class MusicAudio {
     const first = aExcerpt.audio, second = bExcerpt.audio;
     if (first.channels.length > 2 || second.channels.length > 2) throw new Error("Audio comparison supports established mono/stereo layouts only; multichannel layout and channel roles are unknown.");
     if (first.sampleRate !== second.sampleRate || first.channels.length !== second.channels.length) throw new Error("Audio comparison needs matching sample rates and channel layouts; prepare matching files explicitly.");
-    const levels = [loudness(first).integrated, loudness(second).integrated];
-    if (levelMatch && levels.some((level) => !Number.isFinite(level))) throw new Error("Loudness matching needs at least 0.4 seconds and measurable audio in both excerpts. Set levelMatch false for an unmatched audition.");
-    const target = Math.min(...levels);
-    const gains = levels.map((level) => levelMatch ? 10 ** ((target - level) / 20) : 1);
     const aFrames = first.channels[0]!.length, bFrames = second.channels[0]!.length;
     const gap = Math.round(first.sampleRate * 0.5);
     const channels = first.channels.map((channel, index) => {
       const joined = new Float32Array(aFrames + gap + bFrames);
-      joined.set(channel.map((sample) => sample * gains[0]!), 0);
-      joined.set(second.channels[index]!.map((sample) => sample * gains[1]!), aFrames + gap);
+      joined.set(channel, 0);
+      joined.set(second.channels[index]!, aFrames + gap);
       return joined;
     });
     const joinedAudio = { sampleRate: first.sampleRate, channels };
     const bytes = MusicAudio.encode(joinedAudio);
     return { bytes, sources: [{ ...firstCaptured.source, selection: aExcerpt.range }, { ...secondCaptured.source, selection: bExcerpt.range }], payload: MusicAudio.payload(bytes, joinedAudio), comparison: {
       method: "Selected excerpts A then B in one WAV, separated by 0.5 seconds of silence; playback times differ from source-file selection times", sampleRate: first.sampleRate, channels: channels.length,
-      levelMatched: levelMatch, gainDb: gains.map((gain) => 20 * Math.log10(gain)), commonConversionGainDb: -20 * Math.log10(MusicAudio.peak(joinedAudio)),
+      levelMatched: false, gainDb: [0, 0], commonConversionGainDb: 0,
       a: { startSeconds: 0, endSeconds: aFrames / first.sampleRate },
       b: { startSeconds: (aFrames + gap) / first.sampleRate, endSeconds: (aFrames + gap + bFrames) / first.sampleRate },
     } };
@@ -94,7 +90,7 @@ export class MusicAudio {
   private static requireSamples(audio: AudioData): void {
     if (audio.channels.length === 0 || !audio.channels[0]?.length) throw new Error("Audio listening needs a nonempty recording; this file has zero sample frames.");
     const frames = audio.channels[0].length;
-    if (!Number.isInteger(audio.sampleRate) || audio.sampleRate <= 0 || audio.sampleRate * audio.channels.length * 3 > 0xffffffff) throw new Error("Audio listening needs an integer sample rate representable in PCM WAV. Export or resample explicitly; Ode will not silently alter the source rate.");
+    if (!Number.isInteger(audio.sampleRate) || audio.sampleRate <= 0 || audio.sampleRate * audio.channels.length * 4 > 0xffffffff) throw new Error("Audio listening needs an integer sample rate representable in Float32 WAV. Export or resample explicitly; Ode will not silently alter the source rate.");
     for (const channel of audio.channels) {
       if (channel.length !== frames) throw new Error("Audio listening needs the same sample frame length in every channel.");
       for (const sample of channel) if (!Number.isFinite(sample)) throw new Error("Audio listening contains a nonfinite sample; the provider was not called.");
@@ -102,20 +98,12 @@ export class MusicAudio {
   }
 
   private static payload(bytes: Uint8Array, audio: AudioData): ListeningPayload {
-    return { sha256: audioHash(bytes), bytes: bytes.length, representation: { encoding: "PCM24 WAV", channels: audio.channels.length, sampleRate: audio.sampleRate,
-      frames: audio.channels[0]?.length ?? 0, gainDb: -20 * Math.log10(MusicAudio.peak(audio)) } };
+    return { sha256: audioHash(bytes), bytes: bytes.length, representation: { encoding: "Float32 WAV", channels: audio.channels.length, sampleRate: audio.sampleRate,
+      frames: audio.channels[0]?.length ?? 0, gainDb: 0 } };
   }
 
-  /** Uniform attenuation prevents integer clipping; relative stereo levels and full bandwidth remain. */
+  /** Serialize the provider payload without changing its musical level. */
   private static encode(audio: AudioData): Uint8Array<ArrayBuffer> {
-    const peak = MusicAudio.peak(audio);
-    const channels = peak > 1 ? audio.channels.map((channel) => channel.map((sample) => sample / peak)) : audio.channels;
-    return encodeWav({ sampleRate: audio.sampleRate, channels }, WavBitDepth.Int24);
-  }
-
-  private static peak(audio: AudioData): number {
-    let peak = 1;
-    for (const channel of audio.channels) for (const sample of channel) peak = Math.max(peak, Math.abs(sample));
-    return peak;
+    return encodeWav(audio, WavBitDepth.Float32);
   }
 }

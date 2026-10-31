@@ -9,7 +9,7 @@ import { ConversationStore } from "../mneme/conversations";
 import { SongStore } from "../mneme/song-store";
 import { userPaths } from "../mneme/paths";
 import { LocalAudioFiles } from "../live/local-audio-files";
-import { encodeWav } from "../music/audio/wav";
+import { encodeWav } from "../audio/wav";
 import type { ComposerDraft, ComposerState } from "../shared/composer";
 import { OdeServer, type ServerDeps } from "../server/http";
 import { API } from "../shared/api";

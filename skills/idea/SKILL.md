@@ -5,6 +5,8 @@ description: Find a song's centre and write it straight into the lead sheet — 
 
 # Song ideas
 
+Use `lyricist`, the model selected in Settings, for all lyric writing, rewriting, analysis and word-to-note alignment described here. Give it the current text, actual melody notes, relevant artist memory and the musician's directions. The main agent reads and saves the chosen result; it does not supply its own wording or run local language rules. These craft ideas are optional guidance for Lyricist, and the artist's intentional choices take priority.
+
 An idea is more than a topic. "Heartbreak" is a topic. "Learning to cook for one after years of cooking for two" is an idea: a situation with a feeling inside it, and a phrase that could be its title. In Ode the idea lives in the lead sheet, as the title and what the song is about, where every later piece of work on the song reads it. Find the centre, write it there, check the title and hook, and say it in one line.
 
 ## The loop
@@ -13,7 +15,7 @@ An idea is more than a topic. "Heartbreak" is a topic. "Learning to cook for one
    - The lead sheet (the title, what the song is about, what is locked) and the lyrics, every section's lines under its label.
    - The project map: tempo, key, which parts exist (a loop, a beat, a hummed melody), what is selected, and the hand edits since the last request, which show what the musician was just working on.
    - What Ode remembers about the artist: the themes, points of view and moods they usually write, the images they reach for, what they dislike, and situations from their life they have told you about.
-2. **Decide** with the craft below. Start from what the musician brought: their own phrases first (a striking line in a draft, a word in a hum), then the music, then what they have told you. Choose the one strongest direction, and only that one. Again gives another take, and the version history keeps this one.
+2. **Ask Lyricist to develop the title, lyrical theme and hook** with the craft below. Start from what the musician brought: their own phrases first (a striking line in a draft, a word in a hum), then the music, then what they have told you. Choose the one strongest direction, and only that one. Again gives another take, and the version history keeps this one.
 3. **Change in place.** Write into the lead sheet, replacing what was there:
    - **title:** the chosen phrase; one to five words is a common starting point;
    - **theme:** what the song means, with the feeling and its complication ("relieved it's over, and guilty about the relief");
@@ -23,16 +25,16 @@ An idea is more than a topic. "Heartbreak" is a topic. "Learning to cook for one
    - **hook:** the hook line, usually the title line.
    Idea work changes only the title and what the song is about; the lyrics and the Set stay as they are. Use a title the lyric already sings where you can; writing lines around a new title is lyric work, done when the musician asks ("Write the chorus", "Put the title in the chorus").
 4. **Verify.**
-   - **Syllable and stress check** on the title and the hook line: know the count and where the stresses fall. For a clear, syllabic hook, important words often carry the stress and a held word may suit an open vowel ("go", "down", "stay", "far").
-   - **Originality check** on the title and the hook line: clear of clichés and over-used pairs. A stock phrase, or the title of a very famous song, gets replaced, unless it is the musician's own choice: then keep it and say so in the result line.
-   - **Prosody check**, when the title is already sung on notes: review the intended emphasis; retain chosen stress displacement or vowel colour.
+   - **Lyricist syllable and stress review** on the title and the hook line: know the count and where the stresses fall. For a clear, syllabic hook, important words often carry the stress and a held word may suit an open vowel ("go", "down", "stay", "far").
+   - **Lyricist familiarity review** on the title and the hook line: clear of clichés and over-used pairs. A stock phrase, or the title of a very famous song, gets replaced, unless it is the musician's own choice: then keep it and say so in the result line.
+   - **Lyricist prosody review**, when the title is already sung on notes: review the intended emphasis; retain chosen stress displacement or vowel colour.
    - A word the check marks as uncertain (a name, slang) stays out of what you report as checked.
    Fix and check again, up to three rounds; if something still fails, the result line says what.
 5. **Let them hear it.** A title and what the song is about live in the lead sheet, so the result line is the whole answer. If you also changed lines because the musician asked, the result line names their section, so the musician can play it from the locator named like its label.
 6. **Report in one line**: the title and the song in a few words · what was checked. For example:
-   - "Title: 'Spare Room': putting a friend up after their break-up, told by the host · 2 syllables, stress on SPARE and ROOM, cliché-free."
-   - "Song is now about the late shift at a launderette, told by the attendant · title 'Not in Service', 4 syllables, cliché-free · outside your usual style: a character's voice."
-   - "Title kept, 'Paper Crown' is your phrase · what it's about now written: the kid who is king for one birthday, told years later · 3 syllables, stress on PA- and CROWN, cliché-free."
+   - "Title: 'Spare Room': putting a friend up after their break-up, told by the host · 2 syllables, stress on SPARE and ROOM, familiar phrasing reviewed."
+   - "Song is now about the late shift at a launderette, told by the attendant · title 'Not in Service', 4 syllables, familiar phrasing reviewed · outside your usual style: a character's voice."
+   - "Title kept, 'Paper Crown' is your phrase · what it's about now written: the kid who is king for one birthday, told years later · 3 syllables, stress on PA- and CROWN, familiar phrasing reviewed."
 
 ## Asking
 

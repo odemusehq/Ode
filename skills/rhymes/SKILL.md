@@ -1,26 +1,28 @@
 ---
 name: rhymes
-description: Rhyme craft that acts on the song's lyrics. Ode re-ends lines in place so rhymes land where the section needs them, judged by its rhyme check in the musician's accent (UK or US) — perfect, near, assonance, consonance, multisyllabic, internal and identical rhymes, rhyme schemes, settled and unsettled sections, fresh and over-used pairs, and pairs that rhyme in one accent only. Use this whenever the musician clicks "Tighten the rhymes", "Fresher rhymes" or "More internal rhymes", asks whether two words rhyme, says a rhyme feels forced, weak, cheesy or predictable, wants more or fewer rhymes, or whenever you write or change a rhymed line, even when the word "rhyme" goes unsaid.
+description: Rhyme craft that acts on the song's lyrics. Ode re-ends lines in place so rhymes land where the section needs them, judged by its Lyricist rhyme review in the musician's accent (UK or US) — perfect, near, assonance, consonance, multisyllabic, internal and identical rhymes, rhyme schemes, settled and unsettled sections, fresh and over-used pairs, and pairs that rhyme in one accent only. Use this whenever the musician clicks "Tighten the rhymes", "Fresher rhymes" or "More internal rhymes", asks whether two words rhyme, says a rhyme feels forced, weak, cheesy or predictable, wants more or fewer rhymes, or whenever you write or change a rhymed line, even when the word "rhyme" goes unsaid.
 ---
 
 # Rhymes
+
+Use `lyricist`, the model selected in Settings, for all lyric writing, rewriting, analysis and word-to-note alignment described here. Give it the current text, actual melody notes, relevant artist memory and the musician's directions. The main agent reads and saves the chosen result; it does not supply its own wording or run local language rules. These craft ideas are optional guidance for Lyricist, and the artist's intentional choices take priority.
 
 Rhyme serves the song: a tool to use where it helps. It makes lines memorable, gives the ear a sense of arrival, ties ideas together and puts weight on the words it touches. Used carelessly, it drags lines into nonsense or makes a song predictable. The goal is the right rhyme in the right place, in the musician's accent, with the meaning kept whole, with the check describing sound rather than deciding artistic quality: "love" and "move" look alike and sound different; "weight" and "late" look different and rhyme.
 
 ## The loop
 
 1. **Read.**
-   - The section's lines and its matching section (verse 1 for verse 2) in the lyrics. Run the rhyme check on both: the scheme letters and the kind of every pair.
+   - The section's lines and its matching section (verse 1 for verse 2) in the lyrics. Run Lyricist's rhyme assessment on both: the scheme letters and the kind of every pair.
    - The Pronunciation setting (the song's, else the artist's), and anything the musician has said or Ode remembers about the accent they sing in.
    - The notes the rhyme words are sung on: a rhyme word on a long note needs a vowel that can be held.
    - The lines the lead sheet lists as locked, and the hand edits since the last request (a pair the musician just typed is their newest intent).
 2. **Decide** which line to change, what kind of rhyme the moment needs (strong where the section lands, softer where it keeps moving), and which way out of a forced rhyme to take. Meaning comes first: a line that says the right thing with a near rhyme beats a perfect rhyme that changes what the song means.
 3. **Change in place.** Re-end or rewrite the fewest lines, usually one line of the pair, in the lyrics: the same line under the same label, saved against the revision you read. When one line of the pair is locked, re-end the other. A chorus line changed in one copy reaches every copy with the same label when the lyrics are saved. A saved strictRhymes preference applies when it still reflects the musician's request; a current choice of near rhyme or no rhyme overrides it. Keep one version in the text, the clips and the takes: Again gives another take and the version history keeps this one.
 4. **Verify** every line you changed:
-   - **Rhyme check** in the musician's accent: report the kind the tool finds and compare it with the intended sound. Matching-section schemes are references, not obligations; an unrhymed section may be exactly right.
+   - **Lyricist rhyme review** in the musician's accent: report the kind the tool finds and compare it with the intended sound. Matching-section schemes are references, not obligations; an unrhymed section may be exactly right.
    - **Read the classifier's scope.** Its rhyme span runs from the last stressed vowel to the end; a pair linked only by an unstressed ending ("city" / "me") may count as unrhymed while still providing an intended sound echo.
-   - **Originality check:** the changed lines carry fresh pairs, or an over-used pair kept on purpose (a chant-like chorus) that the result line names.
-   - **Lyrics-to-melody check and prosody check** on each changed line: inspect the intended syllable setting and emphasis, including melisma or deliberate stress departures.
+   - **Lyricist familiarity review:** the changed lines carry fresh pairs, or an over-used pair kept on purpose (a chant-like chorus) that the result line names.
+   - **Lyricist alignment review and Lyricist prosody review** on each changed line: inspect the intended syllable setting and emphasis, including melisma or deliberate stress departures.
    - **Report the kind exactly as the check labels it**, with the accent: "(perfect, UK)". A near rhyme is reported as near. A word with two pronunciations ("again", "either") may rhyme in only one of them; say which one the rhyme needs.
    Fix unintended mismatches and check again, up to three rounds; report what the check found without forcing a perfect rhyme or overriding the musician's chosen pair.
 5. **Let them hear it.** The result line names the section of the first changed line, so the musician can play it from the locator named like its label.
@@ -106,13 +108,13 @@ Ways out, in roughly this order:
 > *I waited at the station in the rain*
 > *And thought about the price of sugar cane*
 
-The second line exists only for the rhyme; sugar cane sits outside the song's world. The musician clicks "Fresher rhymes". Ode keeps line 1, the scene the song is built on, and rewrites line 2 in place with a rhyme word that belongs in the scene: *And counted every late and cancelled train*. The rhyme check (UK) calls "rain" / "train" perfect; the syllable check gives 10|11, which fits the phrase's 10 notes with "every" sung as two syllables. ("Cancelled" is UK spelling; US is "canceled". Follow the setting.) Result line: "Line 2 now 'And counted every late and cancelled train', perfect rhyme with 'rain' (UK) · 10 syllables on its 10 notes with 'every' as 'ev-ry'."
+The second line exists only for the rhyme; sugar cane sits outside the song's world. The musician clicks "Fresher rhymes". Ode keeps line 1, the scene the song is built on, and rewrites line 2 in place with a rhyme word that belongs in the scene: *And counted every late and cancelled train*. Lyricist's rhyme assessment (UK) calls "rain" / "train" perfect; Lyricist's syllable assessment gives 10|11, which fits the phrase's 10 notes with "every" sung as two syllables. ("Cancelled" is UK spelling; US is "canceled". Follow the setting.) Result line: "Line 2 now 'And counted every late and cancelled train', perfect rhyme with 'rain' (UK) · 10 syllables on its 10 notes with 'every' as 'ev-ry'."
 
 On Again, a different way out: re-end line 1 this time (*I waited on the platform, soaked right through* / *And every face that passed me wasn't you*), which turns the verse toward the person the song is about. "Through" / "you" is perfect in UK English.
 
 ## Fresh and over-used pairs
 
-Some pairs are so familiar that listeners hear the rhyme coming before it arrives, and they tend to pull clichés in with them. The originality check labels them; among the most common:
+Some pairs are so familiar that listeners hear the rhyme coming before it arrives, and they tend to pull clichés in with them. Lyricist's familiarity review labels them; among the most common:
 
 fire / desire, heart / apart, heart / start, love / above, pain / rain, night / light, night / tonight, eyes / skies, eyes / lies, true / you, cry / goodbye, baby / maybe, girl / world, soul / control, fly / sky, away / stay, forever / together, mind / find, me / free, door / more, day / way, tears / years, cold / hold, alone / home.
 
@@ -126,9 +128,9 @@ They are allowed; sometimes a simple, expected rhyme is exactly right, especiall
 
 ## Rhyming across accents
 
-The rhyme check uses the accent in the settings: the UK setting reflects standard Southern British English, the US setting general American English. Many singers have other accents (Northern English, Scottish, Welsh, Irish, Southern US and many more). When the musician says a pair rhymes the way they sing it, believe them, and treat their accent as the reference for that song.
+Lyricist's rhyme assessment uses the accent in the settings: the UK setting reflects standard Southern British English, the US setting general American English. Many singers have other accents (Northern English, Scottish, Welsh, Irish, Southern US and many more). When the musician says a pair rhymes the way they sing it, believe them, and treat their accent as the reference for that song.
 
-Common pairs that change with the accent, as the rhyme check labels them:
+Common pairs that change with the accent, as Lyricist's rhyme assessment labels them:
 
 | Pair | UK | US |
 |---|---|---|
@@ -146,7 +148,7 @@ When a rhyme works in only one accent, say so in the result line, so the musicia
 ## Finding rhymes
 
 1. Decide what the line has to say before looking for a rhyme.
-2. Gather candidates by sound for the end word with the rhyme check in the musician's accent, and for other end words the partner line could have.
+2. Gather candidates by sound for the end word with Lyricist's rhyme assessment in the musician's accent, and for other end words the partner line could have.
 3. Filter by meaning first, then freshness, then singability (an open vowel if the rhyme lands on a long note), then the musician's vocabulary.
 4. Write the complete line; a rhyme only works in context. Then run the checks.
 

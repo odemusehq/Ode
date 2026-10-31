@@ -1,5 +1,4 @@
 import { diff3MergeRegions } from "node-diff3";
-import { analyzeLyrics } from "../music/prosody/lyrics-analyzer";
 import type { LyricsSaved, LyricsState } from "../shared/lyrics";
 import { LyricsSections } from "../shared/lyrics-sections";
 import type { LeadSheet } from "../shared/song";
@@ -97,7 +96,7 @@ export class LyricsStore {
 
   constructor(
     private readonly song: SongStore,
-    private readonly prefs: PreferencesStore,
+    _prefs: PreferencesStore,
     private readonly onChange: (lyrics: LyricsState) => void,
   ) {}
 
@@ -199,14 +198,12 @@ export class LyricsStore {
     return state;
   }
 
-  /** The text with its analysis in the song's pronunciation; blank and label lines are analysed as empty lines. */
-  private async state(sheet: LeadSheet, song: string): Promise<LyricsState> {
-    const accent = (await this.prefs.effective(sheet)).pronunciation;
+  /** Literal saved text only; lyric interpretation belongs to the configured Lyricist. */
+  private state(sheet: LeadSheet, song: string): LyricsState {
     return {
       songId: song,
       text: sheet.lyrics,
       revision: sheet.lyricsRevision,
-      analysis: analyzeLyrics(LyricsText.forAnalysis(sheet.lyrics), accent),
       strictRhymes: sheet.strictRhymes,
     };
   }

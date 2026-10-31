@@ -3,7 +3,7 @@ import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { encodeWav, WavBitDepth } from "../music/audio/wav";
+import { encodeWav, WavBitDepth } from "../audio/wav";
 import { Dictation, DictationError } from "../server/dictation";
 import { OdeServer, type ServerDeps } from "../server/http";
 import { API } from "../shared/api";
@@ -13,8 +13,8 @@ const wav = (frames = 160, channels = 1, sampleRate = 16000) => encodeWav({ samp
 
 test("dictation validates actual PCM WAV, dimensions and duration before any provider call", () => {
   assert.doesNotThrow(() => Dictation.validate(wav()));
-  assert.doesNotThrow(() => Dictation.validate(wav(160, 2)));
-  for (const bytes of [new Uint8Array(), new TextEncoder().encode("not WAV"), wav(0), wav(160, 3), wav(482001, 1, 8000)]) {
+  assert.doesNotThrow(() => Dictation.validate(wav(240, 1, 24000)));
+  for (const bytes of [new Uint8Array(), new TextEncoder().encode("not WAV"), wav(0), wav(160, 2), wav(160, 3), wav(160, 1, 48000), wav(1450000, 1, 24000)]) {
     assert.throws(() => Dictation.validate(bytes), DictationError);
   }
 });

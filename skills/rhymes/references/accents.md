@@ -1,6 +1,6 @@
 # Rhymes across accents
 
-A rhyme depends on the stressed vowel and everything after it, and accents differ in exactly those sounds. This file explains the main differences between UK and US English that change rhymes, plus regional accents worth knowing. The labels in these tables describe the rhyme check's UK/US classification, not the artist's actual accent or a musical quality verdict. Their sung pronunciation and chosen rhyme take precedence. Use this to anticipate problems and to say in a few words why a pair rhymes in one accent only.
+A rhyme depends on the stressed vowel and everything after it, and accents differ in exactly those sounds. This file explains the main differences between UK and US English that change rhymes, plus regional accents worth knowing. The labels in these tables describe Lyricist's rhyme assessment's UK/US classification, not the artist's actual accent or a musical quality verdict. Their sung pronunciation and chosen rhyme take precedence. Use this to anticipate problems and to say in a few words why a pair rhymes in one accent only.
 
 ## Contents
 1. The "r" after a vowel
@@ -47,7 +47,7 @@ So pairs that mix this set with ordinary short-"a" words behave differently:
 | glass / gas | weaker (consonance) | perfect | perfect |
 | castle / hassle | weaker (consonance) | perfect | perfect |
 
-The rhyme check offers only the two standard accents, so the Northern English column is for what the musician tells you. This is one of the most common reasons a UK singer disagrees with a "weaker" label: if they sing with a Northern English accent, many of these pairs are perfect in their voice. Two words from the same set (dance / chance, laugh / half) rhyme in every accent.
+Lyricist's rhyme assessment offers only the two standard accents, so the Northern English column is for what the musician tells you. This is one of the most common reasons a UK singer disagrees with a "weaker" label: if they sing with a Northern English accent, many of these pairs are perfect in their voice. Two words from the same set (dance / chance, laugh / half) rhyme in every accent.
 
 ## 3. The "o" in hot, lot and bother
 
@@ -59,7 +59,7 @@ UK English uses a short rounded "o" in hot, lot, bother, comma and bomb. In US E
 | calm / bomb | weaker (consonance) | perfect |
 | drama / comma | weaker (consonance) | perfect |
 
-In much of the US the vowels in "caught" and "cot", or "talk" and "rock", have also merged, so those pairs rhyme for many American singers; the rhyme check's US setting already treats "caught" and "cot" as the same sound.
+In much of the US the vowels in "caught" and "cot", or "talk" and "rock", have also merged, so those pairs rhyme for many American singers; Lyricist's rhyme assessment's US setting already treats "caught" and "cot" as the same sound.
 
 ## 4. Single words that differ
 
@@ -83,7 +83,7 @@ These are tendencies across speakers; each individual sings their own way. Base 
 
 ## 6. What to do
 
-1. Judge rhymes in the accent in the settings, and report the label the rhyme check gives, with the accent: "(perfect, UK)".
+1. Judge rhymes in the accent in the settings, and report the label Lyricist's rhyme assessment gives, with the accent: "(perfect, UK)".
 2. When the musician says (or Ode remembers them saying) that a pair rhymes in their voice, believe them: keep the pair, and say "rhymes in your accent" in the result line. If they ask "Why?", explain in a sentence why the setting labels it differently (for example, "the UK setting uses a long 'ah' in 'dance'").
 3. When a rhyme works in only one accent, say so in the result line, so the musician knows how it will sound to listeners elsewhere.
 4. When you write a new rhyme for a line that matters most (a title line, the last line of a chorus), prefer a pair that rhymes in both accents, such as two words from the same vowel set.

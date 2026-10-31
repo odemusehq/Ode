@@ -8,9 +8,6 @@ import { ReferenceResolver } from "../live/extension/refs";
 import { userPaths } from "../mneme/paths";
 import { SettingsStore } from "../mneme/settings-store";
 import { SongStore } from "../mneme/song-store";
-import { analyzeLine } from "../music/phonetics/line-analyzer";
-import { analyzeLyrics } from "../music/prosody/lyrics-analyzer";
-import { compareRhyme } from "../music/rhyme/rhyme-comparer";
 import { ModelServices } from "../services";
 import { ModelRoles } from "../services/model-roles";
 import { ProviderCatalog } from "../services/provider-catalog";
@@ -56,17 +53,6 @@ test("moved or renamed objects are reported as not found; a tagged clip is found
   assert.throws(() => refs.track({ name: "Vocals" }), notFound('not found: track named "Vocals"'));
   assert.throws(() => refs.track({ index: 5 }), notFound("not found: track at index 5"));
   assert.equal(refs.clip({ tag: "o3f2" }).clip, hook);
-});
-
-// 3. Words missing from the dictionaries, and UK/US differences.
-
-test("words missing from the dictionaries are marked not certain, and the accent changes rhymes", () => {
-  for (const accent of ["us", "uk"] as const) {
-    assert.equal(analyzeLine("zorblefrax", accent).words[0]?.certain, false);
-  }
-  const analysis = analyzeLyrics(["the zorblefrax was singing"], "uk");
-  assert.ok(analysis.notes.some((note) => note.kind === "uncertain" && note.message.includes("zorblefrax")));
-  assert.notEqual(compareRhyme("bath", "math", "uk").kind, compareRhyme("bath", "math", "us").kind);
 });
 
 // 4. Optional providers left unset.

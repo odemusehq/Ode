@@ -5,26 +5,28 @@ description: Review words and music together in the Set — stress, vowel colour
 
 # Prosody
 
+Use `lyricist`, the model selected in Settings, for all lyric writing, rewriting, analysis and word-to-note alignment described here. Give it the current text, actual melody notes, relevant artist memory and the musician's directions. The main agent reads and saves the chosen result; it does not supply its own wording or run local language rules. These craft ideas are optional guidance for Lyricist, and the artist's intentional choices take priority.
+
 Prosody is the fit between what is said and how it is set. When it works, the words sound as if they could only be sung that way. When it fails, listeners hear words wrongly stressed ("TO-mor-row"), feel the music pulling against the words, or sense that something is off without knowing why. Speech alignment is useful when natural delivery is wanted. Displaced stresses, awkwardness and tension can be intentional; a check finding alone is not a reason to correct them.
 
 ## The loop
 
 1. **Read.**
-   - The line in the lyrics ("[Chorus] line 1") and the notes it is sung on: the lyrics-to-melody check splits the vocal melody in the section's bars into one phrase per line and reports each line's stress problems against its phrase (the syllables skill explains how to find the melody).
+   - The actual lyric line and melody notes, plus phrase spans and pickups when known. Ask `lyricist` to assess their intended relationship; do not automatically divide the melody by the number of lyric lines.
    - What is locked: everything the lead sheet's locked list names (a lyric line, a melody the musician loves, a recorded vocal).
    - The time signature established by the musician, the tempo, the song's key, and the vocal range from the settings (or a typical range when it is unset). The installed SDK cannot read the current Arrangement meter; a scene's launch meter does not establish it. Keep the meter unknown until established, and obtain it before running checks that use metrical stress.
    - The hand edits since the last request: if the musician just moved notes or retyped the line, start from what they did.
-2. **Decide** what emphasis the musician wants, then choose the smallest authorised change. Possible moves:
+2. **Ask Lyricist to assess** the intended word emphasis and propose wording or alignment changes; decide any authorised note edits as the main model. Possible moves:
    1. **Rhythm only:** shift a note, shorten or lengthen it, add or drop a pickup. Words and pitches stay as they are.
    2. **One word:** a word with its stress in the right place, or a different word order.
    3. **The whole line**, keeping its meaning and its rhyme.
    4. **Pitch:** make the stressed syllable the higher note, once rhythm has run out of options.
    Locked words mean you fix the notes. A locked melody means you fix the words. When both are locked, leave them; describe any relevant finding without treating their chosen setting as a failure.
-3. **Change in place.** Edit the notes of the existing melody clip, or the line's words in the lyrics, saved against the revision you read. The fix always goes into what is already there: Again gives another take and the version history keeps the old one. Moved notes respect explicit range bounds and the intended harmony, including deliberate chromaticism.
+3. **Change in place.** Edit the notes of the existing melody clip, or apply Lyricist's chosen words in the lyrics against the revision you read. The fix always goes into what is already there: Again gives another take and the version history keeps the old one. Moved notes respect explicit range bounds and the intended harmony, including deliberate chromaticism.
 4. **Verify** every line whose words or notes you changed:
-   - **Prosody check** against the new notes: inspect stress, note length and melodic peaks against the intended delivery. Keep deliberate stress shifts or emphasis on a function word; a clean heuristic is not an artistic requirement.
-   - **Syllable check:** review the intended mapping, including melisma and articulation, rather than requiring equal counts.
-   - **Singability check:** treat vowel, consonant and breath findings as English-language heuristics. When tempo is known, the tool flags phrases longer than four seconds without a rest of at least 0.25 seconds; the singer's delivery decides whether a breath is needed.
+   - **Lyricist prosody review** against the new notes: inspect stress, note length and melodic peaks against the intended delivery. Keep deliberate stress shifts or emphasis on a function word; a clean assessment is not an artistic requirement.
+   - **Lyricist syllable review:** review the intended mapping, including melisma and articulation, rather than requiring equal counts.
+   - **Lyricist singability review:** ask about the intended vowels, consonants, breath and delivery against the actual notes and tempo. Ode has no fixed breath-duration rule or local singability checker; the singer's performance and artistic choice decide what works.
    - **Key and range:** inspect harmonic context and keep moved notes within explicit singer bounds; retain intentional non-diatonic notes.
    Fix unintended problems and check again, up to three rounds; report any remaining finding or deliberate departure.
 5. **Let them hear it.** The result line says where the change is, so the musician can play it: moved notes by their bars, from a bar earlier when the change is at the start of a section; changed words by the line's label, which names the locator to play from.
@@ -46,7 +48,7 @@ Every word of two or more syllables has a fixed stress (to-MOR-row, a-FRAID, BEA
 - In 3/4, beat 1 is strong and beats 2 and 3 are weak. In 6/8 there are two main beats, 1 and 4, each divided into three.
 - A note also gains weight from being longer than its neighbours or from being a melodic high point.
 
-**A useful comparison:** when natural speech stress is the aim, compare neighbouring syllables by beat position, length and pitch. The prosody check approximates that relationship; delivery, accompaniment and intentional displacement may make a flagged setting work.
+**A useful comparison:** when natural speech stress is the aim, compare neighbouring syllables by beat position, length and pitch. Lyricist's prosody review approximates that relationship; delivery, accompaniment and intentional displacement may make a flagged setting work.
 
 **Syncopation is fine.** A stressed syllable that arrives just before the beat and is held through it (an anticipation) is heard as strong; it is everywhere in pop and R&B. What matters is that the stressed syllable stands out; its exact place on the grid matters less.
 
@@ -59,7 +61,7 @@ The line *Forget the way we said goodbye* is stressed on -GET, WAY, SAID and -BY
 | Draft | | for | GET | the | WAY | we | SAID | good | BYE (held) |
 | Fixed | for | GET | the | WAY | we | SAID | good | BYE (held) | |
 
-In the draft, every stressed syllable falls on a weak "and" and every unstressed one on a beat, so it sounds like "FOR-get THE way…"; the prosody check flags "forget". Starting "for" as a pickup on the "and" of 4 moves every stress onto a beat without changing a word or a pitch. The notes move in place in the same clip, the prosody check comes back clean, and the result line reads: "Verse 2, line 1: 'for' now comes in on the 'and' of 4, so 'forget' lands on GET (beat 1) · stresses fit, same pitches."
+In the draft, every stressed syllable falls on a weak "and" and every unstressed one on a beat, so it sounds like "FOR-get THE way…"; Lyricist's prosody review flags "forget". Starting "for" as a pickup on the "and" of 4 moves every stress onto a beat without changing a word or a pitch. The notes move in place in the same clip, Lyricist's prosody review comes back clean, and the result line reads: "Verse 2, line 1: 'for' now comes in on the 'and' of 4, so 'forget' lands on GET (beat 1) · stresses fit, same pitches."
 
 **Ways to fix a stress that lands weak,** smallest first:
 1. Add or remove a pickup so the line shifts against the beat.

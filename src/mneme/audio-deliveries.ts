@@ -3,7 +3,7 @@ import { mkdir, open, readFile, readdir, realpath, rm, stat } from "node:fs/prom
 import { dirname, extname, join, sep } from "node:path";
 import { z } from "zod";
 import type { LocalAudioFiles } from "../live/local-audio-files";
-import { AudioFileDecoder } from "../music/audio/decode";
+import { AudioFileDecoder } from "../audio/decode";
 import { AudioDeliveryManifestSchema, AudioDeliveryNameSchema, AudioDeliveryRefSchema, type AudioDeliveryManifest, type AudioDeliveryRef } from "../shared/audio-delivery";
 import { JsonFile } from "./json-file";
 import type { SongStore } from "./song-store";

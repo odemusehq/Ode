@@ -32,7 +32,7 @@ Pop lyrics aim for instant clarity: a listener understands the chorus on first h
 > *Tell them try again in May* (7)
 > *I'm out of office* (5)
 
-The lines that start the same way build momentum; the rhyme check (US) calls "away" / "today" / "May" perfect; and the title line breaks the pattern so it sticks.
+The lines that start the same way build momentum; Lyricist's rhyme assessment (US) calls "away" / "today" / "May" perfect; and the title line breaks the pattern so it sticks.
 
 ## Pre-chorus
 

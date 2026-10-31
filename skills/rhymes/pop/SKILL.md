@@ -22,7 +22,7 @@ Pop rhymes help the listener predict and sing along. A good pop chorus feels ine
 > *Each new circle comes back round* (7)
 > *I'm in a holding pattern* (7)
 
-The rhyme check (UK) calls "down" / "town" perfect and "round" near (the extra "d"), so the first three lines chime on one sound; the title breaks the pattern and sticks. All four lines have seven syllables, so the melody can repeat its rhythm.
+Lyricist's rhyme assessment (UK) calls "down" / "town" perfect and "round" near (the extra "d"), so the first three lines chime on one sound; the title breaks the pattern and sticks. All four lines have seven syllables, so the melody can repeat its rhythm.
 
 ## Pre-choruses
 

@@ -3,7 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
-import { encodeWav, WavBitDepth } from "../music/audio/wav";
+import { encodeWav, WavBitDepth } from "../audio/wav";
 import { MAX_AUDIO, type MaxAudioCommand, type MaxAudioMessage, type MaxAudioRequest, type MaxAudioResult, type MaxAudioSources } from "../shared/max-audio";
 import { MaxWindowError, type MaxWindowBridge } from "./max-window";
 

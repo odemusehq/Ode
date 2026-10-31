@@ -422,7 +422,7 @@ export class AgentLoop {
         function: {
           name: LoopTool.Subagent,
           description:
-            "Starts a subagent for one focused task: writing or revising lyrics, melodies, chords, drums, basslines, sounds or mix advice, reviewing a draft with fresh eyes, or updating what Ode knows about the artist. It sees only this brief, so give the task, the material it needs, the constraints, the skills to load and the format to return. Returns its answer. Several subagents called in one step run at the same time.",
+            "Starts a subagent for one focused musical task: composing melodies, chords, drums or basslines, proposing sounds or mix moves from available observations, reviewing musical material, or updating artist memory. All lyric writing, rewriting, analysis and word-to-note alignment belong to the configured lyricist tool, not this generic subagent. The subagent makes model decisions and uses exposed SDK, Max or plug-in tools; it cannot invent a local processing engine or exact audio transcription. It sees only this brief, so give the actual material, constraints, relevant skills and requested return format. Returns its answer. Several independent subagents called in one step run at the same time.",
           parameters: { type: "object", properties: { task: { type: "string", description: "The whole brief." } }, required: ["task"] },
         },
       });

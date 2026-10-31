@@ -18,7 +18,7 @@ In rap the words are the lead instrument. Rhythm, rhyme and meaning happen at on
 
 Flow is the rhythm of the syllables against the beat: where they start, how dense they are, where the pauses fall, and which syllables are punched.
 
-- **Density.** Run the syllable check on the musician's own bars to learn how many syllables per bar they rap, and stay in that range unless the request asks otherwise. At a given tempo, more syllables per bar feels urgent; fewer feels laid-back and leaves room for emphasis.
+- **Density.** Run Lyricist's syllable assessment on the musician's own bars to learn how many syllables per bar they rap, and stay in that range unless the request asks otherwise. At a given tempo, more syllables per bar feels urgent; fewer feels laid-back and leaves room for emphasis.
 - **Grid.** Straight sixteenth notes, triplets (three syllables per beat), double-time (twice the usual density) and half-time feels are all established; know which one the verse uses.
 - **Placement.** Stressed syllables and rhymes on the snare (beats 2 and 4) give punch; just behind the beat feels relaxed; starting phrases before the beat pulls forward. Match the musician's habit from their own verses.
 - **Variation.** Switch density or pattern at a 4- or 8-bar point to keep attention, then return.
@@ -38,7 +38,7 @@ Flow is the rhythm of the syllables against the beat: where they start, how dens
 > *Workin' the till, every shift I'm countin' other people's change*
 > *Late nights writin', 'cause I swear I'm gonna be the one who changed*
 
-The setup uses "change" literally (coins); the payoff turns it into transformation. Ending two bars on almost the same word usually sounds lazy; here the shift in meaning is the point, and the rhyme check calls the pair a near rhyme. About 15 syllables a bar, a dense flow at around 90 BPM.
+The setup uses "change" literally (coins); the payoff turns it into transformation. Ending two bars on almost the same word usually sounds lazy; here the shift in meaning is the point, and Lyricist's rhyme assessment calls the pair a near rhyme. About 15 syllables a bar, a dense flow at around 90 BPM.
 
 ## Storytelling
 
@@ -64,9 +64,9 @@ Rap audiences hear false claims instantly, and a lyric in the artist's mouth is 
 ## Verify, on top of the lyrics skill's checks
 
 - The bar count is exactly the section's length or the number asked for.
-- The syllable check per bar shows a density in the musician's range (or the requested change), with breath points.
+- Lyricist's syllable assessment per bar shows a density in the musician's range (or the requested change), with breath points.
 - Review punchline placement and relevance against the intended flow; a payoff may land inside or across a bar.
-- Rhymes are labelled as the rhyme check labels them, with a delivery note where they depend on it.
+- Rhymes are labelled as Lyricist's rhyme assessment labels them, with a delivery note where they depend on it.
 - Every claim about the musician's life is one they gave you, and everything is original.
 
 Example result lines:

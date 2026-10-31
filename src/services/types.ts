@@ -38,8 +38,8 @@ export interface RoleSource {
 export interface Services {
   /** One-off text answer from the main agent's model or the subagent model (text only, without tools). */
   text(role: "main" | "subagent", prompt: string, options?: { system?: string; maxTokens?: number; signal?: AbortSignal }): Promise<string>;
-  /** The chat model of the main agent or of subagents, for the agent loop. */
-  chat(role: "main" | "subagent"): Promise<TextGenerator>;
+  /** The configured main, subagent or Lyricist model. */
+  chat(role: "main" | "subagent" | "lyrics_check"): Promise<TextGenerator>;
   /** Audio understanding: describe a recording or answer a question about it. */
   describeAudio(audio: MusicAudioSource, question: string, signal?: AbortSignal, range?: AudioTimeRange): Promise<AudioListeningResult>;
   compareAudio?(a: MusicAudioSource, b: MusicAudioSource, question: string, levelMatch: boolean, signal?: AbortSignal, ranges?: { a?: AudioTimeRange; b?: AudioTimeRange }): Promise<AudioListeningResult & { comparison: unknown }>;

@@ -5,82 +5,23 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { LocalAudioFiles } from "../live/local-audio-files";
-import { encodeWav } from "../music/audio/wav";
-import { AudioFileDecoder } from "../music/audio/decode";
-import { buildLibraryProfile } from "../music/audio/library-profile";
-import { extractAudio } from "../music/audio/extract";
-import { JsonFile } from "../mneme/json-file";
-import { AudioDeliveries } from "../mneme/audio-deliveries";
-import { SongStore } from "../mneme/song-store";
-import { userPaths } from "../mneme/paths";
-import { audioFileEvidence } from "../tools/audio/file-evidence";
+import { encodeWav } from "../audio/wav";
+import { AudioFileDecoder } from "../audio/decode";
 import { ToolRegistry } from "../tools";
 import type { ToolContext } from "../tools/define";
 
 test("library writers remain main-only memory changes while discovery and opening stay read-only", () => {
   const registry = new ToolRegistry({} as ToolContext);
   const readers = new Set(registry.available("subagent").map((entry) => entry.name));
-  for (const name of ["library_audio_update", "library_audio_profile", "library_audio_excerpt"]) {
+  for (const name of ["library_audio_update", "library_audio_profile"]) {
     assert.equal(registry.find(name)?.changes, "memory");
     assert.equal(registry.find(name)?.mainAgentOnly, true);
     assert.equal(readers.has(name), false);
   }
+  assert.equal(registry.find("library_audio_excerpt"), undefined);
   assert.equal(readers.has("library_audio_search"), true);
   assert.equal(readers.has("library_audio_read"), true);
   assert.equal(readers.has("library_audio_open"), true);
-});
-
-test("saved excerpts keep their lineage through retries, listening and delivery, with Stop before publication", async () => {
-  const root = await mkdtemp(join(tmpdir(), "ode-excerpt-lifecycle-"));
-  const atomic = JsonFile.writeAtomically;
-  try {
-    const tempDir = join(root, "work"), audio = new LocalAudioFiles(root, tempDir);
-    const source = await audio.add({ name: "Take.wav", purpose: "processed-bounce", source: "Declared Main bounce",
-      range: { start: 16, end: 32 }, bytes: encodeWav({ sampleRate: 8_000, channels: [Float32Array.of(0, 0.25, -0.5, 0.1, 0)] }) });
-    await audio.annotate(source.id, 0, { labels: ["verse"], declaredBpm: 90 }, {});
-    await audio.profile(source.id, "metadata", buildLibraryProfile);
-    const parentMetadata = await readFile(join(root, "Audio", `${source.id}.json`), "utf8");
-    const exchangeId = randomUUID();
-    const registry = (cap = 60000) => new ToolRegistry({ config: { userDir: root, tempDir, limits: { toolResultMaxChars: cap } },
-      live: { extension: { call: async () => { throw new Error("No Live call expected"); } } } } as unknown as ToolContext);
-    const input = { audioId: source.id, name: "Chosen phrase.wav", selection: { unit: "frames", firstFrame: 1, endFrame: 4 } };
-    const filesBefore = (await readdir(join(root, "Audio"))).sort();
-    await assert.rejects(audio.excerpt({ ...input, selection: { unit: "frames", firstFrame: 1, endFrame: 4 }, exchangeId }, (bytes, from, to) => {
-      const built = extractAudio(bytes, from, to), layout = new AudioFileDecoder().layout(built.bytes, "Changed excerpt");
-      built.bytes[layout.frameOffset]! ^= 1;
-      return built;
-    }), /sample|payload|preserv/i);
-    const tiny = await registry(10).run("library_audio_excerpt", input, undefined, { exchangeId });
-    assert.equal(tiny.ok, false);
-    assert.deepEqual((await readdir(join(root, "Audio"))).sort(), filesBefore);
-    const stop = new AbortController();
-    JsonFile.writeAtomically = async (...args) => { queueMicrotask(() => stop.abort()); return atomic(...args); };
-    const stopped = await registry().run("library_audio_excerpt", input, stop.signal, { exchangeId });
-    JsonFile.writeAtomically = atomic;
-    assert.equal(stopped.ok, false);
-    assert.deepEqual((await readdir(join(root, "Audio"))).sort(), filesBefore, "Aborted metadata staging leaves no derived asset or owned temporary file.");
-    const saved = await registry(80).run("library_audio_excerpt", input, undefined, { exchangeId });
-    assert.equal(saved.ok, true, saved.text); assert.ok(saved.text.length <= 80);
-    const id = JSON.parse(saved.text).id as string;
-    const derived = (await audio.get(id)).record;
-    assert.equal(derived.annotations, undefined); assert.equal(derived.profile, undefined);
-    assert.equal(derived.range, undefined); assert.equal(derived.declaredSource, undefined);
-    await audio.profile(id, "full", (bytes, detail) => ({ ...buildLibraryProfile(bytes, detail), report: { large: "x".repeat(70000) } }));
-    const retry = await registry().run("library_audio_excerpt", input, undefined, { exchangeId });
-    assert.equal(retry.ok, true, retry.text); assert.equal(JSON.parse(retry.text).id, id); assert.ok(retry.text.length < 60000);
-    assert.equal((await audio.searchRecords({})).total, 2);
-    assert.equal(await readFile(join(root, "Audio", `${source.id}.json`), "utf8"), parentMetadata);
-    const opened = await audio.open(id), evidence = await audioFileEvidence(opened.path);
-    assert.deepEqual(evidence.provenance?.derivation, derived.derivation);
-    assert.equal(JSON.stringify(evidence).includes("large"), false);
-    const song = new SongStore(userPaths(root), () => undefined), created = await song.create("Chosen phrase");
-    const deliveries = new AudioDeliveries({ song, audio, attach: async () => undefined });
-    const delivered = await deliveries.retain({ songId: created.id, exchangeId, audioId: id, name: input.name });
-    const receipt = await deliveries.read(created.id, delivered.delivery.id);
-    assert.equal(receipt.provenance, "local-excerpt");
-    assert.deepEqual(receipt.source.derivation, derived.derivation);
-    assert.ok(Buffer.from((await deliveries.download(created.id, delivered.delivery.id)).bytes).equals(Buffer.from((await audio.readVerified(id)).bytes)));
-  } finally { JsonFile.writeAtomically = atomic; await rm(root, { recursive: true, force: true }); }
 });
 
 test("catalogue tools retain declaration provenance, profile explicitly and search saved metadata without writes", async () => {
@@ -110,9 +51,8 @@ test("catalogue tools retain declaration provenance, profile explicitly and sear
     assert.equal(JSON.parse(metadata.text).profile.level, "metadata");
     assert.equal(JSON.parse(metadata.text).profile.sampleValues, "unexamined");
     const complete = await registry.run("library_audio_profile", { id: chosen.id, level: "full" });
-    assert.equal(complete.ok, true, complete.text);
-    assert.equal(JSON.parse(complete.text).profile.level, "full");
-    assert.equal(JSON.parse(complete.text).profile.sha256, chosen.sha256);
+    assert.equal(complete.ok, false);
+    assert.match(complete.text, /metadata|full/i);
 
     const storedPath = join(root, "Audio", `${chosen.id}.json`);
     const before = await readFile(storedPath, "utf8");
@@ -142,8 +82,7 @@ test("large catalogue results stay bounded and exact detail chunks refuse change
     }
     assert.ok(JSON.stringify(await library.searchRecords({ limit: 20 })).length > 60000);
     const id = ids[0]!;
-    const report = { futureDetail: "\u0001".repeat(12000) + "x".repeat(1000) };
-    await library.profile(id, "full", (captured, level) => ({ ...buildLibraryProfile(captured, level), report }));
+    const declarations = (await library.get(id)).record.annotations;
     const snapshots = await Promise.all(ids.map((assetId) => readFile(join(root, "Audio", `${assetId}.json`), "utf8")));
     const run = (name: string, input: unknown, cap = 60000) => new ToolRegistry({ config: { userDir: root, tempDir, limits: { toolResultMaxChars: cap } },
       live: { extension: { call: async () => { throw new Error("No Live call expected"); } } } } as unknown as ToolContext).run(name, input);
@@ -170,7 +109,7 @@ test("large catalogue results stay bounded and exact detail chunks refuse change
     let json = "", detailHash: string | undefined, firstNext: number | null = null;
     offset = 0;
     while (offset !== null) {
-      const result = await run("library_audio_read", { id, section: "report", offset, limit: 20000, detailHash });
+      const result = await run("library_audio_read", { id, section: "annotations", offset, limit: 200, detailHash }, 1000);
       assert.equal(result.ok, true, result.text);
       assert.ok(result.text.length <= 60000);
       const page = JSON.parse(result.text);
@@ -180,7 +119,7 @@ test("large catalogue results stay bounded and exact detail chunks refuse change
       if (offset === 0) firstNext = page.nextOffset;
       offset = page.nextOffset;
     }
-    assert.ok(JSON.stringify(JSON.parse(json)) === JSON.stringify(report), "Report fragments must preserve the exact saved JSON value.");
+    assert.ok(JSON.stringify(JSON.parse(json)) === JSON.stringify(declarations), "Declaration fragments must preserve the exact saved JSON value.");
     assert.equal(decodes, 0);
     const afterReads = await Promise.all(ids.map((assetId) => readFile(join(root, "Audio", `${assetId}.json`), "utf8")));
     assert.ok(afterReads.every((text, index) => text === snapshots[index]), "Search and detail reads must leave saved metadata unchanged.");
@@ -192,7 +131,7 @@ test("large catalogue results stay bounded and exact detail chunks refuse change
       assert.equal(result.ok, true, result.text);
       assert.ok(result.text.length <= 60000);
     }
-    const changedDetail = await run("library_audio_read", { id, section: "report", offset: firstNext, detailHash });
+    const changedDetail = await run("library_audio_read", { id, section: "annotations", offset: firstNext, detailHash });
     assert.equal(changedDetail.ok, false);
     assert.match(changedDetail.text, /changed|fingerprint|hash/i);
     const revision = (await library.get(id)).record.annotations!.revision;

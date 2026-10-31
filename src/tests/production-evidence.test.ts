@@ -14,8 +14,6 @@ import type { ProductionStep } from "../shared/production-task";
 import { VersionAuthor } from "../shared/versions";
 import type { ToolContext } from "../tools/define";
 import { productionTaskTools } from "../tools/song/production-task";
-import { ToolRegistry } from "../tools";
-import { writeWav } from "../music/audio/wav";
 import { TestSets } from "./sets";
 
 test("production evidence checks saved sources and target scope rather than invented citations or success flags", async () => {
@@ -88,49 +86,4 @@ test("a production step combines verified citation subsets while refusing forged
     assert.equal(finished.status, "complete");
     assert.deepEqual(finished.steps[0]!.evidence, citations);
   } finally { await rm(root, { recursive: true, force: true }); }
-});
-
-test("partial mix observations cover only measured sources, including calls selected by name", async () => {
-  const root = await mkdtemp(join(tmpdir(), "ode-mix-evidence-"));
-  const song = new SongStore(userPaths(root), () => undefined);
-  const created = await song.create("Night Bus");
-  const conversations = new ConversationStore(join(root, "conversations"), 2);
-  const exchangeId = await conversations.log(created.id).begin("Inspect the voice and lead");
-  let renders = 0;
-  const registry = new ToolRegistry({ live: { extension: { call: async (op: string) => {
-    if (op === "song_get") return { tracks: [
-      { index: 0, name: "Voice", tag: "voice", kind: "audio" },
-      { index: 1, name: "Lead", tag: "lead", kind: "midi" },
-    ], returnTracks: [] };
-    assert.equal(op, "render_track_audio");
-    const path = join(root, `capture-${renders++}.wav`);
-    await writeWav(path, { sampleRate: 8000, channels: [Float32Array.from({ length: 4000 }, (_, i) => 0.1 * Math.sin(i))] });
-    return { path };
-  } } } } as unknown as ToolContext);
-  const observations = new ToolObservations(song);
-  const input = { tracks: [{ name: "Voice" }, { tag: "voice" }, { tag: "lead" }], start: 0, end: 16 };
-  const result = await registry.run("mix_check", input);
-  assert.equal(result.ok, true);
-  assert.deepEqual(result.targets, ["voice"]);
-  const body = JSON.parse(result.text);
-  assert.equal(body.status, "partial");
-  assert.equal(body.tracks.length, 1);
-  assert.equal(body.masking.length, 0);
-  assert.match(body.skipped[0].reason, /duplicate reference/);
-  assert.equal(body.tracks[0].source.frames, 4000);
-  assert.match(body.tracks[0].source.sha256, /^[a-f0-9]{64}$/);
-  await observations.record({ ...result, input: result.input, name: "mix_check", exchangeId, toolCallId: "partial" });
-  // Legacy receipts inferred requested tags, and must not become proof of a measured source.
-  await observations.record({ ...result, targets: undefined, input, name: "mix_check", exchangeId, toolCallId: "legacy" });
-  const verify = new ProductionEvidence({ song, observations, conversations, versions: new SongVersions(song, 10), isRelevantTool: () => true }).verify;
-  const step = { id: randomUUID(), action: "Measure a source", status: "complete" as const, evidence: [], targetTags: ["voice"] };
-  const citation = { kind: "tool" as const, exchangeId, toolCallId: "partial", summary: "Measured source bytes", targets: ["voice"] };
-  assert.equal(await verify(citation, created.id, step), true);
-  assert.equal(await verify({ ...citation, targets: ["lead"] }, created.id, { ...step, targetTags: ["lead"] }), false);
-  assert.equal(await verify({ ...citation, toolCallId: "legacy" }, created.id, step), false);
-  const none = await registry.run("mix_check", { ...input, tracks: [{ tag: "lead" }] });
-  assert.equal(none.ok, false);
-  assert.match(none.text, /No requested source.*MIDI track/);
-  assert.equal(none.targets, undefined);
-  assert.equal(renders, 1);
 });

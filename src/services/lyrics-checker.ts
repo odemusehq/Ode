@@ -4,6 +4,7 @@ import type { LyricsSupportSettings } from "../shared/config";
 import type { LyricsCheck, LyricsCheckResponse } from "../shared/lyrics";
 import type { Accent } from "../shared/personalisation";
 import type { ModelServices } from "./index";
+import type { TextGenerator } from "./capabilities";
 
 const LyricsCheckSchema = z.object({
   lines: z.array(
@@ -66,6 +67,8 @@ const UNMARKED: LyricsCheck["lines"][number] = { words: [], rhyme: { letter: "",
 export class LyricsChecker {
   private static readonly INSTRUCTION = "src/agents/lyrics-check.md";
   private readonly checked = new Map<string, LyricsCheck>();
+  /** ModelServices replaces an adapter whenever its provider, model, key or other role settings change. */
+  private model: TextGenerator | undefined;
 
   constructor(
     private readonly services: ModelServices,
@@ -73,14 +76,22 @@ export class LyricsChecker {
     private readonly settings: LyricsSupportSettings,
   ) {}
 
-  async check(lines: string[], accent: Accent): Promise<LyricsCheckResponse> {
+  async check(lines: string[], accent: Accent, signal?: AbortSignal): Promise<LyricsCheckResponse> {
+    signal?.throwIfAborted();
     if (lines.length === 0) return { status: "ok", check: { lines: [] } };
     const key = `${accent}\n${lines.join("\n")}`;
-    const known = this.checked.get(key);
-    if (known) return { status: "ok", check: known };
-    if (!(await this.services.available()).lyrics_check) return { status: "setup" };
+    const available = await this.services.available();
+    signal?.throwIfAborted();
+    if (!available.lyrics_check) return { status: "setup" };
     try {
       const model = await this.services.chat("lyrics_check");
+      signal?.throwIfAborted();
+      if (this.model !== model) {
+        this.checked.clear();
+        this.model = model;
+      }
+      const known = this.checked.get(key);
+      if (known) return { status: "ok", check: known };
       const instruction = (await this.texts.read(LyricsChecker.INSTRUCTION)).replaceAll("{accent}", ACCENT_NAMES[accent]);
       const check = await model.json({
         name: "lyrics_check",
@@ -88,11 +99,15 @@ export class LyricsChecker {
         system: instruction,
         user: lines.map((line, index) => `${index + 1}. ${line}`).join("\n"),
         maxTokens: this.settings.maxTokens,
+        signal,
         parse: (value) => LyricsChecker.aligned(LyricsCheckSchema.parse(value), lines.length),
       });
-      this.remember(key, check);
+      signal?.throwIfAborted();
+      // A response already in flight from an earlier provider must not enter the current model's cache.
+      if (this.model === model) this.remember(key, check);
       return { status: "ok", check };
     } catch (error) {
+      signal?.throwIfAborted();
       return { status: "unreachable", detail: error instanceof Error ? error.message : String(error) };
     }
   }

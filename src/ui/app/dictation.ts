@@ -4,13 +4,13 @@ const MAX_SECONDS = 60;
 /** Feature detection only: permission and the browser's actual recording/decoding can still fail. */
 export function dictationSupported(): boolean {
   return typeof window !== "undefined" && window.isSecureContext && Boolean(navigator.mediaDevices?.getUserMedia) &&
-    typeof MediaRecorder !== "undefined" && typeof AudioContext !== "undefined";
+    typeof MediaRecorder !== "undefined" && typeof AudioContext !== "undefined" && typeof OfflineAudioContext !== "undefined";
 }
 
 /** PCM WAV bytes, independent of a browser's chosen compressed recording container. */
 export function encodeMonoWav(channels: readonly Float32Array[], sampleRate: number): Uint8Array<ArrayBuffer> {
   const first = channels[0];
-  if (!first?.length || !Number.isInteger(sampleRate) || sampleRate < 1 || sampleRate > 192_000 ||
+  if (channels.length !== 1 || !first?.length || !Number.isInteger(sampleRate) || sampleRate < 1 || sampleRate > 192_000 ||
     channels.some((channel) => channel.length !== first.length || channel.some((sample) => !Number.isFinite(sample)))) {
     throw new Error(t("dictation.unreadableAudio"));
   }
@@ -24,9 +24,7 @@ export function encodeMonoWav(channels: readonly Float32Array[], sampleRate: num
   view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
   text(36, "data"); view.setUint32(40, frames * 2, true);
   for (let frame = 0; frame < frames; frame++) {
-    let sample = 0;
-    for (const channel of channels) sample += channel[frame]! / channels.length;
-    view.setInt16(44 + frame * 2, Math.round(Math.max(-1, Math.min(1, sample)) * 0x7fff), true);
+    view.setInt16(44 + frame * 2, Math.round(Math.max(-1, Math.min(1, first[frame]!)) * 0x7fff), true);
   }
   return bytes;
 }
@@ -96,7 +94,17 @@ export class DictationRecorder {
       this.context = context;
       const audio = await context.decodeAudioData(await blob.arrayBuffer());
       if (this.cancelled) throw DictationRecorder.aborted();
-      const bytes = encodeMonoWav(Array.from({ length: audio.numberOfChannels }, (_, index) => audio.getChannelData(index)), audio.sampleRate);
+      if (!Number.isFinite(audio.duration) || audio.duration <= 0) throw new Error(t("dictation.unreadableAudio"));
+      if (audio.duration > MAX_SECONDS + 0.25) throw new Error(t("dictation.tooLong"));
+      // The browser performs channel mixing and sample-rate conversion through its native audio graph.
+      const output = new OfflineAudioContext(1, Math.ceil(audio.duration * 24_000), 24_000);
+      const source = output.createBufferSource();
+      source.buffer = audio;
+      source.connect(output.destination);
+      source.start();
+      const mono = await output.startRendering();
+      if (this.cancelled) throw DictationRecorder.aborted();
+      const bytes = encodeMonoWav([mono.getChannelData(0)], mono.sampleRate);
       return new File([bytes], "dictation.wav", { type: "audio/wav" });
     } finally {
       this.releaseTracks();

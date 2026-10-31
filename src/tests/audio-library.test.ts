@@ -5,8 +5,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { audioProvenance, LocalAudioFiles } from "../live/local-audio-files";
-import { AudioFileDecoder } from "../music/audio/decode";
-import { encodeWav, WavBitDepth } from "../music/audio/wav";
+import { AudioFileDecoder } from "../audio/decode";
+import { encodeWav, WavBitDepth } from "../audio/wav";
 import type { LibraryProfile } from "../shared/audio-library";
 
 const wav = () => encodeWav({ sampleRate: 48000, channels: [new Float32Array(48001)] }, WavBitDepth.Int16);
@@ -60,7 +60,7 @@ test("delayed byte-bound profiles preserve a simultaneous annotation and reject 
       return profile(bytes);
     }), /changed/);
     const metadata = JSON.parse(await readFile(join(root, "Audio", `${original.id}.json`), "utf8"));
-    assert.equal(metadata.profile.sha256, original.sha256);
+    assert.equal(metadata.metadataProfile.sha256, original.sha256);
     await assert.rejects(a.open(original.id), /changed/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -81,7 +81,7 @@ test("search uses exact full-file duration, declared filters and explicit unknow
     assert.equal(result.nextOffset, null);
     assert.equal((await files.searchRecords({ labels: ["DRY"], declaredKey: "a MINOR" })).total, 1);
     assert.equal((await files.searchRecords({ durationSeconds: { max: 1 } })).total, 0);
-    assert.equal((await files.searchRecords({ integratedLufs: { max: -10 } })).coverage.excludedUnknown, 2);
+    await assert.rejects(files.searchRecords({ integratedLufs: { max: -10 } } as never), /integratedLufs|unrecognized/i);
     assert.equal(await readFile(join(root, "Audio", `${unknown.id}.json`), "utf8"), before);
     assert.deepEqual((await files.search("dry")).map((item) => item.id), [measured.id]);
   } finally { await rm(root, { recursive: true, force: true }); }

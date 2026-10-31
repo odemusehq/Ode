@@ -13,13 +13,13 @@ Memorability, comfortable singing, harmonic agreement and a clear contour can he
 - Lengths are beats of 4/4: 1 = quarter, ½ = eighth, ¼ = sixteenth, 1½ = dotted quarter, 2 = half, 4 = whole. `r` is a rest and `|` a barline: `r(½) G4(½) A4(1)` is an eighth rest, an eighth-note G4, a quarter-note A4.
 - Scale degrees are numbers (1 = tonic, 5 = dominant, ♭3 = lowered third). Chords are symbols (Am7, F/A, G7sus4).
 
-A hummed idea keeps estimated timing and chromatic pitches by default. `hum_to_midi` exposes its observed pitches and transformations; enable tuning correction, key snapping, fragment cleanup or quantization only when the musician requests that change. Preserve source audio for vibrato and expression that MIDI note numbers cannot represent. ASR speech-detection times are approximate and must not drive note edits or lyric replacement.
+A hummed idea becomes MIDI only through an exposed native conversion, Max device or installed plug-in. Preserve its actual converted timing and pitches unless the musician requests a change. Ode has no local pitch detector, and an LLM's audio description or speech transcript must not be treated as exact note extraction. Keep the original recording for vibrato and expression that ordinary MIDI notes do not preserve.
 
-For an attached voice memo, open its managed id with `library_audio_open` and pass the resulting path to `hum_to_midi` with an explicit `assumedTempoBpm`. File analysis does not need an Arrangement import. It analyses the whole WAV/AIFF and returns unplaced, file-relative notes under that constant-tempo assumption; it does not detect the recording's BPM or establish a position in Live. Select a deliberate passage with `library_audio_excerpt` first when needed. File key snapping requires an explicit key; keep it off when preserving the recorded pitches. Choose placement from the musician's request and musical context separately.
+For an attached voice memo, read its managed metadata and use the available native conversion route. If Live's audio-to-MIDI command is not exposed by Ode's tools, explain the manual conversion step and read the resulting MIDI rather than inventing a substitute. Choose placement from the request and actual musical context. Do not create or process a sample with local algorithms.
 
-`melody_write` is a drafting helper, not the only way to write a melody. Give explicit `phrases` for unequal or sub-bar lyric spans; their starts are nonnegative clip beats, and `beatOffset` retains the actual metrical position. Place the clip early enough to include a pickup. Shared `motifId` values carry the chosen first phrase across lines with proportional timing; `motifBars` repeats a shared motif in whole statements. `hookId` with retained notes keeps the chosen hook exactly, including performance fields, and refuses lyrics that would require silently splitting it. Revise the words or hook deliberately when that is the musical choice. Output alignment names the actual returned notes, not an earlier discarded draft.
+Compose explicit notes as the configured model and apply them through the guarded SDK writers. Ask `lyricist` to write or review the words and their alignment, using the actual notes and lyric text. Phrase spans and pickups are deliberate musical choices; do not infer them from equal line counts. Keep a chosen hook's exact pitch, rhythm and performance fields unless its revision is authorised.
 
-For continuing song work, use `hook_retain` after choosing the actual tagged MIDI performance: it reads back full notes and computes their source hash. Alternatively keep explicit chosen notes in `lead_sheet_update.composition.hooks`. Bind phrase spans to the existing section ID and exact lyric line/text/revision. `melody_write` can consume that section with `sectionId`; use `clipStartBeat` before the section for pickups. Read `compositionStatus` before using the plan: reconcile stale selected bindings with current lyrics; an unrelated stale phrase need not discard a good hook. A source tag/hash is content evidence to recheck, not durable Set identity. Keep deliberately chromatic or expressive hooks; use the note tools directly when a helper's drafting assumptions do not fit. An infeasible register remains an error unless the musician changes the bounds.
+For continuing song work, use `hook_retain` after choosing the actual tagged MIDI performance: it reads back full notes and stores their source hash. Alternatively keep explicit chosen notes in `lead_sheet_update.composition.hooks`. Bind phrase spans to the existing section ID and exact lyric line/text/revision. Read `compositionStatus` before using the plan and reconcile stale selected bindings with current lyrics. A source tag/hash is content evidence to recheck, not durable Set identity. Keep deliberately chromatic or expressive hooks, and change an infeasible register only when the musician authorises it.
 
 ## How Ode works on a melody
 
@@ -46,7 +46,7 @@ Plan in words before placing notes: the motif, the contour, the range, the rhyth
 
 ### 4. Verify
 
-Run the checks that apply and report their coverage. Explicit range and preservation constraints are hard requirements. Chromatic notes, suspensions, syncopation, melismas and deliberate stress departures are musical choices: inspect their intention/resolution before changing them. A passed note check is not a listening or artistic-quality verdict. English pronunciation tools are heuristic and do not establish multilingual lyric expertise.
+Review the explicit notes as the model and use available native or plug-in observations and actual listening. Ask Lyricist for lyric setting, pronunciation and alignment assessments. Explicit range and preservation constraints remain requirements; chromatic notes, suspensions, syncopation, melismas and deliberate stress departures are musical choices. A successful note write is not a listening or artistic-quality verdict. Missing processing or analysis must remain unavailable, without a local algorithm or invented result.
 
 | Check | What to review |
 |---|---|
@@ -193,7 +193,7 @@ Example line: "the kettle's still warm on the stove", stresses on KET, WARM and 
 - Good: `the(½) | KET(½) tle's(½) still(1) WARM(1) on(½) the(½) | STOVE(2)` — "the" is a pickup, and KET, WARM and STOVE land on beat 1, beat 3 and the next beat 1.
 - Poor: `| the(1) KET(1) tle's(1) still(1) | WARM ...` — "the" takes beat 1 and "tle's" takes beat 3, so the line is heard as "the KET-TLE'S".
 
-Some words have more than one sung syllable count (*fire*, *every*). Let the melody choose, and use the same reading the syllable check used.
+Some words have more than one sung syllable count (*fire*, *every*). Let the melody choose, and use the same reading Lyricist's syllable assessment used.
 
 **Melody first, words later.** Keep the rhythm simple and repeatable so several verses can fit it. The note count and the strong notes of each phrase (long, high, or on strong beats) are the lyric's brief: write them into the lead sheet's notes for that section so the lyrics skill can fit lines to them.
 

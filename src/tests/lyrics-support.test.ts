@@ -8,9 +8,11 @@ import type { JsonRequest } from "../services/capabilities";
 import { LyricsChecker } from "../services/lyrics-checker";
 import { ModelRoles } from "../services/model-roles";
 import { ProviderCatalog } from "../services/provider-catalog";
-import type { LyricsCheck } from "../shared/lyrics";
+import type { LyricsCheck, LyricsCheckResponse } from "../shared/lyrics";
 import { LyricsSections } from "../shared/lyrics-sections";
 import { MarkLayout } from "../ui/views/mark-layout";
+import { LyricsMarks } from "../ui/app/lyrics-marks";
+import type { OdeApi } from "../ui/app/api";
 
 const SONG = "[Verse 1]\nI kept the window open wide\n\n[Chorus]\nso leave the light on\nwait for me\n\n[Verse 2]\nthe neighbours say\n\n[Chorus]\nso leave the light on\nwait for me";
 
@@ -45,15 +47,17 @@ test("a section check sends the strict schema, comes from the cache the second t
   let configured = false;
   let failing = false;
   const requests: JsonRequest<LyricsCheck>[] = [];
+  const makeModel = () => ({
+    json: async (request: JsonRequest<LyricsCheck>) => {
+      requests.push(request);
+      if (failing) throw new Error("connect ECONNREFUSED");
+      return request.parse(answer);
+    },
+  });
+  let model = makeModel();
   const services = {
     available: async () => ({ lyrics_check: configured }),
-    chat: async () => ({
-      json: async (request: JsonRequest<LyricsCheck>) => {
-        requests.push(request);
-        if (failing) throw new Error("connect ECONNREFUSED");
-        return request.parse(answer);
-      },
-    }),
+    chat: async () => model,
   };
   const texts = { read: async () => "Mark the lyrics as sung in {accent}.", list: async () => [] };
   const checker = new LyricsChecker(services as never, texts, { maxTokens: 6000, cacheSize: 10 });
@@ -65,6 +69,12 @@ test("a section check sends the strict schema, comes from the cache the second t
   assert.equal(requests.length, 1);
   assert.equal(requests[0]?.schema.additionalProperties, false);
   assert.equal(requests[0]?.system, "Mark the lyrics as sung in UK English.");
+  model = makeModel();
+  assert.deepEqual(await checker.check(["back inside"], "uk"), { status: "ok", check: answer });
+  assert.equal(requests.length, 2, "a changed provider/model adapter must not reuse the earlier model's marks");
+  configured = false;
+  assert.deepEqual(await checker.check(["back inside"], "uk"), { status: "setup" });
+  configured = true;
   failing = true;
   assert.equal((await checker.check(["another line"], "us")).status, "unreachable");
 });
@@ -84,4 +94,49 @@ test("the marks sit on the letters of the line as typed: bars between syllables,
   assert.deepEqual(side?.syllable, { barBefore: true, stressed: true });
   assert.deepEqual(side?.rhyme, [1, 4]);
   assert.equal(MarkLayout.count(check), 3);
+});
+
+test("changing the lyric model clears cached marks and pending work, and ignores replaced or disposed replies", async (t) => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, "window");
+  const timers = new Map<number, () => void>();
+  let nextTimer = 0;
+  Object.defineProperty(globalThis, "window", { configurable: true, value: {
+    setTimeout: (run: () => void) => { timers.set(++nextTimer, run); return nextTimer; },
+    clearTimeout: (id: number) => timers.delete(id),
+  } });
+  t.after(() => original ? Object.defineProperty(globalThis, "window", original) : Reflect.deleteProperty(globalThis, "window"));
+  const runTimers = () => { const due = [...timers.values()]; timers.clear(); due.forEach((run) => run()); };
+  const pending: ((answer: LyricsCheckResponse) => void)[] = [];
+  const api = { checkLyrics: () => new Promise<LyricsCheckResponse>((resolve) => pending.push(resolve)) } as unknown as OdeApi;
+  const marks = new LyricsMarks(api);
+  const line = ["Back inside"];
+  const first = { words: [], rhyme: { letter: "A", quality: "perfect" as const, part: "ide" } };
+  const second = { words: [], rhyme: { letter: "B", quality: "near" as const, part: "side" } };
+  const settle = () => new Promise<void>((resolve) => setImmediate(resolve));
+
+  marks.request("chorus", line); runTimers();
+  pending[0]!({ status: "ok", check: { lines: [first] } }); await settle();
+  assert.deepEqual(marks.marksFor(line), [first]);
+  marks.request("verse", ["A pending verse"]);
+  marks.retry();
+  assert.deepEqual(marks.marksFor(line), [null]);
+  assert.equal(timers.size, 0);
+  marks.request("chorus", line); runTimers();
+  marks.retry();
+  marks.request("chorus", line); runTimers();
+  assert.equal(pending.length, 3, "the new model can request a line still in flight on the old model");
+  pending[1]!({ status: "unreachable", detail: "old model failure" }); await settle();
+  assert.deepEqual(marks.marksFor(line), [null]);
+  marks.request("chorus", line); runTimers();
+  assert.equal(pending.length, 3, "an old reply cannot clear the new model's in-flight marker");
+  pending[2]!({ status: "ok", check: { lines: [second] } }); await settle();
+  assert.deepEqual(marks.marksFor(line), [second]);
+  marks.request("verse", ["A new verse"]); runTimers();
+  const beforeDispose = marks.getSnapshot();
+  marks.dispose();
+  pending[3]!({ status: "setup" }); await settle();
+  assert.deepEqual(marks.getSnapshot(), beforeDispose);
+  marks.request("chorus", line); runTimers();
+  pending[4]!({ status: "ok", check: { lines: [second] } }); await settle();
+  assert.deepEqual(marks.marksFor(line), [second], "React StrictMode can run effects again after cleanup");
 });

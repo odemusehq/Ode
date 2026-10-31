@@ -74,5 +74,5 @@ Save something for the end: a time jump, a reveal, new information, or the narra
 - Personal details are the musician's own, or plainly part of the song's world.
 
 Example result lines:
-- "Verse 3 written: your own kid now says 'I'll be home by nine' · every line fits its notes, refrain word for word, ABCB like verse 1, cliché-free."
+- "Verse 3 written: your own kid now says 'I'll be home by nine' · every line fits its notes, refrain word for word, ABCB like verse 1, familiar phrasing reviewed."
 - "Verse 2 written: the same promise, now made on the phone from a late shift · every line fits its notes, refrain word for word, the turn left for verse 3."

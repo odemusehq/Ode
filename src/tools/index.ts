@@ -4,7 +4,7 @@ import { z } from "zod";
 import type { AnyTool, ToolContext } from "./define";
 import { RefNames } from "./live/ref-names";
 import { liveTools } from "./live";
-import { musicTools } from "./music";
+import { lyricist } from "./lyricist";
 import { audioTools } from "./audio";
 import { mediaTools } from "./media";
 import { songTools } from "./song";
@@ -27,7 +27,7 @@ export interface ToolOutcome {
   targets?: readonly string[];
 }
 
-const GROUPS: readonly (readonly AnyTool[])[] = [liveTools, musicTools, audioTools, mediaTools, songTools, midiMaterialTools];
+const GROUPS: readonly (readonly AnyTool[])[] = [liveTools, [lyricist], audioTools, mediaTools, songTools, midiMaterialTools];
 
 /** Every Ode tool, offered to the model as a function with a JSON Schema for its input. */
 export class ToolRegistry {

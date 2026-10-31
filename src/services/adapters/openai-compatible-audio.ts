@@ -28,7 +28,7 @@ export class OpenAiCompatibleAudioUnderstander implements AudioUnderstander {
   private async ask(prepared: { bytes: Uint8Array; sources: AudioListeningSource[]; payload: ListeningPayload }, criteria: string, question: string, signal?: AbortSignal): Promise<AudioListeningResult> {
     signal?.throwIfAborted();
     const data = Buffer.from(prepared.bytes).toString("base64");
-    const prompt = `${question}\nSource selections: ${JSON.stringify(prepared.sources.map((source) => source.selection))}. Each played excerpt starts at zero within its labelled playback segment; source-file times remain separate.\nAudio preparation: source channel count and sample rate preserved in PCM24 WAV; signals above full scale are uniformly attenuated to avoid conversion clipping. Stereo/full-band model judgement is not independently validated; use numerical metrics for technical claims.`;
+    const prompt = `${question}\nSource selections: ${JSON.stringify(prepared.sources.map((source) => source.selection))}. Each played excerpt starts at zero within its labelled playback segment; source-file times remain separate.\nAudio preparation: source channel count, sample rate and level are preserved in Float32 WAV without gain adjustment. Give qualitative listening observations. Numerical metering claims require actual readings from a supported Ableton, Max or plug-in analyser; do not invent them from this request.`;
     const requestHash = audioHash(Buffer.from(JSON.stringify({ model: this.role.model, prompt, maxTokens: OdeConfig.services.audioMaxTokens, payloadSha256: prepared.payload.sha256 })));
     const dispatchedAt = new Date().toISOString();
     // Baseten's multimodal gateway uses audio_url; Meta's direct API uses input_audio.

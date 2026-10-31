@@ -4,8 +4,8 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { AudioFileDecoder } from "../music/audio/decode";
-import { writeWav, WavBitDepth } from "../music/audio/wav";
+import { AudioFileDecoder } from "../audio/decode";
+import { writeWav, WavBitDepth } from "../audio/wav";
 import { MusicAudio } from "../services/music-audio";
 import { OpenAiCompatibleAudioUnderstander } from "../services/adapters/openai-compatible-audio";
 import { SelfHostedSingingVoice, SelfHostedStemSeparator } from "../services/adapters/self-hosted";
@@ -27,6 +27,8 @@ test("listening preserves stereo and rejects empty, refused and truncated respon
     const listener = new OpenAiCompatibleAudioUnderstander({ provider: "meta", baseUrl: "https://example.invalid/v1", apiKey: "offline", model: "muse-spark-1.2" });
     const described = await listener.describe(path, "What sounds?") as any;
     assert.equal(described.answer, "An audible stereo signal.");
+    assert.match(described.evidence.prompt, /Float32 WAV/);
+    assert.doesNotMatch(described.evidence.prompt, /PCM24|uniformly attenuated/);
     const encoded = sent.messages[0].content.find((part: any) => part.type === "input_audio").input_audio.data;
     const audio = new AudioFileDecoder().decode(Buffer.from(encoded, "base64"), "request.wav");
     assert.equal(described.evidence.payload.sha256, createHash("sha256").update(Buffer.from(encoded, "base64")).digest("hex"));
@@ -38,6 +40,8 @@ test("listening preserves stereo and rejects empty, refused and truncated respon
     const paired = new AudioFileDecoder().decode(Buffer.from(sent.messages[0].content.find((part: any) => part.type === "input_audio").input_audio.data, "base64"), "comparison.wav");
     assert.equal(paired.channels[0]?.length, 4800 * 2 + 24_000);
     assert.equal(comparison.comparison.levelMatched, false);
+    assert.deepEqual(comparison.comparison.gainDb, [0, 0]);
+    await assert.rejects(listener.compare(path, path, "Match levels", true), /Ableton|plug-in backend/i);
     const baseten = new OpenAiCompatibleAudioUnderstander({ provider: "baseten", baseUrl: "https://example.invalid/v1", apiKey: "offline", model: "meta-models/muse-spark-open-1026" });
     const heard = await baseten.describe(path, "What sounds?");
     const dataUrl = sent.messages[0].content.find((part: any) => part.type === "audio_url")?.audio_url.url;
@@ -92,6 +96,11 @@ test("nonfinite PCM and inconsistent channel lengths cannot become listening evi
     const broken = Uint8Array.from(source.bytes);
     new DataView(broken.buffer).setUint16(22, 2, true); // Six mono data bytes cannot form whole stereo frames.
     await assert.rejects(new MusicAudio().prepare({ bytes: broken, source: { ...source.source, sha256: createHash("sha256").update(broken).digest("hex") } }), /channel|frame/i);
+    await writeWav(path, { sampleRate: 48_000, channels: [Float32Array.of(1.2)] }, WavBitDepth.Float32);
+    const headroom = await new MusicAudio().prepare(await MusicAudio.freeze(path));
+    assert.equal(headroom.payload.representation.encoding, "Float32 WAV");
+    assert.equal(headroom.payload.representation.gainDb, 0);
+    assert.ok(Math.abs(new AudioFileDecoder().decode(headroom.bytes, "payload.wav").channels[0]![0]! - 1.2) < 0.000001);
     source.bytes[source.bytes.length - 1]! ^= 1;
     await assert.rejects(new MusicAudio().prepare(source), /captured.*changed/i);
   } finally { await rm(dir, { recursive: true, force: true }); }

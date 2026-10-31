@@ -1,6 +1,6 @@
 import { t } from "../../shared/i18n";
 import { z } from "zod";
-import { hookNotesInRange, melodyNoteHash } from "../../music/melody/lyric-phrases";
+import { hookNotesInRange, melodyNoteHash } from "../../mneme/hook-notes";
 import { SetLookup } from "../../server/set-lookup";
 import type { Note } from "../../shared/live";
 import { CompositionSchema, RetainedHookSchema, compositionStatus } from "../../shared/song";
@@ -10,7 +10,7 @@ import { defineTool } from "../define";
 export const hookRetainTool = defineTool({
   name: "hook_retain",
   changes: "memory",
-  description: "Retain a chosen hook from the current tagged MIDI clip in the song's composition. Reads the actual full notes, including performance fields, and stores them with a canonical SHA-256 source hash; later melody_write hookId uses those notes and verifies that the selected source span still matches. id names the musical hook; clipTag must identify exactly one MIDI clip; startBeat (default 0) and lengthBeats select a complete phrase within it, including initial rests. Notes crossing the boundary are refused rather than clipped; retained note starts become hook-local. description explains its musical identity or intended use. Replaces only the hook with that id and preserves the rest of the plan; it does not change Live or certify the sound. Use after reading/hearing the chosen performance, and again only after deliberately accepting a revision.",
+  description: "Retain a chosen hook from the current tagged MIDI clip in the song's composition. Reads the actual full notes, including performance fields, and stores them with a canonical SHA-256 source hash. id names the musical hook; clipTag must identify exactly one MIDI clip; startBeat (default 0) and lengthBeats select a complete phrase within it, including initial rests. Notes crossing the boundary are refused rather than clipped; retained note starts become hook-local. description explains its musical identity or intended use. Replaces only the hook with that id and preserves the rest of the plan. Read the current source before reusing a saved hook; apply the explicitly chosen notes with the SDK writer. This tool stores material without composing or changing Live. Use again only after deliberately accepting a revision.",
   input: {
     id: z.string().min(1),
     clipTag: z.string().min(1),
