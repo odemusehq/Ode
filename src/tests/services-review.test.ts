@@ -16,7 +16,7 @@ test("listening preserves stereo and rejects empty, refused and truncated respon
     const path = join(dir, "stereo.wav");
     const left = Float32Array.from({ length: 4800 }, (_, i) => Math.sin(i / 10) * 0.25);
     await writeWav(path, { sampleRate: 48_000, channels: [left, left.map((value) => -value)] });
-    let choice: unknown = { finish_reason: "stop", message: { role: "assistant", content: "An audible stereo signal." } };
+    let choice: unknown = { finish_reason: "stop", message: { role: "assistant", content: JSON.stringify({ audioAvailable: true, observations: "An audible stereo signal." }) } };
     let sent: any;
     globalThis.fetch = async (_url, options) => {
       sent = JSON.parse(String(options?.body));
@@ -25,6 +25,7 @@ test("listening preserves stereo and rejects empty, refused and truncated respon
     const listener = new OpenAiCompatibleAudioUnderstander({ provider: "meta", baseUrl: "https://example.invalid/v1", apiKey: "offline", model: "muse-spark-1.2" });
     const described = await listener.describe(path, "What sounds?") as any;
     assert.equal(described.answer, "An audible stereo signal.");
+    assert.equal(sent.response_format.json_schema.name, "audio_observations");
     assert.match(described.evidence.prompt, /Float32 WAV/);
     assert.doesNotMatch(described.evidence.prompt, /PCM24|uniformly attenuated/);
     const encoded = sent.messages[0].content.find((part: any) => part.type === "input_audio").input_audio.data;
