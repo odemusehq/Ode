@@ -10,7 +10,7 @@ const LyricsCheckSchema = z.object({
   lines: z.array(
     z.object({
       words: z.array(z.object({ text: z.string(), syllables: z.array(z.string()), stress: z.array(z.number().int()) })),
-      rhyme: z.object({ letter: z.string(), quality: z.enum(["perfect", "near", "none"]), part: z.string() }),
+      rhyme: z.object({ letter: z.string(), quality: z.enum(["perfect", "near", "none"]), part: z.string(), sound: z.string() }),
     }),
   ),
 });
@@ -44,11 +44,12 @@ const CHECK_SCHEMA: Record<string, unknown> = {
           rhyme: {
             type: "object",
             additionalProperties: false,
-            required: ["letter", "quality", "part"],
+            required: ["letter", "quality", "part", "sound"],
             properties: {
               letter: { type: "string" },
               quality: { type: "string", enum: ["perfect", "near", "none"] },
               part: { type: "string" },
+              sound: { type: "string" },
             },
           },
         },
@@ -58,11 +59,11 @@ const CHECK_SCHEMA: Record<string, unknown> = {
 };
 
 const ACCENT_NAMES: Readonly<Record<Accent, string>> = { uk: "UK English", us: "US English" };
-const UNMARKED: LyricsCheck["lines"][number] = { words: [], rhyme: { letter: "", quality: "none", part: "" } };
+const UNMARKED: LyricsCheck["lines"][number] = { words: [], rhyme: { letter: "", quality: "none", part: "", sound: "" } };
 
 /**
- * Lyrics support: asks the model chosen in Settings for a section's syllables, stress and rhymes, in a fixed JSON shape
- * at the model's lowest reasoning effort, and keeps each answer by section so text seen before is marked at once.
+ * Lyrics support: asks the model chosen in Settings for the whole song's syllables, stress and rhymes, in a fixed JSON shape
+ * at the model's lowest reasoning effort, and caches only the exact whole input, accent and configured model.
  */
 export class LyricsChecker {
   private static readonly INSTRUCTION = "src/agents/lyrics-check.md";
@@ -79,7 +80,7 @@ export class LyricsChecker {
   async check(lines: string[], accent: Accent, signal?: AbortSignal): Promise<LyricsCheckResponse> {
     signal?.throwIfAborted();
     if (lines.length === 0) return { status: "ok", check: { lines: [] } };
-    const key = `${accent}\n${lines.join("\n")}`;
+    const key = JSON.stringify([accent, lines]);
     const available = await this.services.available();
     signal?.throwIfAborted();
     if (!available.lyrics_check) return { status: "setup" };
@@ -98,7 +99,7 @@ export class LyricsChecker {
         schema: CHECK_SCHEMA,
         system: instruction,
         user: lines.map((line, index) => `${index + 1}. ${line}`).join("\n"),
-        maxTokens: this.settings.maxTokens,
+        maxTokens: Math.max(this.settings.maxTokens, Math.min(24_000, lines.length * 400)),
         signal,
         parse: (value) => LyricsChecker.aligned(LyricsCheckSchema.parse(value), lines.length),
       });

@@ -4,8 +4,7 @@ import { ResultKind } from "../shared/events";
 import { bodyLimit } from "hono/body-limit";
 import { LocalAudioFiles, MAX_AUDIO_UPLOAD_BYTES } from "../live/local-audio-files";
 import { randomBytes, timingSafeEqual } from "node:crypto";
-import { readFile } from "node:fs/promises";
-import { basename, extname, join } from "node:path";
+import { extname } from "node:path";
 import { serve } from "@hono/node-server";
 import { Hono, type Context } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
@@ -13,6 +12,8 @@ import { streamSSE } from "hono/streaming";
 import { z } from "zod";
 import { MAX_WINDOW } from "../shared/max-window";
 import { MAX_AUDIO } from "../shared/max-audio";
+import { MAX_PARAMETERS } from "../shared/max-parameters";
+import type { MaxParameterControl } from "./max-parameters";
 import type { MaxAudioCapture } from "./max-audio";
 import { MaxWindowError, type MaxWindowBridge } from "./max-window";
 import { API, type SongsResponse, type StatusResponse } from "../shared/api";
@@ -44,7 +45,6 @@ import { RoleCheck } from "../services/roles";
 import { Dictation, DictationError, MAX_DICTATION_BYTES } from "./dictation";
 import { ComposerCancelSchema, ComposerDraftSchema, ComposerPrepareSchema, ComposerResolveSchema, ComposerWriteSchema } from "../shared/composer";
 import { ComposerError, type ComposerStore } from "../mneme/composer-store";
-import { AudioDeliveryError, type AudioDeliveries } from "../mneme/audio-deliveries";
 
 /** The built UI's files by path ("index.html", "assets/index-….js"), each base64-encoded. */
 export type UiFiles = Readonly<Record<string, string>>;
@@ -61,7 +61,6 @@ export interface ServerDeps {
   models: ModelRoles;
   services: Pick<Services, "transcribe">;
   composer: ComposerStore;
-  deliveries: AudioDeliveries;
   approvals: Approvals;
   questions: Questions;
   sessions: SessionManager;
@@ -69,6 +68,7 @@ export interface ServerDeps {
   ui: UiFiles;
   maxWindow?: MaxWindowBridge;
   maxAudio?: MaxAudioCapture;
+  maxParameters?: MaxParameterControl;
 }
 
 const TextSchema = z.object({ text: z.string().trim().min(1), requestId: z.uuid().optional(), songId: z.string().min(1).optional() });
@@ -83,26 +83,14 @@ const VersionRequestSchema = z.object({ versionId: z.string().min(1) });
 const SongOpenSchema = z.object({ id: z.string().min(1) });
 const SongCreateSchema = z.object({ title: z.string() });
 const RestoreRequestSchema = z.object({ confirmed: z.literal(true) });
-const MaxConnectSchema = z.object({ capability: z.string().regex(/^[a-f0-9]{32}$/), audioVersion: z.literal(1).optional() }).strict();
+const MaxConnectSchema = z.object({ capability: z.string().regex(/^[a-f0-9]{32}$/), audioVersion: z.literal(1).optional(), parametersVersion: z.literal(1).optional() }).strict();
 const MaxPollSchema = z.object({ session: z.string().regex(/^[a-f0-9]{48}$/) }).strict();
 const MaxAckSchema = z.object({ session: z.string().regex(/^[a-f0-9]{48}$/), id: z.uuid(), status: z.enum(["ready", "error"]), error: z.string().max(MAX_WINDOW.errorMaxChars).optional() }).strict();
-const MAX_WINDOW_PATHS: ReadonlySet<string> = new Set([...Object.values(MAX_WINDOW.api), MAX_AUDIO.messagePath]);
+const MAX_WINDOW_PATHS: ReadonlySet<string> = new Set([...Object.values(MAX_WINDOW.api), MAX_AUDIO.messagePath, MAX_PARAMETERS.messagePath]);
 const MaxAudioEnvelopeSchema = z.object({ session: z.string().regex(/^[a-f0-9]{48}$/), message: z.unknown() }).strict();
 
 const SEND_VERSION_ID = t("server.http.sendVersionIdWithTheId");
 
-/** Content types of the files Ode writes into the release folder. */
-const RELEASE_CONTENT_TYPES: ReadonlyMap<string, string> = new Map([
-  [".png", "image/png"],
-  [".jpg", "image/jpeg"],
-  [".jpeg", "image/jpeg"],
-  [".webp", "image/webp"],
-  [".txt", "text/plain; charset=utf-8"],
-  [".json", "application/json"],
-  [".wav", "audio/wav"],
-  [".mp3", "audio/mpeg"],
-  [".pdf", "application/pdf"],
-]);
 const OTHER_CONTENT_TYPE = "application/octet-stream";
 
 /** Content types of the built UI's files. */
@@ -135,13 +123,6 @@ const SAFETY_HEADERS: Readonly<Record<string, string>> = {
 };
 const OPEN_FROM_LIVE = t("server.http.openOdeFromLiveSRightClickMenu");
 
-/** Keep the supplied Unicode filename while providing a safe fallback for older download clients. */
-function attachmentFilename(name: string): string {
-  const ascii = name.replace(/[^\x20-\x7e]|["\\]/g, "_");
-  const utf8 = encodeURIComponent(name).replace(/[!'()*]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`);
-  return `attachment; filename="${ascii}"; filename*=UTF-8''${utf8}`;
-}
-
 /**
  * The local server inside the extension: the UI that Ode's dialogs load, its API and its event stream. It listens on
  * 127.0.0.1 alone, on a port the system picks, and answers only requests that carry this session's token.
@@ -165,6 +146,7 @@ export class OdeServer {
     this.app.use("*", (c, next) => this.authorize(c, next));
     this.routeMaxWindow();
     this.routeMaxAudio();
+    this.routeMaxParameters();
     this.routeApi();
     this.routeSongs();
     this.routeVersions();
@@ -263,7 +245,7 @@ export class OdeServer {
     this.app.post(MAX_WINDOW.api.connect, limit, async (c) => {
       const parsed = MaxConnectSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: t("server.http.sendTheMaxDeviceSConnectionCapability") }, 403);
-      return respond(c, (bridge) => bridge.connect(parsed.data.capability, parsed.data.audioVersion));
+      return respond(c, (bridge) => bridge.connect(parsed.data.capability, parsed.data.audioVersion, parsed.data.parametersVersion));
     });
     this.app.post(MAX_WINDOW.api.poll, limit, async (c) => {
       const parsed = MaxPollSchema.safeParse(await OdeServer.body(c));
@@ -274,6 +256,22 @@ export class OdeServer {
       const parsed = MaxAckSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: t("server.http.sendTheMaxWindowSCommandAcknowledgement") }, 400);
       return respond(c, (bridge) => { bridge.acknowledge(parsed.data); return { ok: true }; });
+    });
+  }
+
+  private routeMaxParameters(): void {
+    this.app.post(MAX_PARAMETERS.messagePath, bodyLimit({ maxSize: MAX_PARAMETERS.maxBodyBytes }), async (c) => {
+      c.header("Cache-Control", "no-store");
+      if (!this.deps.maxParameters) return c.json({ error: t("maxParameters.unavailable") }, 503);
+      const parsed = MaxAudioEnvelopeSchema.safeParse(await OdeServer.body(c));
+      if (!parsed.success) return c.json({ error: t("maxParameters.invalid") }, 403);
+      try {
+        this.deps.maxParameters.receive(parsed.data.session, parsed.data.message);
+        return c.json({ ok: true });
+      } catch (error) {
+        if (error instanceof MaxWindowError) return c.json({ error: error.message }, error.status);
+        throw error;
+      }
     });
   }
 
@@ -490,32 +488,6 @@ export class OdeServer {
       return c.json(await lyrics.setStrictRhymes(parsed.data.name, parsed.data.strict));
     });
 
-    app.get("/api/release/file/:name", async (c) => {
-      const name = basename(c.req.param("name"));
-      const data = await readFile(join(song.releaseDir, name)).catch(() => null);
-      if (!data) return c.json({ error: t("server.http.thatFileIsMissingFromTheRelease") }, 404);
-      return c.body(data, 200, { "Content-Type": RELEASE_CONTENT_TYPES.get(extname(name).toLowerCase()) ?? OTHER_CONTENT_TYPE });
-    });
-
-    app.get("/api/audio-deliveries/:songId/:id", async (c) => {
-      try {
-        const { ref, bytes, contentType } = await this.deps.deliveries.download(c.req.param("songId"), c.req.param("id"));
-        return c.body(Buffer.from(bytes), 200, {
-          "Content-Type": contentType,
-          "Content-Length": String(bytes.byteLength),
-          "Content-Disposition": attachmentFilename(ref.name),
-          "Cache-Control": "no-store",
-          "X-Content-Type-Options": "nosniff",
-        });
-      } catch (error) {
-        if (error instanceof AudioDeliveryError) return c.json({ error: error.message }, error.status);
-        if (error instanceof z.ZodError) return c.json({ error: t("server.http.nameAValidSongAndAudioDelivery") }, 400);
-        if (error instanceof SongNotFoundError) return c.json({ error: error.message }, 404);
-        throw error;
-      }
-    });
-
-
     app.put(API.mode, async (c) => {
       const parsed = ModeSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: t("server.http.modeMustBeOneOf", { details: (Object.values(Mode).join(", ")) }) }, 400);
@@ -599,14 +571,13 @@ export class OdeServer {
         settings: await settings.view(),
         providers: ProviderCatalog.bundled.chatOptions(),
         lyricsProviders: ProviderCatalog.bundled.lyricsOptions(),
-        services: ProviderCatalog.bundled.serviceOptions(),
       };
       return c.json(response);
     });
 
     app.put(API.settings, async (c) => {
       const parsed = SettingsUpdateSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: t("server.http.sendProviderModelServicesWith") }, 400);
+      if (!parsed.success) return c.json({ error: t("server.http.sendProviderAndModel") }, 400);
       return c.json(await settings.update(parsed.data));
     });
 

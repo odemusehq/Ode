@@ -53,8 +53,7 @@
   "meta": {
     "baseUrl": "https://api.meta.ai/v1",
     "audioUnderstanding": "muse-spark-1.2",
-    "transcription": "muse-voice-transcribe-1.0",
-    "imageGeneration": "muse-image-1.0"
+    "transcription": "muse-voice-transcribe-1.0"
   },
   "lyrics": {
     "default": {
@@ -76,39 +75,6 @@
             "effort": "minimal"
           }
         ]
-      }
-    ]
-  },
-  "services": {
-    "stem_separation": [
-      {
-        "id": "fal",
-        "name": "fal",
-        "baseUrl": "https://fal.run"
-      },
-      {
-        "id": "self-hosted",
-        "baseUrl": "",
-        "nameKey": "providers.selfHosted"
-      }
-    ],
-    "singing_voice": [
-      {
-        "id": "self-hosted",
-        "baseUrl": "",
-        "nameKey": "providers.selfHosted"
-      }
-    ],
-    "sound_generation": [
-      {
-        "id": "elevenlabs",
-        "name": "ElevenLabs",
-        "baseUrl": "https://api.elevenlabs.io"
-      },
-      {
-        "id": "self-hosted",
-        "baseUrl": "",
-        "nameKey": "providers.selfHosted"
       }
     ]
   }

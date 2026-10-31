@@ -3,72 +3,40 @@ import { join } from "node:path";
 import { z } from "zod";
 import type { ConversationActivity, ConversationExchange } from "../shared/conversation";
 import { JsonFile } from "./json-file";
-import { AudioDeliveryRefSchema, type AudioDeliveryRef } from "../shared/audio-delivery";
-
-// Delivery links are a recoverable projection; an unusable link must not hide the musician's conversation.
-const DeliveryRefsSchema = z.array(z.unknown()).catch([]).transform((items) => items.flatMap((item) => {
-  const checked = AudioDeliveryRefSchema.safeParse(item);
-  return checked.success ? [checked.data] : [];
-}));
 
 export const ExchangeSchema = z.object({
   id: z.string().optional(), request: z.string(), reply: z.string(), at: z.string(),
   activity: z.array(z.object({ id: z.string(), label: z.string(), status: z.enum(["running", "done", "error"]), reason: z.string().optional() })).optional(),
   rationale: z.string().optional(),
   versionId: z.string().nullable().optional(),
-  deliveries: DeliveryRefsSchema.optional(),
   status: z.enum(["running", "complete", "stopped", "failed"]).optional(),
-});
+}).passthrough();
 export type Exchange = z.infer<typeof ExchangeSchema>;
 
 export class RequestIdentityError extends Error {}
 
 /** The complete song conversation on disk, with a bounded window for the model. */
 export class ConversationLog {
-  constructor(readonly id: string, private readonly file: JsonFile<Exchange[]>, private readonly keep: number, private readonly songId: string) {}
+  constructor(readonly id: string, private readonly file: JsonFile<Exchange[]>, private readonly keep: number) {}
 
   async all(): Promise<ConversationExchange[]> {
-    return (await this.file.read()).map((entry) => ({ ...entry,
+    return (await this.file.read()).map((entry) => ({
+      request: entry.request, reply: entry.reply, at: entry.at,
+      ...(entry.activity === undefined ? {} : { activity: entry.activity }),
+      ...(entry.rationale === undefined ? {} : { rationale: entry.rationale }),
+      ...(entry.versionId === undefined ? {} : { versionId: entry.versionId }),
       id: entry.id ?? createHash("sha256").update(entry.at + entry.request).digest("hex").slice(0, 24),
       status: entry.status ?? "complete",
     }));
   }
 
-  async recent(): Promise<Exchange[]> {
+  async recent(): Promise<ConversationExchange[]> {
     const exchanges = (await this.all()).filter((entry) => entry.status !== "running");
     return this.keep > 0 ? exchanges.slice(-this.keep) : [];
   }
 
   async find(id: string): Promise<ConversationExchange | null> {
     return (await this.all()).find((exchange) => exchange.id === id) ?? null;
-  }
-
-  /** Only an already accepted exchange in the retained file's original song can receive this trusted reference. */
-  async addDelivery(exchangeId: string, input: AudioDeliveryRef): Promise<boolean> {
-    const delivery = AudioDeliveryRefSchema.parse(input);
-    if (delivery.songId !== this.songId) throw new Error("The audio delivery belongs to another song's conversation.");
-    const known = await this.find(exchangeId);
-    if (!known) throw new Error("The audio delivery's accepted exchange is missing from this conversation.");
-    const previous = known.deliveries?.find((entry) => entry.id === delivery.id);
-    if (previous) {
-      if (JSON.stringify(previous) !== JSON.stringify(delivery)) throw new Error("A retained audio link cannot be repointed at different material.");
-      return false;
-    }
-    let added = false;
-    await this.file.update((entries) => {
-      if (!entries.some((entry) => entry.id === exchangeId)) throw new Error("The audio delivery's accepted exchange is missing from this conversation.");
-      return entries.map((entry) => {
-        if (entry.id !== exchangeId) return entry;
-        const existing = entry.deliveries?.find((item) => item.id === delivery.id);
-        if (existing) {
-          if (JSON.stringify(existing) !== JSON.stringify(delivery)) throw new Error("A retained audio link cannot be repointed at different material.");
-          return entry;
-        }
-        added = true;
-        return { ...entry, deliveries: [...(entry.deliveries ?? []), delivery] };
-      });
-    });
-    return added;
   }
 
   async begin(request: string): Promise<string> {
@@ -120,7 +88,7 @@ export class ConversationStore {
   constructor(private readonly folder: string, private readonly keep: number) {}
   log(key: string): ConversationLog {
     const id = createHash("sha256").update(key).digest("hex").slice(0, 32);
-    const log = this.logs.get(id) ?? new ConversationLog(id, new JsonFile(join(this.folder, `${id}.json`), z.array(ExchangeSchema), () => []), this.keep, key);
+    const log = this.logs.get(id) ?? new ConversationLog(id, new JsonFile(join(this.folder, `${id}.json`), z.array(ExchangeSchema), () => []), this.keep);
     this.logs.set(id, log);
     return log;
   }

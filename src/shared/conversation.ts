@@ -1,5 +1,3 @@
-import type { AudioDeliveryRef } from "./audio-delivery";
-
 /** A short public action receipt; never private model reasoning. */
 export interface ConversationActivity {
   id: string;
@@ -17,7 +15,5 @@ export interface ConversationExchange {
   activity?: ConversationActivity[];
   rationale?: string;
   versionId?: string | null;
-  /** Trusted references to retained supplied audio; URLs are rebuilt for the current local server. */
-  deliveries?: AudioDeliveryRef[];
   status: "running" | "complete" | "stopped" | "failed";
 }

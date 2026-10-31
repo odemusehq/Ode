@@ -1,13 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import type { JsonRequest } from "../services/capabilities";
 import { emptyLeadSheet } from "../shared/song";
 import type { ToolContext } from "../tools/define";
-import { lyricist } from "../tools/lyricist";
+import { lyricist } from "../tools/lyrics/lyricist";
 
 test("lyric work reaches the configured Lyricist with current text, exact notes and artist context without saving a draft", async () => {
   const sheet = { ...emptyLeadSheet(), title: "Open Door", lyrics: "[Chorus]\nLeave the door ajar", lyricsRevision: 3, intent: { mood: "hopeful" } };
   const notes = [{ pitch: 62, start: 0.25, duration: 1.5, velocity: 86 }];
-  const calls: { role?: string; prompt?: string; options?: { system?: string; maxTokens: number; signal?: AbortSignal } } = {};
+  const calls: { role?: string; request?: JsonRequest<unknown> } = {};
   const stopped = new AbortController();
   const ctx = {
     signal: stopped.signal,
@@ -16,23 +17,26 @@ test("lyric work reaches the configured Lyricist with current text, exact notes 
     prefs: { effective: async () => ({ genre: "pop", pronunciation: "uk" }) },
     mneme: { recall: async () => [{ topic: "rhymes", value: "Prefer imperfect rhymes", source: "said", confidence: 1 }] },
     snapshots: { latest: null },
+    skills: { read: async (name: string) => `Selected guidance for ${name}` },
     services: { chat: async (role: string) => {
       calls.role = role;
-      return { ask: async (prompt: string, options: typeof calls.options) => { calls.prompt = prompt; calls.options = options; return "Keep the opening; try 'Let the evening in'."; } };
+      return { json: async (request: JsonRequest<unknown>) => { calls.request = request; return request.parse({ text: "Let the evening in", explanation: "Keep the opening; replace the ending.", cautions: [] }); } };
     } },
   } as unknown as ToolContext;
-  const result = await lyricist.run({ task: "Rewrite the chorus ending, keep the melody", notes }, ctx);
+  const result = await lyricist.run({ task: "Rewrite the chorus ending, keep the melody", notes, skills: ["lyrics/rhymes"] }, ctx);
   assert.equal(calls.role, "lyrics_check");
-  const sent = JSON.parse(calls.prompt!);
+  const sent = JSON.parse(calls.request!.user);
   assert.equal(sent.task, "Rewrite the chorus ending, keep the melody");
   assert.equal(sent.lyrics, sheet.lyrics);
   assert.equal(sent.lyricsRevision, 3);
   assert.deepEqual(sent.notes, notes);
+  assert.deepEqual(sent.guidance.map((entry: { name: string }) => entry.name), ["lyrics", "lyrics/rhymes"]);
   assert.equal(sent.preferences.pronunciation, "uk");
   assert.equal(sent.artistPreferences[0].value, "Prefer imperfect rhymes");
-  assert.equal(calls.options?.signal, stopped.signal);
-  assert.equal(calls.options?.maxTokens, 6000);
-  assert.match((result as { answer: string }).answer, /Let the evening in/);
+  assert.equal(calls.request?.signal, stopped.signal);
+  assert.equal(calls.request?.maxTokens, 6000);
+  assert.equal(calls.request?.schema.additionalProperties, false);
+  assert.equal((result as { text: string }).text, "Let the evening in");
   assert.equal(sheet.lyricsRevision, 3);
 });
 

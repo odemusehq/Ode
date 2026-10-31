@@ -21,7 +21,7 @@ import type { ChainSnapshot, DeviceSnapshot } from "../shared/set-snapshot";
 import { FakeLive } from "./fake-live";
 import { FakeSetLive } from "./fake-set-live";
 import { TestSets } from "./sets";
-import { observedSetDependencies } from "../tools/live/set-dependencies";
+import { observedSetDependencies } from "../tools/daw/state/dependencies";
 
 test("audio uploads preserve exact bytes and declared source without claiming current Live audio", async () => {
   const root = await mkdtemp(join(tmpdir(), "ode-audio-"));

@@ -12,21 +12,16 @@ export enum SupportStatus {
 
 export interface MarksSnapshot {
   status: SupportStatus;
-  /** What went wrong, while Lyrics support is out of reach. */
   detail: string;
-  /** Goes up whenever new marks arrive or the status changes. */
   version: number;
 }
 
-/**
- * Lyrics support's marks as the editor shows them. Each section is checked after a pause in its typing; answers are
- * kept by section and by line, so a line typed back, or one a linked copy shares, shows its marks at once.
- */
+/** One debounced whole-song assessment; rhyme letters never come from a different song context. */
 export class LyricsMarks {
-  private readonly sections = new Map<string, LineCheck[]>();
-  private readonly lines = new Map<string, LineCheck>();
-  private readonly timers = new Map<string, number>();
-  private readonly asking = new Set<string>();
+  private checked: { key: string; lines: LineCheck[] } | null = null;
+  private activeKey: string | null = null;
+  private timer: number | undefined;
+  private asking = false;
   private readonly listeners = new Set<() => void>();
   private snapshot: MarksSnapshot = { status: SupportStatus.Ready, detail: "", version: 0 };
   private generation = 0;
@@ -40,32 +35,33 @@ export class LyricsMarks {
 
   getSnapshot = (): MarksSnapshot => this.snapshot;
 
-  /** The marks for each sung line: the section's own answer, else what is known of each line on its own. */
+  /** Only the exact whole input can reuse marks; unchanged lines do not carry old rhyme identities. */
   marksFor(sung: readonly string[]): (LineCheck | null)[] {
-    const whole = this.sections.get(LyricsMarks.key(sung));
-    return sung.map((line, index) => whole?.[index] ?? this.lines.get(line) ?? null);
+    const lines = this.checked?.key === LyricsMarks.key(sung) ? this.checked.lines : [];
+    return sung.map((_line, index) => lines[index] ?? null);
   }
 
-  /** Checks a section's sung lines after a pause; a newer call for the same slot replaces the waiting one. */
-  request(slot: string, sung: readonly string[]): void {
-    window.clearTimeout(this.timers.get(slot));
+  request(sung: readonly string[]): void {
     const key = LyricsMarks.key(sung);
-    if (sung.length === 0 || this.sections.has(key)) return;
+    if (this.activeKey === key && (this.timer !== undefined || this.asking || this.checked?.key === key)) return;
+    if (this.timer !== undefined) window.clearTimeout(this.timer);
+    this.timer = undefined;
+    this.activeKey = key;
+    this.asking = false;
+    const generation = ++this.generation;
+    if (!sung.length || this.checked?.key === key) return;
     const lines = [...sung];
-    const generation = this.generation;
-    this.timers.set(slot, window.setTimeout(() => {
-      this.timers.delete(slot);
+    this.timer = window.setTimeout(() => {
+      this.timer = undefined;
       void this.check(key, lines, generation);
-    }, UI_CONFIG.lyricsCheckDelayMs));
+    }, UI_CONFIG.lyricsCheckDelayMs);
   }
 
-  /** A changed model starts with no marks or pending requests from its predecessor. */
   retry(): void {
     this.invalidate();
     this.publish(SupportStatus.Ready, "");
   }
 
-  /** A replaced model or closed editor must not start its waiting checks. */
   dispose(): void {
     this.invalidate();
     this.listeners.clear();
@@ -73,22 +69,21 @@ export class LyricsMarks {
 
   private invalidate(): void {
     this.generation++;
-    for (const timer of this.timers.values()) window.clearTimeout(timer);
-    this.timers.clear();
-    this.asking.clear();
-    this.sections.clear();
-    this.lines.clear();
+    if (this.timer !== undefined) window.clearTimeout(this.timer);
+    this.timer = undefined;
+    this.asking = false;
+    this.activeKey = null;
+    this.checked = null;
   }
 
   private async check(key: string, lines: string[], generation: number): Promise<void> {
-    if (generation !== this.generation || this.asking.has(key)) return;
-    this.asking.add(key);
+    if (generation !== this.generation) return;
+    this.asking = true;
     try {
       const answer = await this.api.checkLyrics({ lines });
       if (generation !== this.generation) return;
       if (answer.status === "ok") {
-        this.sections.set(key, answer.check.lines);
-        answer.check.lines.forEach((line, index) => this.keepLine(lines[index] ?? "", line));
+        this.checked = { key, lines: answer.check.lines };
         this.publish(SupportStatus.Ready, "");
       } else if (answer.status === "setup") {
         this.publish(SupportStatus.Setup, "");
@@ -98,17 +93,7 @@ export class LyricsMarks {
     } catch (error) {
       if (generation === this.generation) this.publish(SupportStatus.Unreachable, errorMessage(error));
     } finally {
-      if (generation === this.generation) this.asking.delete(key);
-    }
-  }
-
-  /** Keeps a line's marks, letting the oldest go past the limit. */
-  private keepLine(line: string, check: LineCheck): void {
-    this.lines.delete(line);
-    this.lines.set(line, check);
-    if (this.lines.size > UI_CONFIG.lyricsCheckLinesKept) {
-      const oldest = this.lines.keys().next().value;
-      if (oldest !== undefined) this.lines.delete(oldest);
+      if (generation === this.generation) this.asking = false;
     }
   }
 
@@ -117,7 +102,5 @@ export class LyricsMarks {
     for (const listener of this.listeners) listener();
   }
 
-  private static key(sung: readonly string[]): string {
-    return sung.join("\n");
-  }
+  private static key(sung: readonly string[]): string { return JSON.stringify(sung); }
 }

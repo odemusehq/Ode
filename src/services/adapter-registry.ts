@@ -1,10 +1,6 @@
 import type { RoleConfig } from "../shared/config";
-import { ElevenLabsSoundGenerator } from "./adapters/elevenlabs-sound";
-import { FalStemSeparator } from "./adapters/fal-stem-separator";
 import { OpenAiCompatibleAudioUnderstander } from "./adapters/openai-compatible-audio";
-import { OpenAiCompatibleImageGenerator } from "./adapters/openai-compatible-images";
 import { OpenAiCompatibleText } from "./adapters/openai-compatible-text";
-import { SelfHostedSingingVoice, SelfHostedSoundGenerator, SelfHostedStemSeparator } from "./adapters/self-hosted";
 import { MetaTranscriber } from "./adapters/transcribers";
 import { Capability, type CapabilityAdapters } from "./capabilities";
 import { KeyGuard } from "./key-guard";
@@ -28,20 +24,6 @@ export class AdapterRegistry {
     },
     [Capability.Transcription]: {
       [Provider.Meta]: (role, speech) => new MetaTranscriber(role, speech),
-    },
-    [Capability.ImageGeneration]: {
-      [Provider.Meta]: (role) => new OpenAiCompatibleImageGenerator(role),
-    },
-    [Capability.StemSeparation]: {
-      [Provider.Fal]: (role) => new FalStemSeparator(role),
-      [Provider.SelfHosted]: (role) => new SelfHostedStemSeparator(role),
-    },
-    [Capability.SingingVoice]: {
-      [Provider.SelfHosted]: (role) => new SelfHostedSingingVoice(role),
-    },
-    [Capability.SoundGeneration]: {
-      [Provider.ElevenLabs]: (role) => new ElevenLabsSoundGenerator(role),
-      [Provider.SelfHosted]: (role) => new SelfHostedSoundGenerator(role),
     },
   };
 

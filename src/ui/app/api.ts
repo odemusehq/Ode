@@ -230,14 +230,6 @@ export class OdeApi {
     return this.request(HttpMethod.Get, API.status);
   }
 
-  releaseFileUrl(name: string): string {
-    return API.releaseFile(name);
-  }
-
-  audioDeliveryUrl(songId: string, id: string): string {
-    return API.audioDelivery(songId, id);
-  }
-
   /** Sends every change as JSON, the only kind the server accepts for one. */
   private async request<T>(method: HttpMethod, path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
     const reads = method === HttpMethod.Get;

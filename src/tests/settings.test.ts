@@ -18,31 +18,30 @@ test("a fresh install starts on Meta's first model, and a saved key shows only a
   assert.equal(fresh.model, "muse-spark-1.3");
   assert.equal(fresh.keySet, false);
 
-  const saved = await settings.update({ provider: "baseten", model: "meta-models/muse-spark-open-1026", key: "sk-test", services: {} });
+  const saved = await settings.update({ provider: "baseten", model: "meta-models/muse-spark-open-1026", key: "sk-test" });
   assert.equal(saved.keySet, true);
   assert.equal(saved.credit, "Built with Muse Spark Open");
   assert.ok(!JSON.stringify(saved).includes("sk-test"));
 
-  const kept = await settings.update({ provider: "baseten", model: "meta-models/muse-spark-open-1026", services: {} });
+  const kept = await settings.update({ provider: "baseten", model: "meta-models/muse-spark-open-1026" });
   assert.equal(kept.keySet, true);
 });
 
-test("each role reaches its provider's endpoint, with Meta's models for cover art when the chat runs elsewhere", async () => {
+test("each role reaches its provider's endpoint, with listening and transcription when the chat runs elsewhere", async () => {
   const settings = await freshSettings();
   const roles = new ModelRoles(settings, ProviderCatalog.bundled);
-  await settings.update({ provider: "modal", model: "my-endpoint.us-west.modal.direct", key: "wk-1.ws-2", metaKey: "meta-key", services: {} });
+  await settings.update({ provider: "modal", model: "my-endpoint.us-west.modal.direct", key: "wk-1.ws-2", metaKey: "meta-key" });
   const onModal = await roles.roles();
   assert.equal(onModal.main.baseUrl, "https://inference.us-west.modal.direct/v1");
   assert.equal(onModal.main.conversationHeader, "Modal-Routing-Affinity-Key");
   assert.equal(onModal.subagent.model, "my-endpoint.us-west.modal.direct");
-  assert.equal(onModal.image_generation.apiKey, "meta-key");
-  assert.equal(onModal.image_generation.model, "muse-image-1.0");
-  assert.equal(onModal.stem_separation.provider, "");
+  assert.equal(onModal.transcription.apiKey, "meta-key");
+  assert.deepEqual(Object.keys(onModal).sort(), ["audio_understanding", "lyrics_check", "main", "subagent", "transcription"]);
   assert.equal(onModal.audio_understanding.model, "muse-spark-1.2");
 
-  await settings.update({ provider: "meta", model: "muse-spark-1.3", key: "meta-main", services: {} });
+  await settings.update({ provider: "meta", model: "muse-spark-1.3", key: "meta-main" });
   assert.equal((await roles.roles()).transcription.apiKey, "meta-main");
-  await settings.update({ provider: "baseten", model: "meta-models/muse-spark-open-1026", key: "baseten-test", services: {} });
+  await settings.update({ provider: "baseten", model: "meta-models/muse-spark-open-1026", key: "baseten-test" });
   const onBaseten = await roles.roles();
   assert.equal(onBaseten.audio_understanding.provider, "baseten");
   assert.equal(onBaseten.audio_understanding.apiKey, "baseten-test");

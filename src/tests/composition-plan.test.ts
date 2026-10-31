@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import * as song from "../shared/song";
 import type { ToolContext } from "../tools/define";
-import { songTools } from "../tools/song";
-import { hookRetainTool } from "../tools/song/hooks";
+import { mnemeTools as songTools } from "../tools/mneme";
+import { hookRetainTool } from "../tools/mneme/hooks";
 
 const signature = { numerator: 4, denominator: 4 } as const;
 const ctx = {

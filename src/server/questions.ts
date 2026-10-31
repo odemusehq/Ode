@@ -6,8 +6,6 @@ export interface QuestionView {
   id: string;
   text: string;
   options: string[];
-  /** Release files shown as the answers, one per option. */
-  images?: string[];
 }
 
 interface WaitingQuestion {
@@ -21,9 +19,9 @@ export class Questions implements MusicianQuestions {
 
   constructor(private readonly emit: (event: UiEvent) => void) {}
 
-  ask(text: string, options: string[], images?: string[]): Promise<string | null> {
+  ask(text: string, options: string[]): Promise<string | null> {
     const id = randomUUID();
-    const view: QuestionView = images && images.length > 0 ? { id, text, options, images } : { id, text, options };
+    const view: QuestionView = { id, text, options };
     return new Promise((resolve) => {
       this.waiting.set(id, { view, resolve });
       this.emit({ type: "question", ...view });

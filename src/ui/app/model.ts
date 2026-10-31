@@ -21,8 +21,6 @@ export interface Question {
   id: string;
   text: string;
   options: string[];
-  /** Release files shown as the answers, one per option; empty for answers in words. */
-  images: string[];
   /** The musician answered and the answer is still on its way to Ode. */
   answered: boolean;
 }

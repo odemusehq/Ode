@@ -1,11 +1,11 @@
 import type { Role, RoleConfig } from "../shared/config";
-import { Provider } from "./providers";
+import { t } from "../shared/i18n";
 
 /** Whether a role can be used, and what the musician sets in Ode: Settings to make it work. */
 export class RoleCheck {
-  /** A role is usable once it has a provider, an endpoint and a key; a self-hosted server needs the endpoint alone. */
+  /** Configuration names the provider, model, endpoint and local key; actual provider access is checked on use. */
   static isConfigured(role: RoleConfig): boolean {
-    return Boolean(role.provider && role.baseUrl && (role.apiKey || role.provider === Provider.SelfHosted));
+    return Boolean(role.provider && role.baseUrl && role.model && role.apiKey);
   }
 
   /** What the musician sets in Ode: Settings to make a role work. */
@@ -13,13 +13,13 @@ export class RoleCheck {
     switch (role) {
       case "main":
       case "subagent":
-        return "Choose a provider and model, and add its key, in Ode: Settings";
+        return t("modelServices.setup.agent");
       case "audio_understanding":
+        return t("modelServices.setup.listening");
       case "transcription":
-      case "image_generation":
-        return "This uses Meta's models: add a Meta key in Ode: Settings";
-      default:
-        return `Add a ${role.replace("_", " ")} service in Ode: Settings, under More services`;
+        return t("modelServices.setup.transcription");
+      case "lyrics_check":
+        return t("modelServices.setup.lyricist");
     }
   }
 }

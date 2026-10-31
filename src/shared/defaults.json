@@ -25,9 +25,6 @@
     "groupMinutes": 10,
     "listLimit": 30
   },
-  "release": {
-    "coverChoices": 4
-  },
   "server": {
     "keepaliveMs": 15000
   },
@@ -55,18 +52,11 @@
   },
   "services": {
     "textMaxTokens": 4000,
-    "audioMaxTokens": 4000,
-    "imageRequestSize": "1024x1024",
-    "coverSize": 3000
+    "audioMaxTokens": 4000
   },
   "notice": {
     "width": 380,
     "height": 170
-  },
-  "spelling": {
-    "minConfidence": 0.3,
-    "wordsForFullEvidence": 5,
-    "izeWeight": 0.5
   },
   "storage": {
     "renameRetries": 5,

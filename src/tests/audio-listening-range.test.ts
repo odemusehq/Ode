@@ -8,7 +8,7 @@ import { writeWav } from "../audio/wav";
 import { TempFolder } from "../mneme/paths";
 import { OpenAiCompatibleAudioUnderstander } from "../services/adapters/openai-compatible-audio";
 import { audioHash } from "../services/music-audio";
-import { mediaTools } from "../tools/media";
+import { listeningTools as mediaTools } from "../tools/daw/state/listening";
 
 test("listening sends the selected source frames, keeping stereo and whole-file identity", async () => {
   const directory = await mkdtemp(join(tmpdir(), "ode-listen-range-"));

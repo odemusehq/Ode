@@ -41,11 +41,13 @@ export interface WordCheck {
 
 /** The rhyme the editor colours at a line's end. */
 export interface RhymeCheck {
-  /** "A", "B"… in the section's scheme; empty for a line without a rhyming partner. */
+  /** "A", "B"… in the whole song's sound groups; empty for a line without a rhyming partner. */
   letter: string;
   quality: "perfect" | "near" | "none";
   /** The letters of the last word that carry the rhyme, such as "ide" in "inside"; empty without a rhyme. */
   part: string;
+  /** Lyricist's phonetic reading from the stressed vowel onward; empty when uncertain. */
+  sound: string;
 }
 
 export interface LineCheck {
@@ -53,12 +55,12 @@ export interface LineCheck {
   rhyme: RhymeCheck;
 }
 
-/** Lyrics support's marks for one section, one entry per line sent, in order. */
+/** Lyrics support's marks for the whole song, one entry per line sent, in order. */
 export interface LyricsCheck {
   lines: LineCheck[];
 }
 
-/** A section to check: its sung lines, with labels and blank lines left out. */
+/** The whole song to check: its sung lines, with labels and blank lines left out. */
 export interface LyricsCheckRequest {
   lines: string[];
 }

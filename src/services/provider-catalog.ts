@@ -1,11 +1,5 @@
 import { t, type MessageKey } from "../shared/i18n";
-import {
-  OPTIONAL_ROLES,
-  type ChatModelOption,
-  type ChatProviderOption,
-  type OptionalRole,
-  type ServiceProviderOption,
-} from "../shared/settings";
+import type { ChatModelOption, ChatProviderOption } from "../shared/settings";
 import catalogFile from "./providers.json";
 
 /** A provider whose chat model runs Ode's agent, with what Ode needs to reach it. */
@@ -17,12 +11,11 @@ export interface ChatProvider extends ChatProviderOption {
   readonly conversationHeader?: string;
 }
 
-/** Meta's models for listening, transcription and cover art, used with a Meta key whatever the chat provider. */
+/** Meta's models for listening and transcription, used with a Meta key whatever the chat provider. */
 export interface MetaModels {
   readonly baseUrl: string;
   readonly audioUnderstanding: string;
   readonly transcription: string;
-  readonly imageGeneration: string;
 }
 
 /** A model that can run Lyrics support, with the lowest reasoning effort it accepts. */
@@ -46,22 +39,18 @@ interface CatalogFile {
   chat: (Omit<ChatProvider, "keyHint" | "modelHint"> & { keyHint: MessageKey; modelHint?: MessageKey })[];
   meta: MetaModels;
   lyrics: LyricsCatalog;
-  services: Record<OptionalRole, (Omit<ServiceProviderOption, "name"> & ({ name: string } | { nameKey: MessageKey }))[]>;
 }
 
 /** The providers and models Ode offers in Settings, bundled with Ode as providers.json. */
 export class ProviderCatalog {
   static readonly bundled = new ProviderCatalog(catalogFile as CatalogFile);
 
-  private readonly file: Omit<CatalogFile, "chat" | "services"> & { chat: ChatProvider[]; services: Record<OptionalRole, ServiceProviderOption[]> };
+  private readonly file: Omit<CatalogFile, "chat"> & { chat: ChatProvider[] };
 
   private constructor(file: CatalogFile) {
     this.file = {
       ...file,
       chat: file.chat.map((provider) => ({ ...provider, keyHint: t(provider.keyHint), modelHint: provider.modelHint ? t(provider.modelHint) : undefined })),
-      services: Object.fromEntries(OPTIONAL_ROLES.map((role) => [role, file.services[role].map((provider) => ({
-        id: provider.id, baseUrl: provider.baseUrl, name: "nameKey" in provider ? t(provider.nameKey) : provider.name,
-      }))])) as Record<OptionalRole, ServiceProviderOption[]>,
     };
   }
 
@@ -84,10 +73,6 @@ export class ProviderCatalog {
       servesMetaModels,
       models: [...models],
     }));
-  }
-
-  serviceOptions(): Record<OptionalRole, ServiceProviderOption[]> {
-    return Object.fromEntries(OPTIONAL_ROLES.map((role) => [role, [...this.file.services[role]]])) as Record<OptionalRole, ServiceProviderOption[]>;
   }
 
   /** The first provider and its first model: what a fresh install starts with. */

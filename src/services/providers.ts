@@ -1,11 +1,8 @@
-/** Model providers Ode knows how to talk to. The chat provider is chosen in Settings; optional services each pick one. */
+/** Model providers Ode knows how to talk to, chosen in Settings. */
 export enum Provider {
   Meta = "meta",
   Baseten = "baseten",
   Modal = "modal",
-  Fal = "fal",
-  ElevenLabs = "elevenlabs",
-  SelfHosted = "self-hosted",
 }
 
 /** Reads a provider's name from settings. */

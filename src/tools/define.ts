@@ -1,19 +1,20 @@
-import type { ProductionTaskStore } from "../mneme/production-task";
-import type { MidiMaterialScope } from "../harness/midi-materials";
-import type { AudioDeliveries } from "../mneme/audio-deliveries";
 import type { z } from "zod";
-import type { OdeConfig } from "../shared/config";
-import type { LiveConnections } from "../shared/live";
-import type { UiEvent } from "../shared/events";
-import type { SetSnapshot } from "../shared/set-snapshot";
-import type { Services } from "../services/types";
-import type { SongStore, SongVersions } from "../mneme/song-store";
+import type { MidiMaterialScope } from "../harness/midi-materials";
+import type { SkillLibrary } from "../harness/skills";
 import type { Mneme } from "../mneme/artist";
 import type { LyricsStore } from "../mneme/lyrics-store";
-import type { PreferencesStore } from "../mneme/preferences";
 import type { TempFolder } from "../mneme/paths";
-import type { RefNames } from "./live/ref-names";
+import type { PreferencesStore } from "../mneme/preferences";
+import type { ProductionTaskStore } from "../mneme/production-task";
+import type { SongStore, SongVersions } from "../mneme/song-store";
+import type { Services } from "../services/types";
+import type { OdeConfig } from "../shared/config";
+import type { UiEvent } from "../shared/events";
+import type { LiveConnections } from "../shared/live";
 import type { MaxAudioRequest, MaxAudioResult, MaxAudioSources } from "../shared/max-audio";
+import type { MaxParameters } from "../shared/max-parameters";
+import type { SetSnapshot } from "../shared/set-snapshot";
+import type { RefNames } from "./daw/ref-names";
 
 /** What a tool changes: "none" (it only reads or computes), the Live Set, or Mneme (the lyrics, the lead sheet, memory, settings, release files). */
 export type ToolChange = "none" | "set" | "memory";
@@ -32,14 +33,13 @@ export interface MusicianQuestions {
    * The answer the musician tapped, or null when they stopped Ode at the question. `images`, when given, are file names in the
    * release folder shown as the answers, one per option and in the same order.
    */
-  ask(text: string, options: string[], images?: string[]): Promise<string | null>;
+  ask(text: string, options: string[]): Promise<string | null>;
 }
 
 export interface ToolContext {
   /** Exact temporary note material shared only within the current accepted request and original song. */
   midiMaterials?: MidiMaterialScope;
   production: ProductionTaskStore;
-  deliveries: AudioDeliveries;
   exchangeId?: string;
   toolCallId?: string;
   /** Stops later stages of an interrupted request. */
@@ -54,11 +54,15 @@ export interface ToolContext {
   mneme: Mneme;
   prefs: PreferencesStore;
   services: Services;
+  /** The same on-demand instructions available to the agent, for selected Lyricist guidance. */
+  skills?: SkillLibrary;
   /** Actual audio through the paired Max device; unavailable before a capable device connects. */
   maxAudio?: {
     sources(signal?: AbortSignal): Promise<MaxAudioSources>;
     capture(input: MaxAudioRequest, signal?: AbortSignal): Promise<MaxAudioResult>;
   };
+  /** Actual displayed units and native control state through the paired Max device. */
+  maxParameters?: MaxParameters;
   /** Where generated and rendered files go. */
   temp: TempFolder;
   emit: (event: UiEvent) => void;

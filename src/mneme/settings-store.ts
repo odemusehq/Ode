@@ -3,9 +3,7 @@ import type { ProviderCatalog } from "../services/provider-catalog";
 import { Provider } from "../services/providers";
 import {
   ModelSettingsSchema,
-  OPTIONAL_ROLES,
   type ModelSettings,
-  type ServiceSettings,
   type SettingsUpdate,
   type SettingsView,
 } from "../shared/settings";
@@ -34,6 +32,7 @@ export class SettingsStore {
   async update(change: SettingsUpdate): Promise<SettingsView> {
     // A saved key stays with the provider it belongs to: choosing another provider starts with that provider's key.
     const next = await this.file.update((current) => ({
+      ...current,
       provider: change.provider,
       model: change.model,
       key: change.key ?? (change.provider === current.provider ? current.key : ""),
@@ -45,17 +44,6 @@ export class SettingsStore {
             key: change.lyrics.key ?? (change.lyrics.provider === current.lyrics.provider ? current.lyrics.key : ""),
           }
         : current.lyrics,
-      services: Object.fromEntries(
-        OPTIONAL_ROLES.flatMap((role) => {
-          const service = change.services[role];
-          if (!service?.provider) return [];
-          const saved = current.services[role];
-          const sameService = saved?.provider === service.provider && saved.baseUrl === service.baseUrl;
-          const apiKey = service.apiKey ?? (sameService ? saved.apiKey : "");
-          const kept: ServiceSettings = { ...service, apiKey };
-          return [[role, kept]];
-        }),
-      ),
     }));
     return this.toView(next);
   }
@@ -68,7 +56,7 @@ export class SettingsStore {
   }
 
   private initial(): ModelSettings {
-    return { ...this.catalog.firstChoice(), key: "", metaKey: "", lyrics: { ...this.catalog.lyricsDefault(), key: "" }, services: {} };
+    return { ...this.catalog.firstChoice(), key: "", metaKey: "", lyrics: { ...this.catalog.lyricsDefault(), key: "" } };
   }
 
   private toView(settings: ModelSettings): SettingsView {
@@ -83,14 +71,6 @@ export class SettingsStore {
         model: lyrics.model.id,
         keySet: SettingsStore.lyricsKey(settings, lyrics.provider.id).length > 0,
       },
-      services: Object.fromEntries(
-        OPTIONAL_ROLES.flatMap((role) => {
-          const service = settings.services[role];
-          return service
-            ? [[role, { provider: service.provider, baseUrl: service.baseUrl, model: service.model, keySet: service.apiKey.length > 0 }]]
-            : [];
-        }),
-      ),
       credit: this.catalog.credit(settings.provider, settings.model),
     };
   }

@@ -3,7 +3,7 @@ import type { DeviceRef } from "../shared/live";
 import type { SetSnapshot, TrackSnapshot } from "../shared/set-snapshot";
 import type { DeletionCheck } from "../harness/session";
 import type { SetReader } from "../tools/define";
-import { DeviceRefSchema, TrackRefSchema } from "../tools/live/schemas";
+import { DeviceRefSchema, TrackRefSchema } from "../tools/daw/schemas";
 import { RestorePlanner } from "./restore-planner";
 import { SetLookup } from "./set-lookup";
 

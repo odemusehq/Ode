@@ -49,10 +49,6 @@ export class SongStore {
     return this.dir;
   }
 
-  get releaseDir(): string {
-    return join(this.dir, "release");
-  }
-
   get versionsDir(): string {
     return join(this.dir, "versions");
   }

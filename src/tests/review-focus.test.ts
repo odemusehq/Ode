@@ -6,11 +6,7 @@ import { test } from "node:test";
 import { NotFoundError } from "../live/extension/errors";
 import { ReferenceResolver } from "../live/extension/refs";
 import { userPaths } from "../mneme/paths";
-import { SettingsStore } from "../mneme/settings-store";
 import { SongStore } from "../mneme/song-store";
-import { ModelServices } from "../services";
-import { ModelRoles } from "../services/model-roles";
-import { ProviderCatalog } from "../services/provider-catalog";
 import { FakeLive } from "./fake-live";
 
 function notFound(message: string): (error: unknown) => boolean {
@@ -53,23 +49,4 @@ test("moved or renamed objects are reported as not found; a tagged clip is found
   assert.throws(() => refs.track({ name: "Vocals" }), notFound('not found: track named "Vocals"'));
   assert.throws(() => refs.track({ index: 5 }), notFound("not found: track at index 5"));
   assert.equal(refs.clip({ tag: "o3f2" }).clip, hook);
-});
-
-// 4. Optional providers left unset.
-
-test("optional providers left unset name the setting to add", async () => {
-  const dir = await tempDir();
-  const services = new ModelServices(new ModelRoles(new SettingsStore(dir, ProviderCatalog.bundled), ProviderCatalog.bundled));
-  const available = await services.available();
-  assert.equal(available.stem_separation, false);
-  assert.equal(available.singing_voice, false);
-  assert.equal(available.sound_generation, false);
-  await assert.rejects(
-    async () => services.generateSound("rain on a tin roof", 2, join(dir, "rain.wav")),
-    /Add a sound generation service/,
-  );
-  await assert.rejects(
-    async () => services.separateStem(join(dir, "song.wav"), "the guitar", dir),
-    /Add a stem separation service/,
-  );
 });

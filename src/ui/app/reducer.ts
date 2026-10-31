@@ -134,7 +134,7 @@ function truncateAfter(versions: readonly VersionListItem[], afterId: string): r
 }
 
 function addQuestion(state: AppState, event: QuestionEvent): AppState {
-  const question = { id: event.id, text: event.text, options: event.options, images: event.images ?? [], answered: false };
+  const question = { id: event.id, text: event.text, options: event.options, answered: false };
   const known = state.questions.some((item) => item.id === event.id);
   const questions = known ? state.questions.map((item) => (item.id === event.id ? question : item)) : [...state.questions, question];
   return { ...state, questions };

@@ -3,13 +3,11 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { TempFolder } from "../mneme/paths";
 import { AudioFileDecoder } from "../audio/decode";
 import { writeWav, WavBitDepth } from "../audio/wav";
 import { MetaTranscriber } from "../services/adapters/transcribers";
 import { audioHash, MusicAudio } from "../services/music-audio";
 import { SpeechAudio } from "../services/speech-audio";
-import { mediaTools } from "../tools/media";
 
 const role = { provider: "meta", baseUrl: "https://example.invalid", apiKey: "offline", model: "asr" };
 
@@ -71,23 +69,4 @@ test("ASR rejects incompatible native formats before dispatch; captured speech n
     assert.equal(speech.payload.representation.frames, 32);
     assert.equal(speech.source.sha256, frozen.source.sha256);
   } finally { globalThis.fetch = originalFetch; await rm(directory, { recursive: true, force: true }); }
-});
-
-test("vocal detection seconds stay canonical and beat estimates require an explicit tempo assumption", async () => {
-  const directory = await mkdtemp(join(tmpdir(), "ode-asr-times-"));
-  try {
-    const path = join(directory, "vocal.wav");
-    await writeWav(path, { sampleRate: 16_000, channels: [new Float32Array(16)] });
-    const tool = mediaTools.find((entry) => entry.name === "vocal_transcribe")!;
-    const transcript = { text: "Stay", turns: [{ start: 1, end: 2, text: "Stay" }], timing: "speech-detection-approximate" };
-    const ctx = { temp: new TempFolder(directory), services: { transcribe: async () => transcript } } as never;
-    const seconds: any = await tool.run({ path }, ctx);
-    assert.deepEqual(seconds.turns, transcript.turns);
-    assert.equal(seconds.beatEstimates, undefined);
-    const assumed: any = await tool.run({ path, assumedTempoBpm: 120 }, ctx);
-    assert.deepEqual(assumed.turns, transcript.turns);
-    assert.equal(assumed.beatEstimates.turns[0].startBeat, 2);
-    assert.equal(assumed.beatEstimates.turns[0].endBeat, 4);
-    assert.equal(assumed.beatEstimates.tempoAutomation, "unknown");
-  } finally { await rm(directory, { recursive: true, force: true }); }
 });

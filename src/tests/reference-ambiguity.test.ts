@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { ReferenceResolver } from "../live/extension/refs";
 import { SetLookup } from "../server/set-lookup";
 import { MIXER_INDEX } from "../shared/live";
-import { RefNames } from "../tools/live/ref-names";
+import { RefNames } from "../tools/daw/ref-names";
 import { FakeLive } from "./fake-live";
 import { TestSets } from "./sets";
 

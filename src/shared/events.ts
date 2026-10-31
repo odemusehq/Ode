@@ -33,8 +33,8 @@ export type UiEvent =
   | { type: "result"; text: string; versionId: string | null; kind: ResultKind }
   /** The answer to Why? about the change with this version id. */
   | { type: "answer"; versionId: string; text: string }
-  /** A one-line question with two to four answers; images, when given, are release files shown as the answers. */
-  | { type: "question"; id: string; text: string; options: string[]; images?: string[] }
+  /** A one-line question with two to four answers. */
+  | { type: "question"; id: string; text: string; options: string[] }
   | { type: "question-resolved"; id: string; choice: string | null }
   | { type: "version"; version: VersionListItem }
   /** A restore deleted every version after this one. */

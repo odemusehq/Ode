@@ -84,10 +84,12 @@ function LyricsEditor({ text, strictRhymes, settingsRevision }: LyricsEditorProp
   const [view, setView] = useState<LyricsView>(() => LyricsViewStore.load());
   const [retries, setRetries] = useState(0);
 
-  // Lyrics support checks each section after a pause in its typing.
-  useEffect(() => {
-    sections.forEach((section, index) => marks.request(String(index), section.lines.filter(LyricsSections.isSung)));
-  }, [sections, marks, retries]);
+  const sung = useMemo(() => sections.flatMap((section) => section.lines.filter(LyricsSections.isSung)), [sections]);
+  const checks = marks.marksFor(sung);
+  let offset = 0;
+  const starts = sections.map((section) => { const start = offset; offset += section.lines.filter(LyricsSections.isSung).length; return start; });
+  // One shared assessment keeps rhyme sound identities consistent across every section.
+  useEffect(() => { marks.request(sung); }, [sung, marks, retries]);
 
   const toggleView = (mark: keyof LyricsView) => {
     const next = { ...view, [mark]: !view[mark] };
@@ -96,8 +98,11 @@ function LyricsEditor({ text, strictRhymes, settingsRevision }: LyricsEditorProp
   };
 
   /** The marks behind a section's text: each sung line takes its own, labels and blank lines take none. */
-  const marksBehind = (strict: boolean) => (rows: readonly string[]) => {
-    const found = marks.marksFor(rows.filter(LyricsSections.isSung));
+  const marksBehind = (strict: boolean, sectionIndex: number) => (rows: readonly string[]) => {
+    const current = rows.filter(LyricsSections.isSung);
+    const expected = sections[sectionIndex]!.lines.filter(LyricsSections.isSung);
+    const found = current.length === expected.length && current.every((line, at) => line === expected[at])
+      ? checks.slice(starts[sectionIndex], starts[sectionIndex]! + current.length) : [];
     let sung = 0;
     return rows.map((row, index) => (
       <LineMarks key={index} line={row} check={LyricsSections.isSung(row) ? (found[sung++] ?? null) : null} strict={strict} />
@@ -293,12 +298,13 @@ function LyricsEditor({ text, strictRhymes, settingsRevision }: LyricsEditorProp
             linkTargets={sections.flatMap((other, at) => at !== index && other.name !== section.name ? [{ id: String(at), label: other.name ?? t("lyrics.untitledSection", { index: (at + 1) }) }] : [])}
             onLinkTo={(to) => link(index, to)}
             onPartners={(show) => setPartners(show ? section.name : null)}
-            renderMarks={marksBehind(section.name !== null && strictRhymes.includes(section.name))}
+            renderMarks={marksBehind(section.name !== null && strictRhymes.includes(section.name), index)}
             analysis={view.details && <details className="section__analysis"><summary>{t("lyrics.lineAnalysisTitle")}</summary><ol>
               {section.lines.filter(LyricsSections.isSung).map((line, lineIndex) => {
-                const check = marks.marksFor(section.lines.filter(LyricsSections.isSung))[lineIndex];
+                const check = checks[starts[index]! + lineIndex];
                 return <li key={lineIndex}><p>{line}</p>{check ? <p>
                   {t("lyrics.lineAnalysis", { count: (MarkLayout.count(check)), words: (check.words.map((word) => t("lyrics.wordAnalysis", { word: (word.text), syllables: (word.syllables.map((syllable, at) => t("lyrics.syllableAnalysis", { syllable: (syllable), stress: (word.stress[at]) }))).join(", ") })).join("; ")), rhyme: (t("lyrics.rhymeAnalysis", { hasLetter: Boolean((check.rhyme.letter)), letter: (check.rhyme.letter), quality: (check.rhyme.quality), hasPart: Boolean((check.rhyme.part)), part: (check.rhyme.part) })) })}
+                  {check.rhyme.sound && <code> {check.rhyme.sound}</code>}
                 </p> : <p>{t("lyrics.analysisUnavailable")}</p>}</li>;
               })}
             </ol></details>}

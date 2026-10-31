@@ -13,7 +13,6 @@ const INPUTS: Readonly<Record<string, readonly Pattern[]>> = {
   take_lane_create_midi_clip: TOP_NOTES,
   clip_slot_create_midi_clip: TOP_NOTES,
   lyricist: TOP_NOTES,
-  demo_vocal_render: [["lines", "*", "notes"]],
 };
 
 /** Retain notes actually read from Live, without generating or transforming them. */

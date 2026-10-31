@@ -1,4 +1,7 @@
 import type { DeviceParameter } from "@ableton-extensions/sdk";
+import { MIXER_INDEX, type ParameterRef } from "../../../shared/live";
+import type { MaxParameterAddress } from "../../../shared/max-parameters";
+import type { DeviceContainer } from "../refs";
 import { isMaxWindowParameter } from "../../../shared/max-window";
 import { LiveError } from "../errors";
 import type { Version } from "../sdk";
@@ -26,7 +29,38 @@ export class DeviceOperations extends OperationGroup<DeviceOp> {
   private getParameter({ parameter }: OpArgs<"parameter_get">): OpRun<"parameter_get"> {
     const found = this.refs.parameter(parameter);
     DeviceOperations.allowParameter(found.parameter);
-    return async () => this.describe.parameter(found.parameter, found.index, true);
+    const maxAddress = this.parameterAddress(parameter, found.index, found.parameter.name);
+    return async () => ({ ...await this.describe.parameter(found.parameter, found.index, true), maxAddress });
+  }
+
+  /** Max uses positional LOM paths, not SDK handles. Native names and subsequent Max read tokens guard that boundary. */
+  private parameterAddress(ref: ParameterRef, index: number, name: string): MaxParameterAddress {
+    const track = this.refs.track(ref.device.track);
+    const position = this.set.tracks().position(track);
+    let path = position.kind === "main" ? "live_set master_track"
+      : position.kind === "return" ? `live_set return_tracks ${position.index}` : `live_set tracks ${position.index}`;
+    const guards: { path: string; name?: string }[] = [{ path, name: track.name }];
+    let container: DeviceContainer = track;
+    const chain = ref.device.chain ?? [];
+    for (let at = 0; at < chain.length; at += 2) {
+      const rack = this.refs.rack({ track: ref.device.track, chain: chain.slice(0, at), index: chain[at]! });
+      path += ` devices ${chain[at]}`;
+      guards.push({ path, name: rack.name });
+      path += ` chains ${chain[at + 1]}`;
+      guards.push({ path });
+      container = rack.chains[chain[at + 1]!]!;
+    }
+    if (ref.device.index === MIXER_INDEX) {
+      path += " mixer_device";
+      path += index === 0 ? " volume" : index === 1 ? " panning" : ` sends ${index - 2}`;
+    } else {
+      const device = container.devices[ref.device.index]!;
+      path += ` devices ${ref.device.index}`;
+      guards.push({ path, name: device.name });
+      path += ` parameters ${index}`;
+    }
+    guards.push({ path, name });
+    return { path, guards };
   }
 
   private setParameter({ parameter, value }: OpArgs<"parameter_set">): OpRun<"parameter_set"> {

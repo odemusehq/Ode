@@ -102,9 +102,7 @@
     "conversation": "Conversation with Ode",
     "savedConversation": "Saved conversation",
     "attachedAudio": "Attached audio",
-    "preparedAudio": "Prepared audio files",
     "removeAttachment": "Remove {name}",
-    "download": "Download {name}",
     "requestFailed": "This request failed.",
     "requestStopped": "This request was stopped.",
     "dictateMessage": "Dictate message",
@@ -220,7 +218,15 @@
       "chain": "Chain {position} · {devices}",
       "duration": "Length {beats} beats",
       "warpMode": "Warp · {mode}",
-      "warpModes": {"beats":"Beats","tones":"Tones","texture":"Texture","repitch":"Re-Pitch","complex":"Complex","rex":"REX","complexPro":"Complex Pro"},
+      "warpModes": {
+        "beats": "Beats",
+        "tones": "Tones",
+        "texture": "Texture",
+        "repitch": "Re-Pitch",
+        "complex": "Complex",
+        "rex": "REX",
+        "complexPro": "Complex Pro"
+      },
       "warpMarkers": "{count, plural, one {# warp marker} other {# warp markers}}",
       "liveValue": "Stored Live parameter values; units are not recorded."
     }
@@ -286,19 +292,9 @@
     }
   },
   "settings": {
-    "serviceLabels": {
-      "stem_separation": "Stem separation",
-      "singing_voice": "Singing voice for demo vocals",
-      "sound_generation": "Sound generation"
-    },
-    "serviceInfo": {
-      "stem_separation": "Splits a recording into the sound you describe and everything else, for samples and remixes.",
-      "singing_voice": "Sings demo vocals in your own voice, once you agree to it.",
-      "sound_generation": "Makes new one-shots and textures from a description."
-    },
     "modelInfo": "Ode''s main model directs composition, arrangement and production through Live, Max for Live and your installed plug-ins.",
     "lyricsInfo": "Lyricist writes, revises and reviews lyrics, including syllables, rhymes and their fit to the melody. It also supplies the editor''s annotations.",
-    "metaInfo": "Meta''s models use this key for cover art, transcribing recordings and listening to audio.",
+    "metaInfo": "Meta''s models use this key for transcription and listening to audio.",
     "savingNotice": "Wait for Settings to finish saving.",
     "closeNotice": "Save your settings or choose Cancel before closing Ode.",
     "leaveNotice": "Save your settings or choose Cancel before changing views.",
@@ -309,22 +305,14 @@
     "savedKey": "Saved",
     "keyRequired": "Needed for this provider",
     "refreshFailed": "Settings were saved, but Ode could not refresh: {error}",
-    "fieldsetLabel": "Model and service settings",
+    "fieldsetLabel": "Model settings",
     "provider": "Provider",
     "model": "Model",
     "addKeyToListModels": "Add the key to list your models",
     "key": "Key",
-    "metaKey": "Meta key for cover art, transcription and listening",
+    "metaKey": "Meta key for transcription and listening",
     "optional": "Optional",
     "lyricsSupport": "Lyricist",
-    "moreServices": "More services",
-    "off": "Off",
-    "address": "Address",
-    "keySaved": "Key saved",
-    "serviceProvider": "{service}: provider",
-    "serviceAddress": "{service}: address",
-    "serviceModel": "{service}: model",
-    "serviceKey": "{service}: key",
     "saved": "Saved. Ode will use these settings for the next request."
   },
   "kit": {
@@ -388,14 +376,12 @@
       "sendTextBaseRevisionWithThe": "Send '{' text, baseRevision '}' with the whole lyrics and the revision they were edited from.",
       "sendLinesWithTheSectionS": "Send '{' lines '}' with the section''s sung lines.",
       "sendNameStrictWithThe": "Send '{' name, strict '}' with the section''s name.",
-      "thatFileIsMissingFromTheRelease": "That file is missing from the release folder.",
-      "nameAValidSongAndAudioDelivery": "Name a valid song and audio delivery.",
       "modeMustBeOneOf": "mode must be one of: {details}",
       "restoringDeletesTheVersionsAfterItSo": "Restoring deletes the versions after it, so the musician must confirm it: send '{' confirmed: true '}'.",
       "sendName": "Send '{' name '}'.",
-      "sendProviderModelServicesWith": "Send '{' provider, model, services '}' with any keys to change.",
       "sendProviderAndTheKey": "Send '{' provider '}' and the key to list models with.",
-      "odeSPagesAreMissingFromThisBuild": "Ode''s pages are missing from this build."
+      "odeSPagesAreMissingFromThisBuild": "Ode''s pages are missing from this build.",
+      "sendProviderAndModel": "Send provider and model, with any keys you want to update."
     },
     "maxAudio": {
       "preRollNeedsAnArrangementStartBeat": "Pre-roll needs an Arrangement start beat.",
@@ -737,7 +723,6 @@
     "stoppedBeforeStarting": "Stopped before starting.",
     "continuedWithYourLaterMessage": "Continued with your later message.",
     "updatingTheWorkWithYourMessage": "Updating the work with your message",
-    "someSavedAudioLinksCouldNotBeRestored": "Some saved audio links could not be restored. Ask Ode to check the saved files.",
     "odeIsStillWorkingWaitForItTo": "Ode is still working. Wait for it to finish, or press Stop.",
     "theRequestFailedBeforeCompletion": "The request failed before completion.",
     "couldNotSaveTheActivity": "Could not save the activity: {error}",
@@ -771,7 +756,6 @@
     "emptyReply": "No reply received. Review any changes in History."
   },
   "providers": {
-    "selfHosted": "Your own server",
     "meta": {
       "keyHint": "Your API key from dev.meta.ai"
     },
@@ -818,13 +802,8 @@
     "renameLocator": "Song · {locator} · rename to {name}",
     "renameScene": "Song · {scene} · rename to {name}",
     "keepAnAudioCapture": "Keep an audio capture · {track} · {start}",
-    "releaseCoverArtChoices": "Release · cover art choices",
-    "releaseAsTheCover": "Release · {file} as the cover",
-    "saveVoiceReference": "Save your singing on {track} ({start}) as the recording Ode uses to sing demo vocals in your voice",
-    "removeVoiceReference": "Remove the recording of your voice that Ode sings demo vocals with",
     "productionPlan": "Production plan · {goal}",
     "productionPlanUpdateProgress": "Production plan · update progress",
-    "deliveryRetain": "Delivery · retain {name}",
     "setParameter": "{parameter} to {parameter2}",
     "addAChain": "{device} · add a chain",
     "addChainDevice": "{device} · add {name}",
@@ -833,7 +812,6 @@
     "title": "title {title}",
     "leadSheet": "Lead sheet · {value}",
     "preferenceSource": "{isSource, select, true {Your setting} other {Detected}} · {field}",
-    "releaseLyricSheetAndCredits": "Release · lyric sheet and credits",
     "keepTheChosenHook": "Keep the chosen hook · {id}",
     "artistMemory": "Artist memory · {topic}",
     "artistMemoryForget": "Artist memory · forget",
@@ -860,6 +838,37 @@
       "arm": "arm",
       "disarm": "disarm",
       "unchanged": "unchanged"
+    },
+    "adjustParameter": "Adjust {parameter}"
+  },
+  "maxParameters": {
+    "unavailable": "Load the updated Ode Max for Live device to use native parameter units.",
+    "requestRequired": "Native parameter edits need an active Ode request.",
+    "busy": "Ode is already waiting for several native parameter reads.",
+    "invalid": "The native parameter request or reply is invalid.",
+    "expired": "That native parameter job is no longer active.",
+    "disconnected": "The Max device disconnected. Read the parameter again after reconnecting.",
+    "cancelled": "The native parameter request was cancelled.",
+    "timeout": "The native parameter request timed out. Read its actual state before continuing.",
+    "changed": "The parameter, its ancestors or its value changed. Read it again before editing.",
+    "notParameter": "The native target is not a device parameter.",
+    "hidden": "Ode connection controls are private and cannot be read or changed.",
+    "unsupported": "This parameter does not expose native display units.",
+    "disabled": "This parameter is disabled or its native state is unavailable.",
+    "automated": "The parameter automation state is unavailable or active. Explicit override is required for active automation."
+  },
+  "modelServices": {
+    "setup": {
+      "agent": "Choose a provider and model, and add its key, in Ode: Settings",
+      "listening": "The listening model needs a configured provider key in Ode: Settings",
+      "transcription": "This uses Meta''s models: add a Meta key in Ode: Settings",
+      "lyricist": "Choose a Lyricist model and add its provider key in Ode: Settings"
     }
+  },
+  "lyricText": {
+    "rangeRequired": "Give startLine with endLine.",
+    "staleRange": "The lyrics changed since that revision. Read the intended lines again before replacing them.",
+    "invalidRange": "Choose existing line numbers, or use the position after the last line to append.",
+    "reverseRange": "endLine must be at or after startLine."
   }
 }

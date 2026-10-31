@@ -1,5 +1,4 @@
 import type { Role, RoleConfig } from "../shared/config";
-import type { Note } from "../shared/live";
 import type { AudioListeningResult, TextGenerator } from "./capabilities";
 import type { AudioTimeRange, FrozenMusicAudio, MusicAudioSource } from "./music-audio";
 import type { SpeechPayload } from "./speech-audio";
@@ -23,12 +22,6 @@ export interface Transcript {
   };
 }
 
-export interface DemoVocalInput {
-  lines: { text: string; notes: Note[]; pronunciation?: string; alignment?: { syllable: number; note: number }[]; delivery?: string }[];
-  tempo: number;
-  voiceModel?: string;
-}
-
 /** Where each role's settings come from, read again at every call so changes in Settings apply at once. */
 export interface RoleSource {
   roles(): Promise<Record<Role, RoleConfig>>;
@@ -45,14 +38,6 @@ export interface Services {
   compareAudio?(a: MusicAudioSource, b: MusicAudioSource, question: string, levelMatch: boolean, signal?: AbortSignal, ranges?: { a?: AudioTimeRange; b?: AudioTimeRange }): Promise<AudioListeningResult & { comparison: unknown }>;
   /** Transcription: words from a vocal or spoken recording. */
   transcribe(audio: MusicAudioSource, signal?: AbortSignal): Promise<Transcript>;
-  /** Image generation: writes a PNG to outPath and returns it. */
-  generateImage(prompt: string, outPath: string, size?: number, signal?: AbortSignal): Promise<string>;
-  /** Stem separation: isolates the described sound; writes target and rest as WAV files in outDir. */
-  separateStem(audioPath: string, describe: string, outDir: string, signal?: AbortSignal): Promise<{ target: string; rest: string }>;
-  /** Singing voice: writes a WAV of a demo vocal in the artist's voice to outPath. */
-  singDemoVocal(input: DemoVocalInput, outPath: string, signal?: AbortSignal): Promise<string>;
-  /** Sound generation: writes the generated sound next to outPath and returns its path. */
-  generateSound(prompt: string, seconds: number, outPath: string, loop?: boolean, signal?: AbortSignal): Promise<string>;
   /** Which roles are set up in Settings. */
   available(): Promise<Record<Role, boolean>>;
 }

@@ -10,8 +10,6 @@ import { FolderTexts } from "../harness/texts";
 import { ToolLabels } from "../harness/tool-labels";
 import { Mneme } from "../mneme/artist";
 import { ConversationStore } from "../mneme/conversations";
-import { AudioDeliveries } from "../mneme/audio-deliveries";
-import { LocalAudioFiles } from "../live/local-audio-files";
 import { ProductionTaskStore } from "../mneme/production-task";
 import { LyricsStore } from "../mneme/lyrics-store";
 import { TempFolder, userPaths } from "../mneme/paths";
@@ -87,8 +85,6 @@ async function rig(model: ScriptedModel, compactAtTokens?: number) {
     live,
     song,
     production: new ProductionTaskStore(song),
-    deliveries: new AudioDeliveries({ song, audio: new LocalAudioFiles(config.userDir, config.tempDir),
-      attach: async (songId, exchangeId, ref) => { await conversations.log(songId).addDelivery(exchangeId, ref); } }),
     lyrics: new LyricsStore(song, prefs, () => undefined),
     versions: new SongVersions(song, config.versions.snapshotEvery),
     snapshots: new SnapshotReader(live, song),
@@ -325,10 +321,10 @@ test("every tool's input becomes a function definition the model can read", asyn
 test("skills are read by name and sub-skills by path; their test cases stay with the repo", async () => {
   const skills = new SkillLibrary(new FolderTexts(DevConfig.repoDir));
   const index = await skills.index();
-  assert.ok(index.some((skill) => skill.name === "rhymes" && skill.description.length > 0));
-  assert.match(await skills.read("rhymes"), /^---/);
-  await assert.rejects(skills.read("rhymes", "../../package.json"), /Ode's skills are/);
-  await assert.rejects(skills.read("song-form", "evals/mark-sections-with-locators/case.yaml"), /test cases/);
+  assert.ok(index.some((skill) => skill.name === "lyrics" && skill.description.length > 0));
+  assert.match(await skills.read("lyrics/rhymes"), /^---/);
+  await assert.rejects(skills.read("lyrics/rhymes", "../../package.json"), /Ode's skills are/);
+  await assert.rejects(skills.read("production/song-form", "evals/mark-sections-with-locators/case.yaml"), /test cases/);
 });
 
 test("a song's conversation keeps its latest exchanges", async () => {

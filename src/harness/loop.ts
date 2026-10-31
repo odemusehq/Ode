@@ -1,3 +1,6 @@
+import { operationalTools, LoopTool } from "../tools/operations";
+export { LoopTool } from "../tools/operations";
+import { TOOL_GROUPS, type ToolGroup } from "../tools";
 import type { ChatCompletionMessageParam, ChatCompletionMessageToolCall, ChatCompletionTool } from "openai/resources/chat/completions";
 import { randomUUID } from "node:crypto";
 import type { ChatReply } from "../services/capabilities";
@@ -14,12 +17,7 @@ import type { SkillLibrary } from "./skills";
 import type { ToolLabels } from "./tool-labels";
 
 /** The tools every agent has from the loop itself. */
-export enum LoopTool {
-  ToolSearch = "tool_search",
-  SkillRead = "skill_read",
-  Subagent = "subagent",
-  ProductionExecute = "production_execute",
-}
+
 
 /** Decides whether a call runs now. */
 export interface ToolGate {
@@ -336,6 +334,7 @@ export class AgentLoop {
       }
       if (text) run.events.thought(text);
       const answers = await this.answerAll(calls, run, loaded);
+      this.trimLoaded(loaded, run.agent);
       calls.forEach((call, index) => messages.push({ role: "tool", tool_call_id: call.id, content: answers[index] ?? "" }));
       if (calls.some((call) => this.changesSomething(call))) inspections.clear();
       else for (const call of calls) {
@@ -385,49 +384,7 @@ export class AgentLoop {
   }
 
   private builtIns(run: LoopRun): ChatCompletionTool[] {
-    const tools: ChatCompletionTool[] = [
-      {
-        type: "function",
-        function: {
-          name: LoopTool.ToolSearch,
-          description:
-            "Finds Ode's tools for a job by what they do, such as \"set the notes of a MIDI clip\", \"insert a device\" or \"render audio\". The tools found are yours from the next step on, for the rest of this request.",
-          parameters: { type: "object", properties: { query: { type: "string", description: "What the tool should do, in a few words." } }, required: ["query"] },
-        },
-      },
-      {
-        type: "function",
-        function: {
-          name: LoopTool.SkillRead,
-          description:
-            'Reads a skill: its SKILL.md by name ("rhymes", or a sub-skill such as "rhymes/pop"), or a file its SKILL.md points to (file: "references/meter.md").',
-          parameters: {
-            type: "object",
-            properties: { name: { type: "string" }, file: { type: "string", description: "A file inside the skill's folder." } },
-            required: ["name"],
-          },
-        },
-      },
-    ];
-    if (run.agent === "main" && run.production) tools.push({
-      type: "function", function: {
-        name: LoopTool.ProductionExecute,
-        description: "Declare that this CURRENT musician request asks you to execute the reconciled production goal, rather than discuss/status/plan it. First save its working step with production_task_update. Give taskId and the full exact current user request that you interpreted as execution intent; the quote identifies the request, it does not prove semantic permission. This request-local declaration allows one continuation reminder if you reply while work remains; it never starts a new run or budget and is cleared by a question, Stop, steering or restart. Do not use for Why?, status, suggestions or planning-only conversation.",
-        parameters: { type: "object", properties: { taskId: { type: "string" }, quote: { type: "string" } }, required: ["taskId", "quote"] },
-      },
-    });
-    if (run.depth < this.deps.limits.subagentDepth) {
-      tools.push({
-        type: "function",
-        function: {
-          name: LoopTool.Subagent,
-          description:
-            "Starts a subagent for one focused musical task: composing melodies, chords, drums or basslines, proposing sounds or mix moves from available observations, reviewing musical material, or updating artist memory. All lyric writing, rewriting, analysis and word-to-note alignment belong to the configured lyricist tool, not this generic subagent. The subagent makes model decisions and uses exposed SDK, Max or plug-in tools; it cannot invent a local processing engine or exact audio transcription. It sees only this brief, so give the actual material, constraints, relevant skills and requested return format. Returns its answer. Several independent subagents called in one step run at the same time.",
-          parameters: { type: "object", properties: { task: { type: "string", description: "The whole brief." } }, required: ["task"] },
-        },
-      });
-    }
-    return tools;
+    return operationalTools({ production: run.agent === "main" && Boolean(run.production), subagents: run.depth < this.deps.limits.subagentDepth });
   }
 
   private async answer(call: ChatCompletionMessageToolCall, run: LoopRun & { budget: RequestBudget }, loaded: Set<string>): Promise<string> {
@@ -502,10 +459,26 @@ export class AgentLoop {
 
   private search(input: Record<string, unknown>, run: LoopRun & { budget: RequestBudget }, loaded: Set<string>): string {
     const query = typeof input.query === "string" ? input.query : "";
-    const found = this.deps.registry.search(query, run.agent, this.deps.limits.toolSearchResults);
+    const group = typeof input.group === "string" && TOOL_GROUPS.includes(input.group as ToolGroup) ? input.group as ToolGroup : undefined;
+    if (input.group !== undefined && !group) return "Choose a tool group: " + TOOL_GROUPS.join(", ");
+    const available = this.deps.registry.available(run.agent);
+    const found = Array.isArray(input.names)
+      ? input.names.slice(0, this.deps.limits.toolSearchResults).flatMap((name) => {
+          const tool = typeof name === "string" ? this.deps.registry.find(name) : undefined;
+          return tool && available.includes(tool) && (!group || this.deps.registry.group(tool.name) === group) ? [tool] : [];
+        })
+      : this.deps.registry.search(query, run.agent, this.deps.limits.toolSearchResults, group);
     if (found.length === 0) return "Try other words: the ones Live uses for the thing (track, clip, notes, device, parameter, scene, locator).";
     for (const tool of found) { loaded.delete(tool.name); loaded.add(tool.name); }
-    return `${found.map((tool) => `${tool.name}: ${AgentLoop.firstSentence(tool.description)}`).join("\n")}\nThese tools are yours from the next step on.`;
+    return `${found.map((tool) => `${tool.name} [${this.deps.registry.group(tool.name)}]: ${AgentLoop.firstSentence(tool.description)}`).join("\n")}\nThese tools are yours from the next step on.`;
+  }
+
+  /** Keep essential schemas plus a bounded recent working set; skills and tool search remain available. */
+  private trimLoaded(loaded: Set<string>, agent: AgentKind): void {
+    const pinned = new Set(this.deps.registry.alwaysLoaded(agent));
+    const recent = [...loaded].filter(name => !pinned.has(name)).slice(-this.deps.limits.toolSearchResults * 2);
+    loaded.clear();
+    for (const name of [...pinned, ...recent]) loaded.add(name);
   }
 
   private async readSkill(id: string, input: Record<string, unknown>, run: LoopRun & { budget: RequestBudget }): Promise<string> {

@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { Note } from "../shared/live";
 import { MidiMaterialRefSchema, type MidiMaterialRef } from "../shared/midi-material";
-import { NoteSchema } from "../tools/live/schemas";
+import { NoteSchema } from "../tools/daw/schemas";
 
 type MaterialPath = (string | number)[];
 

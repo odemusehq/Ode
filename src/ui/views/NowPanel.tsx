@@ -43,14 +43,10 @@ export function NowPanel() {
             <WorkingSteps steps={exchange.id === activeId && busy ? mergeSteps(exchange.activity ?? [], steps) : exchange.activity ?? []}
               rationale={exchange.id === activeId && busy ? thought ?? exchange.rationale : exchange.rationale}
               progress={exchange.id === activeId && busy ? progress : null} active={exchange.id === activeId} waiting={exchange.id === activeId && waiting > 0} />
-            {Boolean(exchange.reply || exchange.deliveries?.length) && <div className="now__message now__message--assistant">
+            {Boolean(exchange.reply) && <div className="now__message now__message--assistant">
               <h2>{t("common.ode")}</h2>
               {exchange.reply && <p>{exchange.reply}</p>}
-              {Boolean(exchange.deliveries?.length) && <ul className="now__deliveries" aria-label={t("chat.preparedAudio")}>
-                {exchange.deliveries?.map((delivery) => <li key={delivery.id}>
-                  <a href={client.api.audioDeliveryUrl(delivery.songId, delivery.id)} download={delivery.name}>{t("chat.download", { name: (delivery.name) })}</a>
-                </li>)}
-              </ul>}
+
             </div>}
             {exchange.versionId && <ActualChanges versionId={exchange.versionId} />}
             {(exchange.status === "failed" || exchange.status === "stopped") && <p className="now__turn-status">{exchange.status === "failed" ? t("chat.requestFailed") : t("chat.requestStopped")}</p>}

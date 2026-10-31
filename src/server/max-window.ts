@@ -2,6 +2,7 @@ import { t } from "../shared/i18n";
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { DialogView } from "../shared/config";
 import type { MaxAudioCommand } from "../shared/max-audio";
+import type { MaxParameterCommand } from "../shared/max-parameters";
 import { MAX_WINDOW, type MaxWindowAcknowledgement, type MaxWindowBinding, type MaxWindowBootstrap, type MaxWindowCommand, type MaxWindowConnection, type MaxWindowPoll } from "../shared/max-window";
 
 const DISCONNECTED = t("server.maxWindow.odeSMaxDeviceIsNotConnectedLoad");
@@ -24,7 +25,7 @@ interface DeviceConnection {
   readonly binding: MaxWindowBinding;
   readonly isCurrent: () => boolean;
   bootstrap: { capability: string; expires: number } | null;
-  session: { credential: string; lastPoll: number; audioVersion?: number } | null;
+  session: { credential: string; lastPoll: number; audioVersion?: number; parametersVersion?: number } | null;
 }
 
 /** One current-Set device, a consumed bootstrap, and bounded opens acknowledged by its actual web page. */
@@ -33,12 +34,16 @@ export class MaxWindowBridge {
   private readonly pending = new Map<string, PendingOpen>();
   private latch = 0;
   private audio: { poll(): MaxAudioCommand | null; invalidate(): void } | null = null;
+  private parameters: { poll(session: string): MaxParameterCommand | null; invalidate(): void } | null = null;
 
   constructor(private readonly urlForView: (view: DialogView) => string) {}
 
   attachAudio(audio: { poll(): MaxAudioCommand | null; invalidate(): void }): void { this.audio = audio; }
 
   get supportsAudio(): boolean { return this.connected && this.device?.session?.audioVersion === 1; }
+
+  attachParameters(parameters: { poll(session: string): MaxParameterCommand | null; invalidate(): void }): void { this.parameters = parameters; }
+  get supportsParameters(): boolean { return this.connected && this.device?.session?.parametersVersion === 1; }
 
   verifySession(session: string): MaxWindowBinding {
     const device = this.authorized(session);
@@ -56,7 +61,7 @@ export class MaxWindowBridge {
   }
 
   /** A bootstrap is usable once; later polling uses a separate credential held only in Max's memory. */
-  connect(capability: string, audioVersion?: number): MaxWindowConnection {
+  connect(capability: string, audioVersion?: number, parametersVersion?: number): MaxWindowConnection {
     const device = this.current();
     const bootstrap = device?.bootstrap;
     if (!device || !bootstrap || Date.now() >= bootstrap.expires || !MaxWindowBridge.equal(capability, bootstrap.capability)) {
@@ -65,7 +70,7 @@ export class MaxWindowBridge {
     const url = this.localUrl(DialogView.Ask);
     device.bootstrap = null;
     const session = randomBytes(24).toString("hex");
-    device.session = { credential: session, lastPoll: Date.now(), audioVersion };
+    device.session = { credential: session, lastPoll: Date.now(), audioVersion, parametersVersion };
     return { session, url };
   }
 
@@ -84,7 +89,8 @@ export class MaxWindowBridge {
     const device = this.authorized(session);
     device.session!.lastPoll = Date.now();
     const command = this.pending.values().next().value?.command ?? null;
-    return device.session!.audioVersion === 1 ? { command, audio: this.audio?.poll() ?? null } : { command };
+    return { command, ...(device.session!.audioVersion === 1 ? { audio: this.audio?.poll() ?? null } : {}),
+      ...(device.session!.parametersVersion === 1 ? { parameters: this.parameters?.poll(session) ?? null } : {}) };
   }
 
   /** A native Open succeeds only after jweb reports that its page handled this exact command. */
@@ -116,6 +122,7 @@ export class MaxWindowBridge {
   invalidate(): void {
     this.device = null;
     this.audio?.invalidate();
+    this.parameters?.invalidate();
     for (const pending of this.pending.values()) {
       clearTimeout(pending.timer);
       pending.reject(new MaxWindowError(DISCONNECTED));

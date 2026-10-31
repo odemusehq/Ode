@@ -20,8 +20,6 @@ export const API = {
   lyrics: "/api/lyrics", // GET → LyricsState; PUT LyricsWrite → LyricsSaved (merged when Ode saved in between)
   lyricsCheck: "/api/lyrics/check", // POST LyricsCheckRequest → LyricsCheckResponse (Lyrics support's marks for one section)
   lyricsStrict: "/api/lyrics/strict", // POST StrictRhymesRequest → LyricsState (perfect rhymes on or off for a section name)
-  releaseFile: (name: string) => `/api/release/file/${encodeURIComponent(name)}`, // GET a release file (cover art shown in a question)
-  audioDelivery: (songId: string, id: string) => `/api/audio-deliveries/${encodeURIComponent(songId)}/${encodeURIComponent(id)}`, // GET exact retained audio as an attachment
   versions: "/api/versions", // GET → VersionListItem[] (newest first)
   versionsCheck: "/api/versions/check", // POST → VersionListItem | null (saves the musician's hand edits now, when Ode is idle)
   version: (id: string) => `/api/versions/${encodeURIComponent(id)}`, // GET → VersionDetail
@@ -36,14 +34,6 @@ export const API = {
   settings: "/api/settings", // GET → SettingsResponse; PUT SettingsUpdate → SettingsView
   settingsModels: "/api/settings/models", // POST ModelListRequest → ChatModelOption[] (the models a key reaches)
 } as const;
-
-/** The cover art the release uses, in the release folder. */
-export const COVER_FILE = "cover.png";
-/** The lyric sheet and the credits Ode writes into the release folder. */
-export const LYRICS_FILE = "lyrics.txt";
-export const CREDITS_FILE = "credits.json";
-/** The cover art choices Ode makes: cover-1.png, cover-2.png… */
-export const COVER_CHOICE = /^cover-(\d+)\.png$/;
 
 export interface ChatRequest {
   songId?: string;

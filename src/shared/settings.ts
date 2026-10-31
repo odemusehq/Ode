@@ -1,17 +1,5 @@
 import { z } from "zod";
 
-/** The services Ode can use beyond the chat model, each set up in Settings. */
-export const OPTIONAL_ROLES = ["stem_separation", "singing_voice", "sound_generation"] as const;
-export type OptionalRole = (typeof OPTIONAL_ROLES)[number];
-
-export const ServiceSettingsSchema = z.object({
-  provider: z.string(),
-  baseUrl: z.string(),
-  apiKey: z.string(),
-  model: z.string(),
-});
-export type ServiceSettings = z.infer<typeof ServiceSettingsSchema>;
-
 /** Lyrics support: the model that highlights syllables and rhymes in the Lyrics editor, with its provider and key. */
 export const LyricsSupportSchema = z.object({
   provider: z.string(),
@@ -20,26 +8,17 @@ export const LyricsSupportSchema = z.object({
 });
 export type LyricsSupport = z.infer<typeof LyricsSupportSchema>;
 
-/** The musician's choice of models and their keys, kept in Ode's storage folder. */
+/** Model choices and protected local keys. Unknown saved fields survive updates but are never exposed in SettingsView. */
 export const ModelSettingsSchema = z.object({
   provider: z.string(),
   model: z.string(),
   key: z.string(),
-  /** A Meta key for cover art, transcription and listening when the chat provider is Baseten or Modal. */
+  /** A Meta key for transcription and listening when the chat provider is Baseten or Modal. */
   metaKey: z.string(),
   /** Empty provider and model mean the catalog's default; settings saved before Lyrics support start that way. */
   lyrics: LyricsSupportSchema.default({ provider: "", model: "", key: "" }),
-  services: z.partialRecord(z.enum(OPTIONAL_ROLES), ServiceSettingsSchema),
-});
+}).passthrough();
 export type ModelSettings = z.infer<typeof ModelSettingsSchema>;
-
-/** One optional service as the Settings dialog sees it: its key stays with Ode and shows as set. */
-export interface ServiceView {
-  provider: string;
-  baseUrl: string;
-  model: string;
-  keySet: boolean;
-}
 
 /** The settings as the Settings dialog sees them: keys stay with Ode and show as set. */
 export interface SettingsView {
@@ -49,7 +28,6 @@ export interface SettingsView {
   metaKeySet: boolean;
   /** Lyrics support's provider and model, and whether Ode holds a key for that provider. */
   lyrics: { provider: string; model: string; keySet: boolean };
-  services: Partial<Record<OptionalRole, ServiceView>>;
   /** The line the chosen model's licence asks Ode to show. */
   credit: string | null;
 }
@@ -61,10 +39,6 @@ export const SettingsUpdateSchema = z.object({
   key: z.string().optional(),
   metaKey: z.string().optional(),
   lyrics: z.object({ provider: z.string(), model: z.string(), key: z.string().optional() }).optional(),
-  services: z.partialRecord(
-    z.enum(OPTIONAL_ROLES),
-    z.object({ provider: z.string(), baseUrl: z.string(), model: z.string(), apiKey: z.string().optional() }),
-  ),
 });
 export type SettingsUpdate = z.infer<typeof SettingsUpdateSchema>;
 
@@ -91,16 +65,9 @@ export interface ChatProviderOption {
   modelHint?: string;
   /** The provider lists the musician's own models once the key is in, as Modal does with its endpoints. */
   listsModels?: boolean;
-  /** The provider's key also reaches Meta's models for listening, transcription and cover art. */
+  /** The provider's key also reaches Meta's models for listening and transcription. */
   servesMetaModels?: boolean;
   models: ChatModelOption[];
-}
-
-/** A provider for one of the optional services. */
-export interface ServiceProviderOption {
-  id: string;
-  name: string;
-  baseUrl: string;
 }
 
 /** Everything the Settings dialog shows. */
@@ -109,5 +76,4 @@ export interface SettingsResponse {
   providers: ChatProviderOption[];
   /** The providers and models that can run Lyrics support. */
   lyricsProviders: ChatProviderOption[];
-  services: Record<OptionalRole, ServiceProviderOption[]>;
 }

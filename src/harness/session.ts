@@ -2,7 +2,6 @@ import { t } from "../shared/i18n";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import type { MutationReceipt } from "../shared/mutation-receipt";
 import type { ProductionTaskStore } from "../mneme/production-task";
-import type { AudioDeliveries } from "../mneme/audio-deliveries";
 import type { ConversationLog } from "../mneme/conversations";
 import type { PreferencesStore } from "../mneme/preferences";
 import type { ConversationActivity } from "../shared/conversation";
@@ -61,7 +60,6 @@ export interface SessionDeps {
   prefs: PreferencesStore;
   requests: RequestLifecycle;
   production?: Pick<ProductionTaskStore, "read" | "interrupt" | "recover">;
-  deliveries?: Pick<AudioDeliveries, "recover">;
   deletions: DeletionCheck;
   /** Read again before a change waits for Apply, so its card names what the change touches now. */
   snapshots: SetReader;
@@ -186,8 +184,6 @@ export class OdeSession {
     await this.deps.requests.recover?.(interrupted.map((exchange) => exchange.request));
     await this.deps.production?.recover();
     await this.conversation.recover();
-    const deliveryRecovery = await this.deps.deliveries?.recover(this.songId);
-    if (deliveryRecovery?.failed) this.deps.emit({ type: "error", message: t("runtime.someSavedAudioLinksCouldNotBeRestored") });
     await this.publishConversation();
   }
 

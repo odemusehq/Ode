@@ -15,6 +15,7 @@ import type {
 } from "./live";
 import type { SetContents } from "./set-snapshot";
 import type { MutationReceipt } from "./mutation-receipt";
+import type { MaxParameterAddress } from "./max-parameters";
 
 export type TrackKind = "midi" | "audio" | "group" | "return" | "main";
 
@@ -113,6 +114,11 @@ export interface ParameterInfo {
   defaultValue: number;
   valueItems: string[];
   value?: number;
+}
+
+/** Only an explicit parameter read supplies the current SDK-to-Max address, not every project snapshot. */
+export interface ParameterReadInfo extends ParameterInfo {
+  maxAddress?: MaxParameterAddress;
 }
 
 export interface ChainInfo {
@@ -276,7 +282,7 @@ export interface ExtensionOpResults {
   audio_clip_get: AudioClipInfo;
   audio_clip_set: AudioClipInfo;
   device_get: DeviceInfo;
-  parameter_get: ParameterInfo;
+  parameter_get: ParameterReadInfo;
   parameter_set: ParameterInfo;
   mixer_get: MixerInfo;
   rack_get_chains: { chains: ChainInfo[] };

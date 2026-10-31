@@ -1,17 +1,16 @@
-import { assertUnlocked } from "./locked-material";
 import type { ChatCompletionTool } from "openai/resources/chat/completions";
 import { z } from "zod";
-import type { AnyTool, ToolContext } from "./define";
-import { RefNames } from "./live/ref-names";
-import { liveTools } from "./live";
-import { lyricist } from "./lyricist";
-import { audioTools } from "./audio";
-import { mediaTools } from "./media";
-import { songTools } from "./song";
-import { isMutationReceipt, type MutationReceipt } from "../shared/mutation-receipt";
 import { MidiMaterials, type MidiMaterialScope } from "../harness/midi-materials";
+import { isMutationReceipt, type MutationReceipt } from "../shared/mutation-receipt";
+import { dawActionTools, dawStateTools } from "./daw";
+import { RefNames } from "./daw/ref-names";
+import type { AnyTool, ToolContext } from "./define";
+import { assertUnlocked } from "./locked-material";
+import { lyricist } from "./lyrics/lyricist";
+import { lyricTextTools, resolveLyricsEdit } from "./lyrics/text";
 import { midiDescription, midiInputSchema, midiLabelInput, midiOutputPaths, resolveMidiInput } from "./midi-material-adapter";
-import { midiMaterialTools } from "./midi-material";
+import { mnemeTools } from "./mneme";
+import { askMusician } from "./operations/questions";
 
 /** Who a tool list is for: the main agent gets every tool, subagents the read-only ones. */
 export type AgentKind = "main" | "subagent";
@@ -27,19 +26,26 @@ export interface ToolOutcome {
   targets?: readonly string[];
 }
 
-const GROUPS: readonly (readonly AnyTool[])[] = [liveTools, [lyricist], audioTools, mediaTools, songTools, midiMaterialTools];
+export const TOOL_GROUPS = ["daw_write", "daw_read", "mneme", "lyrics", "operations"] as const;
+export type ToolGroup = (typeof TOOL_GROUPS)[number];
+const GROUPS: readonly (readonly [ToolGroup, readonly AnyTool[]])[] = [
+  ["daw_write", dawActionTools], ["daw_read", dawStateTools], ["mneme", mnemeTools],
+  ["lyrics", [...lyricTextTools, lyricist]], ["operations", [askMusician]],
+];
 
 /** Every Ode tool, offered to the model as a function with a JSON Schema for its input. */
 export class ToolRegistry {
   private readonly byName = new Map<string, AnyTool>();
+  private readonly groups = new Map<string, ToolGroup>();
   private readonly functionsByName = new Map<string, ChatCompletionTool>();
   private readonly midiMaterials = new MidiMaterials();
   private readonly midiScopes = new Map<string, MidiMaterialScope>();
 
   constructor(private readonly ctx: ToolContext) {
-    for (const definition of GROUPS.flat()) {
+    for (const [group, definitions] of GROUPS) for (const definition of definitions) {
       if (this.byName.has(definition.name)) throw new Error(`Two tools share the name ${definition.name}.`);
       this.byName.set(definition.name, definition);
+      this.groups.set(definition.name, group);
     }
   }
 
@@ -61,6 +67,8 @@ export class ToolRegistry {
     return this.byName.get(name);
   }
 
+  group(name: string): ToolGroup | undefined { return this.groups.get(name); }
+
   /** The tools an agent may use. */
   available(agent: AgentKind): AnyTool[] {
     return [...this.byName.values()].filter((definition) => agent === "main" || (definition.changes === "none" && !definition.mainAgentOnly));
@@ -74,9 +82,10 @@ export class ToolRegistry {
   }
 
   /** The tools whose name and description share the most words with the query, best first. */
-  search(query: string, agent: AgentKind, limit: number): AnyTool[] {
+  search(query: string, agent: AgentKind, limit: number, group?: ToolGroup): AnyTool[] {
     const words = ToolRegistry.words(query);
     return this.available(agent)
+      .filter((definition) => !group || this.groups.get(definition.name) === group)
       .map((definition) => ({ definition, score: ToolRegistry.score(definition, words) }))
       .filter((match) => match.score > 0)
       .sort((a, b) => b.score - a.score)
@@ -126,16 +135,19 @@ export class ToolRegistry {
         actual = z.object(definition.input).parse(resolved.input);
         if (name === "midi_clip_set_notes" && noteOrigins.length) actual.originReadTokens = noteOrigins;
       }
+      if (name === "lyrics_write" && actual.startLine !== undefined) {
+        actual = resolveLyricsEdit(actual as unknown as Parameters<typeof resolveLyricsEdit>[0], await this.ctx.lyrics.read()) as unknown as Record<string, unknown>;
+      }
       if (definition.changes === "set" || name === "lyrics_write" || name === "lead_sheet_update") {
         const sheet = await this.ctx.song.read();
-        if (sheet.locked.length > 0) assertUnlocked(name, parsed.data, await this.ctx.snapshots.read());
+        if (sheet.locked.length > 0) assertUnlocked(name, name === "lyrics_write" ? actual : parsed.data, await this.ctx.snapshots.read());
       }
       signal?.throwIfAborted();
       scope?.assertActive(this.ctx.song.songId ?? "", execution.exchangeId ?? "");
       const extension = this.ctx.live.extension;
       const live = signal ? { extension: { call: <R>(op: string, args: unknown) => extension.call<R>(op, args, signal) } } : this.ctx.live;
       const result = (await definition.run(actual, { ...this.ctx, live, signal, ...execution, midiMaterials: scope })) ?? { done: true };
-      const covered = new Set(["midi_clip_set_notes", "lyrics_write", "lead_sheet_update", "hook_retain", "release_prepare"]);
+      const covered = new Set(["midi_clip_set_notes", "lyrics_write", "lead_sheet_update", "hook_retain"]);
       const clean = (value: unknown): unknown => {
         if (Array.isArray(value)) return value.map(clean);
         if (!value || typeof value !== "object") return value;
@@ -151,7 +163,7 @@ export class ToolRegistry {
         const expectedReceipts = calls.filter((call) => covered.has(call.op)).length;
         if (receipts.filter((receipt) => receipt.kind !== "unverified").length < expectedReceipts) unverified(name);
       } else if (definition.changes === "set" && !covered.has(name)) unverified(name);
-      if (covered.has(name) && name !== "release_prepare" && !Array.isArray((result as Record<string, unknown>).__odeReceipts)) unverified(name);
+      if (covered.has(name) && !Array.isArray((result as Record<string, unknown>).__odeReceipts)) unverified(name);
       const outputs = midiOutputPaths(name, cleaned, parsed.data, noteOrigins);
       let projected = cleaned;
       if (scope && outputs.length) {
@@ -176,7 +188,7 @@ export class ToolRegistry {
         ...(receipts.length ? { receipts } : {}) };
     } catch (error) {
       return { ok: false, text: error instanceof Error ? error.message : String(error), input: parsed.data,
-        ...(receipts.length ? { receipts } : (definition.changes === "set" || name === "lyrics_write" || name === "lead_sheet_update" || name === "hook_retain" || name === "release_prepare" && Array.isArray((parsed.data as Record<string, unknown>).credits))
+        ...(receipts.length ? { receipts } : (definition.changes === "set" || name === "lyrics_write" || name === "lead_sheet_update" || name === "hook_retain")
           ? { receipts: [{ kind: "unverified" as const, tool: name, reason: "The operation failed; any partial write has unknown scope." }] } : {}) };
     }
   }

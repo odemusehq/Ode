@@ -5,11 +5,7 @@ export const ROLES = [
   "subagent",
   "audio_understanding",
   "transcription",
-  "image_generation",
   "lyrics_check",
-  "stem_separation",
-  "singing_voice",
-  "sound_generation",
 ] as const;
 export type Role = (typeof ROLES)[number];
 
@@ -72,30 +68,11 @@ export interface VersionSettings {
   listLimit: number;
 }
 
-export interface ReleaseSettings {
-  /** How many cover art images Ode makes for the musician to pick from. */
-  coverChoices: number;
-}
-
 export interface ServiceSettings {
-  /** The sample rate speech models expect, in Hz (16 or 24 kHz). */
   /** The longest answer to a one-off text request, in tokens. */
   textMaxTokens: number;
   /** The longest answer about a recording, in tokens; reasoning shares it, so a low limit gives an empty answer. */
   audioMaxTokens: number;
-  /** The size asked of the image model, before the image is scaled to the cover size. */
-  imageRequestSize: string;
-  /** The cover's side in pixels: release platforms ask for square artwork of at least 3000 × 3000. */
-  coverSize: number;
-}
-
-export interface SpellingSettings {
-  /** A spelling guess below this confidence (0–1) leaves the choice to the computer's language setting. */
-  minConfidence: number;
-  /** How many UK or US spellings make the evidence count in full. */
-  wordsForFullEvidence: number;
-  /** How much one "-ize" word counts towards US spelling, since UK English uses "-ize" too. */
-  izeWeight: number;
 }
 
 export interface ServerSettings {
@@ -131,15 +108,12 @@ export interface DialogSize {
 export class OdeConfig {
   /** The size of the small notice Ode shows when it has something to tell the musician, ready before the folders are known. */
   static readonly notice: DialogSize = { ...defaults.notice };
-  /** How sure Ode must be before it reads the lyrics' spelling as UK or US. */
-  static readonly spelling: SpellingSettings = { ...defaults.spelling };
   /** What the model services ask of each provider, the same for every copy of Ode. */
   static readonly services: ServiceSettings = { ...defaults.services };
 
   readonly limits: AgentLimits = { ...defaults.agent };
   readonly memory: MemorySettings = { ...defaults.memory };
   readonly versions: VersionSettings = { ...defaults.versions };
-  readonly release: ReleaseSettings = { ...defaults.release };
   readonly server: ServerSettings = { ...defaults.server };
   readonly lyricsSupport: LyricsSupportSettings = { ...defaults.lyricsSupport };
   readonly dialogs: Record<DialogView, DialogSize> = { ...defaults.dialogs };
@@ -147,7 +121,7 @@ export class OdeConfig {
   constructor(
     /** The extension's storage folder, kept across Live sessions: Settings, the artist, the songs. */
     readonly userDir: string,
-    /** The extension's temp folder, which Live may clear between sessions: renders and generated files. */
+    /** The extension's temp folder, which Live may clear between sessions: renders and listening files. */
     readonly tempDir: string,
   ) {}
 }

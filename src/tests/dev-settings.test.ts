@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -16,7 +16,7 @@ async function fixture(run: (store: SettingsStore, file: string) => Promise<void
 test("developer Meta settings configure the existing roles and persist owner-only", () => fixture(async (store, file) => {
   const result = await importDevSettings(store, { META_API_KEY: "test-meta-key", ODE_CHAT_PROVIDER: "meta", ODE_CHAT_MODEL: "muse-wonder-1.0" });
   assert.equal(result.changed, true);
-  assert.deepEqual(result.configuredRoles, ["main", "subagent", "audio_understanding", "transcription", "image_generation", "lyrics_check"]);
+  assert.deepEqual(result.configuredRoles, ["main", "subagent", "audio_understanding", "transcription", "lyrics_check"]);
   const view = await store.view();
   assert.equal(view.provider, "meta");
   assert.equal(view.model, "muse-wonder-1.0");
@@ -24,16 +24,19 @@ test("developer Meta settings configure the existing roles and persist owner-onl
   assert.equal((await stat(file)).mode & 0o777, 0o600);
 }));
 
-test("a Meta key preserves other chat, services and Lyrics settings; blank keys preserve saved credentials", () => fixture(async (store, file) => {
+test("a Meta key preserves other chat, saved fields and Lyricist settings; blank keys preserve saved credentials", () => fixture(async (store, file) => {
   await store.update({ provider: "modal", model: "developer-endpoint", key: "test-chat-key",
-    lyrics: { provider: "meta", model: "muse-wonder-1.0", key: "test-lyrics-key" },
-    services: { sound_generation: { provider: "self-hosted", baseUrl: "http://localhost:9000", model: "developer-sound", apiKey: "test-service-key" } } });
+    lyrics: { provider: "meta", model: "muse-wonder-1.0", key: "test-lyrics-key" } });
+  const stored = { ...JSON.parse(await readFile(file, "utf8")), retired: { apiKey: "unused-old-key" } };
+  await writeFile(file, JSON.stringify(stored));
   const before = await store.view();
   const result = await importDevSettings(store, { META_API_KEY: "test-meta-key" });
   const after = await store.view();
   assert.equal(result.changed, true);
   assert.deepEqual(after, { ...before, metaKeySet: true });
   const saved = await readFile(file, "utf8");
+  assert.deepEqual(JSON.parse(saved).retired, stored.retired);
+  assert.equal("retired" in after, false);
   assert.equal((await importDevSettings(store, { META_API_KEY: " ", ODE_CHAT_API_KEY: "" })).changed, false);
   assert.equal(await readFile(file, "utf8"), saved);
 }));

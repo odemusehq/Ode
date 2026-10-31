@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, stat } from "node:fs/promises";
+import { mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { test } from "node:test";
@@ -22,9 +22,15 @@ test("chat keeps the full transcript while only recent exchanges enter the model
   const log = new ConversationStore(folder, 2).log("song-a");
   await log.add("first", "one");
   await log.add("second", "two");
+  const file = join(folder, `${log.id}.json`);
+  const saved = JSON.parse(await readFile(file, "utf8"));
+  saved[0].retired = { marker: "keep on disk" };
+  await writeFile(file, JSON.stringify(saved));
   const interrupted = await log.begin("keep the vocal");
   await log.recover();
   assert.equal((await log.all()).length, 3);
+  assert.equal("retired" in (await log.all())[0]!, false);
+  assert.deepEqual(JSON.parse(await readFile(file, "utf8"))[0].retired, saved[0].retired);
   assert.deepEqual((await log.recent()).map((entry) => entry.request), ["second", "keep the vocal"]);
   assert.equal((await log.all()).find((entry) => entry.id === interrupted)?.status, "stopped");
   assert.equal((await new ConversationStore(folder, 2).log("song-b").all()).length, 0);
@@ -115,7 +121,7 @@ test("Stop during an awaited gate prevents the edit, and questions accept ordina
 
 test("saved keys survive recreating Settings and never enter the frontend response", async () => {
   const folder = await mkdtemp(join(tmpdir(), "ode-settings-"));
-  await new SettingsStore(folder, ProviderCatalog.bundled).update({ provider: "meta", model: "muse-wonder-1.0", key: "offline-secret", services: {} });
+  await new SettingsStore(folder, ProviderCatalog.bundled).update({ provider: "meta", model: "muse-wonder-1.0", key: "offline-secret" });
   const reopened = new SettingsStore(folder, ProviderCatalog.bundled);
   assert.equal((await reopened.read()).key, "offline-secret");
   assert.ok(!JSON.stringify(await reopened.view()).includes("offline-secret"));
@@ -201,8 +207,9 @@ test("identifiable locked tracks and lyric sections cannot be changed through a 
   const registry = new ToolRegistry({
     config: new OdeConfig(folder, folder), live: { extension: { call: async () => undefined } },
     song: { read: async () => snapshot.sheet }, snapshots: { read: async () => { throw new Error("Live unreadable"); } },
+    mneme: { forget: async () => true },
   } as never);
-  assert.equal((await registry.run("voice_reference_clear", {})).ok, true);
+  assert.equal((await registry.run("memory_forget", { id: "forgotten" })).ok, true);
 });
 
 test("retrying an accepted request keeps one exchange, including after restart", async () => {

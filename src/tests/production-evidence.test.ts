@@ -13,7 +13,7 @@ import { ToolObservations } from "../mneme/tool-observations";
 import type { ProductionStep } from "../shared/production-task";
 import { VersionAuthor } from "../shared/versions";
 import type { ToolContext } from "../tools/define";
-import { productionTaskTools } from "../tools/song/production-task";
+import { productionTaskTools } from "../tools/mneme/production-task";
 import { TestSets } from "./sets";
 
 test("production evidence checks saved sources and target scope rather than invented citations or success flags", async () => {

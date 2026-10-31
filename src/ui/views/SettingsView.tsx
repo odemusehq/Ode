@@ -1,9 +1,7 @@
 import { t } from "../../shared/i18n";
 import { useEffect, useState } from "react";
 import {
-  OPTIONAL_ROLES,
   type ChatModelOption,
-  type OptionalRole,
   type SettingsResponse,
   type SettingsUpdate,
 } from "../../shared/settings";
@@ -15,43 +13,19 @@ import { useClient } from "../app/hooks";
 import { Layout } from "../app/layout";
 import "./SettingsView.css";
 
-const SERVICE_LABELS: Record<OptionalRole, string> = { stem_separation: t("settings.serviceLabels.stem_separation"), singing_voice: t("settings.serviceLabels.singing_voice"), sound_generation: t("settings.serviceLabels.sound_generation") };
-
 /** Where Ode uses each model, shown by its (i). */
 const MODEL_INFO = t("settings.modelInfo");
 const LYRICS_INFO = t("settings.lyricsInfo");
 const META_INFO = t("settings.metaInfo");
 const SAVING_NOTICE = t("settings.savingNotice");
 const CLOSE_NOTICE = t("settings.closeNotice");
-const SERVICE_INFO: Record<OptionalRole, string> = { stem_separation: t("settings.serviceInfo.stem_separation"), singing_voice: t("settings.serviceInfo.singing_voice"), sound_generation: t("settings.serviceInfo.sound_generation") };
-
-/** One optional service as the form edits it; a key typed here replaces the saved one. */
-interface ServiceDraft {
-  provider: string;
-  baseUrl: string;
-  model: string;
-  apiKey: string;
-  keySet: boolean;
-}
-
-type ServiceDrafts = Record<OptionalRole, ServiceDraft>;
-
-function draftsFrom(response: SettingsResponse): ServiceDrafts {
-  return Object.fromEntries(
-    OPTIONAL_ROLES.map((role) => {
-      const saved = response.settings.services[role];
-      return [role, { provider: saved?.provider ?? "", baseUrl: saved?.baseUrl ?? "", model: saved?.model ?? "", apiKey: "", keySet: saved?.keySet ?? false }];
-    }),
-  ) as ServiceDrafts;
-}
-
 interface SettingsViewProps {
   embedded?: boolean;
   active?: boolean;
   onSaved?: () => void;
 }
 
-/** The chat provider, its model and key, a Meta key, and optional services. */
+/** The chat provider, its model and key, a Meta key, and the configured Lyricist. */
 export function SettingsView({ embedded = false, active = true, onSaved }: SettingsViewProps) {
   const client = useClient();
   const { api } = client;
@@ -64,8 +38,6 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
   const [lyricsModel, setLyricsModel] = useState("");
   const [lyricsKey, setLyricsKey] = useState("");
   const [listed, setListed] = useState<ChatModelOption[]>([]);
-  const [services, setServices] = useState<ServiceDrafts | null>(null);
-  const [moreOpen, setMoreOpen] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -91,7 +63,6 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
     setKey("");
     setMetaKey("");
     setLyricsKey("");
-    setServices(draftsFrom(response));
     const error = client.store.getSnapshot().error;
     if (error === SAVING_NOTICE || error === CLOSE_NOTICE) client.store.setError(null);
   };
@@ -103,10 +74,9 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
     finish(DialogResult.Cancelled);
   };
 
-  const dirty = Boolean(loaded && services && (
+  const dirty = Boolean(loaded && (
     provider !== loaded.settings.provider || model !== loaded.settings.model || key || metaKey || lyricsKey ||
-    lyricsProvider !== loaded.settings.lyrics.provider || lyricsModel !== loaded.settings.lyrics.model ||
-    JSON.stringify(services) !== JSON.stringify(draftsFrom(loaded))
+    lyricsProvider !== loaded.settings.lyrics.provider || lyricsModel !== loaded.settings.lyrics.model
   ));
   useEffect(() => client.beforeLeave(() => {
     if (!saving && !dirty) return true;
@@ -160,7 +130,7 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
     };
   }, [api, provider, key, savedKeyApplies, listsModels, active]);
 
-  if (!loaded || !services) {
+  if (!loaded) {
     return (
       <div className={`settings settings--reading${embedded ? " settings--embedded" : ""}`}>
         {!embedded && !LiveDialog.hosted && <Button variant={ButtonVariant.Quiet} onClick={backToChat}>{t("settings.backToChat")}</Button>}
@@ -208,15 +178,6 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
     setLyricsModel(id === loaded.settings.lyrics.provider ? loaded.settings.lyrics.model : (next?.models[0]?.id ?? ""));
   };
 
-  /** A saved key belongs to the service's provider and address: changing either asks for the key again. */
-  const editService = (role: OptionalRole, change: Partial<ServiceDraft>) => {
-    const next = { ...services[role], ...change };
-    if (next.provider !== services[role].provider || next.baseUrl !== services[role].baseUrl) next.apiKey = "";
-    const saved = loaded.settings.services[role];
-    const keySet = saved !== undefined && saved.provider === next.provider && saved.baseUrl === next.baseUrl && saved.keySet;
-    setServices({ ...services, [role]: { ...next, keySet } });
-  };
-
   const save = async () => {
     if (saving) return;
     setSaving(true);
@@ -228,12 +189,6 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
       key: key || undefined,
       metaKey: metaKey || undefined,
       lyrics: { provider: lyricsProvider, model: lyricsModel, key: lyricsKey || undefined },
-      services: Object.fromEntries(
-        OPTIONAL_ROLES.filter((role) => services[role].provider).map((role) => {
-          const draft = services[role];
-          return [role, { provider: draft.provider, baseUrl: draft.baseUrl, model: draft.model, apiKey: draft.apiKey || undefined }];
-        }),
-      ),
     };
     try {
       const settings = await api.saveSettings(update);
@@ -347,52 +302,6 @@ export function SettingsView({ embedded = false, active = true, onSaved }: Setti
         </label>
       </fieldset>
 
-      <Button variant={ButtonVariant.Quiet} aria-expanded={moreOpen} onClick={() => setMoreOpen(!moreOpen)}>
-        {t("settings.moreServices")}
-      </Button>
-      {moreOpen &&
-        OPTIONAL_ROLES.map((role) => {
-          const draft = services[role];
-          const offered = loaded.services[role];
-          return (
-            <fieldset key={role} className="settings__service">
-              <legend className="settings__label">
-                {SERVICE_LABELS[role]}
-                <InfoTip text={SERVICE_INFO[role]} />
-              </legend>
-              <Select
-                aria-label={t("settings.serviceProvider", { service: (SERVICE_LABELS[role]) })}
-                value={draft.provider}
-                options={[{ value: "", label: t("settings.off") }, ...offered.map((each) => ({ value: each.id, label: each.name }))]}
-                onChange={(id) => editService(role, { provider: id, baseUrl: offered.find((each) => each.id === id)?.baseUrl ?? "" })}
-              />
-              {draft.provider && (
-                <>
-                  <TextInput
-                    aria-label={t("settings.serviceAddress", { service: (SERVICE_LABELS[role]) })}
-                    placeholder={t("settings.address")}
-                    value={draft.baseUrl}
-                    onChange={(event) => editService(role, { baseUrl: event.target.value.trim() })}
-                  />
-                  <TextInput
-                    aria-label={t("settings.serviceModel", { service: (SERVICE_LABELS[role]) })}
-                    placeholder={t("settings.model")}
-                    value={draft.model}
-                    onChange={(event) => editService(role, { model: event.target.value.trim() })}
-                  />
-                  <TextInput
-                    aria-label={t("settings.serviceKey", { service: (SERVICE_LABELS[role]) })}
-                    type="password"
-                    autoComplete="off"
-                    placeholder={draft.keySet ? t("settings.keySaved") : t("settings.key")}
-                    value={draft.apiKey}
-                    onChange={(event) => editService(role, { apiKey: event.target.value.trim() })}
-                  />
-                </>
-              )}
-            </fieldset>
-          );
-        })}
       </fieldset>
 
       {problem && <Notice tone={Tone.Danger}>{problem}</Notice>}

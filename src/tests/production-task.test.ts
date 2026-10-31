@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { ProductionTaskStore } from "../mneme/production-task";
 import { userPaths } from "../mneme/paths";
 import { SongStore } from "../mneme/song-store";
-import { productionTaskTools } from "../tools/song/production-task";
+import { productionTaskTools } from "../tools/mneme/production-task";
 import type { ToolContext } from "../tools/define";
 
 test("production checkpoints survive interruption, reject stale or unsupported completion and retain replaced work", async () => {

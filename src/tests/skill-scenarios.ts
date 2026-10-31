@@ -9,8 +9,6 @@ import { SkillLibrary } from "../harness/skills";
 import { FolderTexts } from "../harness/texts";
 import { ToolLabels } from "../harness/tool-labels";
 import { ConversationStore } from "../mneme/conversations";
-import { AudioDeliveries } from "../mneme/audio-deliveries";
-import { LocalAudioFiles } from "../live/local-audio-files";
 import { Mneme } from "../mneme/artist";
 import { ProductionTaskStore } from "../mneme/production-task";
 import { LyricsStore } from "../mneme/lyrics-store";
@@ -66,13 +64,14 @@ class ScenarioCase {
   /** Every case folder under skills/<skill>/evals/, for the skills named (all when none are). */
   static async all(skillsDir: string, only: string[]): Promise<ScenarioCase[]> {
     const cases: ScenarioCase[] = [];
-    for (const skill of (await readdir(skillsDir)).sort()) {
-      if (only.length > 0 && !only.includes(skill)) continue;
-      const evals = join(skillsDir, skill, "evals");
-      const names = await readdir(evals).catch(() => [] as string[]);
-      for (const name of names.sort()) {
-        if (await ScenarioCase.isCase(join(evals, name))) cases.push(await ScenarioCase.load(skill, name, join(evals, name)));
-      }
+    const paths = (await readdir(skillsDir, { recursive: true })).sort();
+    for (const file of paths) {
+      const match = /^(.*)\/evals\/([^/]+)\/case\.yaml$/.exec(file);
+      if (!match) continue;
+      const skill = match[1]!, name = match[2]!;
+      if (only.length && !only.includes(skill) && !only.includes(skill.split("/").at(-1)!)) continue;
+      const dir = join(skillsDir, skill, "evals", name);
+      if (await ScenarioCase.isCase(dir)) cases.push(await ScenarioCase.load(skill, name, dir));
     }
     return cases;
   }
@@ -147,9 +146,7 @@ class ScenarioRun {
     const services = new ModelServices(this.roles);
     const temp = new TempFolder(config.tempDir);
     const conversations = new ConversationStore(join(paths.workspace, "conversations"), config.limits.historyExchanges);
-    const deliveries = new AudioDeliveries({ song, audio: new LocalAudioFiles(config.userDir, config.tempDir),
-      attach: async (songId, exchangeId, ref) => { await conversations.log(songId).addDelivery(exchangeId, ref); } });
-    const registry = new ToolRegistry({ config, live, song, production: new ProductionTaskStore(song), deliveries, lyrics, versions, snapshots: reader, questions, mneme, prefs, services, temp, emit });
+    const registry = new ToolRegistry({ config, live, song, production: new ProductionTaskStore(song), lyrics, versions, snapshots: reader, questions, mneme, prefs, services, temp, emit });
     const requests = new RequestContext({
       config,
       live,
@@ -169,7 +166,7 @@ class ScenarioRun {
     const loop = new AgentLoop({ services, registry, skills, labels, limits: config.limits, subagentPrompt: () => agents.subagentPrompt() });
     const deletions = new DeletionChecker(reader);
     const session = new OdeSession(
-      { loop, agents, labels, approvals, questions, prefs, requests, deliveries, deletions, snapshots: reader, emit },
+      { loop, agents, labels, approvals, questions, prefs, requests, deletions, snapshots: reader, emit },
       conversations.log(song.songId), song.songId,
     );
     const before = await reader.read();
@@ -192,7 +189,7 @@ class ScenarioRun {
       action,
       reply: results.at(-1) ?? "",
       questions: events.flatMap((event) =>
-        event.type === "question" ? [`${event.text} [${event.options.join(" / ")}]${event.images ? ` images: ${event.images.join(", ")}` : ""}`] : [],
+        event.type === "question" ? [`${event.text} [${event.options.join(" / ")}]`] : [],
       ),
       approvals: events.flatMap((event) => (event.type === "approval" ? [`${event.tool}: ${event.summary}`] : [])),
       tools: events.flatMap((event) => (event.type === "tool" && event.status === "started" ? [`${event.name}${event.summary ? `: ${event.summary}` : ""}`] : [])),

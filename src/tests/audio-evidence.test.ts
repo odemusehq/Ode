@@ -9,7 +9,7 @@ import { encodeWav } from "../audio/wav";
 import { LocalAudioFiles } from "../live/local-audio-files";
 import { TempFolder } from "../mneme/paths";
 import { JsonFile } from "../mneme/json-file";
-import { mediaTools } from "../tools/media";
+import { listeningTools as mediaTools } from "../tools/daw/state/listening";
 import type { ToolContext } from "../tools/define";
 
 test("listening evidence stays bound to sent bytes, and only explicit Arrangement captures persist", async () => {

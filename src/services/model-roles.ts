@@ -9,8 +9,6 @@ import type { RoleSource } from "./types";
 
 /** Each role's provider, endpoint, key and model, worked out from the musician's Settings and the bundled catalog. */
 export class ModelRoles implements RoleSource {
-  private static readonly UNSET: RoleConfig = { provider: "", baseUrl: "", apiKey: "", model: "" };
-
   constructor(
     private readonly settings: SettingsStore,
     private readonly catalog: ProviderCatalog,
@@ -38,7 +36,6 @@ export class ModelRoles implements RoleSource {
       subagent: main,
       audio_understanding: settings.provider === Provider.Baseten ? main : metaRole(meta.audioUnderstanding),
       transcription: metaRole(meta.transcription),
-      image_generation: metaRole(meta.imageGeneration),
       lyrics_check: {
         provider: lyrics.provider.id,
         baseUrl: lyrics.provider.baseUrl,
@@ -46,9 +43,6 @@ export class ModelRoles implements RoleSource {
         model: lyrics.model.id,
         effort: lyrics.model.effort,
       },
-      stem_separation: settings.services.stem_separation ?? ModelRoles.UNSET,
-      singing_voice: settings.services.singing_voice ?? ModelRoles.UNSET,
-      sound_generation: settings.services.sound_generation ?? ModelRoles.UNSET,
     };
   }
 
