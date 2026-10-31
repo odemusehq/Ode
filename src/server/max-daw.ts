@@ -29,7 +29,7 @@ export class MaxDawControl implements MaxDaw {
     if (!this.window.supportsDaw) throw new Error(t("maxDaw.unavailable"));
     if (!DAW_OPERATIONS.includes(op) || !scope.trim()) throw new Error(t("maxDaw.invalid"));
     if (this.pending.size >= MAX_DAW.maxPending) throw new Error(t("maxDaw.busy"));
-    const command = { id: randomUUID(), op, address, args, scope };
+    const command = { id: randomUUID(), op, address, args, scope, expiresAt: Date.now() + MAX_DAW.timeoutMs };
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => this.fail(this.pending.get(command.id), new Error(t("maxDaw.timeout"))), MAX_DAW.timeoutMs);
       timer.unref?.();

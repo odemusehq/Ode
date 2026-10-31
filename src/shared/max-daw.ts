@@ -13,6 +13,7 @@ export interface MaxDawCommand {
   address: MaxDawAddress | null;
   args: Record<string, unknown>;
   scope: string;
+  expiresAt: number;
 }
 export type MaxDawMessage = { id: string } & ({ ok: true; result: Record<string, unknown> } | { ok: false; error: string });
 export interface MaxDaw {

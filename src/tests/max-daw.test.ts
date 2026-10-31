@@ -27,6 +27,8 @@ test("native DAW commands require a capable session and cancel queued work", asy
 
 export async function nativeDawFixture() {
   const objects: Record<string, any> = {
+    live_set: { id: "80", type: "Song", record_mode: 0, session_record: 0 },
+    "live_set view": { id: "81", type: "Song.View", selected_track: ["id", 99], detail_clip: ["id", 0] },
     "live_set tracks 0": { id: "1", type: "Track", name: "Lead" },
     "live_set tracks 0 devices 0": { id: "2", type: "PluginDevice", name: "Singer", presets: ["Soft", "Bright"], selected_preset_index: 0, is_editor_open: 0 },
   };
@@ -45,7 +47,7 @@ export async function nativeDawFixture() {
   let sequence = 0;
   const address = { path: "live_set tracks 0 devices 0", guards: [{ path: "live_set tracks 0", name: "Lead" }, { path: "live_set tracks 0 devices 0", name: "Singer" }] };
   const run = (op: string, args: object = {}, target: any = address, id = String(++sequence)) => {
-    vm.ode_daw_command({ id, op, args, address: target, scope: "request" });
+    vm.ode_daw_command({ id, op, args, address: target, scope: "request", expiresAt: Date.now() + 30_000 });
     return sent.at(-1);
   };
   return { objects, writes, run, address, vm };
@@ -74,16 +76,19 @@ test("track routing uses offered native identifiers and meters stay in native un
   const { run, objects, writes } = await nativeDawFixture();
   const path = "live_set tracks 0";
   const address = { path, guards: [{ path, name: "Lead" }] };
-  const first = { display_name: "Ext. In", identifier: "external" }, next = { display_name: "Resampling", identifier: "resample" };
+  const first = { display_name: "Ext. In", identifier: "external" }, next = { display_name: "Resampling", identifier: 13 };
   Object.assign(objects[path], { available_input_routing_types: JSON.stringify({ available_input_routing_types: [first, next] }), input_routing_type: JSON.stringify(first),
     input_meter_level: 0.25, output_meter_left: 0.6, output_meter_right: 0.5, output_meter_level: 0.65 });
   const read = run("track_routing_read", {}, address);
   assert.equal(read.ok, true, read.error);
-  assert.equal(read.result.available_input_routing_types[1].identifier, "resample");
+  assert.equal(read.result.available_input_routing_types[1].identifier, 13);
   assert.equal(run("track_routing_set", { readToken: read.result.readToken, field: "input_routing_type", identifier: "invented" }, address).ok, false);
   const token = run("track_routing_read", {}, address).result.readToken;
-  assert.equal(run("track_routing_set", { readToken: token, field: "input_routing_type", identifier: "resample" }, address).ok, true);
-  assert.deepEqual(JSON.parse(writes.at(-1)[2]), next);
+  assert.equal(run("track_routing_set", { readToken: token, field: "input_routing_type", identifier: 13 }, address).ok, true);
+  assert.deepEqual(JSON.parse(writes.at(-1)[2][0]), { input_routing_type: next });
+  const unknown = run("track_routing_read", {}, address).result.readToken;
+  objects.live_set.record_mode = null;
+  assert.equal(run("track_routing_set", { readToken: unknown, field: "input_routing_type", identifier: "external" }, address).ok, false);
   const meters = run("track_meters", {}, address).result;
   assert.equal(meters.output_meter_level, 0.65);
   assert.equal(meters.input_meter_right, null);
@@ -149,4 +154,33 @@ test("Simpler and Drum Rack edits use their native sample and chain controls", a
   assert.equal(chain.ok, true, chain.error);
   assert.equal(run("drum_chain_set", { chain: 0, readToken: chain.result.readToken, field: "choke_group", value: 1 }).ok, true);
   assert.deepEqual(writes.at(-1), [chainPath, "choke_group", 1]);
+});
+
+test("large plugin catalogues do not turn a completed preset change into an oversized error", async () => {
+  const { run, objects, address } = await nativeDawFixture();
+  objects[address.path].presets = Array.from({ length: 5000 }, (_, index) => `Preset ${index} with a long descriptive name`);
+  const read = run("plugin_read", { offset: 4998, limit: 2 });
+  assert.equal(read.result.presets.length, 2);
+  const changed = run("plugin_preset", { readToken: read.result.readToken, index: 4999 });
+  assert.equal(changed.ok, true, changed.error);
+  assert.equal(changed.result.after.selectedPresetIndex, 4999);
+  assert.ok(JSON.stringify(changed).length < 2048);
+});
+
+test("a delayed native command expires before touching the host", async () => {
+  const { vm, writes, address } = await nativeDawFixture();
+  vm.ode_daw_command({ id: "expired", op: "device_show", args: { editor: true }, address, scope: "request", expiresAt: Date.now() - 1 });
+  assert.equal(writes.length, 0);
+});
+
+test("revealing a device selects its containing track and clip IDs use one list value", async () => {
+  const { run, writes, objects } = await nativeDawFixture();
+  assert.equal(run("device_show").ok, true);
+  assert.deepEqual(JSON.parse(JSON.stringify(writes.slice(0, 2))), [
+    ["live_set view", "selected_track", ["id", 1]], ["live_set view", "select_device", "id", 2],
+  ]);
+  const path = "live_set tracks 0 arrangement_clips 0";
+  objects[path] = { id: "10", type: "Clip", name: "Humming" };
+  assert.equal(run("clip_show", {}, { path, guards: [{ path: "live_set tracks 0", name: "Lead" }, { path, name: "Humming" }] }).ok, true);
+  assert.deepEqual(JSON.parse(JSON.stringify(objects["live_set view"].detail_clip)), ["id", 10]);
 });

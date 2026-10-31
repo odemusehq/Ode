@@ -4,7 +4,7 @@ import { defineTool } from "../../define";
 import { nativeTarget } from "../native-target";
 import { DeviceRefSchema, TrackRefSchema } from "../schemas";
 
-const choice = { readToken: z.string().min(1), identifier: z.string().min(1).max(1024) };
+const choice = { readToken: z.string().min(1), identifier: z.union([z.string().min(1).max(1024), z.number()]).describe("Exact identifier returned by Live, preserving its string or numeric type.") };
 export const routingWrites = [defineTool({
   name: "track_set_routing", changes: "set", mainAgentOnly: true,
   description: "Set one native track input/output routing choice using an exact identifier and readToken from track_get_routing. Refuses stale state, unavailable choices or active recording. Read again after a type change before choosing its channel. Routing is outside Ode's saved-state restoration; preserve the returned native before-state. No conventional routing is assumed.",

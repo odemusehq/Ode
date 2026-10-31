@@ -63,7 +63,9 @@ function ode_daw_routes(target, compressor) {
 }
 function ode_daw_recording() {
   var song = new LiveAPI(null, "live_set");
-  return ode_daw_optional(song, "record_mode") === 1 || ode_daw_optional(song, "session_record") === 1;
+  var arrangement = ode_daw_optional(song, "record_mode"), sessionRecord = ode_daw_optional(song, "session_record");
+  if ((arrangement !== 0 && arrangement !== 1) || (sessionRecord !== 0 && sessionRecord !== 1)) throw new Error(ODE_DAW_COPY.unsupported);
+  return arrangement === 1 || sessionRecord === 1;
 }
 function ode_daw_route_set(command, target, compressor) {
   var before = ode_daw_routes(target, compressor), args = command.args;
@@ -75,7 +77,9 @@ function ode_daw_route_set(command, target, compressor) {
   if (!Array.isArray(offered)) throw new Error(ODE_DAW_COPY.unsupported);
   var selected = offered.filter(function (value) { return value && value.identifier === args.identifier; });
   if (selected.length !== 1) throw new Error(ODE_DAW_COPY.changed);
-  target.api.set(args.field, JSON.stringify(selected[0]));
+  // Track/Compressor dictionaries retain their property envelope as one JSON symbol.
+  var envelope = {}; envelope[args.field] = selected[0];
+  target.api.set(args.field, [JSON.stringify(envelope)]);
   return { before: before, after: ode_daw_routes(target, compressor), restoration: ODE_DAW_COPY.nativeUndo };
 }
 function ode_daw_ids(value) {
@@ -210,6 +214,14 @@ function ode_daw_drum_chain(command, rack) {
   var after = Object.assign({}, state); after[field] = ode_daw_get(api, field);
   return { before: state, after: after, restoration: ODE_DAW_COPY.nativeUndo };
 }
+function ode_daw_reveal_track(target) {
+  var path = target.path.match(/^live_set (?:tracks \d+|return_tracks \d+|master_track)/);
+  if (!path) throw new Error(ODE_DAW_COPY.invalid);
+  var track = new LiveAPI(null, path[0]), view = new LiveAPI(null, "live_set view");
+  view.set("selected_track", ["id", Number(track.id)]);
+  if (ode_daw_ids(view.get("selected_track")).indexOf(Number(track.id)) === -1) throw new Error(ODE_DAW_COPY.changed);
+  return view;
+}
 function ode_daw_execute(command) {
   if (typeof odeAudio !== "undefined" && odeAudio.job && !/(_read|_meters)$/.test(command.op)) throw new Error(ODE_DAW_COPY.capturing);
   if (command.op === "return_create") return ode_daw_return(command.args);
@@ -222,7 +234,9 @@ function ode_daw_execute(command) {
   if (command.op === "clip_set" || command.op === "clip_warp") return ode_daw_clip_edit(command, target);
   if (command.op === "clip_show") {
     if (target.api.type !== "Clip") throw new Error(ODE_DAW_COPY.unsupported);
-    new LiveAPI(null, "live_set view").set("detail_clip", "id", Number(target.api.id));
+    var songView = ode_daw_reveal_track(target);
+    songView.set("detail_clip", ["id", Number(target.api.id)]);
+    if (ode_daw_ids(songView.get("detail_clip")).indexOf(Number(target.api.id)) === -1) throw new Error(ODE_DAW_COPY.changed);
     var clipView = new LiveAPI(null, "live_app view");
     clipView.call("show_view", "Detail"); clipView.call("show_view", "Detail/Clip");
     return { shown: true, name: String(ode_daw_get(target.api, "name")) };
@@ -238,9 +252,11 @@ function ode_daw_execute(command) {
   if (command.op === "plugin_read") {
     var state = ode_daw_plugin(target), result = ode_daw_remember(command, target, state);
     var offset = Number.isInteger(args.offset) && args.offset >= 0 ? args.offset : 0;
+    var limit = Number.isInteger(args.limit) && args.limit > 0 ? Math.min(128, args.limit) : 32;
     result.presetCount = state.presets.length;
-    result.presets = state.presets.slice(offset, offset + 128).map(function (name, index) { return { index: index + offset, name: name }; });
+    result.presets = state.presets.slice(offset, offset + limit).map(function (name, index) { return { index: index + offset, name: name }; });
     result.offset = offset;
+    result.nextOffset = offset + result.presets.length < state.presets.length ? offset + result.presets.length : null;
     return result;
   }
   if (command.op === "plugin_preset") {
@@ -248,16 +264,19 @@ function ode_daw_execute(command) {
     ode_daw_check(command, target, before);
     if (!Number.isInteger(args.index) || args.index < 0 || args.index >= before.presets.length) throw new Error(ODE_DAW_COPY.invalid);
     target.api.set("selected_preset_index", args.index);
-    return { before: { selectedPresetIndex: before.selectedPresetIndex }, after: ode_daw_plugin(target), restoration: ODE_DAW_COPY.nativeUndo };
+    var after = ode_daw_plugin(target);
+    return { before: { selectedPresetIndex: before.selectedPresetIndex }, after: { name: after.name, selectedPresetIndex: after.selectedPresetIndex,
+      selectedPresetName: after.presets[after.selectedPresetIndex] || null, presetCount: after.presets.length, editorOpen: after.editorOpen }, restoration: ODE_DAW_COPY.nativeUndo };
   }
   if (command.op === "device_show") {
     if (!/ devices \d+$/.test(target.path)) throw new Error(ODE_DAW_COPY.invalid);
+    var selectedView = ode_daw_reveal_track(target);
     if (args.editor === true) {
       if (!ode_daw_device_kind(target, "PluginDevice", "PluginDevice")) throw new Error(ODE_DAW_COPY.notPlugin);
       target.api.set("is_editor_open", 1);
       return { editorOpen: ode_daw_get(target.api, "is_editor_open") === 1 };
     }
-    new LiveAPI(null, "live_set view").call("select_device", "id", Number(target.api.id));
+    selectedView.call("select_device", "id", Number(target.api.id));
     var view = new LiveAPI(null, "live_app view");
     view.call("show_view", "Detail"); view.call("show_view", "Detail/DeviceChain");
     return { shown: true, name: String(ode_daw_get(target.api, "name")) };
@@ -271,9 +290,11 @@ function ode_daw_command(command) {
   var message;
   try {
     if (typeof command.scope !== "string" || !command.scope.length || !command.args || typeof command.args !== "object") throw new Error(ODE_DAW_COPY.invalid);
+    if (typeof command.expiresAt !== "number" || !Number.isFinite(command.expiresAt) || Date.now() >= command.expiresAt) throw new Error(ODE_DAW_COPY.expired);
     message = { id: command.id, ok: true, result: ode_daw_execute(command) };
   } catch (error) { message = { id: command.id, ok: false, error: String(error && error.message || error).slice(0, 2048) || ODE_DAW_COPY.invalid }; }
-  if (JSON.stringify(message).length > ODE_DAW.maxBodyBytes - 512) message = { id: command.id, ok: false, error: ODE_DAW_COPY.tooLarge };
+  // UTF-8 uses at most three bytes per UTF-16 code unit. Leave room for the session envelope.
+  if (JSON.stringify(message).length > Math.floor((ODE_DAW.maxBodyBytes - 512) / 3)) message = { id: command.id, ok: false, error: ODE_DAW_COPY.tooLarge };
   ode_daw_keep(odeDaw.replies, odeDaw.replyOrder, command.id, { key: key, message: message }, 64);
   http(ODE_DAW.messagePath, { session: session, message: message }, function () {});
 }
