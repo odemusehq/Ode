@@ -6,6 +6,12 @@ import { ArrangementClipRefSchema, DeviceRefSchema, LoopSchema, NoteSchema, Trac
 
 export const trackTools = [
   extensionTool({
+    op: "import_into_project",
+    changes: "set",
+    description: "Copy an available audio file into the Live project through the SDK. Returns the persistent path to use when creating audio clips. Simpler sample replacement imports its file automatically.",
+    input: { filePath: z.string().min(1) },
+  }),
+  extensionTool({
     op: "track_set",
     changes: "set",
     description: "Change a track's name, mute, solo or arm state. Only the fields you give change.",

@@ -22,7 +22,8 @@ export class SimplerOperations extends OperationGroup<SimplerOp> {
     const simpler = this.refs.simpler(device);
     OperationGroup.checkFile(filePath);
     return async () => {
-      const sample = await LiveError.guard(simpler.replaceSample(filePath), "replace the sample");
+      const imported = await LiveError.guard(this.live.resources.importIntoProject(filePath), "import the sample into the project");
+      const sample = await LiveError.guard(simpler.replaceSample(imported), "replace the sample");
       return { filePath: sample.filePath };
     };
   }

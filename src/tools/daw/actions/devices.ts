@@ -60,7 +60,7 @@ export const rackTools = [
   extensionTool({
     op: "simpler_replace_sample",
     changes: "set",
-    description: "Load a different audio file into a Simpler (for example an available licensed drum one-shot or recorded sample).",
+    description: "Load a different audio file into a Simpler (for example an available licensed drum one-shot or recorded sample). First copies the file into the Live project through the SDK, then loads that persistent path, so temporary audition files can safely expire. A failed import leaves the current sample unchanged.",
     input: { device: DeviceRefSchema, filePath: z.string().min(1) },
     describe: ({ device, filePath }, names) => t("toolActivity.load", { device: names.device(device), filePath: basename(filePath) }),
   })

@@ -16,11 +16,5 @@ export const audioFileTools = [
     description:
       "Render an Arrangement audio track's sound before its effects, between two beats, to an audio file. Returns the file path, for analysis tools. Only audio tracks in the Arrangement can be rendered.",
     input: { track: TrackRefSchema, start: z.number().min(0), end: z.number().positive() },
-  }),
-  extensionTool({
-    op: "import_into_project",
-    description:
-      "Copy an audio file (for example one Ode generated) into the Live project so Live manages it. Returns the new path; use that path when creating clips or loading samples.",
-    input: { filePath: z.string().min(1) },
   })
 ];
