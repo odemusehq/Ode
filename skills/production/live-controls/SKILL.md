@@ -47,7 +47,7 @@ There is no local pitch detector, model-to-MIDI transcription substitute or hidd
 
 ## Mixing and limits
 
-`track_get_meters` reads native 0..1 peak/hold meters during playback. It does not yield LUFS, true peak or gain reduction. Use actual accessible analyser/plugin readings when available; otherwise open the relevant device and ask the musician to read it. Do not infer measured loudness from limiter settings or an LLM answer. Use actual processed captures and `audio_describe`/`audio_compare` for musical decisions.
+`track_get_meters` reads native 0..1 peak/hold meters during playback. It does not yield LUFS, true peak or gain reduction. Use actual accessible analyser/plugin readings when available; otherwise open the relevant device and ask the musician to read it. Do not infer measured loudness from limiter settings or an LLM answer. Use actual processed captures and `audio_read` for musical decisions.
 
 Timed automation curves, general Browser/preset loading, arbitrary plugin UI operations and full comping remain musician-performed where no tool exposes them. State the specific step and purpose, let the musician do it, then reread the result and continue. Use the existing chat/question flow; no extra workflow panel or pretend tool is needed.
 

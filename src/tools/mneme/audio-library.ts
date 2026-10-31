@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { attachAudioFile } from "../daw/audio/file-evidence";
 import { buildLibraryProfile } from "../../audio/library-profile";
 import { LocalAudioFiles, type AudioFileRecord } from "../../live/local-audio-files";
 import { LibraryAnnotationsPatchSchema, LibraryProfileLevelSchema, LibrarySearchSchema } from "../../shared/audio-library";
@@ -140,7 +141,7 @@ export const localAudioTools: AnyTool[] = [
     name: "library_audio_profile",
     description: [
       "Verify and save a whole-file profile for one explicitly managed audio id. level defaults to metadata: inspect WAV/AIFF headers for exact frames, sample rate, channels, format and duration without examining sample values.",
-      "No signal analysis, pitch detection, loudness measurement or musical inference runs here. Use supported Ableton/Max operations, an installed plug-in or the configured listening model for those tasks.",
+      "No signal analysis, pitch detection, loudness measurement or musical inference runs here. Use supported Ableton/Max operations, an installed plug-in for measurements; open the audio into your own context for qualitative musical assessment.",
       "Returns a compact updated summary with profile level, method/version and exact source hash/bytes; library_audio_read gives exact header metadata. The profile covers the complete asset, never an excerpt, and saves no temporary path. Unsupported codecs require a WAV/AIFF export; no provider or Live call runs. Annotation edits are preserved. Changes persistent memory and follows Manual Apply.",
     ].join(" "),
     input: { id: z.uuid(), level: LibraryProfileLevelSchema.optional() },
@@ -162,15 +163,15 @@ export const localAudioTools: AnyTool[] = [
   }),
   defineTool({
     name: "library_audio_open",
-    description: "Open a file id returned by library_audio_search as an exact-byte managed working copy. Returns an exact path for audio_describe or import_into_project and a compact identity/declaration/header summary. library_audio_read gives exact metadata without copying. WAV/AIFF support the listening payload adapter; convert other formats to WAV in the DAW first. A processed-bounce declaration does not establish its routing, effects, range, tails or currentness. This does not capture or export Live audio.",
+    description: "Open a file id returned by library_audio_search as an exact-byte managed working copy. Attaches supported WAV/AIFF/MP3 audio to your own next turn, and returns an exact path for native import with a compact identity/declaration/header summary. library_audio_read gives exact metadata without copying. Other formats remain available for native import but require conversion in Live before they can be attached. No separate model is called. A processed-bounce declaration does not establish its routing, effects, range, tails or currentness. This does not capture or export Live audio.",
     input: { id: z.string().uuid() },
     changes: "none",
     run: async ({ id }, ctx) => {
       const opened = await new LocalAudioFiles(ctx.config.userDir, ctx.config.tempDir).open(id);
       const limit = windowSize(ctx), card = { ...summary(opened), path: opened.path };
-      if (fits(card, limit)) return card;
+      if (fits(card, limit)) return attachAudioFile(card, ctx.signal);
       const compact = { id: opened.id, path: opened.path, sha256: opened.sha256, bytes: opened.bytes };
-      return fits(compact, limit) ? compact : bounded({ id: opened.id, path: opened.path }, limit);
+      return attachAudioFile(fits(compact, limit) ? compact : bounded({ id: opened.id, path: opened.path }, limit), ctx.signal);
     },
   }),
 ];

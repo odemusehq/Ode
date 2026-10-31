@@ -11,10 +11,9 @@ export interface ChatProvider extends ChatProviderOption {
   readonly conversationHeader?: string;
 }
 
-/** Meta's models for listening and transcription, used with a Meta key whatever the chat provider. */
+/** Meta's microphone transcription model, independent of the agent's multimodal input. */
 export interface MetaModels {
   readonly baseUrl: string;
-  readonly audioUnderstanding: string;
   readonly transcription: string;
 }
 

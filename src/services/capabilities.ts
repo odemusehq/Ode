@@ -1,7 +1,7 @@
 import type { ChatCompletionContentPart, ChatCompletionMessage, ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/chat/completions";
 import type { Role } from "../shared/config";
 import type { Transcript } from "./types";
-import type { AudioListeningSource, AudioTimeRange, ListeningPayload, MusicAudioSource } from "./music-audio";
+import type { MusicAudioSource } from "./music-audio";
 
 /** Captured media stays binary in the agent context; the provider adapter encodes it at dispatch. */
 export interface AudioContent {
@@ -23,7 +23,7 @@ export function chatContextSize(value: unknown): { chars: number; audioTokens: n
     if (part?.type !== "audio" || !(part.data instanceof Uint8Array)) return part;
     // A conservative allowance above Spark Open's 12.5 embeddings/second; provider usage replaces it.
     // Compressed input with unknown timing uses its byte size rather than inventing a duration.
-    audioTokens += part.durationSeconds === null ? Math.ceil(part.data.byteLength / 2) : Math.ceil(part.durationSeconds * 100);
+    audioTokens += part.durationSeconds === null ? Math.ceil(part.data.byteLength / 128) : Math.ceil(part.durationSeconds * 100);
     return { type: "audio", format: part.format, durationSeconds: part.durationSeconds, bytes: part.data.byteLength };
   });
   return { chars: text.length, audioTokens };
@@ -52,14 +52,12 @@ export interface ChatReply {
 /** What Ode needs from models, independent of who provides them. */
 export enum Capability {
   Text = "text",
-  AudioUnderstanding = "audio understanding",
   Transcription = "transcription",
 }
 
 export const ROLE_CAPABILITY: Record<Role, Capability> = {
   main: Capability.Text,
   subagent: Capability.Text,
-  audio_understanding: Capability.AudioUnderstanding,
   transcription: Capability.Transcription,
   lyrics_check: Capability.Text,
 };
@@ -92,32 +90,11 @@ export interface TextGenerator {
   models(): Promise<string[]>;
 }
 
-export interface AudioListeningResult {
-  answer: string;
-  evidence: {
-    criteria: string;
-    prompt: string;
-    provider: string;
-    model: string;
-    sources: AudioListeningSource[];
-    payload: ListeningPayload;
-    requestHash: string;
-    dispatchedAt: string;
-    completedAt: string;
-  };
-}
-
-export interface AudioUnderstander {
-  describe(audio: MusicAudioSource, question: string, signal?: AbortSignal, range?: AudioTimeRange): Promise<AudioListeningResult>;
-  compare?(a: MusicAudioSource, b: MusicAudioSource, question: string, levelMatch: boolean, signal?: AbortSignal, ranges?: { a?: AudioTimeRange; b?: AudioTimeRange }): Promise<AudioListeningResult & { comparison: unknown }>;
-}
-
 export interface Transcriber {
   transcribe(audio: MusicAudioSource, signal?: AbortSignal): Promise<Transcript>;
 }
 
 export interface CapabilityAdapters {
   [Capability.Text]: TextGenerator;
-  [Capability.AudioUnderstanding]: AudioUnderstander;
   [Capability.Transcription]: Transcriber;
 }

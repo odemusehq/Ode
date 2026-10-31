@@ -4,7 +4,7 @@ import { Capability, ROLE_CAPABILITY, type CapabilityAdapters, type TextGenerato
 import { RoleCheck } from "./roles";
 import { SpeechAudio } from "./speech-audio";
 import type { RoleSource, Services, Transcript } from "./types";
-import type { AudioTimeRange, MusicAudioSource } from "./music-audio";
+import type { MusicAudioSource } from "./music-audio";
 
 /** Model-backed services: each role's capability, served by the adapter for the provider chosen in Settings. */
 export class ModelServices implements Services {
@@ -24,16 +24,6 @@ export class ModelServices implements Services {
 
   chat(role: "main" | "subagent" | "lyrics_check"): Promise<TextGenerator> {
     return this.adapter(role, Capability.Text);
-  }
-
-  async describeAudio(audio: MusicAudioSource, question: string, signal?: AbortSignal, range?: AudioTimeRange) {
-    return (await this.adapter("audio_understanding", Capability.AudioUnderstanding)).describe(audio, question, signal, range);
-  }
-
-  async compareAudio(a: MusicAudioSource, b: MusicAudioSource, question: string, levelMatch: boolean, signal?: AbortSignal, ranges?: { a?: AudioTimeRange; b?: AudioTimeRange }) {
-    const adapter = await this.adapter("audio_understanding", Capability.AudioUnderstanding);
-    if (!adapter.compare) throw new Error("The configured audio service does not support paired comparison.");
-    return adapter.compare(a, b, question, levelMatch, signal, ranges);
   }
 
   async transcribe(audio: MusicAudioSource, signal?: AbortSignal): Promise<Transcript> {

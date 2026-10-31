@@ -82,11 +82,11 @@ test("listening source evidence excludes catalogue reports without discarding th
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-test("paired listening refuses an unknown multichannel layout without processing it", async () => {
+test("agent audio input refuses an unknown multichannel layout without processing it", async () => {
   const dir = await mkdtemp(join(tmpdir(), "ode-multichannel-"));
   try {
     const path = join(dir, "eight.wav");
     await writeWav(path, { sampleRate: 8000, channels: Array.from({ length: 8 }, () => new Float32Array(800)) });
-    await assert.rejects(new MusicAudio().comparison(path, path, false), /layout|mono|stereo/i);
+    await assert.rejects(new MusicAudio().read(path), /layout|mono|stereo/i);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });

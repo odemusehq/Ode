@@ -1,5 +1,4 @@
 import type { RoleConfig } from "../shared/config";
-import { OpenAiCompatibleAudioUnderstander } from "./adapters/openai-compatible-audio";
 import { OpenAiCompatibleText } from "./adapters/openai-compatible-text";
 import { MetaTranscriber } from "./adapters/transcribers";
 import { Capability, type CapabilityAdapters } from "./capabilities";
@@ -17,10 +16,6 @@ export class AdapterRegistry {
       [Provider.Meta]: (role) => new OpenAiCompatibleText(role),
       [Provider.Baseten]: (role) => new OpenAiCompatibleText(role),
       [Provider.Modal]: (role) => new OpenAiCompatibleText(role),
-    },
-    [Capability.AudioUnderstanding]: {
-      [Provider.Meta]: (role) => new OpenAiCompatibleAudioUnderstander(role),
-      [Provider.Baseten]: (role) => new OpenAiCompatibleAudioUnderstander(role),
     },
     [Capability.Transcription]: {
       [Provider.Meta]: (role, speech) => new MetaTranscriber(role, speech),

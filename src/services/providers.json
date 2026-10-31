@@ -52,7 +52,6 @@
   ],
   "meta": {
     "baseUrl": "https://api.meta.ai/v1",
-    "audioUnderstanding": "muse-spark-1.2",
     "transcription": "muse-voice-transcribe-1.0"
   },
   "lyrics": {

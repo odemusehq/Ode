@@ -3,7 +3,6 @@ import defaults from "./defaults.json";
 export const ROLES = [
   "main",
   "subagent",
-  "audio_understanding",
   "transcription",
   "lyrics_check",
 ] as const;
@@ -71,8 +70,6 @@ export interface VersionSettings {
 export interface ServiceSettings {
   /** The longest answer to a one-off text request, in tokens. */
   textMaxTokens: number;
-  /** The longest answer about a recording, in tokens; reasoning shares it, so a low limit gives an empty answer. */
-  audioMaxTokens: number;
 }
 
 export interface ServerSettings {

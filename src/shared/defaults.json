@@ -51,8 +51,7 @@
     }
   },
   "services": {
-    "textMaxTokens": 4000,
-    "audioMaxTokens": 4000
+    "textMaxTokens": 4000
   },
   "notice": {
     "width": 380,

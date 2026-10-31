@@ -18,7 +18,7 @@ test("Ode offers execution adapters without its own music or audio engines", () 
   assert.equal(registry.group("memory_record"), "mneme");
   assert.equal(registry.group("lyrics_write"), "lyrics");
   assert.equal(registry.group("ask_musician"), "operations");
-  for (const name of ["midi_clip_get_notes", "midi_clip_set_notes", "track_create_midi_clip", "audio_describe", "lyricist"]) {
+  for (const name of ["midi_clip_get_notes", "midi_clip_set_notes", "track_create_midi_clip", "audio_read", "lyricist"]) {
     assert.ok(registry.find(name), `${name} must remain available`);
   }
 });

@@ -27,7 +27,7 @@ test("a fresh install starts on Meta's first model, and a saved key shows only a
   assert.equal(kept.keySet, true);
 });
 
-test("each role reaches its provider's endpoint, with listening and transcription when the chat runs elsewhere", async () => {
+test("each role reaches its provider's endpoint, with the same agent model and independent microphone transcription", async () => {
   const settings = await freshSettings();
   const roles = new ModelRoles(settings, ProviderCatalog.bundled);
   await settings.update({ provider: "modal", model: "my-endpoint.us-west.modal.direct", key: "wk-1.ws-2", metaKey: "meta-key" });
@@ -36,16 +36,14 @@ test("each role reaches its provider's endpoint, with listening and transcriptio
   assert.equal(onModal.main.conversationHeader, "Modal-Routing-Affinity-Key");
   assert.equal(onModal.subagent.model, "my-endpoint.us-west.modal.direct");
   assert.equal(onModal.transcription.apiKey, "meta-key");
-  assert.deepEqual(Object.keys(onModal).sort(), ["audio_understanding", "lyrics_check", "main", "subagent", "transcription"]);
-  assert.equal(onModal.audio_understanding.model, "muse-spark-1.2");
+  assert.deepEqual(Object.keys(onModal).sort(), ["lyrics_check", "main", "subagent", "transcription"]);
 
   await settings.update({ provider: "meta", model: "muse-spark-1.3", key: "meta-main" });
   assert.equal((await roles.roles()).transcription.apiKey, "meta-main");
   await settings.update({ provider: "baseten", model: "meta-models/muse-spark-open-1026", key: "baseten-test" });
   const onBaseten = await roles.roles();
-  assert.equal(onBaseten.audio_understanding.provider, "baseten");
-  assert.equal(onBaseten.audio_understanding.apiKey, "baseten-test");
-  assert.equal(onBaseten.audio_understanding.model, "meta-models/muse-spark-open-1026");
+  assert.equal(onBaseten.main.model, "meta-models/muse-spark-open-1026");
+  assert.equal(onBaseten.main.apiKey, "baseten-test");
 });
 
 test("Settings lists each provider's models, and Modal lists its endpoints once a key is in", async () => {

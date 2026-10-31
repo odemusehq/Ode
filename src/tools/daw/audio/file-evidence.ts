@@ -1,5 +1,20 @@
 import { audioProvenance } from "../../../live/local-audio-files";
 import { MusicAudio, type FrozenMusicAudio } from "../../../services/music-audio";
+import { withAudio } from "../../define";
+
+/** Opening/capturing a file returns audio directly to the same agent, alongside its normal metadata. */
+export async function attachAudioFile<T extends { path: string }>(result: T, signal?: AbortSignal) {
+  if (signal?.aborted) return result;
+  try {
+    const read = await new MusicAudio().read(result.path);
+    if (signal?.aborted) return result;
+    const metadata = { ...result, audioAttached: true, audioPayload: read.payload };
+    return withAudio(metadata, [{ description: JSON.stringify(metadata), content: read.content }]);
+  } catch (error) {
+    // A successful native capture or file copy remains available even if its codec cannot be attached.
+    return { ...result, audioAttached: false, audioError: error instanceof Error ? error.message : String(error) };
+  }
+}
 
 /** Call only after managed-path validation, or for an SDK render in the extension's temp folder. */
 export async function audioFileEvidence(path: string, frozen?: FrozenMusicAudio) {

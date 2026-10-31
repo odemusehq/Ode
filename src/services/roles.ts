@@ -14,8 +14,6 @@ export class RoleCheck {
       case "main":
       case "subagent":
         return t("modelServices.setup.agent");
-      case "audio_understanding":
-        return t("modelServices.setup.listening");
       case "transcription":
         return t("modelServices.setup.transcription");
       case "lyrics_check":

@@ -1,6 +1,6 @@
 import type { Role, RoleConfig } from "../shared/config";
-import type { AudioListeningResult, TextGenerator } from "./capabilities";
-import type { AudioTimeRange, FrozenMusicAudio, MusicAudioSource } from "./music-audio";
+import type { TextGenerator } from "./capabilities";
+import type { FrozenMusicAudio, MusicAudioSource } from "./music-audio";
 import type { SpeechPayload } from "./speech-audio";
 
 export interface Transcript {
@@ -33,9 +33,6 @@ export interface Services {
   text(role: "main" | "subagent", prompt: string, options?: { system?: string; maxTokens?: number; signal?: AbortSignal }): Promise<string>;
   /** The configured main, subagent or Lyricist model. */
   chat(role: "main" | "subagent" | "lyrics_check"): Promise<TextGenerator>;
-  /** Audio understanding: describe a recording or answer a question about it. */
-  describeAudio(audio: MusicAudioSource, question: string, signal?: AbortSignal, range?: AudioTimeRange): Promise<AudioListeningResult>;
-  compareAudio?(a: MusicAudioSource, b: MusicAudioSource, question: string, levelMatch: boolean, signal?: AbortSignal, ranges?: { a?: AudioTimeRange; b?: AudioTimeRange }): Promise<AudioListeningResult & { comparison: unknown }>;
   /** Transcription: words from a vocal or spoken recording. */
   transcribe(audio: MusicAudioSource, signal?: AbortSignal): Promise<Transcript>;
   /** Which roles are set up in Settings. */

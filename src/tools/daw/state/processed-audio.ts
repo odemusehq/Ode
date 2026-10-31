@@ -5,6 +5,7 @@ import { LocalAudioFiles } from "../../../live/local-audio-files";
 import { t } from "../../../shared/i18n";
 import { MAX_AUDIO, type MaxAudioSource } from "../../../shared/max-audio";
 import { defineTool, type AnyTool, type ToolContext } from "../../define";
+import { attachAudioFile } from "../audio/file-evidence";
 
 function device(ctx: ToolContext) {
   if (!ctx.maxAudio) throw new Error("Load the updated Ode Max for Live device to capture processed sound.");
@@ -40,7 +41,7 @@ export const processedAudioTools: AnyTool[] = [
     changes: "set",
     mainAgentOnly: true,
     description: [
-      "Record actual stereo audio through the paired Max device and retain a managed Float32 WAV for audio_describe and audio_compare. First call processed_audio_sources; give its exact sourceId and durationSeconds (real-time seconds, maximum 300 and 16 million frames). Only offered routing stages can be captured; pre-fx/device-input is not final processed output. No listening model is called here.",
+      "Record actual stereo audio through the paired Max device, retain a managed Float32 WAV and attach its actual audio to your next turn in this conversation. You assess it yourself; no separate model is called. First call processed_audio_sources; give its exact sourceId and durationSeconds (real-time seconds, maximum 300 and 16 million frames). Only offered routing stages can be captured; pre-fx/device-input is not final processed output.",
       "Omit startBeat to record the current live output without starting playback. For Arrangement playback, startBeat seeks and starts a stopped, non-recording transport; optional prerollBeats warms processing before recording. Live must already be playing the intended Arrangement rather than Session overrides. Capture restores transport it still owns, and stops/restores on cancellation; human transport changes can prevent restoration. This touches transport and device routing, follows Manual Apply, and cannot run alongside other host edits/captures.",
       "For a selected-track mix, use a Main post-mixer source, startBeat and includeSourceIds containing current track/group post-mixer source ids. The updated device temporarily unmutes selected tracks and their group ancestors, mutes excluded tracks, zeros excluded sends, and clears track/return solos. Automated excluded sends are refused to preserve automation. It restores changed controls after capture, error or cancellation if they still match Ode's values; conflicting human edits are preserved. Selected groups include their children. Existing return mute states, Main processing, shared effect history, routing and sidechain relationships remain relevant: this is a selected-track Main audition, not guaranteed isolated stems. For separate tracks capture their own offered source, sequentially; one device records one stereo take at a time.",
       "Returns retained id, working path, exact hash/frames/rate, source stage, included sources when selected, host, requested timing and observed beat bounds with uncertainty. Reopen by id with library_audio_open later. Seconds are not an exact beat selection, especially with tempo changes; pre-roll does not recreate all plugin history, and post-roll can include later music. Do not manually solo tracks, infer missing routes, claim complete isolated effect tails, or call this a native offline export. Main post-mixer must be explicitly available. Later Set edits require a fresh capture for evaluation.",
@@ -62,8 +63,9 @@ export const processedAudioTools: AnyTool[] = [
           bytes, provenance: "max-device-capture", capture: { capturedAt: new Date().toISOString(), ...facts },
           purpose: captured.source.stage === "post-fx" || captured.source.stage === "post-mixer" ? "processed-bounce" : "reference",
           source: `${captured.source.name}; ${captured.source.stage}; recorded through Ode on ${captured.host.trackName}. ${captured.timing.rangeUncertainty}` }, ctx.signal);
-        return { ...(ctx.signal?.aborted ? record : await library.open(record.id)), retained: true,
-          availability: "Reopen this id with library_audio_open when its working path expires." };
+        if (ctx.signal?.aborted) return { ...record, retained: true };
+        return attachAudioFile({ ...await library.open(record.id), retained: true,
+          availability: "Reopen this id with library_audio_open or audio_read to attach it again after compaction or in a later request." }, ctx.signal);
       } finally {
         await rm(captured.path, { force: true });
       }

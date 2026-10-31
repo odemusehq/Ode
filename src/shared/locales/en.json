@@ -885,7 +885,6 @@
   "modelServices": {
     "setup": {
       "agent": "Choose a provider and model, and add its key, in Ode: Settings",
-      "listening": "The listening model needs a configured provider key in Ode: Settings",
       "transcription": "This uses Meta''s models: add a Meta key in Ode: Settings",
       "lyricist": "Choose a Lyricist model and add its provider key in Ode: Settings"
     }

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp } from "node:fs/promises";
+import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -26,6 +26,7 @@ import { DevConfig } from "../shared/dev-config";
 import { ToolRegistry } from "../tools";
 import { FakeSetLive } from "./fake-set-live";
 import { TestSets } from "./sets";
+import { encodeWav } from "../audio/wav";
 
 async function tempDir(): Promise<string> {
   return mkdtemp(join(tmpdir(), "ode-harness-"));
@@ -124,7 +125,7 @@ async function rig(model: ScriptedModel, compactAtTokens?: number) {
     signal: new AbortController().signal,
     ...overrides,
   });
-  return { loop, seen, run, registry, live, limits: config.limits };
+  return { loop, seen, run, registry, live, limits: config.limits, temp: config.tempDir };
 }
 
 test("a long run compacts and continues without replaying edits or losing the musician's request", async () => {
@@ -195,6 +196,25 @@ test("Stop after a tool returns audio prevents its next model request", async ()
   const result = await loop.run(run({ signal: stop.signal }));
   assert.equal(result.end, LoopEnd.Cancelled);
   assert.equal(model.turns.length, 1);
+});
+
+test("a real audio_read reaches the same agent through the registry and survives compaction", async () => {
+  const script: ChatCompletionMessage[] = [];
+  const model = new ScriptedModel(script);
+  const { loop, run, temp } = await rig(model, 40_000);
+  const path = await new TempFolder(temp).file("wav");
+  const bytes = encodeWav({ sampleRate: 8000, channels: [Float32Array.of(0.1, -0.2)] });
+  await writeFile(path, bytes);
+  script.push(answer("Earlier work. ".repeat(10_000), [{ id: "read-audio", name: "audio_read", args: { path } }]),
+    answer("The capture is read. Continue answering the musician's question from its attached audio."), answer("Answered from the capture."));
+  const result = await loop.run(run({ prompt: "Read the captured audio and describe it." }));
+  assert.equal(result.reply, "Answered from the capture.");
+  assert.equal(model.turns.length, 3, "The same agent makes the tool turn, compaction and answer.");
+  for (const turn of model.turns.slice(1)) {
+    const audio = turn.messages.flatMap(message => message.role === "user" && Array.isArray(message.content) ? message.content.filter(part => part.type === "audio") : []) as any[];
+    assert.equal(audio.length, 1);
+    assert.deepEqual(Buffer.from(audio[0].data), Buffer.from(bytes));
+  }
 });
 
 test("repeated inspections get a continuation reminder without blocking fresh reads", async () => {

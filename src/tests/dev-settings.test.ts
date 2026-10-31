@@ -16,7 +16,7 @@ async function fixture(run: (store: SettingsStore, file: string) => Promise<void
 test("developer Meta settings configure the existing roles and persist owner-only", () => fixture(async (store, file) => {
   const result = await importDevSettings(store, { META_API_KEY: "test-meta-key", ODE_CHAT_PROVIDER: "meta", ODE_CHAT_MODEL: "muse-wonder-1.0" });
   assert.equal(result.changed, true);
-  assert.deepEqual(result.configuredRoles, ["main", "subagent", "audio_understanding", "transcription", "lyrics_check"]);
+  assert.deepEqual(result.configuredRoles, ["main", "subagent", "transcription", "lyrics_check"]);
   const view = await store.view();
   assert.equal(view.provider, "meta");
   assert.equal(view.model, "muse-wonder-1.0");
