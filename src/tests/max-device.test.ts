@@ -66,7 +66,9 @@ test("embedded Max client consumes bootstrap once and waits for page readiness b
   const window: unknown[][] = [];
   const statuses: string[] = [];
   const requests: FakeRequest[] = [];
+  let allocatedRequests = 0;
   class FakeRequest {
+    constructor() { allocatedRequests++; }
     readyState = 0;
     status = 0;
     responseText = "";
@@ -76,7 +78,11 @@ test("embedded Max client consumes bootstrap once and waits for page readiness b
     aborted = false;
     open(method: string, url: string) { assert.equal(method, "POST"); this.url = url; }
     setRequestHeader() {}
-    send(body: string) { this.body = JSON.parse(body); requests.push(this); }
+    send(body: string) {
+      this.body = JSON.parse(body);
+      const original = this;
+      requests.push({ ...this, reply: this.reply.bind(this), get aborted() { return original.aborted; } } as FakeRequest);
+    }
     abort() { this.aborted = true; }
     reply(body: unknown, status = 200) { this.status = status; this.responseText = JSON.stringify(body); this.readyState = 4; this.onreadystatechange?.(); }
   }
@@ -163,4 +169,5 @@ test("embedded Max client consumes bootstrap once and waits for page readiness b
   context.stop();
   assert.equal(requests[10]!.aborted, true, "Removing the device must cancel its outstanding requests");
   assert.equal(tasks.every((task) => task.freed), true, "Removing the device must release its loop and request Tasks");
+  assert.ok(allocatedRequests <= 2, "Repeated requests must reuse a bounded number of native HTTP clients.");
 });

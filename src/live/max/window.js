@@ -7,6 +7,7 @@ var loop = null;
 var busy = false;
 var generation = 0;
 var requests = [];
+var idleRequests = [];
 var session = "";
 var connectionNotice = "";
 var port = 0;
@@ -77,6 +78,8 @@ function stop() {
   var active = requests.slice();
   requests = [];
   for (var index = 0; index < active.length; index++) active[index].cancel();
+  for (var idle = 0; idle < idleRequests.length; idle++) { try { idleRequests[idle].abort(); } catch (_) {} }
+  idleRequests = [];
   busy = false;
   session = "";
   connectionNotice = "";
@@ -90,7 +93,8 @@ function notifydeleted() { stop(); }
 
 function http(path, body, callback) {
   var expected = generation;
-  var xhr = new XMLHttpRequest();
+  // Max 9.1 retains native sockets per client. Reuse clients across PCM chunks and polls.
+  var xhr = idleRequests.pop() || new XMLHttpRequest();
   var finished = false;
   var timer = new Task(function () { finish(null, 0); try { xhr.abort(); } catch (_) {} }, this);
   var request = { xhr: xhr, timer: timer, cancel: function () { finish(null, 0); try { xhr.abort(); } catch (_) {} } };
@@ -101,7 +105,12 @@ function http(path, body, callback) {
     releaseTask(timer);
     var index = requests.indexOf(request);
     if (index >= 0) requests.splice(index, 1);
-    if (running && expected === generation) callback(value, code);
+    xhr.onreadystatechange = null;
+    try { if (running && expected === generation) callback(value, code); }
+    finally {
+      if (running) idleRequests.push(xhr);
+      else { try { xhr.abort(); } catch (_) {} }
+    }
   }
   try {
     xhr.open("POST", "http://127.0.0.1:" + port + path);
