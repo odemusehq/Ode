@@ -886,7 +886,7 @@
     "tooLarge": "The native reply is too large. Read a smaller page before continuing; inspect Live before retrying a change.",
     "activityPreset": "{device} · Choose preset",
     "activityShow": "{device} · Open in Live",
-    "recording": "Stop recording before changing this native control.",
+    "recording": "The musician controls recording in Live. Disable Record before Ode changes rehearsal playback or these native controls.",
     "capturing": "Wait for the current Ode audio capture before changing native controls.",
     "inspectCreated": "Live accepted the creation command. Read the current Set before continuing; do not repeat the creation.",
     "activityRouting": "{target} · Set routing",
@@ -894,7 +894,7 @@
     "activityClip": "{clip} · Edit clip",
     "activityWarp": "{clip} · Edit warp marker",
     "activityShowClip": "{clip} · Open in Live",
-    "activityTransport": "Set playback or recording",
+    "activityTransport": "Set rehearsal playback",
     "transportRestoration": "Transport state is not restored by Ode History. A completed recording or playback command remains active until changed in Live.",
     "activityInstrument": "{device} · Set instrument controls",
     "meterUnits": "native 0..1; peak/hold meters, not dBFS, LUFS, true peak or gain reduction"

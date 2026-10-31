@@ -140,6 +140,7 @@ function ode_daw_transport_command(command) {
   if (command.op === "transport_read") return Object.assign(ode_daw_remember(command, target, state), { current_song_time: ode_daw_optional(api, "current_song_time"), observedAt: new Date().toISOString() });
   ode_daw_check(command, target, state);
   var args = command.args, action = args.action;
+  if (action === "record_mode" || ode_daw_recording()) throw new Error(ODE_DAW_COPY.recording);
   if (action === "play" || action === "stop") {
     if (state.is_playing !== 0 && state.is_playing !== 1) throw new Error(ODE_DAW_COPY.unsupported);
     api.call(action === "play" ? "start_playing" : "stop_playing");
@@ -147,9 +148,9 @@ function ode_daw_transport_command(command) {
     if (state.is_playing !== 0 || ode_daw_recording()) throw new Error(ODE_DAW_COPY.recording);
     if (typeof args.value !== "number" || !Number.isFinite(args.value) || args.value < 0) throw new Error(ODE_DAW_COPY.invalid);
     api.set(action, args.value);
-  } else if (["record_mode", "metronome", "punch_in", "punch_out", "loop", "back_to_arranger"].indexOf(action) !== -1) {
+  } else if (["metronome", "punch_in", "punch_out", "loop", "back_to_arranger"].indexOf(action) !== -1) {
     if (typeof args.value !== "boolean" || state[action] === null) throw new Error(ODE_DAW_COPY.unsupported);
-    if (action !== "record_mode" && ode_daw_recording()) throw new Error(ODE_DAW_COPY.recording);
+    if (ode_daw_recording()) throw new Error(ODE_DAW_COPY.recording);
     api.set(action, args.value ? 1 : 0);
   } else if (action === "loop_start" || action === "loop_length") {
     if (ode_daw_recording()) throw new Error(ODE_DAW_COPY.recording);

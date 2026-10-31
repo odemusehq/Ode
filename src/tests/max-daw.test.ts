@@ -125,9 +125,13 @@ test("transport reads tolerate playback progress but recording prevents seeking"
   objects.live_set = { id: "80", type: "Song", is_playing: 0, record_mode: 0, session_record: 0, current_song_time: 16, loop_start: 0, loop_length: 16, back_to_arranger: 0 };
   const first = run("transport_read", {}, null);
   assert.equal(first.ok, true, first.error);
-  assert.equal(run("transport_set", { readToken: first.result.readToken, action: "record_mode", value: true }, null).ok, true);
+  assert.equal(run("transport_set", { readToken: first.result.readToken, action: "record_mode", value: true }, null).ok, false);
+  assert.equal(writes.length, 0);
+  objects.live_set.record_mode = 1; // The musician operates Live's Record control.
   const recording = run("transport_read", {}, null).result.readToken;
   assert.equal(run("transport_set", { readToken: recording, action: "current_song_time", value: 0 }, null).ok, false);
+  const armed = run("transport_read", {}, null).result.readToken;
+  assert.equal(run("transport_set", { readToken: armed, action: "play" }, null).ok, false);
   objects.live_set.record_mode = 0; objects.live_set.is_playing = 1;
   const moving = run("transport_read", {}, null).result.readToken;
   objects.live_set.current_song_time = 20;

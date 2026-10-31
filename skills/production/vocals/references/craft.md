@@ -13,7 +13,7 @@ A synth playing the melody is a guide, not a sung lead or backing vocal. A song 
 ## Range planning
 
 - Find the song's lowest and highest lead notes in each section and compare them with the singer's comfortable range.
-- The chorus peak should sit a little below the top of their range, and the verse comfortably in the lower middle.
+- For a relaxed delivery, leaving room below the top of the singer's comfortable range can help. A higher verse, lower chorus or exposed peak may be an intentional artistic choice.
 - Check every backing part against its singer too: a harmony a third above the lead's peak is often the first note out of range.
 
 Example: the artist's comfortable range is A2–E4. The chorus peak is D4, two semitones below the top, so the key works. A harmony a third above that peak would be F♯4, above the range; the harmony goes a third or a sixth below the lead (F♯3 is a sixth below D4), or to another singer whose range fits.
@@ -70,6 +70,8 @@ One possible growing arrangement follows. A stripped final chorus or unchanged v
 Use additions or changes only where they serve the intended arc.
 
 ## Guide parts for the session
+
+Use a separate, clearly named MIDI melody guide, played by a clean piano/electric piano or another pitch-stable available instrument. Choose the sound for intelligible pitch, onset and note length rather than imitating a voice. Rehearse in short phrases with exact lyric lines and Arrangement positions. The singer operates Live's Record controls; mute the guide for the take when requested and keep the MIDI available for later practice. Ode does not enable recording or generate the singer's performance.
 
 What the singer needs to record lives in the Set and the lead sheet: each backing part on its own MIDI track or clip, named for the part ("BV Harmony – Chorus"), the lead's guide melody on its own track, and the lines to double written into the lead sheet's notes.
 

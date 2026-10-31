@@ -27,15 +27,15 @@ Read the actual Set before choosing an operation. Discover only the tool schemas
 
 - `track_get_routing` returns current input/output choices and available identifiers. `track_set_routing` changes one choice; reread after selecting a type before selecting its channels.
 - `song_create_return_track` creates an actual return. Then read its reference, insert effects and set actual SDK mixer sends. For Live's Compressor sidechain, use `compressor_get_sidechain`/`compressor_set_sidechain`, then the device's real sidechain enable/EQ controls.
-- `song_get_transport` observes playback/recording, loop/punch and metronome state. `song_set_transport` performs one native operation. Track arming uses `track_set`. Prepare the requested input/track first; begin recording only when the musician requests it and is ready. Never interrupt or overwrite a performance as a setup shortcut.
-- A singer records the actual vocal in Live. Confirm audio-interface/microphone setup with the musician when it is outside the APIs. Record mode and playback are separate native controls: inspect both. Stopping an Ode request does not reverse a completed recording command.
+- `song_get_transport` observes playback/recording, loop/punch and metronome state. `song_set_transport` controls rehearsal playback and loop/metronome setup. Prepare the requested input/track when useful, but the musician starts/stops vocal recording using Live's controls. Ode cannot enable Record or start playback while Record is active. Never interrupt a performance.
+- A singer records the actual vocal in Live. Confirm audio-interface/microphone setup with the musician when it is outside the APIs. Inspect playback and Record state before rehearsal. The MIDI guide can be audible while practising, then muted with track_set for the real take; keep its notes and lyric/phrase bindings.
 - `clip_get_native`/`clip_set_native` expose clip gain, pitch and markers. `clip_warp_marker` uses Live's own warp-marker edits. These are not pitch correction, automatic vocal alignment or a complete comping API. For unavailable comping/fades/automation, point to the exact clip, phrase or parameter and guide the musician through the native edit.
 
 ## A hummed melody
 
 Live has **Convert Melody to New MIDI Track**, a clip conversion command rather than a separate humming plugin. It can convert an isolated monophonic sung, whistled or hummed recording. This command is not exposed by the checked Extension SDK or Max tools.
 
-1. Help the musician record the isolated idea into a real audio clip, or locate their existing recording.
+1. Prepare an audio track and guide the musician through recording the isolated idea themselves, or locate their existing recording.
 2. `clip_show` reveals that clip. Ask them to right-click its clip header and choose **Convert Melody to New MIDI Track** (also in Live's Create menu). Availability depends on their Live edition and content.
 3. After they finish, read `song_get`/`track_get` and `midi_clip_get_notes` on the created material. Audition and discuss corrections; the converted MIDI is a starting point, not the singer's actual audio performance.
 
