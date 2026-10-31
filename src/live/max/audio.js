@@ -57,13 +57,14 @@ function ode_audio_host() {
   }
   return { trackName: trackName, deviceName: String(ode_audio_get(device, "name")) };
 }
-function ode_audio_host_identity() {
-  var current = new LiveAPI(null, "this_device");
+function ode_audio_host_identity(job) {
+  var current = job ? job.deviceApi : new LiveAPI(null, "this_device");
   var identity = [String(current.id)];
   for (var depth = 0; depth < 12; depth++) {
     var ids = ode_audio_ids(current.get("canonical_parent"));
     if (!ids.length) break;
-    var parent = new LiveAPI(null, "id " + ids[0]);
+    var parent = job ? job.parentApi : new LiveAPI(null, "id " + ids[0]);
+    if (job) parent.id = ids[0];
     identity.push(String(ids[0]));
     if (parent.type === "Track" || parent.type === "Chain") identity.push(ode_audio_ids(parent.get("devices")).join(","));
     if (parent.type === "Track") break;
@@ -177,6 +178,7 @@ function ode_audio_restore(job) {
     try { job.buffer.freepeer(); } catch (_) {}
     try { odePatcher.getnamed("odeCaptureBuffer").message("sizeinsamps", 1); } catch (_) {}
   }
+  job.deviceApi = null; job.parentApi = null; job.songApi = null;
 }
 function ode_audio_stop() {
   var job = odeAudio.job;
@@ -191,14 +193,14 @@ function ode_audio_error(id, error) {
   ode_audio_remember(id);
   ode_audio_send({ kind: "error", id: id, error: String(error && error.message || error).slice(0, 1000) });
 }
-function ode_audio_observed_beat() {
-  try { var beat = Number(ode_audio_get(new LiveAPI(null, "live_set"), "current_song_time")); return Number.isFinite(beat) ? beat : null; }
+function ode_audio_observed_beat(job) {
+  try { var beat = Number(ode_audio_get(job.songApi, "current_song_time")); return Number.isFinite(beat) ? beat : null; }
   catch (_) { return null; }
 }
 function ode_audio_check(job) {
   if (!odeAudio.dsp) throw new Error(ODE_AUDIO_COPY.liveSAudioEngineStoppedDuringCapture);
   if (odeAudio.rate !== job.rate) throw new Error(ODE_AUDIO_COPY.liveSSampleRateChangedDuringCapture);
-  if (ode_audio_host_identity() !== job.hostIdentity) throw new Error(ODE_AUDIO_COPY.odeSHostTrackOrDeviceChain);
+  if (ode_audio_host_identity(job) !== job.hostIdentity) throw new Error(ODE_AUDIO_COPY.odeSHostTrackOrDeviceChain);
   if (job.bus && (ode_audio_routing(job.bus, "routing_type").identifier !== job.target.type.identifier || ode_audio_routing(job.bus, "routing_channel").identifier !== job.target.channel.identifier)) throw new Error(ODE_AUDIO_COPY.theCaptureSourceOrRoutingStageChanged);
 }
 function ode_audio_monitor() {
@@ -258,7 +260,7 @@ function ode_audio_monitor() {
 function ode_audio_start_recording(job) {
   if (odeAudio.job !== job || job.recording) return;
   job.waiting = false; job.recording = true;
-  job.startedBeat = ode_audio_observed_beat();
+  job.startedBeat = ode_audio_observed_beat(job);
   job.startedSample = odeAudio.flags & 1 ? odeAudio.sample : null;
   ode_audio_object("odeCaptureRecorder", 1);
   // The fixed-size buffer stops record~ itself. The Task waits for its final vector before reading.
@@ -268,7 +270,6 @@ function ode_audio_capture(command) {
   if (odeAudio.job) throw new Error(ODE_AUDIO_COPY.waitForTheCurrentAudioCaptureTo);
   var catalogue = odeAudio.catalogue;
   if (!catalogue || command.catalogueId !== catalogue.catalogueId || !catalogue.targets[command.sourceId]) throw new Error(ODE_AUDIO_COPY.readTheCurrentAudioSourcesAgainBefore);
-  if (ode_audio_host_identity() !== catalogue.hostIdentity) throw new Error(ODE_AUDIO_COPY.odeMovedOrItsHostDeviceChain);
   var rate = odeAudio.rate;
   var duration = Number(command.durationSeconds);
   var frames = Math.ceil(duration * rate);
@@ -277,6 +278,11 @@ function ode_audio_capture(command) {
   var job = { id: command.id, catalogueId: command.catalogueId, sourceId: command.sourceId, target: catalogue.targets[command.sourceId], hostIdentity: catalogue.hostIdentity, frames: frames, rate: rate, offset: 0, startedBeat: null, endedBeat: null, prerollBeats: 0 };
   odeAudio.job = job;
   try {
+    // Reuse handles during monitoring; re-read the actual parent chain on every check.
+    job.deviceApi = new LiveAPI(null, "this_device");
+    job.parentApi = new LiveAPI(null, "this_device");
+    job.songApi = new LiveAPI(null, "live_set");
+    if (ode_audio_host_identity(job) !== catalogue.hostIdentity) throw new Error(ODE_AUDIO_COPY.odeMovedOrItsHostDeviceChain);
     if (!job.target.local) {
       job.bus = new LiveAPI(null, "id " + job.target.busId);
       var available = ode_audio_routing(job.bus, "available_routing_types").available_routing_types || [];
@@ -301,7 +307,7 @@ function ode_audio_capture(command) {
     if (command.startBeat !== undefined) {
       var start = Number(command.startBeat), preroll = Number(command.prerollBeats || 0);
       if (!Number.isFinite(start) || start < 0 || !Number.isFinite(preroll) || preroll < 0 || preroll > 64) throw new Error(ODE_AUDIO_COPY.chooseANonnegativeStartBeatAndPreroll);
-      var song = new LiveAPI(null, "live_set");
+      var song = job.songApi;
       if (Number(ode_audio_get(song, "is_playing")) || Number(ode_audio_get(song, "record_mode")) || Number(ode_audio_get(song, "session_record"))) throw new Error(ODE_AUDIO_COPY.stopPlaybackAndRecordingBeforeAskingOde);
       if (Number(ode_audio_get(song, "back_to_arranger"))) throw new Error(ODE_AUDIO_COPY.returnToArrangementPlaybackBeforeARange);
       job.startBeat = start; job.prerollBeats = Math.min(start, preroll); job.waiting = true;
@@ -323,7 +329,7 @@ function ode_audio_recorded() {
   try { ode_audio_check(job); } catch (error) { ode_audio_error(job.id, error); return; }
   releaseTask(job.finishTask); job.finishTask = null;
   ode_audio_object("odeCaptureRecorder", 0);
-  job.recording = false; job.endedBeat = ode_audio_observed_beat();
+  job.recording = false; job.endedBeat = ode_audio_observed_beat(job);
   job.endedSample = odeAudio.flags & 1 ? odeAudio.sample : null;
   // Restore playback before transferring the frozen buffer; polling continues independently.
   releaseTask(job.monitorTask); job.monitorTask = null;

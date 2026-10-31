@@ -9,13 +9,15 @@ async function fixture(withRouting = false, names = ["Synth"], types = [{ displa
   const messages: any[] = [], controls: any[] = [], tasks: any[] = [];
   const transportWrites: (() => void)[] = [], transportCalls: string[] = [];
   let now = 0;
-  let allocatedFrames = 0;
+  let allocatedFrames = 0, apiConstructions = 0;
   const routing = { routing_type: { display_name: "No Input", identifier: "none" }, routing_channel: { display_name: "No Input", identifier: "none" } };
   const song: Record<string, any> = { is_playing: 0, record_mode: 0, session_record: 0, current_song_time: 12, start_time: 80, loop: 1, loop_start: 8, loop_length: 8, tracks: names.flatMap((_, index) => ["id", 20 + index]), return_tracks: [] };
   class LiveAPI {
-    id = 1;
+    private identifier = 1;
+    get id() { return this.identifier; }
+    set id(value: number) { this.identifier = value; this.path = "id " + value; }
     path: string;
-    constructor(_callback: unknown, path: string) { this.path = path; if (path === "this_device") this.id = 30; }
+    constructor(_callback: unknown, path: string) { apiConstructions++; this.path = path; if (path === "this_device") this.identifier = 30; }
     get type() { return this.path === "id 20" ? "Track" : "MaxDevice"; }
     get(key: string): any {
       if (this.path === "live_set") return [song[key]];
@@ -69,9 +71,22 @@ async function fixture(withRouting = false, names = ["Synth"], types = [{ displa
   context.ode_audio_rate(8000);
   context.ode_audio_dsp(1);
   context.ode_audio_buffer("unique-buffer");
-  return { context, messages, controls, tasks, song, routing, transportCalls,
+  return { context, messages, controls, tasks, song, routing, transportCalls, constructions: () => apiConstructions,
     flushTransport: () => { transportWrites.splice(0).forEach((apply) => apply()); }, advance: (milliseconds: number) => { now += milliseconds; } };
 }
+
+test("capture monitoring reuses native handles while still observing host changes", async () => {
+  const { context, messages, constructions } = await fixture();
+  context.ode_audio_command({ kind: "sources", id: "list" });
+  const catalogue = messages.at(-1).message;
+  context.ode_audio_command({ kind: "capture", id: "take", catalogueId: catalogue.catalogueId, sourceId: catalogue.sources[0].id, durationSeconds: 1 });
+  const count = constructions();
+  for (let tick = 0; tick < 2000; tick++) context.ode_audio_monitor();
+  assert.equal(constructions(), count, "A monitor tick must not construct more native LiveAPI objects.");
+  context.odeAudio.job.deviceApi.identifier = 999;
+  context.ode_audio_monitor();
+  assert.equal(messages.at(-1).message.kind, "error", "Reused handles must still detect a changed device identity.");
+});
 
 test("Max capture uploads ordered bounded PCM with headroom and never a file path", async () => {
   const { context, messages, controls, tasks } = await fixture();
