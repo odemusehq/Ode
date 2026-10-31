@@ -132,7 +132,7 @@ async function rig(model: ScriptedModel, compactAtTokens?: number) {
 }
 
 test("a long run compacts and continues without replaying edits or losing the musician's request", async () => {
-  const summary = "Tempo is now 107. Keep the chorus melody; hook reference hook-123 is still available. Next: arrange drums.";
+  const summary = "Tempo is now 107. The earlier bass edit is complete. Keep the chorus melody; hook reference hook-123 is still available. Next: arrange drums.";
   const model = new ScriptedModel([
     answer("Find devices.", [{ id: "search", name: "tool_search", args: { query: "device_get" } }]),
     answer("Find note tools.", [{ id: "notes", name: "tool_search", args: { query: "MIDI clip notes" } }]),
@@ -141,7 +141,8 @@ test("a long run compacts and continues without replaying edits or losing the mu
     answer("Done."),
   ]);
   const { loop, run, live } = await rig(model, 40_000);
-  const history = [{ role: "user" as const, content: "Keep the chorus melody exactly." }];
+  const history = [{ role: "user" as const, content: "Keep the chorus melody exactly." },
+    { role: "assistant" as const, content: "The chorus melody is preserved; the requested bass edit is complete." }];
   const result = await loop.run(run({ history, prompt: "Finish the arrangement.", request: "Finish the arrangement." }));
   assert.equal(result.reply, "Done.");
   assert.equal(result.tokens, 50, "The summary call shares the request's accounting.");
@@ -153,11 +154,12 @@ test("a long run compacts and continues without replaying edits or losing the mu
   const resumed = model.turns[4]!;
   assert.ok(!resumed.tools.some((tool) => tool.type === "function" && tool.function.name === "device_get"));
   assert.ok(resumed.tools.some((tool) => tool.type === "function" && tool.function.name === "midi_clip_set_notes"), "The newest discovered tools remain callable after compaction.");
-  assert.deepEqual(resumed.messages.filter((message) => message.role === "user").map((message) => message.content), ["Keep the chorus melody exactly.", "Finish the arrangement."]);
+  assert.deepEqual(resumed.messages.filter((message) => message.role === "user").map((message) => message.content), ["Finish the arrangement."]);
   assert.ok(resumed.messages.some((message) => String(message.content).includes(summary)));
   assert.ok(!resumed.messages.some((message) => message.role === "tool" || (message.role === "assistant" && message.tool_calls?.length)));
   assert.ok(JSON.stringify(resumed.messages).length < JSON.stringify(model.turns[3]!.messages).length / 2);
-  assert.equal(history.length, 1, "Compaction must not rewrite the saved conversation.");
+  assert.ok(!resumed.messages.some((message) => message.role === "user" && message.content === history[0]!.content), "Earlier requests must be summarised with their outcomes, rather than pinned as unanswered commands.");
+  assert.equal(history.length, 2, "Compaction must not rewrite the saved conversation.");
 });
 
 test("repeated inspections get a continuation reminder without blocking fresh reads", async () => {

@@ -219,8 +219,9 @@ export class AgentLoop {
     const run: LoopRun & { budget: RequestBudget } = { ...start, budget: start.budget ?? new RequestBudget(limits) };
     const model = await this.deps.services.chat(run.agent);
     const messages: ChatCompletionMessageParam[] = [{ role: "system", content: run.system }, ...run.history, { role: "user", content: run.prompt }];
-    // Keep actual user requests verbatim, separately from summaries and synthetic continuation prompts.
-    const pinned = messages.filter((message) => message.role === "system" || message.role === "developer" || message.role === "user");
+    // Summarise earlier exchanges together with their outcomes. Pinning only their user
+    // messages would present completed work as unanswered instructions after compaction.
+    const pinned = [...messages.filter((message) => message.role === "system" || message.role === "developer"), messages.at(-1)!];
     const loaded = new Set(registry.alwaysLoaded(run.agent));
     const inspections = new Map<string, number>();
     let compactedLength = 0;
