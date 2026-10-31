@@ -37,6 +37,7 @@ export async function nativeDawFixture() {
     constructor(_callback: unknown, readonly path: string) {}
     get id() { return objects[this.path]?.id ?? "0"; }
     get type() { return objects[this.path]?.type; }
+    get info() { return objects[this.path]?.info ?? ""; }
     get(key: string) { if (!(key in objects[this.path])) throw new Error(`unsupported ${key}`); return objects[this.path][key]; }
     set(key: string, value: unknown) { writes.push([this.path, key, value]); objects[this.path][key] = value; }
     call(name: string, ...args: unknown[]) { writes.push([this.path, name, ...args]); }
@@ -183,4 +184,16 @@ test("revealing a device selects its containing track and clip IDs use one list 
   objects[path] = { id: "10", type: "Clip", name: "Humming" };
   assert.equal(run("clip_show", {}, { path, guards: [{ path: "live_set tracks 0", name: "Lead" }, { path, name: "Humming" }] }).ok, true);
   assert.deepEqual(JSON.parse(JSON.stringify(objects["live_set view"].detail_clip)), ["id", 10]);
+});
+
+test("device introspection returns actual bounded Live metadata without executing it", async () => {
+  const { run, objects, address, writes } = await nativeDawFixture();
+  objects[address.path].info = "type PluginDevice\nproperty selected_preset_index int\nproperty is_editor_open bool";
+  objects[address.path].class_name = "PluginDevice";
+  const info = run("device_info", { offset: 5, limit: 12 });
+  assert.equal(info.ok, true, info.error);
+  assert.equal(info.result.className, "PluginDevice");
+  assert.equal(info.result.nativeApi.text, objects[address.path].info.slice(5, 17));
+  assert.equal(info.result.nativeApi.nextOffset, 17);
+  assert.equal(writes.length, 0);
 });

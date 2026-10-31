@@ -10,6 +10,7 @@ Read the actual Set before choosing an operation. Discover only the tool schemas
 ## Instruments and presets
 
 - `track_get`, `device_get` and `rack_get_chains` identify devices already in the Set and their exposed parameters. This is not an inventory of everything installed on the computer. The APIs expose neither the full Live Browser nor arbitrary plugin feature descriptions.
+- `device_get_native_info` reads the actual LiveAPI object metadata, including its native class and exposed properties/functions. This describes Live's interface to that loaded device. Discover an existing named adapter for the operation; metadata does not create a new tool or reveal every plugin-internal feature.
 - `track_insert_device` and `chain_insert_device` insert native Live defaults. Native instruments/effects can make the music; choose the source and its performance for this song. A loaded acoustic kit or sampled instrument may be the appropriate source.
 - `plugin_get_presets` reads programs reported by an already-loaded PluginDevice. `plugin_set_preset` selects an actual returned index. This does not cover every plugin's internal preset browser or Live's `.adg`/`.adv` files.
 - `device_show` reveals an existing device; `editor:true` opens a loaded plugin's own editor. Exposed controls use `parameter_read_display`/`parameter_set_display` or SDK raw parameters. An open editor does not give Ode access to every control inside it.

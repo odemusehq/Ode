@@ -223,10 +223,21 @@ function ode_daw_reveal_track(target) {
   return view;
 }
 function ode_daw_execute(command) {
-  if (typeof odeAudio !== "undefined" && odeAudio.job && !/(_read|_meters)$/.test(command.op)) throw new Error(ODE_DAW_COPY.capturing);
+  if (typeof odeAudio !== "undefined" && odeAudio.job && !/(_read|_meters|_info)$/.test(command.op)) throw new Error(ODE_DAW_COPY.capturing);
   if (command.op === "return_create") return ode_daw_return(command.args);
   if (command.op === "transport_read" || command.op === "transport_set") return ode_daw_transport_command(command);
   var target = ode_daw_target(command.address), args = command.args;
+  if (command.op === "device_info") {
+    if (!/ devices \d+$/.test(target.path)) throw new Error(ODE_DAW_COPY.invalid);
+    var info = target.api.info;
+    var infoOffset = Number.isInteger(args.offset) && args.offset >= 0 ? args.offset : 0;
+    var infoLimit = Number.isInteger(args.limit) && args.limit > 0 ? Math.min(12000, args.limit) : 6000;
+    return { name: String(ode_daw_get(target.api, "name")), type: target.api.type, className: ode_daw_optional(target.api, "class_name"),
+      classDisplayName: ode_daw_optional(target.api, "class_display_name"), canHaveChains: ode_daw_optional(target.api, "can_have_chains"),
+      canHaveDrumPads: ode_daw_optional(target.api, "can_have_drum_pads"),
+      nativeApi: typeof info === "string" && info.length ? { text: info.slice(infoOffset, infoOffset + infoLimit), length: info.length,
+        nextOffset: infoOffset + infoLimit < info.length ? infoOffset + infoLimit : null } : null };
+  }
   if (command.op === "simpler_read") return ode_daw_remember(command, target, ode_daw_simpler(target));
   if (command.op === "simpler_set" || command.op === "simpler_slice") return ode_daw_simpler_edit(command, target);
   if (command.op === "drum_chain_read" || command.op === "drum_chain_set") return ode_daw_drum_chain(command, target);
