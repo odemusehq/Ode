@@ -73,6 +73,32 @@ test("loaded plugin presets use native values, stale guards and replay protectio
   assert.equal(run("plugin_read").ok, false);
 });
 
+test("existing native grooves can be discovered and assigned with current clip and groove identities", async () => {
+  const { run, objects, writes } = await nativeDawFixture();
+  objects['live_set groove_pool'] = { id: '90', type: 'GroovePool', grooves: ['id', 91] };
+  objects['live_set groove_pool grooves 0'] = { id: '91', type: 'Groove', name: 'Swing', base: 3, timing_amount: 0.6 };
+  const path = 'live_set tracks 0 arrangement_clips 0';
+  objects[path] = { id: '3', type: 'Clip', name: 'Beat', is_audio_clip: 0, is_recording: 0, groove: ['id', 0], start_marker: 0, end_marker: 8, loop_start: 0, loop_end: 8 };
+  const address = { path, guards: [{ path: 'live_set tracks 0', name: 'Lead' }, { path, name: 'Beat' }] };
+  const pool = run('groove_pool_read', {}, null);
+  assert.equal(pool.ok, true, pool.error);
+  assert.equal(pool.result.grooves[0].id, '91');
+  const read = () => run('clip_read', {}, address).result.readToken;
+  const selected = run('clip_groove_set', { readToken: read(), groove: { id: '91', name: 'Swing' } }, address);
+  assert.equal(selected.ok, true, selected.error);
+  assert.deepEqual(JSON.parse(JSON.stringify(writes.at(-1))), [path, 'groove', ['id', 91]]);
+  assert.equal(selected.result.after.groove.id, '91');
+  const stale = read(); objects[path].loop_end = 4;
+  assert.equal(run('clip_groove_set', { readToken: stale, groove: null }, address).ok, false);
+  objects['live_set groove_pool grooves 0'].name = 'Renamed';
+  assert.equal(run('clip_groove_set', { readToken: read(), groove: { id: '91', name: 'Swing' } }, address).ok, false);
+  assert.equal(run('clip_groove_set', { readToken: read(), groove: { id: '999', name: 'Missing' } }, address).ok, false);
+  objects[path].is_recording = 1;
+  assert.equal(run('clip_groove_set', { readToken: read(), groove: null }, address).ok, false);
+  objects[path].is_recording = 0;
+  assert.equal(run('clip_groove_set', { readToken: read(), groove: null }, address).ok, true);
+});
+
 test("track routing uses offered native identifiers and meters stay in native units", async () => {
   const { run, objects, writes } = await nativeDawFixture();
   const path = "live_set tracks 0";

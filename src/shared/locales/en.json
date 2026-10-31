@@ -876,6 +876,7 @@
     "reverseRange": "endLine must be at or after startLine."
   },
   "maxDaw": {
+    "activityGroove": "{clip} · Set groove",
     "unavailable": "Load the updated Ode Max for Live device to use these native DAW controls.",
     "invalid": "The native DAW request or reply is invalid.",
     "busy": "Ode is waiting for earlier native DAW controls.",

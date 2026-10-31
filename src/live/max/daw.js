@@ -102,7 +102,42 @@ function ode_daw_clip(target) {
   var state = { name: String(ode_daw_get(target.api, "name")), isAudio: ode_daw_get(target.api, "is_audio_clip") === 1 };
   ["start_marker", "end_marker", "loop_start", "loop_end"].concat(state.isAudio ? ["file_path", "gain", "gain_display_string", "pitch_coarse", "pitch_fine", "warping", "warp_mode"] : []).forEach(function (field) { state[field] = ode_daw_optional(target.api, field); });
   if (state.isAudio) { try { state.warp_markers = ode_daw_dictionary(target.api, "warp_markers"); } catch (_) { state.warp_markers = null; } }
+  var groove = ode_daw_optional(target.api, "groove");
+  state.groove = groove === null ? null : { id: String(ode_daw_ids(groove)[0] || 0) };
   return state;
+}
+function ode_daw_groove_pool(args) {
+  var pool = new LiveAPI(null, "live_set groove_pool");
+  if (!pool.id || String(pool.id) === "0") throw new Error(ODE_DAW_COPY.unsupported);
+  var ids = ode_daw_ids(pool.get("grooves"));
+  var offset = args.offset === undefined ? 0 : args.offset, limit = args.limit === undefined ? 32 : args.limit;
+  if (!Number.isInteger(offset) || offset < 0 || !Number.isInteger(limit) || limit < 1 || limit > 64) throw new Error(ODE_DAW_COPY.invalid);
+  var grooves = ids.slice(offset, offset + limit).map(function (id, index) {
+    var api = new LiveAPI(null, "live_set groove_pool grooves " + (offset + index));
+    if (String(api.id) !== String(id)) throw new Error(ODE_DAW_COPY.changed);
+    var row = { id: String(id), name: String(ode_daw_get(api, "name")) };
+    ["base", "quantization_amount", "timing_amount", "velocity_amount", "random_amount"].forEach(function (field) { row[field] = ode_daw_optional(api, field); });
+    return row;
+  });
+  return { grooves: grooves, offset: offset, total: ids.length, nextOffset: offset + grooves.length < ids.length ? offset + grooves.length : null };
+}
+function ode_daw_clip_groove(command, target) {
+  var before = ode_daw_clip(target), chosen = command.args.groove;
+  ode_daw_check(command, target, before);
+  if (before.groove === null) throw new Error(ODE_DAW_COPY.unsupported);
+  if (ode_daw_recording() || ode_daw_optional(target.api, "is_recording") !== 0) throw new Error(ODE_DAW_COPY.recording);
+  var id = 0;
+  if (chosen !== null) {
+    if (!chosen || typeof chosen.id !== "string" || !/^[1-9]\d*$/.test(chosen.id) || typeof chosen.name !== "string") throw new Error(ODE_DAW_COPY.invalid);
+    var pool = new LiveAPI(null, "live_set groove_pool"), ids = ode_daw_ids(pool.get("grooves"));
+    var index = ids.map(String).indexOf(chosen.id);
+    if (index === -1) throw new Error(ODE_DAW_COPY.changed);
+    var groove = new LiveAPI(null, "live_set groove_pool grooves " + index);
+    if (String(groove.id) !== chosen.id || String(ode_daw_get(groove, "name")) !== chosen.name) throw new Error(ODE_DAW_COPY.changed);
+    id = Number(chosen.id);
+  }
+  target.api.set("groove", ["id", id]);
+  return { before: before, after: ode_daw_clip(target), restoration: ODE_DAW_COPY.nativeUndo };
 }
 function ode_daw_clip_edit(command, target) {
   var before = ode_daw_clip(target), args = command.args;
@@ -232,6 +267,7 @@ function ode_daw_reveal_track(target) {
 function ode_daw_execute(command) {
   if (typeof odeAudio !== "undefined" && odeAudio.job && !/(_read|_meters|_info)$/.test(command.op)) throw new Error(ODE_DAW_COPY.capturing);
   if (command.op === "return_create") return ode_daw_return(command.args);
+  if (command.op === "groove_pool_read") return ode_daw_groove_pool(command.args);
   if (command.op === "transport_read" || command.op === "transport_set") return ode_daw_transport_command(command);
   var target = ode_daw_target(command.address), args = command.args;
   if (command.op === "device_info") {
@@ -249,6 +285,7 @@ function ode_daw_execute(command) {
   if (command.op === "simpler_set" || command.op === "simpler_slice") return ode_daw_simpler_edit(command, target);
   if (command.op === "drum_chain_read" || command.op === "drum_chain_set") return ode_daw_drum_chain(command, target);
   if (command.op === "clip_read") return ode_daw_remember(command, target, ode_daw_clip(target));
+  if (command.op === "clip_groove_set") return ode_daw_clip_groove(command, target);
   if (command.op === "clip_set" || command.op === "clip_warp") return ode_daw_clip_edit(command, target);
   if (command.op === "clip_show") {
     if (target.api.type !== "Clip") throw new Error(ODE_DAW_COPY.unsupported);

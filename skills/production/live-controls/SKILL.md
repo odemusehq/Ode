@@ -18,6 +18,8 @@ Read the actual Set before choosing an operation. Discover only the tool schemas
 
 ## Samples and drums
 
+`groove_pool_get` reads grooves already loaded in this Set's native Groove Pool. To assign or clear one, read `clip_get_native`, then use `clip_set_groove` with its current token and the returned groove id/name, or null. Live performs the groove processing. This does not load `.agr` files, extract grooves or commit them into notes. If the pool lacks the intended groove, request its precise loading step in Live, then read it again. Native groove assignment is outside Ode's saved-state restoration.
+
 - `simpler_replace_sample` loads an actual available file using the SDK. Native sample loading is not sample generation, source separation or automatic discovery of the factory library.
 - `simpler_get_native`/`simpler_set_native` expose playback, voice, sample-region and slicing controls. Simpler itself performs transient/beat/region slicing. Manual slices use `simpler_slice` with actual sample-frame positions. Do not invent precise transient positions from a model's broad listening description.
 - `drum_chain_get_native`/`drum_chain_set_native` expose choke groups and output notes. Input-note mapping uses `drum_pad_set_note`. Use real chain indices and mappings; a Drum Rack is not necessarily GM.

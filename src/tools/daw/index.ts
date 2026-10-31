@@ -1,4 +1,6 @@
 import { instrumentWrites } from "./actions/instruments";
+import { grooveReads } from "./state/grooves";
+import { grooveWrites } from "./actions/grooves";
 import { instrumentReads } from "./state/instruments";
 import { midiMaterialTools } from "./state/midi-material";
 import { transportWrites } from "./actions/transport";
@@ -17,5 +19,5 @@ import { listeningTools } from "./state/listening";
 import { parameterDisplayReads } from "./state/parameter-display";
 import { processedAudioTools } from "./state/processed-audio";
 import { projectTools } from "./state/project";
-export const dawActionTools = [...nativeOperations.filter(tool => tool.changes === "set"), applyAsOneUndoStep, ...parameterDisplayWrites, ...pluginWrites, ...routingWrites, ...nativeClipWrites, ...transportWrites, ...instrumentWrites];
-export const dawStateTools = [...nativeOperations.filter(tool => tool.changes === "none"), ...parameterDisplayReads, ...processedAudioTools, ...listeningTools, setDependencies, ...projectTools, ...pluginReads, ...routingReads, ...nativeClipReads, ...transportReads, ...instrumentReads, ...midiMaterialTools];
+export const dawActionTools = [...nativeOperations.filter(tool => tool.changes === "set"), applyAsOneUndoStep, ...parameterDisplayWrites, ...pluginWrites, ...routingWrites, ...nativeClipWrites, ...transportWrites, ...instrumentWrites, ...grooveWrites];
+export const dawStateTools = [...nativeOperations.filter(tool => tool.changes === "none"), ...parameterDisplayReads, ...processedAudioTools, ...listeningTools, setDependencies, ...projectTools, ...pluginReads, ...routingReads, ...nativeClipReads, ...transportReads, ...instrumentReads, ...midiMaterialTools, ...grooveReads];
