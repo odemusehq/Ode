@@ -1,11 +1,37 @@
-import type { ChatCompletionMessage, ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/chat/completions";
+import type { ChatCompletionContentPart, ChatCompletionMessage, ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/chat/completions";
 import type { Role } from "../shared/config";
 import type { Transcript } from "./types";
 import type { AudioListeningSource, AudioTimeRange, ListeningPayload, MusicAudioSource } from "./music-audio";
 
+/** Captured media stays binary in the agent context; the provider adapter encodes it at dispatch. */
+export interface AudioContent {
+  type: "audio";
+  data: Uint8Array;
+  format: "wav" | "mp3";
+  durationSeconds: number | null;
+}
+
+export type ChatMessage = ChatCompletionMessageParam | {
+  role: "user";
+  content: (ChatCompletionContentPart | AudioContent)[];
+};
+
+/** Estimate media separately: JSON/base64 size is not the waveform's model token count. */
+export function chatContextSize(value: unknown): { chars: number; audioTokens: number } {
+  let audioTokens = 0;
+  const text = JSON.stringify(value, (_key, part) => {
+    if (part?.type !== "audio" || !(part.data instanceof Uint8Array)) return part;
+    // A conservative allowance above Spark Open's 12.5 embeddings/second; provider usage replaces it.
+    // Compressed input with unknown timing uses its byte size rather than inventing a duration.
+    audioTokens += part.durationSeconds === null ? Math.ceil(part.data.byteLength / 2) : Math.ceil(part.durationSeconds * 100);
+    return { type: "audio", format: part.format, durationSeconds: part.durationSeconds, bytes: part.data.byteLength };
+  });
+  return { chars: text.length, audioTokens };
+}
+
 /** One model call in a conversation: the messages so far, the tools on offer, and who it belongs to. */
 export interface ChatTurn {
-  messages: ChatCompletionMessageParam[];
+  messages: ChatMessage[];
   tools: ChatCompletionTool[];
   maxTokens: number;
   /** Keeps one conversation's requests on the same server where the provider asks for it. */

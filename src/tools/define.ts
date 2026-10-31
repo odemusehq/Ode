@@ -16,7 +16,15 @@ import type { MaxAudioRequest, MaxAudioResult, MaxAudioSources } from "../shared
 import type { MaxDaw } from "../shared/max-daw";
 import type { MaxParameters } from "../shared/max-parameters";
 import type { SetSnapshot } from "../shared/set-snapshot";
+import type { AudioContent } from "../services/capabilities";
 import type { RefNames } from "./daw/ref-names";
+
+/** Binary tool output is agent context, never JSON in History, Mneme or the activity feed. */
+export const TOOL_AUDIO = Symbol("tool audio");
+export interface ToolAudio { description: string; content: AudioContent }
+export function withAudio<T extends object>(result: T, audio: ToolAudio[]): T & { [TOOL_AUDIO]: ToolAudio[] } {
+  return Object.assign(result, { [TOOL_AUDIO]: audio });
+}
 
 /** What a tool changes: "none" (it only reads or computes), the Live Set, or Mneme (the lyrics, the lead sheet, memory and settings). */
 export type ToolChange = "none" | "set" | "memory";

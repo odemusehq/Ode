@@ -3,7 +3,8 @@ import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import type { ReasoningEffort } from "openai/resources/shared";
 import type { RoleConfig } from "../../shared/config";
-import type { ChatReply, ChatTurn, JsonRequest, TextGenerator, TextOptions } from "../capabilities";
+import { chatContextSize, type ChatMessage, type ChatReply, type ChatTurn, type JsonRequest, type TextGenerator, type TextOptions } from "../capabilities";
+import { Provider } from "../providers";
 
 /** Chat Completions from any OpenAI-compatible endpoint: Meta, Baseten and Modal each serve one. */
 export class OpenAiCompatibleText implements TextGenerator {
@@ -33,7 +34,7 @@ export class OpenAiCompatibleText implements TextGenerator {
     const response = await this.client.chat.completions.create(
       {
         model: this.role.model,
-        messages: turn.messages,
+        messages: this.messages(turn.messages),
         tools: turn.tools.length > 0 ? turn.tools : undefined,
         max_tokens: turn.maxTokens,
       },
@@ -76,7 +77,22 @@ export class OpenAiCompatibleText implements TextGenerator {
 
   /** Tokens of a turn, worked out from its length. */
   private static estimate(turn: ChatTurn, answer: string): number {
-    return Math.ceil((JSON.stringify(turn.messages).length + answer.length) / OpenAiCompatibleText.CHARACTERS_PER_TOKEN);
+    const size = chatContextSize(turn.messages);
+    return Math.ceil((size.chars + answer.length) / OpenAiCompatibleText.CHARACTERS_PER_TOKEN) + size.audioTokens;
+  }
+
+  /** The same agent request carries media alongside the tool results, using the provider's wire format. */
+  private messages(messages: ChatMessage[]): ChatCompletionMessageParam[] {
+    return messages.map((message) => {
+      if (message.role !== "user" || !Array.isArray(message.content)) return message;
+      return { ...message, content: message.content.map((part) => {
+        if (part.type !== "audio") return part;
+        const data = Buffer.from(part.data).toString("base64");
+        return this.role.provider === Provider.Baseten
+          ? { type: "audio_url", audio_url: { url: `data:audio/${part.format === "mp3" ? "mpeg" : "wav"};base64,${data}` } }
+          : { type: "input_audio", input_audio: { data, format: part.format } };
+      }) };
+    }) as ChatCompletionMessageParam[];
   }
 
   private headers(conversation: string): Record<string, string> {

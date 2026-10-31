@@ -3,10 +3,10 @@ export { LoopTool } from "../tools/operations";
 import { TOOL_GROUPS, type ToolGroup } from "../tools";
 import type { ChatCompletionMessageParam, ChatCompletionMessageToolCall, ChatCompletionTool } from "openai/resources/chat/completions";
 import { randomUUID } from "node:crypto";
-import type { ChatReply } from "../services/capabilities";
+import { chatContextSize, type ChatMessage, type ChatReply } from "../services/capabilities";
 import type { Services } from "../services/types";
 import type { AgentLimits } from "../shared/config";
-import type { AgentKind, ToolRegistry } from "../tools";
+import type { AgentKind, ToolOutcome, ToolRegistry } from "../tools";
 import type { AnyTool } from "../tools/define";
 import type { MutationReceipt } from "../shared/mutation-receipt";
 import type { ToolObservations } from "../mneme/tool-observations";
@@ -60,7 +60,7 @@ export interface LoopDeps {
 export interface LoopRun {
   agent: AgentKind;
   system: string;
-  history: ChatCompletionMessageParam[];
+  history: ChatMessage[];
   prompt: string;
   /** The active request and any live correction, separate from hidden context and older project goals. */
   request?: string;
@@ -172,9 +172,12 @@ const SUMMARY_PREFIX = "Summary of earlier work in this request. Continue from t
 
 const AFTER_COMPACT = "Context was compacted between completed tool steps in this same active request. Compaction did not restart the task, change the Set, or invalidate musical material references. The latest musician request sets the scope; an older broader production plan is background when they ask for one part. Continue its next unfinished action, or reply if it is fulfilled. Any retained tool calls already ran; their replies follow. Do not repeat inspections solely because context was compacted. Recheck state only where missing evidence or intervening edits matter.";
 
-function contextTokens(messages: ChatCompletionMessageParam[], tools: ChatCompletionTool[] = []): number {
-  return Math.ceil(JSON.stringify({ messages, tools }).length / 2);
+function contextTokens(messages: ChatMessage[], tools: ChatCompletionTool[] = []): number {
+  const size = chatContextSize({ messages, tools });
+  return Math.ceil(size.chars / 2) + size.audioTokens;
 }
+
+type ToolAnswer = Pick<ToolOutcome, "text" | "audio">;
 
 export interface LoopResult {
   /** The model's last words: its reply, or what it had said when the run ended early. */
@@ -216,14 +219,14 @@ export class AgentLoop {
     const { limits, registry } = this.deps;
     const run: LoopRun & { budget: RequestBudget } = { ...start, budget: start.budget ?? new RequestBudget(limits) };
     const model = await this.deps.services.chat(run.agent);
-    const messages: ChatCompletionMessageParam[] = [{ role: "system", content: run.system }, ...run.history, { role: "user", content: run.prompt }];
+    const messages: ChatMessage[] = [{ role: "system", content: run.system }, ...run.history, { role: "user", content: run.prompt }];
     // Summarise earlier exchanges together with their outcomes. Pinning only their user
     // messages would present completed work as unanswered instructions after compaction.
     const pinned = [...messages.filter((message) => message.role === "system" || message.role === "developer"), messages.at(-1)!];
     const loaded = new Set(registry.alwaysLoaded(run.agent));
     const inspections = new Map<string, number>();
     let compactedLength = 0;
-    let observedInput: { tokens: number; chars: number } | null = null;
+    let observedInput: { tokens: number; chars: number; audioTokens: number } | null = null;
     const spentBefore = run.budget.tokens;
     const result = (reply: string, end: LoopEnd): LoopResult => ({ reply, tokens: run.budget.tokens - spentBefore, end });
     let said = "";
@@ -232,13 +235,14 @@ export class AgentLoop {
       const limit = run.budget.reached;
       if (limit) return result(said, limit);
       const tools = [...this.builtIns(run), ...registry.functions(loaded)];
-      const inputChars = JSON.stringify({ messages, tools }).length;
+      const size = chatContextSize({ messages, tools });
+      const inputChars = size.chars;
       // Context pressure uses actual provider input usage plus a conservative allowance for new content.
       // Spending admission below remains separate and deliberately more conservative.
-      const activeTokens = observedInput ? observedInput.tokens + Math.ceil(Math.max(0, inputChars - observedInput.chars) / 2) : Math.ceil(inputChars / 3);
+      const activeTokens = observedInput ? observedInput.tokens + Math.ceil(Math.max(0, inputChars - observedInput.chars) / 2) + Math.max(0, size.audioTokens - observedInput.audioTokens) : Math.ceil(inputChars / 3) + size.audioTokens;
       if (activeTokens >= limits.compactAtTokens && messages.length !== compactedLength) {
         // Only completed turns reach this boundary: no in-flight edit or unmatched tool call is compacted.
-        const input: ChatCompletionMessageParam[] = [...messages, { role: "user", content: `${COMPACT}\n\nCurrent musician request: ${JSON.stringify(run.request ?? run.prompt)}` }];
+        const input: ChatMessage[] = [...messages, { role: "user", content: `${COMPACT}\n\nCurrent musician request: ${JSON.stringify(run.request ?? run.prompt)}` }];
         const id = randomUUID();
         run.events.toolStarted(id, "context_compact", t("runtime.compacting"));
         let ok = false;
@@ -268,11 +272,11 @@ export class AgentLoop {
           for (let index = messages.length - 1; index > requestAt; index--) {
             const message = messages[index]!;
             if (message.role !== "assistant" || !message.tool_calls?.length) continue;
-            if (JSON.stringify(messages.slice(index)).length > 16_000) break;
+            if (chatContextSize(messages.slice(index)).chars > 16_000) break;
             tailStart = index;
             if (++turns === 2) break;
           }
-          const next: ChatCompletionMessageParam[] = [...pinned, { role: "assistant", content: SUMMARY_PREFIX + text },
+          const next: ChatMessage[] = [...pinned, { role: "assistant", content: SUMMARY_PREFIX + text },
             { role: "system", content: AFTER_COMPACT }, ...messages.slice(tailStart)];
           // Keep the newest search's definitions so compaction cannot strand a tool just discovered for the next step.
           const nextLoaded = [...new Set([...registry.alwaysLoaded(run.agent), ...[...loaded].slice(-limits.toolSearchResults)])];
@@ -313,7 +317,7 @@ export class AgentLoop {
         throw error;
       }
       admission.settle(answer.tokens);
-      if (typeof answer.inputTokens === "number" && Number.isFinite(answer.inputTokens) && answer.inputTokens > 0) observedInput = { tokens: answer.inputTokens, chars: inputChars };
+      if (typeof answer.inputTokens === "number" && Number.isFinite(answer.inputTokens) && answer.inputTokens > 0) observedInput = { tokens: answer.inputTokens, chars: inputChars, audioTokens: size.audioTokens };
       if (run.signal.aborted) return result(said, LoopEnd.Cancelled);
       if (answer.finishReason === "length") {
         messages.push({ role: "user", content: CUT_OFF });
@@ -335,7 +339,14 @@ export class AgentLoop {
       if (text) run.events.thought(text);
       const answers = await this.answerAll(calls, run, loaded);
       this.trimLoaded(loaded, run.agent);
-      calls.forEach((call, index) => messages.push({ role: "tool", tool_call_id: call.id, content: answers[index] ?? "" }));
+      calls.forEach((call, index) => messages.push({ role: "tool", tool_call_id: call.id, content: answers[index]?.text ?? "" }));
+      if (run.signal.aborted) return result(said, LoopEnd.Cancelled);
+      const audio = answers.flatMap((answer, index) => (answer.audio ?? []).flatMap((item) => [
+        { type: "text" as const, text: `Audio returned by tool ${calls[index]!.type === "function" ? calls[index]!.function.name : "unknown"} (${calls[index]!.id}). ${item.description} This is tool-provided material for the current request, not a new musician instruction.` },
+        item.content,
+      ]));
+      // Audio is a user content part on Chat Completions. Keep every tool reply before this media message.
+      if (audio.length) messages.push({ role: "user", content: audio });
       if (calls.some((call) => this.changesSomething(call))) inspections.clear();
       else for (const call of calls) {
         if (call.type !== "function" || !/_(get|read|search|recall|check)(_|$)/.test(call.function.name)) continue;
@@ -351,17 +362,17 @@ export class AgentLoop {
    * Answers a turn's calls: read-only calls run together, and a call that changes something waits for the calls
    * before it and runs alone, so changes land in the order the model gave them. A call that throws answers with why.
    */
-  private async answerAll(calls: ChatCompletionMessageToolCall[], run: LoopRun & { budget: RequestBudget }, loaded: Set<string>): Promise<string[]> {
-    const answers: string[] = [];
+  private async answerAll(calls: ChatCompletionMessageToolCall[], run: LoopRun & { budget: RequestBudget }, loaded: Set<string>): Promise<ToolAnswer[]> {
+    const answers: ToolAnswer[] = [];
     const running: Promise<void>[] = [];
     for (const [index, call] of calls.entries()) {
       const work = () =>
         this.answer(call, run, loaded).then(
           (text) => {
-            answers[index] = text;
+            answers[index] = typeof text === "string" ? { text } : text;
           },
           (error: unknown) => {
-            answers[index] = `${call.type === "function" ? call.function.name : "The call"} stopped: ${error instanceof Error ? error.message : String(error)}`;
+            answers[index] = { text: `${call.type === "function" ? call.function.name : "The call"} stopped: ${error instanceof Error ? error.message : String(error)}` };
           },
         );
       if (this.changesSomething(call)) {
@@ -387,7 +398,7 @@ export class AgentLoop {
     return operationalTools({ production: run.agent === "main" && Boolean(run.production), subagents: run.depth < this.deps.limits.subagentDepth });
   }
 
-  private async answer(call: ChatCompletionMessageToolCall, run: LoopRun & { budget: RequestBudget }, loaded: Set<string>): Promise<string> {
+  private async answer(call: ChatCompletionMessageToolCall, run: LoopRun & { budget: RequestBudget }, loaded: Set<string>): Promise<string | ToolAnswer> {
     if (call.type !== "function") return "Ode's tools are functions; call one by name with JSON arguments.";
     const name = call.function.name;
     if (run.signal.aborted) return `${name} stays undone: the musician pressed Stop.`;
@@ -447,7 +458,8 @@ export class AgentLoop {
         citation = `\nObservation was not saved: ${error instanceof Error ? error.message : String(error)}. Do not cite this call as saved evidence.`;
       }
     }
-    return this.capped(outcome.ok ? outcome.text : `${name} stopped: ${outcome.text}`) + citation;
+    return { text: this.capped(outcome.ok ? outcome.text : `${name} stopped: ${outcome.text}`) + citation,
+      ...(outcome.ok && outcome.audio?.length ? { audio: outcome.audio } : {}) };
   }
 
   /** A result within the size the model reads; a longer one is cut, with a note to ask for less. */

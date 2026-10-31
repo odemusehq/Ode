@@ -158,6 +158,45 @@ test("a long run compacts and continues without replaying edits or losing the mu
   assert.equal(history.length, 2, "Compaction must not rewrite the saved conversation.");
 });
 
+test("tool audio reaches the next agent turn after every sibling tool reply, outside the text limit", async () => {
+  const model = new ScriptedModel([
+    answer("Read the material.", [{ id: "audio", name: "song_get" }, { id: "track", name: "track_get", args: { track: { index: 0 } } }]),
+    answer("Heard the material."),
+  ]);
+  const { loop, run, registry, limits } = await rig(model);
+  const native = registry.run.bind(registry);
+  const data = new Uint8Array(100_000);
+  registry.run = async (name, ...args) => name === "song_get" ? { ok: true, text: "Captured source", audio: [
+    { description: "Native Main post-mixer capture", content: { type: "audio", data, format: "wav", durationSeconds: 1 } },
+  ] } : native(name, ...args);
+  limits.toolResultMaxChars = 100;
+  const result = await loop.run(run({ prompt: "Listen to this passage." }));
+  assert.equal(result.reply, "Heard the material.");
+  assert.equal(model.turns.length, 2, "Only the original agent's two turns run.");
+  const messages = model.turns[1]!.messages;
+  assert.deepEqual(messages.filter(message => message.role === "tool").map(message => message.tool_call_id), ["audio", "track"]);
+  const media = messages.at(-1)!;
+  assert.equal(media.role, "user");
+  assert.ok(Array.isArray(media.content));
+  const content = media.content as any[];
+  assert.equal(content[1].data, data);
+  assert.match(content[0].text, /song_get \(audio\)/);
+  assert.ok(!messages.filter(message => message.role === "tool").some(message => String(message.content).includes("100000")));
+});
+
+test("Stop after a tool returns audio prevents its next model request", async () => {
+  const model = new ScriptedModel([answer("Capture.", [{ id: "audio", name: "song_get" }])]);
+  const { loop, run, registry } = await rig(model);
+  const stop = new AbortController();
+  registry.run = async () => {
+    stop.abort();
+    return { ok: true, text: "Capture completed", audio: [{ description: "Capture", content: { type: "audio", data: Uint8Array.of(1), format: "wav", durationSeconds: 1 } }] };
+  };
+  const result = await loop.run(run({ signal: stop.signal }));
+  assert.equal(result.end, LoopEnd.Cancelled);
+  assert.equal(model.turns.length, 1);
+});
+
 test("repeated inspections get a continuation reminder without blocking fresh reads", async () => {
   const model = new ScriptedModel([
     answer("Read.", [{ id: "one", name: "song_get" }]),
