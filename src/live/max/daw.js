@@ -122,9 +122,39 @@ function ode_daw_clip_edit(command, target) {
   }
   return { before: before, after: ode_daw_clip(target), restoration: ODE_DAW_COPY.nativeUndo };
 }
+function ode_daw_transport(target) {
+  var state = {};
+  ["is_playing", "is_counting_in", "record_mode", "session_record", "session_automation_record", "arrangement_overdub", "loop", "loop_start", "loop_length", "metronome", "punch_in", "punch_out", "back_to_arranger", "signature_numerator", "signature_denominator"].forEach(function (field) { state[field] = ode_daw_optional(target.api, field); });
+  return state;
+}
+function ode_daw_transport_command(command) {
+  var api = new LiveAPI(null, "live_set"), target = { api: api, ids: [String(api.id)], path: "live_set" }, state = ode_daw_transport(target);
+  if (!api.id || String(api.id) === "0") throw new Error(ODE_DAW_COPY.changed);
+  if (command.op === "transport_read") return Object.assign(ode_daw_remember(command, target, state), { current_song_time: ode_daw_optional(api, "current_song_time"), observedAt: new Date().toISOString() });
+  ode_daw_check(command, target, state);
+  var args = command.args, action = args.action;
+  if (action === "play" || action === "stop") {
+    if (state.is_playing !== 0 && state.is_playing !== 1) throw new Error(ODE_DAW_COPY.unsupported);
+    api.call(action === "play" ? "start_playing" : "stop_playing");
+  } else if (action === "current_song_time") {
+    if (state.is_playing !== 0 || ode_daw_recording()) throw new Error(ODE_DAW_COPY.recording);
+    if (typeof args.value !== "number" || !Number.isFinite(args.value) || args.value < 0) throw new Error(ODE_DAW_COPY.invalid);
+    api.set(action, args.value);
+  } else if (["record_mode", "metronome", "punch_in", "punch_out", "loop", "back_to_arranger"].indexOf(action) !== -1) {
+    if (typeof args.value !== "boolean" || state[action] === null) throw new Error(ODE_DAW_COPY.unsupported);
+    if (action !== "record_mode" && ode_daw_recording()) throw new Error(ODE_DAW_COPY.recording);
+    api.set(action, args.value ? 1 : 0);
+  } else if (action === "loop_start" || action === "loop_length") {
+    if (ode_daw_recording()) throw new Error(ODE_DAW_COPY.recording);
+    if (typeof args.value !== "number" || !Number.isFinite(args.value) || args.value < 0 || action === "loop_length" && args.value === 0 || state[action] === null) throw new Error(ODE_DAW_COPY.invalid);
+    api.set(action, args.value);
+  } else throw new Error(ODE_DAW_COPY.unsupported);
+  return { before: state, after: Object.assign(ode_daw_transport(target), { current_song_time: ode_daw_optional(api, "current_song_time") }), restoration: ODE_DAW_COPY.transportRestoration };
+}
 function ode_daw_execute(command) {
   if (typeof odeAudio !== "undefined" && odeAudio.job && !/(_read|_meters)$/.test(command.op)) throw new Error(ODE_DAW_COPY.capturing);
   if (command.op === "return_create") return ode_daw_return(command.args);
+  if (command.op === "transport_read" || command.op === "transport_set") return ode_daw_transport_command(command);
   var target = ode_daw_target(command.address), args = command.args;
   if (command.op === "clip_read") return ode_daw_remember(command, target, ode_daw_clip(target));
   if (command.op === "clip_set" || command.op === "clip_warp") return ode_daw_clip_edit(command, target);

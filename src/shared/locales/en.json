@@ -893,6 +893,8 @@
     "activityReturn": "Add return track",
     "activityClip": "{clip} · Edit clip",
     "activityWarp": "{clip} · Edit warp marker",
-    "activityShowClip": "{clip} · Open in Live"
+    "activityShowClip": "{clip} · Open in Live",
+    "activityTransport": "Set playback or recording",
+    "transportRestoration": "Transport state is not restored by Ode History. A completed recording or playback command remains active until changed in Live."
   }
 }
