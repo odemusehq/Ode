@@ -6,6 +6,7 @@ import { test } from "node:test";
 import { audioHash, MusicAudio } from "../services/music-audio";
 import { OpenAiCompatibleAudioUnderstander } from "../services/adapters/openai-compatible-audio";
 import { encodeWav } from "../audio/wav";
+import { AudioFileDecoder } from "../audio/decode";
 import { LocalAudioFiles } from "../live/local-audio-files";
 import { TempFolder } from "../mneme/paths";
 import { JsonFile } from "../mneme/json-file";
@@ -27,7 +28,7 @@ test("listening evidence stays bound to sent bytes, and only explicit Arrangemen
     globalThis.fetch = async (_url, options) => {
       sent = JSON.parse(String(options?.body));
       await writeFile(supplied, altered); // A later disk edit must not repoint the captured observation.
-      return Response.json({ choices: [{ finish_reason: "stop", message: { content: "A short tone." } }] });
+      return Response.json({ choices: [{ finish_reason: "stop", message: { content: JSON.stringify({ audioAvailable: true, observations: "A short tone." }) } }] });
     };
     const listener = new OpenAiCompatibleAudioUnderstander({ provider: "meta", baseUrl: "https://example.invalid/v1", apiKey: "offline", model: "audio" });
     const folder = new TempFolder(temp);
@@ -41,6 +42,7 @@ test("listening evidence stays bound to sent bytes, and only explicit Arrangemen
     const tool = mediaTools.find((candidate) => candidate.name === "audio_describe")!;
     const input = await tool.run({ path: supplied, question: "Describe its attack" }, ctx) as any;
     assert.equal(input.source.sha256, audioHash(bytes));
+    assert.equal(input.answer, "A short tone.");
     assert.equal(input.evidence.sources[0].sha256, audioHash(bytes));
     const payload = Buffer.from(sent.messages[0].content.find((part: any) => part.type === "input_audio").input_audio.data, "base64");
     assert.equal(input.evidence.payload.sha256, audioHash(payload));
@@ -79,4 +81,17 @@ test("listening evidence stays bound to sent bytes, and only explicit Arrangemen
     } finally { JsonFile.writeAtomically = publish; }
     assert.deepEqual((await readdir(join(root, "Audio"))).sort(), persisted, "Stopped publication must remove its staged binary too.");
   } finally { globalThis.fetch = originalFetch; await rm(root, { recursive: true, force: true }); }
+});
+
+test("a completed provider response without audio access is not a listening result", async () => {
+  const originalFetch = globalThis.fetch;
+  const bytes = encodeWav({ sampleRate: 8_000, channels: [Float32Array.of(0.1, -0.1)] });
+  const source = { bytes, source: { ...new AudioFileDecoder().inspect(bytes, "source.wav"), sha256: audioHash(bytes), bytes: bytes.length, capturedAt: new Date().toISOString() } };
+  try {
+    for (const content of [JSON.stringify({ audioAvailable: false, observations: "I cannot access the attached recording." }), "I cannot listen to attached recordings.", JSON.stringify({ audioAvailable: true, observations: "" })]) {
+      globalThis.fetch = async () => Response.json({ choices: [{ finish_reason: "stop", message: { content } }] });
+      const listener = new OpenAiCompatibleAudioUnderstander({ provider: "meta", baseUrl: "https://example.invalid/v1", apiKey: "offline", model: "audio" });
+      await assert.rejects(listener.describe(source, "Describe the sound"), /Audio listening is incomplete/);
+    }
+  } finally { globalThis.fetch = originalFetch; }
 });

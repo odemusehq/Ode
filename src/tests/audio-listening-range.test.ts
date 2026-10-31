@@ -22,7 +22,7 @@ test("listening sends the selected source frames, keeping stereo and whole-file 
       calls++;
       const request = JSON.parse(String(options?.body));
       sent = Buffer.from(request.messages[0].content.find((part: any) => part.type === "input_audio").input_audio.data, "base64");
-      return Response.json({ choices: [{ finish_reason: "stop", message: { content: "A short sustained sound." } }] });
+      return Response.json({ choices: [{ finish_reason: "stop", message: { content: JSON.stringify({ audioAvailable: true, observations: "A short sustained sound." }) } }] });
     };
     const listener = new OpenAiCompatibleAudioUnderstander({ provider: "meta", baseUrl: "https://example.invalid/v1", apiKey: "offline", model: "audio" });
     const ctx = { temp: new TempFolder(directory), services: { describeAudio: listener.describe.bind(listener), compareAudio: listener.compare.bind(listener) } } as never;
