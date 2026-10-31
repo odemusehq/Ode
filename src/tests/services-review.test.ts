@@ -38,6 +38,11 @@ test("listening preserves stereo and rejects empty, refused and truncated respon
     const paired = new AudioFileDecoder().decode(Buffer.from(sent.messages[0].content.find((part: any) => part.type === "input_audio").input_audio.data, "base64"), "comparison.wav");
     assert.equal(paired.channels[0]?.length, 4800 * 2 + 24_000);
     assert.equal(comparison.comparison.levelMatched, false);
+    const baseten = new OpenAiCompatibleAudioUnderstander({ provider: "baseten", baseUrl: "https://example.invalid/v1", apiKey: "offline", model: "meta-models/muse-spark-open-1026" });
+    const heard = await baseten.describe(path, "What sounds?");
+    const dataUrl = sent.messages[0].content.find((part: any) => part.type === "audio_url")?.audio_url.url;
+    assert.ok(dataUrl?.startsWith("data:audio/wav;base64,"));
+    assert.equal(heard.evidence.payload.sha256, createHash("sha256").update(Buffer.from(dataUrl.split(",")[1], "base64")).digest("hex"));
     for (choice of [null, { finish_reason: "length", message: { content: "The chorus, but" } }, { finish_reason: "stop", message: { content: "" } }, { finish_reason: "stop", message: { content: null, refusal: "No" } }]) {
       await assert.rejects(() => listener.describe(path, "Evaluate it"), /incomplete|empty|refus|answer/i);
     }

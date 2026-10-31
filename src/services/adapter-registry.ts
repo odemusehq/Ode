@@ -24,6 +24,7 @@ export class AdapterRegistry {
     },
     [Capability.AudioUnderstanding]: {
       [Provider.Meta]: (role) => new OpenAiCompatibleAudioUnderstander(role),
+      [Provider.Baseten]: (role) => new OpenAiCompatibleAudioUnderstander(role),
     },
     [Capability.Transcription]: {
       [Provider.Meta]: (role, speech) => new MetaTranscriber(role, speech),

@@ -1,7 +1,9 @@
 import OpenAI from "openai";
+import type { ChatCompletion } from "openai/resources/chat/completions";
 import { OdeConfig, type RoleConfig } from "../../shared/config";
 import type { AudioListeningResult, AudioUnderstander } from "../capabilities";
 import { MusicAudio, audioHash, type AudioListeningSource, type AudioTimeRange, type ListeningPayload, type MusicAudioSource } from "../music-audio";
+import { Provider } from "../providers";
 
 /** Audio understanding over an OpenAI-compatible endpoint that accepts input_audio parts (Meta's included). */
 export class OpenAiCompatibleAudioUnderstander implements AudioUnderstander {
@@ -29,7 +31,11 @@ export class OpenAiCompatibleAudioUnderstander implements AudioUnderstander {
     const prompt = `${question}\nSource selections: ${JSON.stringify(prepared.sources.map((source) => source.selection))}. Each played excerpt starts at zero within its labelled playback segment; source-file times remain separate.\nAudio preparation: source channel count and sample rate preserved in PCM24 WAV; signals above full scale are uniformly attenuated to avoid conversion clipping. Stereo/full-band model judgement is not independently validated; use numerical metrics for technical claims.`;
     const requestHash = audioHash(Buffer.from(JSON.stringify({ model: this.role.model, prompt, maxTokens: OdeConfig.services.audioMaxTokens, payloadSha256: prepared.payload.sha256 })));
     const dispatchedAt = new Date().toISOString();
-    const response = await this.client.chat.completions.create({
+    // Baseten's multimodal gateway uses audio_url; Meta's direct API uses input_audio.
+    const audioPart = this.role.provider === Provider.Baseten
+      ? { type: "audio_url", audio_url: { url: `data:audio/wav;base64,${data}` } }
+      : { type: "input_audio", input_audio: { data, format: "wav" } };
+    const response = await this.client.post<ChatCompletion>("/chat/completions", { body: {
       model: this.role.model,
       max_tokens: OdeConfig.services.audioMaxTokens,
       messages: [
@@ -37,11 +43,11 @@ export class OpenAiCompatibleAudioUnderstander implements AudioUnderstander {
           role: "user",
           content: [
             { type: "text", text: prompt },
-            { type: "input_audio", input_audio: { data, format: "wav" } },
+            audioPart,
           ],
         },
       ],
-    }, { signal });
+    }, signal });
     const choice = response.choices?.[0];
     if (!choice) throw new Error("Audio listening is incomplete: the service returned no answer.");
     if (choice.message.refusal) throw new Error(`Audio listening was refused: ${choice.message.refusal}`);

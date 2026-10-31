@@ -42,6 +42,11 @@ test("each role reaches its provider's endpoint, with Meta's models for cover ar
 
   await settings.update({ provider: "meta", model: "muse-spark-1.3", key: "meta-main", services: {} });
   assert.equal((await roles.roles()).transcription.apiKey, "meta-main");
+  await settings.update({ provider: "baseten", model: "meta-models/muse-spark-open-1026", key: "baseten-test", services: {} });
+  const onBaseten = await roles.roles();
+  assert.equal(onBaseten.audio_understanding.provider, "baseten");
+  assert.equal(onBaseten.audio_understanding.apiKey, "baseten-test");
+  assert.equal(onBaseten.audio_understanding.model, "meta-models/muse-spark-open-1026");
 });
 
 test("Settings lists each provider's models, and Modal lists its endpoints once a key is in", async () => {

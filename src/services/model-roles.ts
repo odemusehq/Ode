@@ -36,7 +36,7 @@ export class ModelRoles implements RoleSource {
     return {
       main,
       subagent: main,
-      audio_understanding: metaRole(meta.audioUnderstanding),
+      audio_understanding: settings.provider === Provider.Baseten ? main : metaRole(meta.audioUnderstanding),
       transcription: metaRole(meta.transcription),
       image_generation: metaRole(meta.imageGeneration),
       lyrics_check: {
