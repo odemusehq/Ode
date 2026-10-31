@@ -66,7 +66,7 @@ export function observedSetDependencies(snapshot: SetSnapshot) {
 export const setDependencies = defineTool({
   name: "set_dependencies_get",
   changes: "none",
-  description: "Read a fresh observed dependency map per track: current track references, group membership, device/chain containment and raw send controls. It is partial: input/output routes, sidechains, automation, cross-device mappings and opaque plug-in dependencies are unavailable; send values do not prove active routes. Song structure, scenes, solo/arm behaviour, transactions, whole-Set snapshots, settings and version history remain global resources. Use this for planning and inspection, never as permission for parallel host edits. No conventional track-to-Main routing is inferred. Read-only.",
+  description: "Read a fresh observed dependency map per track: current track references, group membership, device/chain containment and raw send controls. It is partial: input/output routes, sidechains, automation, cross-device mappings and opaque plug-in dependencies are not included in this map; native track_get_routing/compressor_get_sidechain can inspect supported routing separately; send values do not prove active routes. Song structure, scenes, solo/arm behaviour, transactions, whole-Set snapshots, settings and version history remain global resources. Use this for planning and inspection, never as permission for parallel host edits. No conventional track-to-Main routing is inferred. Read-only.",
   input: {},
   run: async (_input, ctx) => observedSetDependencies(await ctx.snapshots.read()),
 });

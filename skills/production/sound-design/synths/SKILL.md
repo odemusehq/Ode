@@ -70,13 +70,13 @@ The loop, the checks and the one-line result are in the parent sound-design skil
 - **Downlifter.** The reverse movement: noise or a tone falling in pitch and filter after a section's peak, often after an impact.
 - **Impact.** A low sine with a fast pitch drop (as for a kick, but longer), a noise burst and a long dark reverb, placed on the downbeat of the new section.
 - **Reverse sweeps.** A reversed cymbal or reverb tail that ends exactly on the downbeat.
-- **Build the movement into the sound**, so it runs without automation: a riser sample generated or trimmed to the build's length, or one long note on a synth whose amp and filter envelopes rise over the whole build. Where it goes in the song belongs to the arrangement skill.
+- **Build the movement into the sound**, so it runs without automation: an available riser sample with native clip markers set for the build's length, or one long note on a synth whose amp and filter envelopes rise over the whole build. Where it goes in the song belongs to the arrangement skill.
 
 ## Drones and textures
 
 - Meld, or Wavetable with slow modulation on position and filter; long envelopes; layered noise for air.
 - Keep drones in key: a root or fifth drone supports most chords; a drone on a note outside the chords creates tension, which can be the point.
-- Generated or sampled textures can be stretched, reversed or re-pitched in Simpler into sounds unique in the song.
+- Available recorded textures can be re-pitched or warped with exposed native controls. Reverse playback or other editor work needs the musician when no tool exposes it.
 
 ## Synth checks
 

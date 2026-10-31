@@ -1,3 +1,4 @@
+import { t } from "../../../shared/i18n";
 import type { ClipRef, DeviceRef, TrackRef } from "../../../shared/live";
 import type { MaxDawAddress } from "../../../shared/max-daw";
 import type { MaxParameterAddress } from "../../../shared/max-parameters";
@@ -10,7 +11,7 @@ import type { OperationTable } from "./operation";
 export class MaxTargetOperations extends OperationGroup<"max_target"> {
   table(): OperationTable<"max_target"> {
     return { max_target: { prepare: (args) => {
-      if (Number(args.track !== undefined) + Number(args.device !== undefined) + Number(args.clip !== undefined) !== 1) throw new Error("Give exactly one native target.");
+      if (Number(args.track !== undefined) + Number(args.device !== undefined) + Number(args.clip !== undefined) !== 1) throw new Error(t("maxDaw.invalid"));
       const address = args.device ? this.device(args.device) : args.clip ? this.clip(args.clip) : this.track(args.track!);
       return async () => address;
     } } };

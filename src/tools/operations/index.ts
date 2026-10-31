@@ -15,7 +15,7 @@ export function operationalTools(options: { production: boolean; subagents: bool
         function: {
           name: LoopTool.ToolSearch,
           description:
-            "Finds Ode's tools for a job by what they do, such as \"set the notes of a MIDI clip\", \"insert a device\" or \"render audio\". Found schemas are available next step. Rediscover older schemas when needed.",
+            "Finds Ode's tools for a job by what they do, such as \"set the notes of a MIDI clip\", \"insert a device\" or \"capture processed sound\". Found schemas are available next step. Rediscover older schemas when needed.",
           parameters: { type: "object", properties: { query: { type: "string", description: "What the tool should do." }, names: { type: "array", items: { type: "string" }, maxItems: 8, description: "Exact tool names from a skill, instead of a text query." }, group: { type: "string", enum: ["daw_write", "daw_read", "mneme", "lyrics", "operations"] } } },
         },
       },

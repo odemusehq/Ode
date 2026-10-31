@@ -231,7 +231,7 @@ function ode_daw_execute(command) {
   if (command.op === "track_routing_set" || command.op === "compressor_routing_set") return ode_daw_route_set(command, target, command.op === "compressor_routing_set");
   if (command.op === "track_meters") {
     if (target.api.type !== "Track") throw new Error(ODE_DAW_COPY.unsupported);
-    var meters = { observedAt: new Date().toISOString(), units: "native 0..1; peak/hold meters, not dBFS, LUFS, true peak or gain reduction" };
+    var meters = { observedAt: new Date().toISOString(), units: ODE_DAW_COPY.meterUnits };
     ["input_meter_left", "input_meter_right", "input_meter_level", "output_meter_left", "output_meter_right", "output_meter_level"].forEach(function (field) { meters[field] = ode_daw_optional(target.api, field); });
     return meters;
   }

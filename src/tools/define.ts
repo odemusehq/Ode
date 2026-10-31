@@ -17,7 +17,7 @@ import type { MaxParameters } from "../shared/max-parameters";
 import type { SetSnapshot } from "../shared/set-snapshot";
 import type { RefNames } from "./daw/ref-names";
 
-/** What a tool changes: "none" (it only reads or computes), the Live Set, or Mneme (the lyrics, the lead sheet, memory, settings, release files). */
+/** What a tool changes: "none" (it only reads or computes), the Live Set, or Mneme (the lyrics, the lead sheet, memory and settings). */
 export type ToolChange = "none" | "set" | "memory";
 
 /** Reads the whole Set: every track, device and clip, the song's tempo, key, scale, scenes and locators, and the lead sheet. */
@@ -31,8 +31,7 @@ export interface SetReader {
 /** One-line questions to the musician, each with two to four answers. */
 export interface MusicianQuestions {
   /**
-   * The answer the musician tapped, or null when they stopped Ode at the question. `images`, when given, are file names in the
-   * release folder shown as the answers, one per option and in the same order.
+   * The answer the musician tapped, or null when they stopped Ode at the question.
    */
   ask(text: string, options: string[]): Promise<string | null>;
 }

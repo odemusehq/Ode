@@ -2,7 +2,7 @@
 
 Choose and shape sounds so every part does its job in this song: the bass holds the floor, the lead speaks over everything, the pad fills without crowding, the texture adds life without asking for attention. A sound that is great in solo can be wrong in the track, so judge every change in the section where the part plays.
 
-Ode changes the sound where it lives — the instrument and effects already on the track, or a new instrument or effect on that same track — and the musician plays it in Live straight away. Undo and the version history are the way back, so every change happens on the original, without copies.
+Ode changes the sound where it lives — the instrument and effects already on the track, or a new instrument or effect on that same track — and the musician plays it in Live straight away. Preserve existing material and use native read/write controls. Live Undo and Ode History cover different state; do not promise full restoration of sample, preset or routing changes.
 
 ## Words into parameters
 
@@ -79,15 +79,7 @@ Layer when the jobs need more than one sound: one layer for the attack, one for 
 - **Simpler modes.** Classic plays one sample melodically, with looping and envelopes; One-Shot plays drums and hits through; Slicing chops a loop by transient, beat, region or by hand.
 - **Warp modes** for audio clips and warped samples: Beats for drums and percussive loops, Tones for monophonic pitched material, Texture for pads and noisy material, Complex or Complex Pro for full mixes and chords, Re-Pitch when speed and pitch should change together. Pick the mode with the fewest artefacts at the song's tempo.
 - **Tune to the song.** Find the pitch of tonal samples, kicks and 808s and transpose them onto the key, using cents for the last step.
-- **Trim and fade.** Start at the transient; short fades at the start and end of loops stop clicks.
-
-## Rights
-
-Ode is for songs the musician will release, so every sound has to be one they are free to publish.
-
-- **Generated sounds** only from models or services whose terms allow commercial use and leave the musician the rights to the results.
-- **Isolated sounds** are cleared only when the musician owns the source recording or has cleared it. Their own old demo is fine; a sound lifted from someone else's record needs clearance (usually for both the recording and the composition) or replacing before release. Say so once, plainly, in the result line.
-- **Library samples** come with a licence; most packs allow use inside a song.
+- **Regions and fades.** Native Simpler sample markers and clip markers can trim playback regions. Simpler can perform its own transient slicing. Fades or macro mappings without an exposed control need a specific musician-performed editor step.
 
 ## Effects as sound design
 

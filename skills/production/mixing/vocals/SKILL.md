@@ -82,7 +82,7 @@ Sibilance ("s", "sh", "t") usually sits somewhere around 5–9 kHz; find where i
 - **Pan for width:** doubles left and right (or one centred double to thicken the lead), harmonies spread, ad-libs off-centre.
 - **Compress and de-ess more** than the lead; stacked parts multiply sibilance and level jumps.
 - **Group them** on a backing-vocal bus with shared compression, EQ and reverb so they act as one section, sent a little wetter than the lead to sit them further back.
-- **Timing:** doubles sound best when word starts and consonant endings line up. Timing edits on recorded vocals are the musician's: name the words that flam in the result line.
+- **Timing:** doubles sound best when word starts and consonant endings line up. Use exposed native clip/warp-marker edits for an intended correction when exact positions are available. For inaccessible comping, fades or detailed alignment, reveal the clip and name the specific musician-performed step. Do not invent exact consonant times from a broad audio description.
 
 ## Dense, rhythmic vocals (rap and spoken parts)
 

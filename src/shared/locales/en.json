@@ -896,6 +896,7 @@
     "activityShowClip": "{clip} · Open in Live",
     "activityTransport": "Set playback or recording",
     "transportRestoration": "Transport state is not restored by Ode History. A completed recording or playback command remains active until changed in Live.",
-    "activityInstrument": "{device} · Set instrument controls"
+    "activityInstrument": "{device} · Set instrument controls",
+    "meterUnits": "native 0..1; peak/hold meters, not dBFS, LUFS, true peak or gain reduction"
   }
 }

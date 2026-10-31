@@ -1,11 +1,11 @@
 ---
 name: sound-design-drums
-description: Shape drum sounds in place in Live — choose, swap, layer, tune, trim and process the kick, snare, clap, hats, percussion and 808 in the Drum Rack or Simpler already on the track, build a Drum Rack kit from samples, slice a loop onto pads, and clean drums isolated from recordings or generated one-shots — with the checks drums need (kit balance, kick against bass, tuning, clean starts). Read this after the sound-design skill whenever the job is how the drums sound (punch, weight, tone, length, tuning, a coherent kit); how they play belongs to the drums skill.
+description: Shape drum sounds in place in Live — choose, swap, layer, tune, trim and process the kick, snare, clap, hats, percussion and 808 in the Drum Rack or Simpler already on the track, build a Drum Rack kit from samples, slice a loop onto pads, and process supplied recorded one-shots — with the checks drums need (kit balance, kick against bass, tuning, clean starts). Read this after the sound-design skill whenever the job is how the drums sound (punch, weight, tone, length, tuning, a coherent kit); how they play belongs to the drums skill.
 ---
 
 # Drum sound design
 
-This file covers how the drums sound: punch, weight, tone, length and tuning. How they play (grooves, fills, velocity patterns) belongs to the drums skill, and their final balance to mixing. The loop, the checks and the one-line result are in the parent sound-design skill.
+This file covers how the drums sound: punch, weight, tone, length and tuning. How they play (grooves, fills, velocity patterns) belongs to the drums skill, and their final balance to mixing. Read production/live-controls for the actual native sample, slice and choke controls. Recommendations here are musical options; unexposed editor work needs a specific musician-performed step.
 
 Work on the kit that is already there: change a pad's sample, its Simpler settings and the devices in its chain; swap a sample in its pad, keeping one kit on one drum track.
 
@@ -32,7 +32,7 @@ These are typical regions and the settings below are starting points; find the r
 ## Kick
 
 - **Fit the kick to the bass.** Decide which one owns the sub. A long, subby kick wants a bass that sits higher or leaves gaps; a short, punchy kick leaves room for a deep bass. The low-end mixing sub-skill covers the full relationship.
-- **Tune it.** A kick with a clear pitch sits on the song's root or fifth (or another chord tone); an out-of-key kick fights the bass. Find its fundamental (the strongest low band in its spectrum) and transpose it in its Simpler.
+- **Tune it.** When a pitched kick clashes with the intended bass, audition tuning it to a suitable note. A tonic/fifth is one option; preserve deliberate dissonance or unpitched character. Use a real accessible tuner or the musician's input for exact pitch; an LLM description is not a measured fundamental.
 - **Set its length to the tempo and the bass.** Shorten the decay or fade the tail in its Simpler until the kick ends before the next bass note or kick.
 - **Layer by job, inside its pad's chain.** A top layer for the click (high-passed around 100–200 Hz) over a body or sub layer (low-passed if its top is messy). Align the transients so they hit together, then check polarity: flip one layer and keep the setting with more low end.
 - **Synthesise one when every sample falls short.** In Operator: one sine; a pitch envelope sweeping from about 150–250 Hz down to the fundamental (40–60 Hz) over roughly 30–80 ms; amp decay 200–600 ms; a click from a very short noise burst (5–15 ms) or a short high sine. Drum Buss's Boom adds a tuned low tail that can be set to a note.
@@ -91,10 +91,6 @@ On the drum track's own Drum Rack:
 - Separated drums often carry bleed (bass in the kick, vocal or guitar in the snare and cymbals): EQ out what is outside each drum's range, gate between hits, and reinforce weak transients with a clean layer.
 - Slice the separated drums onto pads to reuse single hits.
 - They are cleared for release only when the musician owns the source recording or has cleared it; write the source in the lead sheet's notes either way.
-
-## Generated one-shots
-
-Describe the hit precisely: drum type, length, pitch, attack, character and space — for example "short dry kick, around 300 ms, tuned near F, tight click, fully dry". Trim, tune and level-match the result like any sample, keep it on its pad, and write its description in the lead sheet's notes. Use generated sounds only from services whose terms allow commercial use and leave the musician the rights.
 
 ## Drum checks
 
