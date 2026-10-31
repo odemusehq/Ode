@@ -870,5 +870,21 @@
     "staleRange": "The lyrics changed since that revision. Read the intended lines again before replacing them.",
     "invalidRange": "Choose existing line numbers, or use the position after the last line to append.",
     "reverseRange": "endLine must be at or after startLine."
+  },
+  "maxDaw": {
+    "unavailable": "Load the updated Ode Max for Live device to use these native DAW controls.",
+    "invalid": "The native DAW request or reply is invalid.",
+    "busy": "Ode is waiting for earlier native DAW controls.",
+    "timeout": "The native DAW control did not respond. Inspect Live before retrying a change.",
+    "cancelled": "The native DAW request was cancelled.",
+    "disconnected": "The Ode Max device disconnected. Inspect Live before retrying a change.",
+    "expired": "This native DAW reply has expired.",
+    "changed": "The target or its state changed. Read it again before editing.",
+    "notPlugin": "This device is not a loaded PluginDevice. Use its native parameters or ask the musician to load the required plugin.",
+    "unsupported": "Live does not expose this control on the selected object.",
+    "nativeUndo": "This control is outside Ode's saved-state restoration. Use Live's Undo where supported, or restore it in the device.",
+    "tooLarge": "The native reply is too large. Read a smaller page before continuing; inspect Live before retrying a change.",
+    "activityPreset": "{device} · Choose preset",
+    "activityShow": "{device} · Open in Live"
   }
 }

@@ -2,6 +2,7 @@ import { t, nativeStrings } from "../../shared/i18n";
 import { readFile } from "node:fs/promises";
 import { MAX_WINDOW } from "../../shared/max-window";
 import { MAX_AUDIO } from "../../shared/max-audio";
+import { MAX_DAW } from "../../shared/max-daw";
 import { MAX_PARAMETERS } from "../../shared/max-parameters";
 
 type Box = Record<string, unknown> & { id: string };
@@ -11,7 +12,7 @@ interface Line { patchline: { source: [string, number]; destination: [string, nu
 export class MaxDevice {
   /** An unfrozen .amxd container, with the same ampf/meta/ptch structure as Max's own devices. */
   static async build(): Promise<Buffer> {
-    const script = `var ODE_WINDOW = ${JSON.stringify(MAX_WINDOW)};\nvar ODE_AUDIO = ${JSON.stringify(MAX_AUDIO)};\nvar ODE_PARAMETERS = ${JSON.stringify(MAX_PARAMETERS)};\nvar ODE_PARAMETER_COPY = ${JSON.stringify(nativeStrings.maxParameters)};\nvar ODE_COPY = ${JSON.stringify(nativeStrings.max)};\nvar ODE_AUDIO_COPY = ${JSON.stringify(nativeStrings.maxAudio)};\n${await readFile(new URL("window.js", import.meta.url), "utf8")}\n${await readFile(new URL("audio.js", import.meta.url), "utf8")}\n${await readFile(new URL("parameters.js", import.meta.url), "utf8")}`;
+    const script = `var ODE_WINDOW = ${JSON.stringify(MAX_WINDOW)};\nvar ODE_AUDIO = ${JSON.stringify(MAX_AUDIO)};\nvar ODE_PARAMETERS = ${JSON.stringify(MAX_PARAMETERS)};\nvar ODE_DAW = ${JSON.stringify(MAX_DAW)};\nvar ODE_DAW_COPY = ${JSON.stringify(nativeStrings.maxDaw)};\nvar ODE_PARAMETER_COPY = ${JSON.stringify(nativeStrings.maxParameters)};\nvar ODE_COPY = ${JSON.stringify(nativeStrings.max)};\nvar ODE_AUDIO_COPY = ${JSON.stringify(nativeStrings.maxAudio)};\n${await readFile(new URL("window.js", import.meta.url), "utf8")}\n${await readFile(new URL("audio.js", import.meta.url), "utf8")}\n${await readFile(new URL("parameters.js", import.meta.url), "utf8")}\n${await readFile(new URL("daw.js", import.meta.url), "utf8")}`;
     const patch = Buffer.from(`${JSON.stringify(MaxDevice.patch(script))}\n\0`, "utf8");
     const header = Buffer.alloc(32);
     header.write("ampf", 0, "ascii");

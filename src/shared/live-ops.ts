@@ -185,6 +185,7 @@ export const LIVE_DEFAULT_SIGNATURE: TimeSignature = { numerator: 4, denominator
 type Named = { name?: string; tag?: string };
 
 export interface ExtensionOpArgs {
+  max_target: { track?: TrackRef; device?: DeviceRef };
   song_get: Record<string, never>;
   song_set_tempo: { tempo: number };
   song_create_midi_track: Named;
@@ -245,6 +246,7 @@ export interface ExtensionOpArgs {
 }
 
 export interface ExtensionOpResults {
+  max_target: import("./max-parameters").MaxParameterAddress;
   song_get: SongInfo;
   song_set_tempo: { tempo: number };
   song_create_midi_track: CreatedTrack;

@@ -72,6 +72,7 @@ function releaseTask(task) {
 function stop() {
   if (typeof ode_audio_stop === "function") ode_audio_stop();
   if (typeof ode_parameters_stop === "function") ode_parameters_stop();
+  if (typeof ode_daw_stop === "function") ode_daw_stop();
   running = false;
   generation += 1;
   releaseTask(loop);
@@ -134,6 +135,7 @@ function safeUrl(url) {
 function disconnect() {
   if (typeof ode_audio_stop === "function") ode_audio_stop();
   if (typeof ode_parameters_stop === "function") ode_parameters_stop();
+  if (typeof ode_daw_stop === "function") ode_daw_stop();
   generation += 1;
   session = "";
   busy = false;
@@ -172,8 +174,10 @@ function tick() {
       status(ODE_COPY.connecting);
       if (typeof ode_audio_stop === "function") ode_audio_stop();
       if (typeof ode_parameters_stop === "function") ode_parameters_stop();
+  if (typeof ode_daw_stop === "function") ode_daw_stop();
       var connectionBody = { capability: capability };
       if (typeof LiveAPI === "function" && typeof ode_parameters_command === "function") connectionBody.parametersVersion = 1;
+      if (typeof LiveAPI === "function" && typeof ode_daw_command === "function") connectionBody.dawVersion = 1;
       if (typeof LiveAPI === "function" && typeof Buffer === "function") connectionBody.audioVersion = 1;
       http(ODE_WINDOW.api.connect, connectionBody, function (response, code) {
         busy = false;
@@ -204,6 +208,7 @@ function tick() {
     if (response.command && !pending) openCommand(response.command, false);
     if (response.audio && typeof ode_audio_command === "function") ode_audio_command(response.audio);
     if (response.parameters && typeof ode_parameters_command === "function") ode_parameters_command(response.parameters);
+    if (response.daw && typeof ode_daw_command === "function") ode_daw_command(response.daw);
   });
 }
 

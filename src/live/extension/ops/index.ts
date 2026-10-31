@@ -5,6 +5,7 @@ import { ClipSlotOperations } from "./clip-slots";
 import { ClipOperations } from "./clips";
 import { DeviceOperations } from "./devices";
 import type { LiveServices } from "./group";
+import { MaxTargetOperations } from "./max-target";
 import { MidiNoteOperations } from "./midi-notes";
 import type { OperationTable, RegularOp } from "./operation";
 import { RackOperations } from "./racks";
@@ -20,6 +21,7 @@ import { UndoOperations } from "./undo";
 /** Every operation by name, from the group that implements it. */
 export function createOperationRegistry(services: LiveServices): OperationRegistry {
   const regular: OperationTable<RegularOp> = {
+    ...new MaxTargetOperations(services).table(),
     ...new SongOperations(services).table(),
     ...new TrackOperations(services).table(),
     ...new TakeLaneOperations(services).table(),

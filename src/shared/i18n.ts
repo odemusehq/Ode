@@ -29,4 +29,4 @@ export type MessageKey = ParseKeys;
 export const t = i18n.t.bind(i18n);
 
 /** Max's embedded JavaScript receives the same catalogue through its existing device build. */
-export const nativeStrings = { max: en.max, maxAudio: en.maxAudio, maxParameters: en.maxParameters };
+export const nativeStrings = { max: en.max, maxAudio: en.maxAudio, maxParameters: en.maxParameters, maxDaw: en.maxDaw };

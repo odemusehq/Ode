@@ -133,6 +133,7 @@ export const EXTENSION_OPS = [
   "import_into_project",
   "apply_as_one_undo_step",
   "set_snapshot",
+  "max_target",
 ] as const;
 export type ExtensionOp = (typeof EXTENSION_OPS)[number];
 

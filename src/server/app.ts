@@ -41,6 +41,7 @@ import { VersionActions } from "./version-actions";
 import { VersionRecorder } from "./version-recorder";
 import { MaxWindowBridge } from "./max-window";
 import { MaxAudioCapture } from "./max-audio";
+import { MaxDawControl } from "./max-daw";
 import { MaxParameterControl } from "./max-parameters";
 
 /** Builds every part of Ode inside the extension and connects them. */
@@ -71,6 +72,7 @@ export class OdeApp {
   readonly maxWindow: MaxWindowBridge;
   readonly maxAudio: MaxAudioCapture;
   readonly maxParameters: MaxParameterControl;
+  readonly maxDaw: MaxDawControl;
   private readonly server: OdeServer;
   /** The song title the dialogs were last sent. */
   private title = "";
@@ -104,6 +106,7 @@ export class OdeApp {
     this.maxWindow = new MaxWindowBridge((view) => this.server.url(view));
     this.maxAudio = new MaxAudioCapture({ tempDir: config.tempDir, window: this.maxWindow });
     this.maxParameters = new MaxParameterControl(this.maxWindow);
+    this.maxDaw = new MaxDawControl(this.maxWindow);
 
     const skills = new SkillLibrary(texts);
     const context: ToolContext = {
@@ -121,6 +124,7 @@ export class OdeApp {
       skills,
       maxAudio: this.maxAudio,
       maxParameters: this.maxParameters,
+      maxDaw: this.maxDaw,
       temp: this.temp,
       emit,
     };
@@ -195,6 +199,7 @@ export class OdeApp {
       maxWindow: this.maxWindow,
       maxAudio: this.maxAudio,
       maxParameters: this.maxParameters,
+      maxDaw: this.maxDaw,
     });
   }
 

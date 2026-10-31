@@ -13,6 +13,8 @@ import { z } from "zod";
 import { MAX_WINDOW } from "../shared/max-window";
 import { MAX_AUDIO } from "../shared/max-audio";
 import { MAX_PARAMETERS } from "../shared/max-parameters";
+import { MAX_DAW } from "../shared/max-daw";
+import type { MaxDawControl } from "./max-daw";
 import type { MaxParameterControl } from "./max-parameters";
 import type { MaxAudioCapture } from "./max-audio";
 import { MaxWindowError, type MaxWindowBridge } from "./max-window";
@@ -69,6 +71,7 @@ export interface ServerDeps {
   maxWindow?: MaxWindowBridge;
   maxAudio?: MaxAudioCapture;
   maxParameters?: MaxParameterControl;
+  maxDaw?: MaxDawControl;
 }
 
 const TextSchema = z.object({ text: z.string().trim().min(1), requestId: z.uuid().optional(), songId: z.string().min(1).optional() });
@@ -83,10 +86,10 @@ const VersionRequestSchema = z.object({ versionId: z.string().min(1) });
 const SongOpenSchema = z.object({ id: z.string().min(1) });
 const SongCreateSchema = z.object({ title: z.string() });
 const RestoreRequestSchema = z.object({ confirmed: z.literal(true) });
-const MaxConnectSchema = z.object({ capability: z.string().regex(/^[a-f0-9]{32}$/), audioVersion: z.literal(1).optional(), parametersVersion: z.literal(1).optional() }).strict();
+const MaxConnectSchema = z.object({ capability: z.string().regex(/^[a-f0-9]{32}$/), audioVersion: z.literal(1).optional(), parametersVersion: z.literal(1).optional(), dawVersion: z.literal(1).optional() }).strict();
 const MaxPollSchema = z.object({ session: z.string().regex(/^[a-f0-9]{48}$/) }).strict();
 const MaxAckSchema = z.object({ session: z.string().regex(/^[a-f0-9]{48}$/), id: z.uuid(), status: z.enum(["ready", "error"]), error: z.string().max(MAX_WINDOW.errorMaxChars).optional() }).strict();
-const MAX_WINDOW_PATHS: ReadonlySet<string> = new Set([...Object.values(MAX_WINDOW.api), MAX_AUDIO.messagePath, MAX_PARAMETERS.messagePath]);
+const MAX_WINDOW_PATHS: ReadonlySet<string> = new Set([...Object.values(MAX_WINDOW.api), MAX_AUDIO.messagePath, MAX_PARAMETERS.messagePath, MAX_DAW.messagePath]);
 const MaxAudioEnvelopeSchema = z.object({ session: z.string().regex(/^[a-f0-9]{48}$/), message: z.unknown() }).strict();
 
 const SEND_VERSION_ID = t("server.http.sendVersionIdWithTheId");
@@ -147,6 +150,7 @@ export class OdeServer {
     this.routeMaxWindow();
     this.routeMaxAudio();
     this.routeMaxParameters();
+    this.routeMaxDaw();
     this.routeApi();
     this.routeSongs();
     this.routeVersions();
@@ -245,7 +249,7 @@ export class OdeServer {
     this.app.post(MAX_WINDOW.api.connect, limit, async (c) => {
       const parsed = MaxConnectSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: t("server.http.sendTheMaxDeviceSConnectionCapability") }, 403);
-      return respond(c, (bridge) => bridge.connect(parsed.data.capability, parsed.data.audioVersion, parsed.data.parametersVersion));
+      return respond(c, (bridge) => bridge.connect(parsed.data.capability, parsed.data.audioVersion, parsed.data.parametersVersion, parsed.data.dawVersion));
     });
     this.app.post(MAX_WINDOW.api.poll, limit, async (c) => {
       const parsed = MaxPollSchema.safeParse(await OdeServer.body(c));
@@ -256,6 +260,22 @@ export class OdeServer {
       const parsed = MaxAckSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: t("server.http.sendTheMaxWindowSCommandAcknowledgement") }, 400);
       return respond(c, (bridge) => { bridge.acknowledge(parsed.data); return { ok: true }; });
+    });
+  }
+
+  private routeMaxDaw(): void {
+    this.app.post(MAX_DAW.messagePath, bodyLimit({ maxSize: MAX_DAW.maxBodyBytes }), async (c) => {
+      c.header("Cache-Control", "no-store");
+      if (!this.deps.maxDaw) return c.json({ error: t("maxDaw.unavailable") }, 503);
+      const parsed = MaxAudioEnvelopeSchema.safeParse(await OdeServer.body(c));
+      if (!parsed.success) return c.json({ error: t("maxDaw.invalid") }, 403);
+      try {
+        this.deps.maxDaw.receive(parsed.data.session, parsed.data.message);
+        return c.json({ ok: true });
+      } catch (error) {
+        if (error instanceof MaxWindowError) return c.json({ error: error.message }, error.status);
+        throw error;
+      }
     });
   }
 

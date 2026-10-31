@@ -12,6 +12,7 @@ import type { OdeConfig } from "../shared/config";
 import type { UiEvent } from "../shared/events";
 import type { LiveConnections } from "../shared/live";
 import type { MaxAudioRequest, MaxAudioResult, MaxAudioSources } from "../shared/max-audio";
+import type { MaxDaw } from "../shared/max-daw";
 import type { MaxParameters } from "../shared/max-parameters";
 import type { SetSnapshot } from "../shared/set-snapshot";
 import type { RefNames } from "./daw/ref-names";
@@ -63,6 +64,7 @@ export interface ToolContext {
   };
   /** Actual displayed units and native control state through the paired Max device. */
   maxParameters?: MaxParameters;
+  maxDaw?: MaxDaw;
   /** Where generated and rendered files go. */
   temp: TempFolder;
   emit: (event: UiEvent) => void;
