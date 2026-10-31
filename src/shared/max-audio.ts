@@ -1,11 +1,12 @@
 /** Bounded PCM capture through the paired Max device; no message carries a file path. */
 export const MAX_AUDIO = {
-  version: 1,
+  version: 2,
   messagePath: "/max-audio/message",
   maxBodyBytes: 128 * 1024,
   maxDurationSeconds: 300,
   maxFrames: 16_000_000,
   chunkFrames: 512,
+  pcmChunkFrames: 2048,
   maxSources: 512,
 } as const;
 
@@ -58,5 +59,7 @@ export type MaxAudioMessage =
   | ({ readonly kind: "sources"; readonly id: string } & MaxAudioSources)
   | { readonly kind: "begin"; readonly id: string; readonly catalogueId: string; readonly sourceId: string; readonly sampleRate: number; readonly channels: 2; readonly frames: number }
   | { readonly kind: "chunk"; readonly id: string; readonly offset: number; readonly channels: readonly [readonly number[], readonly number[]] }
+  /** Interleaved stereo Float32 little-endian bytes, losslessly base64 encoded. */
+  | { readonly kind: "pcm"; readonly id: string; readonly offset: number; readonly data: string }
   | { readonly kind: "complete"; readonly id: string; readonly frames: number; readonly timing: MaxAudioTiming }
   | { readonly kind: "error"; readonly id: string; readonly error: string };

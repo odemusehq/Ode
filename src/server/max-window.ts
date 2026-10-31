@@ -1,7 +1,7 @@
 import { t } from "../shared/i18n";
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { DialogView } from "../shared/config";
-import type { MaxAudioCommand } from "../shared/max-audio";
+import { MAX_AUDIO, type MaxAudioCommand } from "../shared/max-audio";
 import type { MaxDawCommand } from "../shared/max-daw";
 import type { MaxParameterCommand } from "../shared/max-parameters";
 import { MAX_WINDOW, type MaxWindowAcknowledgement, type MaxWindowBinding, type MaxWindowBootstrap, type MaxWindowCommand, type MaxWindowConnection, type MaxWindowPoll } from "../shared/max-window";
@@ -42,7 +42,7 @@ export class MaxWindowBridge {
 
   attachAudio(audio: { poll(): MaxAudioCommand | null; invalidate(): void }): void { this.audio = audio; }
 
-  get supportsAudio(): boolean { return this.connected && this.device?.session?.audioVersion === 1; }
+  get supportsAudio(): boolean { return this.connected && (this.device?.session?.audioVersion === 1 || this.device?.session?.audioVersion === MAX_AUDIO.version); }
 
   attachParameters(parameters: { poll(session: string): MaxParameterCommand | null; invalidate(): void }): void { this.parameters = parameters; }
   get supportsParameters(): boolean { return this.connected && this.device?.session?.parametersVersion === 1; }
@@ -94,7 +94,7 @@ export class MaxWindowBridge {
     const device = this.authorized(session);
     device.session!.lastPoll = Date.now();
     const command = this.pending.values().next().value?.command ?? null;
-    return { command, ...(device.session!.audioVersion === 1 ? { audio: this.audio?.poll() ?? null } : {}),
+    return { command, ...(this.supportsAudio ? { audio: this.audio?.poll() ?? null } : {}),
       ...(device.session!.parametersVersion === 1 ? { parameters: this.parameters?.poll(session) ?? null } : {}),
       ...(device.session!.dawVersion === 1 ? { daw: this.daw?.poll(session) ?? null } : {}) };
   }

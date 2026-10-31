@@ -348,16 +348,27 @@ function ode_audio_upload_next() {
     return;
   }
   try {
-    var count = Math.min(ODE_AUDIO.chunkFrames, job.frames - job.offset);
+    var count = Math.min(ODE_AUDIO.pcmChunkFrames, job.frames - job.offset);
     var channels = [job.buffer.peek(1, job.offset, count), job.buffer.peek(2, job.offset, count)];
     channels = channels.map(function (samples) { return Array.isArray(samples) ? samples : [samples]; });
     if (channels.some(function (samples) { return samples.length !== count || samples.some(function (sample) { return typeof sample !== "number" || !Number.isFinite(sample); }); })) throw new Error(ODE_AUDIO_COPY.maxReturnedIncompleteOrNonfiniteCapturedSamples);
-    ode_audio_send({ kind: "chunk", id: job.id, offset: job.offset, channels: channels }, function (ok) {
+    ode_audio_send({ kind: "pcm", id: job.id, offset: job.offset, data: ode_audio_pcm(channels, count) }, function (ok) {
       if (odeAudio.job !== job) return;
       if (!ok) { ode_audio_error(job.id, "Ode could not receive the captured samples."); return; }
       job.offset += count; job.uploadTask = ode_audio_task(ode_audio_upload_next, 0);
     });
   } catch (error) { ode_audio_error(job.id, error); }
+}
+// Transport serialization only: preserve the native Float32 samples, channels and level.
+function ode_audio_pcm(channels, count) {
+  var bytes = new Uint8Array(count * 8), view = new DataView(bytes.buffer);
+  for (var frame = 0; frame < count; frame++) for (var channel = 0; channel < 2; channel++) view.setFloat32(frame * 8 + channel * 4, channels[channel][frame], true);
+  var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", text = "";
+  for (var i = 0; i < bytes.length; i += 3) {
+    var value = bytes[i] * 65536 + (bytes[i + 1] || 0) * 256 + (bytes[i + 2] || 0);
+    text += alphabet[(value >>> 18) & 63] + alphabet[(value >>> 12) & 63] + (i + 1 < bytes.length ? alphabet[(value >>> 6) & 63] : "=") + (i + 2 < bytes.length ? alphabet[value & 63] : "=");
+  }
+  return text;
 }
 function ode_audio_command(command) {
   if (!command || typeof command.id !== "string" || command.id.length > 512) return;

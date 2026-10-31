@@ -84,9 +84,14 @@ test("Max capture uploads ordered bounded PCM with headroom and never a file pat
     const task = tasks.find((item) => !item.cancelled && item.callback.name === "ode_audio_upload_next"); task.cancelled = true; task.callback();
   }
   const payloads = messages.map((item) => item.message);
-  assert.ok(messages.filter((item) => item.message.kind === "chunk").every((item) => Buffer.byteLength(JSON.stringify(item)) < 32767), "Nonzero float32 PCM and its envelope must fit Max 9.1's observed string transport limit");
-  assert.deepEqual(payloads.filter((item) => item.kind === "chunk").map((item) => [item.offset, item.channels[0].length]), [[0, 512], [512, 512], [1024, 512], [1536, 512], [2048, 512], [2560, 512], [3072, 512], [3584, 512]]);
-  assert.equal(payloads.find((item) => item.kind === "chunk").channels[1][0], 2.5);
+  const pcm = payloads.filter((item) => item.kind === "pcm");
+  assert.ok(pcm.length > 0);
+  assert.ok(messages.filter((item) => item.message.kind === "pcm").every((item) => Buffer.byteLength(JSON.stringify(item)) < 32767), "Nonzero float32 PCM and its envelope must fit Max 9.1's observed string transport limit");
+  assert.deepEqual(pcm.map((item) => [item.offset, Buffer.from(item.data, "base64").length / 8]), [[0, 2048], [2048, 2048]]);
+  const bytes = Buffer.concat(pcm.map((item) => Buffer.from(item.data, "base64")));
+  assert.equal(bytes.readFloatLE(0), 1.25);
+  assert.equal(bytes.readFloatLE(4), 2.5);
+  assert.equal(bytes.readFloatLE(4095 * 8 + 4), Math.fround(Math.sin(4095 * 0.07) * 0.5));
   assert.equal(payloads.at(-1).kind, "complete");
   assert.equal(payloads.at(-1).frames, 4096);
   assert.ok(controls.some((item) => item[0] === "odeCaptureRecorder" && item[1] === 0));

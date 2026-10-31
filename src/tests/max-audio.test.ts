@@ -58,6 +58,28 @@ test("completed ordered PCM is float32 WAV and retains values above full scale",
   } finally { await f.close(); }
 });
 
+test("compact PCM preserves stereo samples and refuses malformed byte lengths", async () => {
+  for (const broken of [false, true]) {
+    const f = await fixture(2);
+    try {
+      await f.catalogue();
+      const captured = f.audio.capture({ sourceId: source.id, durationSeconds: 0.001 });
+      const rejected = broken ? assert.rejects(captured) : null;
+      const request = f.command();
+      await f.send({ kind: "begin", id: request.id, catalogueId: "catalogue-1", sourceId: source.id, sampleRate: 8000, channels: 2, frames: 8 });
+      const bytes = Buffer.alloc(broken ? 7 : 64);
+      if (!broken) { bytes.writeFloatLE(1.5, 0); bytes.writeFloatLE(-2, 4); }
+      const message = { kind: "pcm", id: request.id, offset: 0, data: bytes.toString("base64") } as any;
+      if (broken) { await assert.rejects(f.send(message)); await rejected; assert.deepEqual(await readdir(f.tempDir), []); }
+      else {
+        await f.send(message); await f.send({ kind: "complete", id: request.id, frames: 8, timing });
+        const wav = await readFile((await captured).path), start = wav.indexOf(Buffer.from("data")) + 8;
+        assert.equal(wav.readFloatLE(start), 1.5); assert.equal(wav.readFloatLE(start + 4), -2);
+      }
+    } finally { await f.close(); }
+  }
+});
+
 test("a gap revokes the capture and publishes no file", async () => {
   const f = await fixture(1);
   try {

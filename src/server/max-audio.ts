@@ -20,6 +20,7 @@ const messageSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("begin"), id, catalogueId: text, sourceId: text, sampleRate: z.number().int().min(8000).max(384000),
     channels: z.literal(2), frames: z.number().int().min(1).max(MAX_AUDIO.maxFrames) }).strict(),
   z.object({ kind: z.literal("chunk"), id, offset: z.number().int().min(0), channels: z.tuple([samples, samples]) }).strict(),
+  z.object({ kind: z.literal("pcm"), id, offset: z.number().int().min(0), data: z.string().min(4).max(Math.ceil(MAX_AUDIO.pcmChunkFrames * 8 / 3) * 4) }).strict(),
   z.object({ kind: z.literal("complete"), id, frames: z.number().int().min(1).max(MAX_AUDIO.maxFrames), timing }).strict(),
   z.object({ kind: z.literal("error"), id, error: z.string().min(1).max(1000) }).strict(),
 ]);
@@ -103,19 +104,29 @@ export class MaxAudioCapture {
         if (message.frames > Math.ceil(job.command.durationSeconds * message.sampleRate) + MAX_AUDIO.chunkFrames) throw new Error(t("server.maxAudio.maxAudioCaptureExceedsTheRequestedDuration"));
         job.pcm = { sampleRate: message.sampleRate, frames: message.frames, offset: 0,
           channels: [new Float32Array(message.frames), new Float32Array(message.frames)] };
+        this.progress(job);
         return;
       }
       const pcm = job.pcm;
       if (!pcm) throw new Error(t("server.maxAudio.maxMustBeginThePCMTransferBefore"));
-      if (message.kind === "chunk") {
-        const count = message.channels[0].length;
-        if (message.offset !== pcm.offset || message.channels[1].length !== count || pcm.offset + count > pcm.frames) throw new Error(t("server.maxAudio.maxAudioChunkOffsetOrderOrChannel"));
+      if (message.kind === "chunk" || message.kind === "pcm") {
+        let channels: readonly (readonly number[] | Float32Array)[];
+        if (message.kind === "pcm") {
+          const bytes = Buffer.from(message.data, "base64");
+          if (!bytes.length || bytes.length % 8 || bytes.toString("base64") !== message.data) throw new Error(t("server.maxAudio.maxAudioChunkOffsetOrderOrChannel"));
+          const count = bytes.length / 8;
+          channels = [new Float32Array(count), new Float32Array(count)];
+          for (let frame = 0; frame < count; frame++) for (let channel = 0; channel < 2; channel++) (channels[channel] as Float32Array)[frame] = bytes.readFloatLE(frame * 8 + channel * 4);
+        } else channels = message.channels;
+        const count = channels[0]!.length;
+        if (message.offset !== pcm.offset || channels[1]!.length !== count || pcm.offset + count > pcm.frames) throw new Error(t("server.maxAudio.maxAudioChunkOffsetOrderOrChannel"));
         for (let channel = 0; channel < 2; channel++) {
           // Finite doubles can still overflow float32; reject those rather than writing Infinity.
-          if (message.channels[channel]!.some((value) => !Number.isFinite(Math.fround(value)))) throw new Error(t("server.maxAudio.maxAudioSamplesMustBeFiniteFloat32"));
-          pcm.channels[channel]!.set(message.channels[channel]!, pcm.offset);
+          if (channels[channel]!.some((value) => !Number.isFinite(Math.fround(value)))) throw new Error(t("server.maxAudio.maxAudioSamplesMustBeFiniteFloat32"));
+          pcm.channels[channel]!.set(channels[channel]!, pcm.offset);
         }
         pcm.offset += count;
+        this.progress(job);
         return;
       }
       if (message.kind !== "complete" || message.frames !== pcm.frames || pcm.offset !== pcm.frames) throw new Error(t("server.maxAudio.maxAudioTransferIsIncompleteOrHas"));
@@ -190,5 +201,11 @@ export class MaxAudioCapture {
     clearTimeout(job.timer);
     if (job.abort) job.signal?.removeEventListener("abort", job.abort);
     if (this.pending === job) this.pending = null;
+  }
+
+  /** Once recording is complete, allow ordered transfer progress without a song-length cutoff. */
+  private progress(job: Pending): void {
+    clearTimeout(job.timer);
+    job.timer = setTimeout(() => this.fail(new Error(t("server.maxAudio.theMaxAudioRequestTimedOutIts"))), 60_000);
   }
 }

@@ -178,7 +178,7 @@ function tick() {
       var connectionBody = { capability: capability };
       if (typeof LiveAPI === "function" && typeof ode_parameters_command === "function") connectionBody.parametersVersion = 1;
       if (typeof LiveAPI === "function" && typeof ode_daw_command === "function") connectionBody.dawVersion = 1;
-      if (typeof LiveAPI === "function" && typeof Buffer === "function") connectionBody.audioVersion = 1;
+      if (typeof LiveAPI === "function" && typeof Buffer === "function") connectionBody.audioVersion = ODE_AUDIO.version;
       http(ODE_WINDOW.api.connect, connectionBody, function (response, code) {
         busy = false;
         if (code !== 200 || !response || typeof response.session !== "string" || !response.session || !safeUrl(response.url)) {

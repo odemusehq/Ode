@@ -5,6 +5,7 @@ import { OdeServer, type ServerDeps } from "../server/http";
 import { MaxWindowBridge } from "../server/max-window";
 import { DialogView } from "../shared/config";
 import { MAX_WINDOW } from "../shared/max-window";
+import { MAX_AUDIO } from "../shared/max-audio";
 
 const binding = { deviceId: "device-1", setId: "set-1" };
 const url = (view: DialogView) => `http://localhost:9123/?view=${view}&token=private-ui-token`;
@@ -113,7 +114,7 @@ test("bridge HTTP credentials stay isolated from UI auth and retain loopback req
   assert.equal((await local.app.request(`http://localhost:0${MAX_WINDOW.api.connect}`, {
     method: "POST", body: "not JSON", headers: { host: "localhost:0", ...legacy },
   })).status, 403);
-  const connection = await send(MAX_WINDOW.api.connect, { capability: bootstrap.capability, audioVersion: 1 }, legacy);
+  const connection = await send(MAX_WINDOW.api.connect, { capability: bootstrap.capability, audioVersion: MAX_AUDIO.version }, legacy);
   assert.equal(connection.status, 200);
   const { session } = await connection.json() as { session: string };
   assert.equal(local.modifyingRequests, 0);
