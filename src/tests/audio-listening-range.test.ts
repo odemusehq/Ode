@@ -21,6 +21,28 @@ test("preparing audio lets the host process its Max heartbeat", async () => {
   assert.equal(new AudioFileDecoder().decode(prepared.bytes, "prepared.wav").channels[0]![79_999], 0.25);
 });
 
+test("whole-song listening fits the decoded audio limit without changing rate, channels or source", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "ode-whole-song-"));
+  try {
+    const path = join(directory, "main.wav"), frames = 6_250_001;
+    const bytes = encodeWav({ sampleRate: 44_100, channels: [new Float32Array(frames).fill(0.25), new Float32Array(frames).fill(-0.5)] }, WavBitDepth.Float32);
+    await writeFile(path, bytes);
+    const read = await new MusicAudio().read(path);
+    assert.ok(read.content.data.length <= 50_000_000, "Meta refuses more than 50 MB of decoded audio per input.");
+    const info = new AudioFileDecoder().inspect(read.content.data, "payload.wav");
+    assert.equal(info.bitDepth, 24);
+    assert.equal(info.frames, frames);
+    assert.equal(info.sampleRate, 44_100);
+    assert.equal(info.channels, 2);
+    assert.equal(read.payload.representation.encoding, "PCM24 WAV");
+    assert.equal(read.source.sha256, audioHash(bytes));
+    assert.equal(audioHash(await readFile(path)), audioHash(bytes), "The original float capture stays unchanged.");
+    new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).setFloat32(bytes.length - frames * 8, 1.2, true);
+    await writeFile(path, bytes);
+    await assert.rejects(new MusicAudio().read(path), /headroom.*shorter range/i, "Oversized float headroom must not be clipped to integer PCM.");
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
 test("audio_read attaches exact selected frames and source identity without calling a model", async () => {
   const directory = await mkdtemp(join(tmpdir(), "ode-read-audio-"));
   try {
