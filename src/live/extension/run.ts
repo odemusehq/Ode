@@ -18,7 +18,7 @@ export class ExtensionLauncher {
   /** Builds the extension for release and packages it at `file`, which Live installs from its Extensions page. */
   static async package(file: string): Promise<void> {
     await new ExtensionBuild(true).run();
-    const code = await ExtensionLauncher.cli(["package", "-o", file]);
+    const code = await ExtensionLauncher.cli(["package", "-o", file, "--include", "agent-runtime"]);
     if (code !== 0) throw new Error(`Ableton's extensions CLI stopped with code ${code} while packaging ${file}`);
   }
 

@@ -2,6 +2,7 @@ import * as esbuild from "esbuild";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join, relative, sep } from "node:path";
 import { DevConfig } from "../../shared/dev-config";
+import { AgentRuntime } from "../../harness/agent-runtime";
 
 interface Manifest {
   readonly entry: string;
@@ -45,12 +46,15 @@ export class ExtensionBuild {
       format: "cjs",
       platform: "node",
       target: "node24",
+      define: { "import.meta.url": "odeModuleUrl" },
+      banner: { js: 'const odeModuleUrl = require("node:url").pathToFileURL(__filename).href;' },
       sourcesContent: false,
       logLevel: "info",
       minify: this.production,
       sourcemap: !this.production,
       plugins: [ExtensionBuild.bundledFiles({ "ode:texts": texts, "ode:ui": ui })],
     });
+    await AgentRuntime.bundle(ExtensionBuild.outDir);
   }
 
   /** Serves each "ode:" module as its files, by path, in JSON. */
