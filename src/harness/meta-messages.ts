@@ -8,20 +8,22 @@ export class MetaMessages {
   static request(body: MessagesRequest, media: AgentMedia): Block {
     const input: Block[] = [];
     const blocks = (value: string | Block[] | undefined): Block[] => typeof value === "string" ? [{ type: "text", text: value }] : value ?? [];
-    if (body.system) input.push({ type: "message", role: "system", content: blocks(body.system).map(block => ({ type: "input_text", text: String(block.text ?? "") })) });
+    // Meta's typed-message route failed the recorded music comparison. Its documented
+    // shorthand preserved the sound, including when the original waveforms were swapped.
+    if (body.system) input.push({ role: "system", content: blocks(body.system).map(block => ({ type: "input_text", text: String(block.text ?? "") })) });
     for (let index = 0; index < body.messages.length;) {
       const message = body.messages[index]!;
       if (message.role === "assistant") {
         for (const block of blocks(message.content)) {
           if (block.type === "tool_use") input.push({ type: "function_call", call_id: block.id, name: block.name, arguments: JSON.stringify(block.input ?? {}) });
           else if (block.type === "redacted_thinking") input.push({ type: "reasoning", summary: [], encrypted_content: block.data ?? block.redacted_thinking });
-          else if (block.type === "text") input.push({ type: "message", role: "assistant", content: [{ type: "output_text", text: block.text }] });
+          else if (block.type === "text") input.push({ role: "assistant", content: [{ type: "output_text", text: block.text }] });
           else if (block.type !== "thinking") throw new Error(`Unsupported SDK assistant block: ${block.type}`);
         }
         index++; continue;
       }
       if (message.role !== "user") {
-        input.push({ type: "message", role: message.role, content: blocks(message.content).map(block => ({ type: "input_text", text: String(block.text ?? "") })) });
+        input.push({ role: message.role, content: blocks(message.content).map(block => ({ type: "input_text", text: String(block.text ?? "") })) });
         index++; continue;
       }
       // All tool results must precede the media user message, even when the SDK splits results across messages.
@@ -49,10 +51,14 @@ export class MetaMessages {
         }
       }
       input.push(...outputs);
-      if (content.length) input.push({ type: "message", role: "user", content });
-      if (audio.length) input.push({ type: "message", role: "user", content: audio });
+      if (content.length) input.push({ role: "user", content });
+      if (audio.length) input.push({ role: "user", content: audio });
     }
-    const request: Block = { model: body.model, input, store: false, include: ["reasoning.encrypted_content"] };
+    // In the exact audio replay, opaque pre-listening reasoning produced a wrong A/B
+    // comparison. Rebuild audio turns from the visible conversation and original waveforms.
+    const hasAudio = input.some(item => item.content?.some((part: Block) => part.type === "input_audio"));
+    const request: Block = { model: body.model, input: hasAudio ? input.filter(item => item.type !== "reasoning") : input,
+      store: false, include: ["reasoning.encrypted_content"] };
     if (body.max_tokens !== undefined) request.max_output_tokens = body.max_tokens;
     if (body.output_config?.effort) request.reasoning = { effort: body.output_config.effort };
     if (body.output_config?.format) request.text = { format: body.output_config.format };
