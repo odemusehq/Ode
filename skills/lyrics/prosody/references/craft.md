@@ -1,104 +1,63 @@
-# Prosody
+# Prosody: words, music and intention
 
-Use `lyricist`, the model selected in Settings, for all lyric writing, rewriting, analysis and word-to-note alignment described here. Give it the current text, actual melody notes, relevant artist memory and the musician's directions. The main agent reads and saves the chosen result; it does not supply its own wording or run local language rules. These craft ideas are optional guidance for Lyricist, and the artist's intentional choices take priority.
+Ask `lyricist` to interpret the actual words and notes. Forward this file with `references: [{skill: "lyrics/prosody", file: "references/craft.md"}]` when the task needs this detail. The model proposes; ordinary guarded text/MIDI tools apply the chosen edit. There is no local prosody engine.
 
-Prosody is the fit between what is said and how it is set. When it works, the words sound as if they could only be sung that way. When it fails, listeners hear words wrongly stressed ("TO-mor-row"), feel the music pulling against the words, or sense that something is off without knowing why. Speech alignment is useful when natural delivery is wanted. Displaced stresses, awkwardness and tension can be intentional; a check finding alone is not a reason to correct them.
+## Review the setting that exists
 
-## Stressed syllables on strong beats
+Begin with what the passage means, who says it and what the listener should feel. Read the current lyric revision, exact note starts/durations/pitches, phrase origin, tempo, meter, harmony and the artist's delivery directions. Identify protected words, notes and linked phrases before proposing changes.
 
-Every word of two or more syllables has a fixed stress (to-MOR-row, a-FRAID, BEAU-ti-ful), and every line has a natural speech rhythm. The music has its own pattern of strong and weak positions. Prosody starts with lining the two up.
+Have Lyricist return a compact, explicit plan for the affected phrase:
 
-**Where the weight is:**
-- In 4/4, beat 1 is strongest, then beat 3, then beats 2 and 4 (although the snare's backbeat accents them in pop, rock and hip-hop), then the "and" between beats, then the sixteenths.
-- In 3/4, beat 1 is strong and beats 2 and 3 are weak. In 6/8 there are two main beats, 1 and 4, each divided into three.
-- A note also gains weight from being longer than its neighbours or from being a melodic high point.
+- word and sung syllable, including the chosen pronunciation;
+- corresponding note or note run at the actual beat coordinates, with rests/breaths;
+- normal lexical stress and intended semantic emphasis;
+- the weight created by the groove, onset, duration, register, contour and articulation;
+- any unintended mismatch, the proposed correction and what it preserves.
 
-**A useful comparison:** when natural speech stress is the aim, compare neighbouring syllables by beat position, length and pitch. Lyricist's prosody review approximates that relationship; delivery, accompaniment and intentional displacement may make a flagged setting work.
+Do not accept matching syllable/note counts as a completed review. Check every affected word in context, then the entry from the previous phrase and the exit to the next. Save the chosen mapping with the existing phrase/lead-sheet notes; do not invent a separate analysis document or product panel.
 
-**Syncopation is fine.** A stressed syllable that arrives just before the beat and is held through it (an anticipation) is heard as strong; it is everywhere in pop and R&B. What matters is that the stressed syllable stands out; its exact place on the grid matters less.
+## Natural stress and musical weight
 
-### Worked example
+For an intelligible sung line, preserve the recognisable stress of the intended pronunciation and give the intended meaning audible emphasis. A function word acquiring the longest or highest note accidentally is a reason to revise. If the artist explicitly wants a displaced stress or emphasis on that word, develop that intention instead.
 
-The line *Forget the way we said goodbye* is stressed on -GET, WAY, SAID and -BYE. In the musician's draft every syllable sits an eighth note late against those stresses:
+Lexical stress concerns the shape of a word; semantic stress concerns what this speaker means. In "I didn't say YOU did it", emphasising YOU changes the accusation. A pronunciation can also depend on dialect, grammatical role or the singer's chosen reading. Ask Lyricist to distinguish these rather than treating one dictionary-like stress pattern as universal.
 
-| | "and" before 1 | 1 | & | 2 | & | 3 | & | 4 | & |
-|---|---|---|---|---|---|---|---|---|---|
-| Draft | | for | GET | the | WAY | we | SAID | good | BYE (held) |
-| Fixed | for | GET | the | WAY | we | SAID | good | BYE (held) | |
+Musical strength is not a beat-number ranking. In 4/4 the downbeat matters, but the backbeat, accompaniment, anticipations, held notes, leaps, register and phrase position can move the perceived accent. A syllable on an offbeat can be emphatic when it leads into or sustains across a stronger event. Do not move every offbeat stress onto the grid.
 
-In the draft, every stressed syllable falls on a weak "and" and every unstressed one on a beat, so it sounds like "FOR-get THE way…"; Lyricist's prosody review flags "forget". Starting "for" as a pickup on the "and" of 4 moves every stress onto a beat without changing a word or a pitch. The notes move in place in the same clip, Lyricist's prosody review comes back clean, and the result line reads: "Verse 2, line 1: 'for' now comes in on the 'and' of 4, so 'forget' lands on GET (beat 1) · stresses fit, same pitches."
+Choose the smallest useful correction among onset, duration, rest, articulation, pitch, accompaniment or wording, within the authorised scope. A words-only task preserves the melody; a melody-only task preserves the words. Reassess the complete phrase after the change.
 
-**Ways to fix a stress that lands weak,** smallest first:
-1. Add or remove a pickup so the line shifts against the beat.
-2. Move the note: shift the stressed syllable onto a stronger position, or lengthen it.
-3. Change the words: a word with its stress in the right place, or a different order.
-4. Change the pitch: make the stressed syllable the higher note.
+## Meaning and contour
 
-## Natural speech rhythm
+Review direction, register and movement words against the musical gesture: low/high, falling/rising, holding/leaving, certainty/doubt. Ask whether the setting supports the intended sense or creates an unintended contradiction. This is a check on meaning, not a keyword-to-pitch algorithm.
 
-- Say the line aloud at a natural speed. Its rhythm (which syllables are long, which are quick, where the pauses fall) is the best first draft of its musical rhythm.
-- Long, stressed syllables want longer notes; unstressed syllables want short ones. Function words (a, the, of, to, and) on long notes or melodic peaks sound oddly important.
-- Conversational styles follow speech closely; anthemic styles stretch words over long notes. Either can also displace stress deliberately.
-- Breathing is part of the rhythm. A long phrase needs a natural place to breathe, usually where a comma would go.
+When the musician requests a descending gesture on "low", the note carrying that word must fall from the specified preceding note; verify the actual MIDI after writing. Do not explain away the requested gesture as artistic freedom. Without that request, decide from the phrase's intended meaning: literal word painting, indirect emotional support and intentional contrast are all possible. Name the reason for a contrasting setting when proposing it rather than inventing an intention after a mismatch is noticed.
 
-## Note length and vowels
+Emphasis does not require the highest pitch. A low word can carry weight through a longer note, exposed placement or harmonic arrival. The title or emotional pivot should be perceptible, but need not receive every peak. A rise can reach, question or resist; a fall can settle or collapse. Harmony, groove and surrounding phrases decide the effect, not those associations alone.
 
-Only vowels can be sustained, so a long note is a held vowel. Choose words whose vowel suits the note:
+## Sung time and articulation
 
-- **Long and high notes:** open vowels such as "ah" (far), "aw" (saw), "oh" (go), "ay" (day) and "eye" (night) bloom. "Oo" (you) is fine in the middle of the range; "ee" (free) and "oo" get harder very high, and singers often have to modify them.
-- **Short notes:** short vowels such as "ih" (sit), "eh" (bed), "uh" (cup) and the "oo" in "book" are naturally short and sound best on quick notes.
-- **Diphthongs:** on a held "ay" or "eye", the singer sustains the first part and closes at the end ("night" is held as "naaah-eet"), so the first part has to suit the note.
-- **Endings:** words ending in t, k, p, d, g or b stop the sound dead, which suits punchy short notes and cuts a long one short. Words ending in m, n, ng, l, v or z can be sung through.
-- **"R" after a vowel:** in US English the singer usually holds the vowel and adds the "r" at the end of the note; in UK English the "r" is silent. Either way, hold the vowel and keep the "r" short.
+Use tempo and exact durations to assess the available sung time. Singing can sustain a vowel, delay a consonant, elide a weak syllable or spread one syllable over several notes. Conversely a dense cluster may need more articulation time even when the count matches. There is no universal syllable duration or one-note-per-syllable requirement.
 
-## Singability
+Review consonant transitions, intelligibility, sustainable vowels/diphthongs, breaths, range and tessitura for the actual singer and delivery. Do not ban a vowel from a high/long note or assume a final consonant must cut it short: singers can hold the preceding vowel and release later. Accent and vocal technique matter. If range, pronunciation or performance is unknown, identify that specific uncertainty and use a provisional guide.
 
-- **Consonant clusters** ("strengths", "sixths", "texts", "asked") are hard to say on fast notes. Keep fast passages to light words with simple consonants.
-- **Sibilants** ("s", "sh") hiss on held notes; put them at the ends of phrases or on short notes.
-- **Word boundaries blur when sung.** "A nice man" can be heard as "an ice man". Hear the line in your head at tempo and listen for a different phrase appearing (a mondegreen), above all in the title line.
-- **Breath:** plan practicable breath points for this singer, including breaks within a long phrase or an intentionally layered performance.
-- **Range:** keep important words out of the extremes of the singer's range unless the strain is the point (an emotional climax). The melody skill covers range itself.
-
-`references/singability.md` has more on vowels and consonants, with words that work well and badly on held notes.
+A MIDI instrument audition verifies the guide's played timing and contour. It cannot establish that the singer pronounces the line naturally. Listen to the singer's actual recording when available; do not call an unheard performance verified.
 
 ## Structural prosody
 
-Section shape can influence feeling. The associations below are possibilities to try in context, not reliable equations between form and emotion.
+Pat Pattison's *Writing Better Lyrics*, second edition, chapters 14-21, examines how five interacting choices support meaning: number of lines, their lengths, their rhythms, rhyme placement and rhyme type. In this structural analysis, compare lengths by **stressed events and perceived musical phrases**, not raw syllable totals or printed line breaks. Common meter is one useful longer/shorter stress pattern, not a target for every song.
 
-- **Line count:** an even number of lines (2, 4) feels settled; an odd number (3, 5) feels unsettled and leans forward.
-- **Line lengths:** matched lengths feel balanced; a short line after long ones lands like a punch; lines that get shorter build urgency; lines that get longer can feel like spilling over.
-- **Rhyme closure:** a perfect rhyme at the end of a section feels resolved; a near rhyme or an unrhymed line leaves it open; withholding a rhyme the listener expects creates tension (the rhymes skill covers schemes).
-- **Phrase starts and ends:** a phrase starting on the downbeat feels grounded and declarative; starting with a pickup feels conversational and forward-moving; starting after the beat feels laid-back. Phrases that end early leave space; phrases that run over the bar line feel urgent.
+Establish what the listener is led to expect, then decide where to confirm, delay or redirect it. Matched lengths and close rhyme can create local stops; lengthening/shortening a final phrase, delaying a rhyme or adding a meaningful line can spotlight a thought or sustain motion. Repeated couplets may need a larger phrase arc so every two lines do not stop identically.
 
-**Matching sections to feelings:**
-- **Verse:** settled enough to tell the story; slightly unsettled if it hands over to a pre-chorus.
-- **Pre-chorus:** unsettled and building: shorter lines, odd counts, open rhymes.
-- **Chorus:** usually settled and resolved, because it is the arrival. A song about doubt or something unfinished can keep the chorus open on purpose.
-- **Bridge:** different from both: new line lengths, a new scheme, a different phrase rhythm.
+Even/odd line count alone cannot tell you whether a section closes. Six lines can stop in local pairs yet leave a larger unit open; a five-line section can close through its rhyme, rhythm and final arrival. Consider the existing grouping and the music, including the transition into the next section.
 
-**Example (original), a pre-chorus before a nervous night out:**
+Contrast verse, chorus or bridge where their functions differ, using the dimensions that help: thought, phrase length, rhythm, density, rhyme, register or arrangement. A doubtful chorus can stay unresolved; a pre-chorus need not rise or have an odd line count. Structural momentum can increase at the same tempo.
 
-> *I've changed my shirt three times tonight* (8)
-> *The taxi's at the door* (6)
-> *My hands won't stop* (4)
+## Working sequence
 
-The lines shrink from 8 to 6 to 4 syllables and all three stay unrhymed, so the section tightens and stays open, pushing into the chorus the way nerves do. The structure says "nervous" before the words do.
+1. Clarify intended meaning and current artistic directions; inspect the actual phrase.
+2. Ask Lyricist for the word-to-note plan and concrete mismatches, using only the references needed.
+3. Propose a setting that supports that meaning and respects protected material.
+4. Apply the chosen notes/words, read them back, and listen to the affected span in context.
+5. Revisit the neighbouring phrase, repeated setting and chorus meaning where the edit changes them.
 
-## Melody shape and meaning
-
-- **Rising lines** suit hope, questions, reaching and building intensity; **falling lines** suit resolution, statements, letting go. "I'm not coming back" falling to a low final note sounds like a decision; rising, it sounds like a question or a threat.
-- **Leaps** suit outbursts and surprise; **steps and repeated notes** suit intimacy and conversation.
-- **Give the highest note to the most important word,** often the title or the emotional turn. In *I never wanted you to leave*, the peak belongs on "never" or "leave", with "you to" kept lower.
-- **Register:** low sounds intimate and private; high sounds public, urgent or strained.
-- **Word painting** (rising on "rise") is lovely in small doses; done literally and often, it sounds naive.
-- **Harmony** colours meaning too, case by case: a minor key can sound tender or defiant as well as sad, and bright music under bittersweet words is an established, powerful contrast.
-
-## Working order
-
-Start with the material the musician wants to develop. These are examples, not a required sequence; words, rhythm, harmony and melody can be revised together.
-
-- **Lyric first:** mark the stresses and the most important word in each line, decide which words should be peaks and which should be held, then write or adjust the notes to fit.
-- **Melody first:** map the strong beats, the long notes and the high notes, then choose words whose stresses land on the strong positions and whose vowels suit the long and high notes.
-- **Fixing a mismatch:** see what is locked, then make the smallest change: a pickup or a note shift first, a word swap next, a rewrite last.
-
-Related skills: syllables (counts and stress), rhymes (closure), lyrics, melody.
+The structural guidance above is paraphrased from Pattison; the exact MIDI review and semantic-contour checks are Ode's application of intention-led prosody, not a claim that the book mandates literal pitch painting for every word.

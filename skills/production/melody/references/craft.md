@@ -5,7 +5,7 @@ Memorability, comfortable singing, harmonic agreement and a clear contour can he
 ## Conventions
 
 - Note names are scientific pitch: middle C is C4, MIDI 60. Live's piano roll shows MIDI 60 as C3, so its octave numbers are one lower. In a result line, use Live's names or skip octave numbers ("up a fourth", "peak on 'gold'").
-- Lengths are beats of 4/4: 1 = quarter, ½ = eighth, ¼ = sixteenth, 1½ = dotted quarter, 2 = half, 4 = whole. `r` is a rest and `|` a barline: `r(½) G4(½) A4(1)` is an eighth rest, an eighth-note G4, a quarter-note A4.
+- Tool coordinates use quarter-note beats regardless of meter: 1 = quarter, ½ = eighth, ¼ = sixteenth, 1½ = dotted quarter, 2 = half, 4 = whole. `r` is a rest and `|` a barline: `r(½) G4(½) A4(1)` is an eighth rest, an eighth-note G4, a quarter-note A4.
 - Scale degrees are numbers (1 = tonic, 5 = dominant, ♭3 = lowered third). Chords are symbols (Am7, F/A, G7sus4).
 
 A hummed idea becomes MIDI only through an exposed native conversion, Max device or installed plug-in. Preserve its actual converted timing and pitches unless the musician requests a change. Ode has no local pitch detector, and an LLM's audio description or speech transcript must not be treated as exact note extraction. Keep the original recording for vibrato and expression that ordinary MIDI notes do not preserve.
@@ -111,19 +111,16 @@ Common tonal song tendencies, not required roles or a writing order.
 
 **Notes for existing words** (the prosody skill covers this in depth):
 
-1. Mark each line's stressed syllables.
-2. For speech-like delivery, let spoken stress suggest accented notes, whether on or off the beat. Deliberate stress displacement or emphasis on a small word can serve another delivery.
-3. Give the important words — the title, the image, the turn — length, height or the downbeat.
-4. Consider vowel and consonant demands on held, high or fast notes; open vowels may help, while chosen narrow vowels or clusters may need a delivery adjustment.
-5. Default to one syllable per note; save melisma for a few key words.
-6. Match phrase length to the line, and leave a breath between lines.
+1. Give Lyricist the exact words, notes, phrase origin, tempo, meter, harmony and protected material. Forward `lyrics/prosody`'s `references/craft.md` for a detailed review.
+2. Establish the intended pronunciation, lexical stress and what the speaker means. Map words/syllables to actual note onsets, runs, durations and breath gaps.
+3. Compare perceived musical emphasis with those stresses. Account for groove, anticipations and sustained notes; an offbeat syllable need not be weak.
+4. Review meaningful contour. If the artist requests a descent on "low", realise and verify that descent. An important low word can gain emphasis through length or placement rather than pitch height.
+5. Choose the sung phrasing: syllabic delivery, melisma, elision, pickups and repeated attacks are available. Equal counts are neither required nor proof of a good fit.
+6. Rehearse the phrase at its actual tempo, inspect consonant transitions and breaths, then read back and audition the MIDI. A piano guide cannot verify sung pronunciation.
 
-Example line: "the kettle's still warm on the stove", stresses on KET, WARM and STOVE.
+For an original illustrative phrase, "hold me low", a sustained final note below "me" can make "low" both prominent and descending. A highest-note-only rule would miss that option. Decide the exact pitches from the harmony and the intended delivery, not the isolated word.
 
-- Good: `the(½) | KET(½) tle's(½) still(1) WARM(1) on(½) the(½) | STOVE(2)` — "the" is a pickup, and KET, WARM and STOVE land on beat 1, beat 3 and the next beat 1.
-- Poor: `| the(1) KET(1) tle's(1) still(1) | WARM ...` — "the" takes beat 1 and "tle's" takes beat 3, so the line is heard as "the KET-TLE'S".
-
-Some words have more than one sung syllable count (*fire*, *every*). Let the melody choose, and use the same reading Lyricist's syllable assessment used.
+Some words have more than one sung syllable count (*fire*, *every*). Use the artist's intended reading and retain uncertainty when it is not established.
 
 **Melody first, words later.** Keep the rhythm simple and repeatable so several verses can fit it. The note count and the strong notes of each phrase (long, high, or on strong beats) are the lyric's brief: write them into the lead sheet's notes for that section so the lyrics skill can fit lines to them.
 
