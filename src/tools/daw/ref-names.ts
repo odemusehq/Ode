@@ -140,10 +140,17 @@ export class RefNames {
   }
 
   /** "Lyrics · lines 3–4": the lines a save changes, when the snapshot holds the revision it was edited from. */
-  lyrics(text: string, baseRevision: number): string {
+  lyrics(text: string, baseRevision: number, startLine?: number, endLine?: number): string {
     const sheet = this.set?.sheet;
-    const after = LyricsText.normalize(text);
-    if (!sheet || sheet.lyricsRevision !== baseRevision || sheet.lyrics === after) return "Lyrics";
+    if (!sheet || sheet.lyricsRevision !== baseRevision) return "Lyrics";
+    let after = LyricsText.normalize(text);
+    if (startLine !== undefined) {
+      const lines = LyricsText.lines(sheet.lyrics);
+      const end = endLine ?? startLine;
+      if (startLine > lines.length + 1 || end > lines.length || end < startLine - 1) return "Lyrics";
+      after = [...lines.slice(0, startLine - 1), ...(text === "" ? [] : LyricsText.lines(text)), ...lines.slice(end)].join("\n");
+    } else if (endLine !== undefined) return "Lyrics";
+    if (sheet.lyrics === after) return "Lyrics";
     return LyricsWording.label(sheet.lyrics, after);
   }
 

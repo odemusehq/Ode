@@ -49,7 +49,7 @@ export const lyricTextTools: AnyTool[] = [
       startLine: z.number().int().positive().optional(),
       endLine: z.number().int().min(0).optional(),
     },
-    describe: ({ text, baseRevision }, names) => names.lyrics(text, baseRevision),
+    describe: ({ text, baseRevision, startLine, endLine }, names) => names.lyrics(text, baseRevision, startLine, endLine),
     run: async (input, ctx) => {
       const { text, baseRevision } = input.startLine === undefined ? resolveLyricsEdit(input, { text: "", revision: input.baseRevision })
         : resolveLyricsEdit(input, await ctx.lyrics.read());
