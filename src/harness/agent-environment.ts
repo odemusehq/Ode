@@ -42,6 +42,9 @@ export class AgentEnvironment {
       CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1",
       CLAUDE_AGENT_SDK_DISABLE_BUILTIN_AGENTS: "1",
       CLAUDE_AGENT_SDK_CLIENT_APP: "ode",
+      // Meta's tested gateway did not resolve Anthropic tool_reference blocks for Spark.
+      // Start gateways in documented non-deferred mode until their model's discovery is verified.
+      ENABLE_TOOL_SEARCH: "false",
     });
     if (this.role.conversationHeader) {
       if (!/^[A-Za-z0-9-]+$/.test(this.role.conversationHeader) || /[\r\n]/.test(conversation)) throw new Error("Invalid conversation routing header.");

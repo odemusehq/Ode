@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { test } from "node:test";
 import { OperationRegistry } from "../live/extension/ops/registry";
 import { OdeSession } from "../harness/session";
-import { AgentLoop, LoopEnd, RequestBudget } from "../harness/loop";
+import { AgentLoop, LoopEnd } from "../harness/loop";
 import { ConversationStore } from "../mneme/conversations";
 import { SettingsStore } from "../mneme/settings-store";
 import { ProviderCatalog } from "../services/provider-catalog";
@@ -36,87 +36,45 @@ test("chat keeps the full transcript while only recent exchanges enter the model
   assert.equal((await new ConversationStore(folder, 2).log("song-b").all()).length, 0);
 });
 
-test("concurrent model calls reserve their turns and tokens before dispatch", () => {
-  const budget = new RequestBudget({ ...limits, turnsPerRequest: 2, tokensPerRequest: 100, tokensPerTurn: 30 });
-  const first = budget.reserve(10), second = budget.reserve(10);
-  assert.ok(first && second);
-  assert.equal(budget.reserve(0), null);
-  first.settle(20); second.settle(25);
-  assert.equal(budget.tokens, 45);
-  assert.equal(budget.reached, LoopEnd.TurnLimit);
-  const tokens = new RequestBudget({ ...limits, tokensPerRequest: 40, tokensPerTurn: 30 });
-  assert.ok(tokens.reserve(10));
-  assert.equal(tokens.reserve(1), null);
-});
-
-test("the normal production budget has room beyond sixty model calls but still bounds tokens", () => {
-  const budget = new RequestBudget(limits);
-  for (let index = 0; index < 61; index++) {
-    const admitted = budget.reserve(100);
-    assert.ok(admitted);
-    admitted.settle(100);
-  }
-  assert.equal(budget.reached, null);
-  const bounded = new RequestBudget({ ...limits, tokensPerRequest: 100 });
-  assert.ok(bounded.reserve(1));
-  assert.equal(bounded.reserve(1), null);
-});
-
-test("temporary MIDI material belongs to the parent request and expires immediately on Stop", async () => {
-  let active = false, opened = 0, closed = 0;
-  let wait: Promise<void> | undefined, enter: () => void = () => undefined;
-  const loop = new AgentLoop({
-    services: { chat: async () => ({ complete: async () => {
-      enter(); await wait;
-      return { message: { content: "Done" }, tokens: 1, finishReason: "stop" };
-    } }) },
-    registry: { alwaysLoaded: () => [], functions: () => [], beginMidiMaterials: () => {
-      opened++; active = true;
-      return () => { if (active) { active = false; closed++; } };
-    } }, labels: {}, limits, skills: {}, subagentPrompt: async () => "",
-  } as never);
+test("temporary MIDI material expires immediately on Stop while SDK setup is pending", async () => {
+  let release!: () => void;
+  const held = new Promise<void>(resolve => { release = resolve; });
   const controller = new AbortController();
-  const start = { agent: "main" as const, system: "", history: [], prompt: "draft", conversation: "fixture", depth: 0,
-    exchangeId: "request", signal: controller.signal, gate: { check: async () => null },
-    events: { thought() {}, toolStarted() {}, toolFinished() {}, subagentStarted() {}, subagentFinished() {} } };
-  await loop.run(start);
-  assert.equal(opened, 1); assert.equal(closed, 1); assert.equal(active, false);
-  await loop.run({ ...start, agent: "subagent", depth: 1 });
-  assert.equal(opened, 1, "A child must not reset or close its parent's shared material.");
-  let finish!: () => void;
-  wait = new Promise<void>((resolve) => { finish = resolve; });
-  const entered = new Promise<void>((resolve) => { enter = resolve; });
-  const pending = loop.run(start);
-  await entered;
-  assert.equal(active, true);
-  controller.abort();
-  assert.equal(active, false, "Stop expires material while the provider's pending response is still unresolved.");
-  finish();
-  assert.equal((await pending).end, LoopEnd.Cancelled);
-  assert.equal(closed, 2);
-});
-
-test("Stop during an awaited gate prevents the edit, and questions accept ordinary text", async () => {
-  const controller = new AbortController();
-  let dispatched = 0;
-  const tool = { name: "edit", changes: "set" };
+  let active = false;
   const loop = new AgentLoop({
-    services: { chat: async () => ({ complete: async () => ({ message: { content: "", tool_calls: [
-      { id: "one", type: "function", function: { name: "edit", arguments: "{}" } },
-    ] }, tokens: 1, finishReason: "stop" }) }) },
-    registry: { alwaysLoaded: () => [], functions: () => [], find: () => tool, available: () => [tool], run: async () => { dispatched++; return { ok: true, text: "done" }; } },
-    labels: { for: () => "edit" }, limits, skills: {}, subagentPrompt: async () => "",
+    roles: { roles: async () => { await held; return { main: {} }; } },
+    registry: { beginMidiMaterials: () => { active = true; return () => { active = false; }; } },
   } as never);
-  const result = await loop.run({ agent: "main", system: "", history: [], prompt: "edit", conversation: "fixture", depth: 0,
-    signal: controller.signal, gate: { check: async () => { await Promise.resolve(); controller.abort(); return null; } },
+  const pending = loop.run({ system: "", history: [], prompt: "edit", conversation: "fixture", exchangeId: "request",
+    signal: controller.signal, gate: { check: async () => null },
     events: { thought() {}, toolStarted() {}, toolFinished() {}, subagentStarted() {}, subagentFinished() {} },
   });
-  assert.equal(dispatched, 0);
-  assert.equal(result.end, LoopEnd.Cancelled);
+  assert.equal(active, true);
+  controller.abort();
+  assert.equal(active, false);
+  release();
+  assert.equal((await pending).end, LoopEnd.Cancelled);
+});
+
+test("questions accept ordinary conversational answers", async () => {
   const questions = new Questions(() => undefined);
   const pending = questions.ask("Which part?", ["Verse", "Chorus"]);
   assert.equal(questions.reply("The second half of verse two"), true);
   assert.equal(await pending, "The second half of verse two");
+});
+
+test("unsupported SDK audio is refused before contacting a model and still closes the request scope", async () => {
+  let contacted = 0, closed = 0;
+  const loop = new AgentLoop({ roles: { roles: async () => { contacted++; throw new Error("Must not contact a provider"); } },
+    registry: { beginMidiMaterials: () => () => { closed++; } },
+  } as never);
+  await assert.rejects(loop.run({ system: "", history: [], prompt: "Listen", conversation: "fixture", exchangeId: "request",
+    content: [{ type: "audio", data: new Uint8Array([1, 2]), format: "wav", durationSeconds: 1 }],
+    signal: new AbortController().signal, gate: { check: async () => null },
+    events: { thought() {}, toolStarted() {}, toolFinished() {}, subagentStarted() {}, subagentFinished() {} },
+  }), /has not been heard/);
+  assert.equal(contacted, 0);
+  assert.equal(closed, 1);
 });
 
 test("saved keys survive recreating Settings and never enter the frontend response", async () => {

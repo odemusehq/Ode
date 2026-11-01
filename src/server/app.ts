@@ -151,7 +151,8 @@ export class OdeApp {
     const agents = new OdeAgents(texts, skills);
     const labels = new ToolLabels(registry);
     const loop = new AgentLoop({
-      services: this.services,
+      roles: this.models,
+      userDir: config.userDir,
       observations: this.observations,
       registry,
       skills,

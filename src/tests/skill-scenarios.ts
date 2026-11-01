@@ -163,7 +163,7 @@ class ScenarioRun {
     const skills = new SkillLibrary(texts);
     const agents = new OdeAgents(texts, skills);
     const labels = new ToolLabels(registry);
-    const loop = new AgentLoop({ services, registry, skills, labels, limits: config.limits, subagentPrompt: () => agents.subagentPrompt() });
+    const loop = new AgentLoop({ roles: this.roles, userDir: config.userDir, registry, skills, labels, limits: config.limits, subagentPrompt: () => agents.subagentPrompt() });
     const deletions = new DeletionChecker(reader);
     const session = new OdeSession(
       { loop, agents, labels, approvals, questions, prefs, requests, deletions, snapshots: reader, emit },

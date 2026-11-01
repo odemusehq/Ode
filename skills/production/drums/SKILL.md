@@ -7,7 +7,7 @@ description: Program or edit drums on an actual kit.
 
 Read the actual rack chains and receivingNote mapping before writing notes. Drum Rack mappings are arbitrary, not guaranteed GM. Prefer a suitable loaded or licensed acoustic kit when that is the brief; synthetic drums remain an artistic choice. Use explicit model-decided note timing, duration and velocity through SDK writers, not a local groove or humanisation engine.
 
-Discover the named tools with `tool_search` using `names` and the appropriate group before calling them. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
+Use the tool schemas exposed by the SDK; discover missing schemas with `ToolSearch` when available. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
 
 - `references/craft.md`: optional detailed techniques and examples.
 

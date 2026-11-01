@@ -11,6 +11,6 @@ For a whole song, develop the hook and a representative verse-to-chorus passage 
 
 Read `references/craft.md` when building the full arrangement or diagnosing a flat one. Use `production/song-form` and its relevant genre child when section order or duration needs work, and return to `production/sound-design` when the source itself limits the result. Build changes with supported native clips, notes, samples and parameters; for an unexposed automation/editor operation, give the musician its exact intended native step.
 
-Discover the named tools with `tool_search` using `names` and the appropriate group before calling them. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
+Use the tool schemas exposed by the SDK; discover missing schemas with `ToolSearch` when available. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
 
 - `references/craft.md`: optional detailed techniques and examples.

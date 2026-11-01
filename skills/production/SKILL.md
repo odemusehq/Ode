@@ -5,7 +5,7 @@ description: Operate on the real Live Set: instruments, MIDI, arrangement, sound
 
 # Production
 
-Start from the musician's request, fresh DAW state and applicable artist memory. Load only the child needed now. Its entry point names relevant tools and optional craft references. Find exact schemas with `tool_search` using `names` or a concise query and group `daw_read` or `daw_write`.
+Start from the musician's request, fresh DAW state and applicable artist memory. Load only the child needed now. Its entry point names relevant tools and optional craft references. Use the SDK's exposed tool schemas. When `ToolSearch` is available, discover only the missing schemas needed for this step.
 
 The Extension SDK reads and writes supported Set objects: tracks, MIDI/audio clips, devices, racks and parameters. Max adds processed-audio capture, displayed parameter units, loaded-plugin programs/editors, routing, native meters, transport and additional clip/sample controls. Neither API exposes every Live menu command or the installed-plugin/Browser inventory. A configured model decides the music; native devices and plug-ins produce/process it. No local composition, pitch, linguistic or DSP engine exists.
 

@@ -5,7 +5,7 @@ description: Use when setting up native devices, loaded plugins, samples, routin
 
 # Native Live workflow
 
-Read the actual Set before choosing an operation. Discover only the tool schemas needed for this step with `tool_search`; named tools below are adapters to SDK/Max operations, not independent music engines. Native reads return request-scoped tokens; read again between writes and after any stale-state refusal. Inspect actual readback and listen to relevant processed audio.
+Read the actual Set before choosing an operation. Use only the tool schemas needed for this step; named tools below are adapters to SDK/Max operations, not independent music engines. Native reads return request-scoped tokens; read again between writes and after any stale-state refusal. Inspect actual readback and listen to relevant processed audio.
 
 ## Instruments and presets
 

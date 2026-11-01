@@ -20,6 +20,9 @@ export class AgentTools {
 
   server() { return createSdkMcpServer({ name: "ode", tools: this.definitions() }); }
 
+  /** Do not finish a request while an already-issued native operation is still settling. */
+  async drain(): Promise<void> { await Promise.allSettled([this.writing, ...this.reading]); }
+
   definitions(): SdkMcpToolDefinition<any>[] {
     const registered: SdkMcpToolDefinition<any>[] = this.deps.registry.available("main").map(definition => tool(
       definition.name, midiDescription(definition.name, definition.description), midiInputSchema(definition.name, definition.input).shape,
@@ -79,9 +82,13 @@ export class AgentTools {
           if (definition.changes === "memory") this.run.onMutation?.();
         }
         // An audio MCP block becomes a path inside the stock SDK. It is never listening evidence.
-        const audioUnavailable = outcome.media?.some(item => item.content.type === "audio");
-        ok = outcome.ok && !audioUnavailable;
-        const text = audioUnavailable ? t("runtime.sdkAudioUnavailable") : outcome.text;
+        const audioUnavailable = outcome.media?.some(item => item.content.type === "audio" || item.content.type === "input_audio");
+        let media: ReturnType<typeof AgentTools.media> = [];
+        let mediaError = audioUnavailable ? t("runtime.sdkAudioUnavailable") : "";
+        if (!mediaError) try { media = (outcome.media ?? []).flatMap(item => AgentTools.media(item)); }
+        catch (error) { mediaError = error instanceof Error ? error.message : String(error); }
+        ok = outcome.ok && !mediaError;
+        const text = mediaError || outcome.text;
         let citation = "";
         if (this.run.exchangeId && this.deps.observations) {
           try {
@@ -93,7 +100,7 @@ export class AgentTools {
         }
         return { isError: !ok, content: [
           { type: "text" as const, text: this.capped(text) + citation },
-          ...(audioUnavailable ? [] : (outcome.media ?? []).flatMap(item => AgentTools.media(item))),
+          ...media,
         ] };
       } finally { this.run.events.toolFinished(callId, ok); }
     };
@@ -118,7 +125,7 @@ export class AgentTools {
     if (item.content.type === "image_url") {
       const match = /^data:(image\/(?:png|jpeg|gif|webp));base64,([A-Za-z0-9+/=]+)$/.exec(item.content.image_url.url);
       if (!match) throw new Error("The reference image must contain its actual bytes.");
-      return [{ type: "text" as const, text: item.description }, { type: "image" as const, mimeType: match[1]!, data: match[2]! }];
+      return [{ type: "text" as const, text: item.description }, { type: "image" as const, mimeType: match[1]! as "image/png" | "image/jpeg" | "image/gif" | "image/webp", data: match[2]! }];
     }
     throw new Error(t("runtime.sdkAudioUnavailable"));
   }

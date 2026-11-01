@@ -20,14 +20,11 @@ export interface RoleConfig {
 }
 
 export interface AgentLimits {
-  /** How deep subagents can start their own subagents. */
-  subagentDepth: number;
-  subagentsAtOnce: number;
   /** Subagents one request may start in all, at every depth. */
   subagentsPerRequest: number;
-  /** Emergency backstop for a production request, including compaction and subagents. */
+  /** SDK turn limit for the main agent and each read-only subagent. */
   turnsPerRequest: number;
-  /** Tokens, sent and received, one request may use before Ode stops it, subagents' tokens included. */
+  /** Observed tokens across the request; checked between SDK stream events, not a provider billing cap. */
   tokensPerRequest: number;
   /** The longest answer a single model call may give, in tokens. */
   tokensPerTurn: number;
@@ -35,8 +32,6 @@ export interface AgentLimits {
   compactAtTokens: number;
   /** Earlier requests and Ode's replies carried into each new request of the same song. */
   historyExchanges: number;
-  /** How many tools one tool search offers. */
-  toolSearchResults: number;
   /** The longest tool result the model reads, in characters; a longer one is cut with a note to ask for less. */
   toolResultMaxChars: number;
 }

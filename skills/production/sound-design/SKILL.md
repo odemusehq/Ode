@@ -13,7 +13,7 @@ Judge source and performance together in a representative musical passage. Compa
 
 Read `production/live-controls` for loaded-plugin preset selection/editor opening and native Simpler/Drum Rack controls. A plugin's reported program list differs from Live Browser presets. When a required source is inaccessible, reveal the target device where useful, explain exactly what the musician should load and why, then inspect the resulting native device and audition it.
 
-Discover the named tools with `tool_search` using `names` and the appropriate group before calling them. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
+Use the tool schemas exposed by the SDK; discover missing schemas with `ToolSearch` when available. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
 
 - `references/craft.md`: optional detailed techniques and examples.
 

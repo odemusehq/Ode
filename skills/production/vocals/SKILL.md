@@ -9,7 +9,7 @@ Distinguish a sung recording from a MIDI guide. Edit supplied audio through expo
 
 Read `production/live-controls` to prepare the real input/track, guide the singer while they operate Live's Record controls. Ode cannot record or manufacture a sung performance. Work with their actual performance. Native clip pitch/markers and explicit warp-marker edits are available; complete comping, phrase fades and detailed automation can require a musician-performed native step. Reveal the clip/device, explain that specific action and inspect the result afterwards.
 
-Discover the named tools with `tool_search` using `names` and the appropriate group before calling them. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
+Use the tool schemas exposed by the SDK; discover missing schemas with `ToolSearch` when available. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
 
 - `references/craft.md`: optional detailed techniques and examples.
 

@@ -298,14 +298,12 @@ export class OdeSession {
       if (!controller.signal.aborted) {
         try {
           const result = await this.deps.loop.run({
-            agent: "main",
             content: request.attachments?.length ? await this.deps.references?.context(request.attachments) : undefined,
             system: await this.deps.agents.systemPrompt(),
             history: await this.history(),
             prompt: `${hiddenContext}\n\n${request.continuing ? `Continue the task with the latest correction. Earlier work may have partially changed the Set; inspect it before editing. Original task: ${request.continuing}\nLatest message: ` : ""}${request.text}`,
             request: request.continuing ? `${request.continuing}\nLatest correction: ${request.text}` : request.text,
             conversation: this.conversation.id,
-            depth: 0,
             gate: this.gate,
             events: this.events,
             signal: controller.signal,
@@ -319,7 +317,7 @@ export class OdeSession {
           cutShort = CUT_SHORT.has(result.end);
           const limit = LIMIT_MESSAGES[result.end];
           if (limit) this.deps.emit({ type: "error", message: limit });
-          status = result.end === LoopEnd.Reply ? "complete" : "stopped";
+          status = result.end === LoopEnd.Reply ? "complete" : result.end === LoopEnd.Failed ? "failed" : "stopped";
           savedReply = reply || limit || (controller.signal.aborted ? t("runtime.stoppedPendingWork") : t("runtime.incompleteAnswer"));
         } catch (error) {
           savedReply = OdeSession.errorText(error);

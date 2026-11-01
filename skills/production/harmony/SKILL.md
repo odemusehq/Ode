@@ -7,7 +7,7 @@ description: Compose or revise chords and voicings.
 
 Read the actual notes and song direction. Decide explicit harmony and voicings as the model; use the guarded SDK MIDI writer or new clip creation. Preserve intentional chromaticism, silence and tension. Retain only useful decisions in the lead sheet.
 
-Discover the named tools with `tool_search` using `names` and the appropriate group before calling them. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
+Use the tool schemas exposed by the SDK; discover missing schemas with `ToolSearch` when available. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
 
 - `references/craft.md`: optional detailed techniques and examples.
 

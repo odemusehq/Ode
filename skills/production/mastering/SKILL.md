@@ -9,6 +9,6 @@ Inspect the actual Main chain, artist intent and available processed Main route.
 
 Add the required native effects with track_insert_device on Main, preserving the artist's existing processing. Read `production/live-controls` for native meters and loaded-plugin controls. A suitable analyser may be loaded by the musician; do not claim its display is readable unless a tool actually exposes the measurement. Open its editor and request the specific reading when necessary. Listen and revise the whole song's intended tonal/dynamic arc without imposing a platform loudness target.
 
-Discover the named tools with `tool_search` using `names` and the appropriate group before calling them. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
+Use the tool schemas exposed by the SDK; discover missing schemas with `ToolSearch` when available. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
 
 - `references/craft.md`: optional detailed techniques and examples.

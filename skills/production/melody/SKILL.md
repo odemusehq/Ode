@@ -13,7 +13,7 @@ Rehearse the proposed words against the actual beat coordinates before extending
 
 For a hummed or sung sketch, read `production/live-controls`: help the musician record an isolated monophonic clip, reveal it and guide them through Live's Convert Melody to New MIDI Track. Then read the actual created MIDI and discuss any corrections. Live performs conversion; a model audio description is not an exact transcription.
 
-Discover the named tools with `tool_search` using `names` and the appropriate group before calling them. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
+Use the tool schemas exposed by the SDK; discover missing schemas with `ToolSearch` when available. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
 
 - `references/craft.md`: optional detailed techniques and examples.
 

@@ -1,14 +1,11 @@
 {
   "agent": {
-    "subagentDepth": 2,
-    "subagentsAtOnce": 6,
     "subagentsPerRequest": 12,
     "turnsPerRequest": 240,
     "tokensPerRequest": 8000000,
     "tokensPerTurn": 8000,
-    "compactAtTokens": 80000,
+    "compactAtTokens": 100000,
     "historyExchanges": 12,
-    "toolSearchResults": 8,
     "toolResultMaxChars": 60000
   },
   "memory": {

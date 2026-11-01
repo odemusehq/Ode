@@ -14,6 +14,7 @@ test("the SDK uses each provider's Messages host and only the selected credentia
     assert.equal(env.ANTHROPIC_DEFAULT_HAIKU_MODEL, "selected-model");
     assert.equal(env.CLAUDE_CODE_SUBAGENT_MODEL, "selected-model");
     assert.equal(env.CLAUDE_CONFIG_DIR, "/private/ode-agent");
+    assert.equal(env.ENABLE_TOOL_SEARCH, "false");
     assert.match(env.ANTHROPIC_CUSTOM_HEADERS!, /Modal-Routing-Affinity-Key: song-1/);
   }
 });
