@@ -10,6 +10,8 @@ export const AudioProvenanceSchema = z.enum(["user-supplied", "sdk-pre-fx-captur
 const MaxCaptureSourceSchema = z.object({ id: boundedText(512), name: boundedText(512),
   kind: z.enum(["device", "track", "group", "return", "main"]),
   stage: z.enum(["device-input", "pre-fx", "post-fx", "post-mixer"]), trackName: boundedText(512).optional() });
+const captureSection = z.object({ id: z.string().min(1).max(512), name: z.string().min(1).max(512),
+  startBeat: z.number().min(0), lengthBeats: z.number().positive() });
 /** Max routing and observed host timing retained with the captured bytes, never a claim of native export. */
 export const MaxCaptureEvidenceSchema = z.object({
   capturedAt: z.string().datetime(),
@@ -20,6 +22,9 @@ export const MaxCaptureEvidenceSchema = z.object({
     rangeUncertainty: boundedText(1000) }),
   requested: z.object({ sourceId: boundedText(512), durationSeconds: z.number().positive().max(300),
     startBeat: z.number().min(0).optional(), prerollBeats: z.number().min(0).max(64).optional(), includeSourceIds: z.array(boundedText(512)).min(1).max(64).readonly().optional() }),
+  sectionRange: z.object({ from: captureSection, to: captureSection, startBeat: z.number().min(0), endBeat: z.number().positive(),
+    observedTempoBpm: z.number().min(20).max(999), estimatedDurationSeconds: z.number().positive(),
+    durationSecondsOverride: z.number().positive().max(300).optional(), uncertainty: boundedText(1000) }).optional(),
   frames: z.number().int().positive().max(16_000_000), channels: z.literal(2),
   sampleRate: z.number().int().min(8000).max(384000), durationSeconds: z.number().positive(),
 });

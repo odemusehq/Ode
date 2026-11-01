@@ -32,6 +32,11 @@ export class RefNames {
     this.beatsPerBar = set ? SetWording.beatsPerBar(set.signature) : null;
   }
 
+  /** A current lead-sheet section's display name; its explicit ID remains the fallback. */
+  section(id: string): string {
+    return this.set?.sheet?.sections.find(section => section.id === id)?.name || id;
+  }
+
   /** "Bass", "A-Reverb", "Main track"; otherwise "track 2", "return track 1", "the track tagged x3f". */
   track(ref: TrackRef): string {
     if ("main" in ref) return MAIN_TRACK;

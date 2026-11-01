@@ -843,6 +843,7 @@
     "artistFeedback": "Artist feedback · {habit}",
     "audioFindAvailableListeningSources": "Audio · find available listening sources",
     "captureAudio": "Audio · capture {durationSeconds}s{isStartBeat, select, true { of current playback} other { from beat {startBeat}}}",
+    "captureSectionAudio": "Audio · capture {single, select, true {{fromSection}} other {{fromSection} through {toSection}}}",
     "transposeNotes": "transpose {isTransposeSemitones, select, true {+} other {}}{transposeSemitones} semitones",
     "timing": "timing ×{timeScale}",
     "shiftNotes": "shift {isTimeOffsetBeats, select, true {+} other {}}{timeOffsetBeats} beats",

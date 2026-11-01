@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -13,6 +13,63 @@ import { buildLibraryProfile } from "../audio/library-profile";
 import { encodeWav } from "../audio/wav";
 import type { ToolContext } from "../tools/define";
 import { MaxCaptureEvidenceSchema } from "../shared/audio-library";
+import { processedAudioTools } from "../tools/daw/state/processed-audio";
+import { z } from "zod";
+
+test("section captures resolve current IDs, retain estimated range evidence and preserve manual timing", async () => {
+  const root = await mkdtemp(join(tmpdir(), "ode-section-capture-"));
+  const capture = processedAudioTools.find(tool => tool.name === "processed_audio_capture")!;
+  const schema = z.object(capture.input);
+  const sections = [{ id: "chorus-1", name: "Chorus", startBeat: 16, lengthBeats: 8 },
+    { id: "break", name: "Breakdown", startBeat: 24, lengthBeats: 8 },
+    { id: "chorus-2", name: "Chorus", startBeat: 32, lengthBeats: 8 }];
+  const requests: any[] = [];
+  const names = { section: (id: string) => sections.find(section => section.id === id)?.name ?? id };
+  assert.equal(capture.describe!({ sectionRange: { fromSectionId: "break" } }, names as never), "Audio · capture Breakdown");
+  assert.equal(capture.describe!({ sectionRange: { fromSectionId: "chorus-1", toSectionId: "break" } }, names as never), "Audio · capture Chorus through Breakdown");
+  let tempoReads = 0;
+  const ctx = { config: { userDir: root, tempDir: join(root, "work") }, song: { read: async () => ({ sections }) },
+    live: { extension: { call: async (op: string) => { assert.equal(op, "song_get"); tempoReads++; return { tempo: 120 }; } } },
+    maxAudio: { capture: async (request: any) => {
+      requests.push(request);
+      const frames = Math.ceil(request.durationSeconds * 8000);
+      const bytes = encodeWav({ sampleRate: 8000, channels: [new Float32Array(frames), new Float32Array(frames)] });
+      const path = join(root, `take-${requests.length}.wav`); await writeFile(path, bytes);
+      return { path, sha256: createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length,
+        frames, channels: 2, sampleRate: 8000, durationSeconds: frames / 8000,
+        source: { id: "main", name: "Main", kind: "main", stage: "post-mixer" }, host: { trackName: "Main", deviceName: "Ode" },
+        requested: request, timing: { startedBeat: request.startBeat ?? 0,
+          endedBeat: (request.startBeat ?? 0) + request.durationSeconds * 2 + 0.02, prerollBeats: 0, rangeUncertainty: "Observed message-thread bounds" } };
+    } },
+  } as unknown as ToolContext;
+  const run = (args: object) => capture.run(schema.parse({ sourceId: "main", ...args }), ctx) as Promise<any>;
+  try {
+    const selected = await run({ sectionRange: { fromSectionId: "chorus-1", toSectionId: "chorus-2" } });
+    assert.deepEqual(requests[0], { sourceId: "main", startBeat: 16, durationSeconds: 12 });
+    assert.equal(selected.capture.sectionRange.from.name, "Chorus");
+    assert.equal(selected.capture.sectionRange.to.id, "chorus-2");
+    assert.equal(selected.capture.sectionRange.endBeat, 40);
+    assert.equal(selected.capture.sectionRange.estimatedDurationSeconds, 12);
+    assert.equal(selected.capture.sectionRange.observedTempoBpm, 120);
+    assert.equal(selected.capture.timing.endedBeat, 40.02);
+    assert.match(selected.capture.sectionRange.uncertainty, /estimate|tempo/i);
+    const override = await run({ sectionRange: { fromSectionId: "break" }, durationSeconds: 1 });
+    assert.equal(requests[1].startBeat, 24);
+    assert.equal(override.capture.sectionRange.durationSecondsOverride, 1);
+    assert.equal(override.capture.sectionRange.endBeat, 32);
+    await run({ startBeat: 4, durationSeconds: 0.1 });
+    assert.deepEqual(requests[2], { sourceId: "main", startBeat: 4, durationSeconds: 0.1 });
+    assert.equal(tempoReads, 2, "Manual seconds must not require a tempo/section read.");
+    for (const args of [
+      { sectionRange: { fromSectionId: "missing" } },
+      { sectionRange: { fromSectionId: "chorus-2", toSectionId: "chorus-1" } },
+      { sectionRange: { fromSectionId: "chorus-1" }, startBeat: 0 },
+    ]) await assert.rejects(run(args), /section|startBeat|range/i);
+    sections.push({ ...sections[0]! });
+    await assert.rejects(run({ sectionRange: { fromSectionId: "chorus-1" } }), /ambiguous|unique/i);
+    assert.equal(requests.length, 3, "Invalid ranges must refuse before native capture.");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 
 test("retained Max capture metadata preserves selected-track identities", () => {
   const source = { id: "main", name: "Main", kind: "main", stage: "post-mixer" };
