@@ -16,7 +16,7 @@ export class AgentEnvironment {
 
   /** A session cannot resume under a different model, endpoint or credential. No key is persisted here. */
   get identity(): string {
-    return createHash("sha256").update(JSON.stringify(this.role)).digest("hex");
+    return createHash("sha256").update(JSON.stringify({ role: this.role, transport: this.role.provider === "meta" ? "responses-audio-v1" : "messages-v1" })).digest("hex");
   }
 
   build(conversation: string, inherited: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {

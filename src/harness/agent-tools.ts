@@ -6,6 +6,7 @@ import { midiDescription, midiInputSchema } from "../tools/midi-material-adapter
 import type { AnyTool, ToolMedia } from "../tools/define";
 import { Semaphore } from "./semaphore";
 import type { LoopDeps, LoopRun } from "./loop";
+import type { AgentMedia } from "./agent-media";
 
 export const SDK_TOOL_PREFIX = "mcp__ode__";
 
@@ -16,7 +17,7 @@ export class AgentTools {
   private readonly reading = new Set<Promise<unknown>>();
   private writing: Promise<unknown> = Promise.resolve();
 
-  constructor(private readonly deps: Pick<LoopDeps, "registry" | "skills" | "labels" | "observations" | "limits">, private readonly run: LoopRun) {}
+  constructor(private readonly deps: Pick<LoopDeps, "registry" | "skills" | "labels" | "observations" | "limits">, private readonly run: LoopRun, private readonly media?: AgentMedia) {}
 
   server() { return createSdkMcpServer({ name: "ode", tools: this.definitions() }); }
 
@@ -81,11 +82,9 @@ export class AgentTools {
           this.run.onReceipts?.(outcome.receipts);
           if (definition.changes === "memory") this.run.onMutation?.();
         }
-        // An audio MCP block becomes a path inside the stock SDK. It is never listening evidence.
-        const audioUnavailable = outcome.media?.some(item => item.content.type === "audio" || item.content.type === "input_audio");
         let media: ReturnType<typeof AgentTools.media> = [];
-        let mediaError = audioUnavailable ? t("runtime.sdkAudioUnavailable") : "";
-        if (!mediaError) try { media = (outcome.media ?? []).flatMap(item => AgentTools.media(item)); }
+        let mediaError = "";
+        try { media = (outcome.media ?? []).flatMap(item => AgentTools.media(item, this.media, callId)); }
         catch (error) { mediaError = error instanceof Error ? error.message : String(error); }
         ok = outcome.ok && !mediaError;
         const text = mediaError || outcome.text;
@@ -120,12 +119,17 @@ export class AgentTools {
     return text.length <= limit ? text : `${text.slice(0, limit)}\nResult truncated. Request a smaller range or page.`;
   }
 
-  static media(item: ToolMedia) {
+  static media(item: ToolMedia, media?: AgentMedia, owner?: string) {
     if (item.content.type === "text") return [{ type: "text" as const, text: `${item.description}\n${item.content.text}` }];
     if (item.content.type === "image_url") {
       const match = /^data:(image\/(?:png|jpeg|gif|webp));base64,([A-Za-z0-9+/=]+)$/.exec(item.content.image_url.url);
       if (!match) throw new Error("The reference image must contain its actual bytes.");
       return [{ type: "text" as const, text: item.description }, { type: "image" as const, mimeType: match[1]! as "image/png" | "image/jpeg" | "image/gif" | "image/webp", data: match[2]! }];
+    }
+    if (media && (item.content.type === "audio" || item.content.type === "input_audio")) {
+      const audio = item.content.type === "audio" ? item.content : { type: "audio" as const,
+        data: Buffer.from(item.content.input_audio.data, "base64"), format: item.content.input_audio.format, durationSeconds: null };
+      return [{ type: "text" as const, text: `${item.description}\n${media.add(audio, owner)}` }];
     }
     throw new Error(t("runtime.sdkAudioUnavailable"));
   }

@@ -63,9 +63,9 @@ test("questions accept ordinary conversational answers", async () => {
   assert.equal(await pending, "The second half of verse two");
 });
 
-test("unsupported SDK audio is refused before contacting a model and still closes the request scope", async () => {
-  let contacted = 0, closed = 0;
-  const loop = new AgentLoop({ roles: { roles: async () => { contacted++; throw new Error("Must not contact a provider"); } },
+test("unsupported provider audio is refused before SDK startup and still closes the request scope", async () => {
+  let closed = 0;
+  const loop = new AgentLoop({ roles: { roles: async () => ({ main: { provider: "baseten" } }) },
     registry: { beginMidiMaterials: () => () => { closed++; } },
   } as never);
   await assert.rejects(loop.run({ system: "", history: [], prompt: "Listen", conversation: "fixture", exchangeId: "request",
@@ -73,7 +73,6 @@ test("unsupported SDK audio is refused before contacting a model and still close
     signal: new AbortController().signal, gate: { check: async () => null },
     events: { thought() {}, toolStarted() {}, toolFinished() {}, subagentStarted() {}, subagentFinished() {} },
   }), /has not been heard/);
-  assert.equal(contacted, 0);
   assert.equal(closed, 1);
 });
 
