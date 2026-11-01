@@ -4,11 +4,22 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { AudioFileDecoder } from "../audio/decode";
-import { writeWav } from "../audio/wav";
+import { encodeWav, writeWav, WavBitDepth } from "../audio/wav";
 import { TempFolder } from "../mneme/paths";
 import { MusicAudio, audioHash } from "../services/music-audio";
 import { TOOL_MEDIA } from "../tools/define";
 import { listeningTools } from "../tools/daw/state/listening";
+
+test("preparing audio lets the host process its Max heartbeat", async () => {
+  const bytes = encodeWav({ sampleRate: 8_000, channels: [new Float32Array(80_000).fill(0.25)] }, WavBitDepth.Float32);
+  const source = { ...new AudioFileDecoder().inspect(bytes, "reference.wav"), sha256: audioHash(bytes), bytes: bytes.length, capturedAt: new Date().toISOString() };
+  let ticked = false;
+  const heartbeat = new Promise<void>(resolve => setTimeout(() => { ticked = true; resolve(); }, 0));
+  const prepared = await new MusicAudio().prepare({ bytes, source });
+  assert.equal(ticked, true, "PCM decoding must yield to native bridge traffic.");
+  await heartbeat;
+  assert.equal(new AudioFileDecoder().decode(prepared.bytes, "prepared.wav").channels[0]![79_999], 0.25);
+});
 
 test("audio_read attaches exact selected frames and source identity without calling a model", async () => {
   const directory = await mkdtemp(join(tmpdir(), "ode-read-audio-"));

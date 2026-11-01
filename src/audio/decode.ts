@@ -45,6 +45,20 @@ export class AudioFileDecoder {
     return { sampleRate: block.sampleRate, channels: AudioFileDecoder.samples(view, block, options.rejectNonfinite ?? false) };
   }
 
+  /** Keep the extension's native bridge responsive while decoding a recording. */
+  async decodeAsync(bytes: Uint8Array, name: string, options: { rejectNonfinite?: boolean } = {}): Promise<AudioData> {
+    const { view, block } = this.block(bytes, name);
+    const channels = Array.from({ length: block.channels }, () => new Float32Array(block.frames));
+    const frameBytes = block.channels * block.encoding.bits / 8;
+    const chunkFrames = 16_384;
+    for (let first = 0; first < block.frames; first += chunkFrames) {
+      const chunk = AudioFileDecoder.samples(view, { ...block, start: block.start + first * frameBytes, frames: Math.min(chunkFrames, block.frames - first) }, options.rejectNonfinite ?? false);
+      for (let channel = 0; channel < channels.length; channel++) channels[channel]!.set(chunk[channel]!, first);
+      await new Promise<void>(resolve => setTimeout(resolve, 0));
+    }
+    return { sampleRate: block.sampleRate, channels };
+  }
+
   inspect(bytes: Uint8Array, name: string) {
     const { view, block } = this.block(bytes, name);
     return AudioFileDecoder.info(view, block);

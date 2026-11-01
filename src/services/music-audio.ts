@@ -76,7 +76,8 @@ export class MusicAudio {
 
   async prepare(source: MusicAudioSource, range?: AudioTimeRange) {
     const frozen = typeof source === "string" ? await MusicAudio.freeze(source) : source;
-    const captured = MusicAudio.decode(frozen);
+    const capturedBytes = MusicAudio.capturedBytes(frozen);
+    const captured = { source: capturedBytes.source, audio: await new AudioFileDecoder().decodeAsync(capturedBytes.bytes, "captured audio", { rejectNonfinite: true }) };
     MusicAudio.requireSamples(captured.audio);
     const excerpt = audioExcerpt(captured.audio, range?.fromSeconds, range?.toSeconds);
     const bytes = MusicAudio.encode(excerpt.audio);
@@ -89,7 +90,6 @@ export class MusicAudio {
     if (!Number.isInteger(audio.sampleRate) || audio.sampleRate <= 0 || audio.sampleRate * audio.channels.length * 4 > 0xffffffff) throw new Error("Audio listening needs an integer sample rate representable in Float32 WAV. Export or resample explicitly; Ode will not silently alter the source rate.");
     for (const channel of audio.channels) {
       if (channel.length !== frames) throw new Error("Audio listening needs the same sample frame length in every channel.");
-      for (const sample of channel) if (!Number.isFinite(sample)) throw new Error("Audio listening contains a nonfinite sample; the provider was not called.");
     }
   }
 
