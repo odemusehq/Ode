@@ -28,6 +28,12 @@ Use `sample_folders_get` to discover the musician's configured folders, then `sa
 - `drum_chain_get_native`/`drum_chain_set_native` expose choke groups and output notes. Input-note mapping uses `drum_pad_set_note`. Use real chain indices and mappings; a Drum Rack is not necessarily GM.
 - Multisample instruments can contain layers and articulations that are inaccessible as a simple sample replacement. Preserve their setup and use exposed controls; guide the musician through any required editor work.
 
+## Existing MIDI performance edits
+
+Use `midi_clip_get_notes_native` followed by `midi_clip_modify_notes_native` for focused edits to existing notes. The native reader returns actual clip-local note IDs and a page-specific token; the writer accepts those IDs with explicit absolute destination fields. Live applies the changes to existing note identities and retains attached expression. Leave fields and notes that do not need changing out of the input. This is a native operation, not a local transpose, rhythm or composition engine. The SDK whole-note read/replacement tools remain available for their documented purpose.
+
+Read again between writes. A native token covers the complete observed clip note state, so an intervening edit anywhere in the clip invalidates it. It authorises IDs from only its returned page. Native IDs and MPE are absent from Ode's saved-state reconstruction, so the writer records an unverified recovery receipt and cannot offer a safe History inverse. Use Live's Undo where supported, then inspect the actual clip. These IDs/tokens do not prevent repeating a musical decision after a new read: after interruption or context compaction, first compare current pitches/timing with the intended absolute destination and any recorded completed result. Do not apply a relative instruction again merely because a fresh token is available.
+
 ## Routing, recording and vocals
 
 - `track_get_routing` returns current input/output choices and available identifiers. `track_set_routing` changes one choice; reread after selecting a type before selecting its channels.

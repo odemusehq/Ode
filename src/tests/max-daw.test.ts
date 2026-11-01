@@ -6,6 +6,9 @@ import { MaxDawControl } from "../server/max-daw";
 import { MaxWindowBridge } from "../server/max-window";
 import { MAX_DAW } from "../shared/max-daw";
 import { nativeStrings } from "../shared/i18n";
+import { ToolRegistry } from "../tools";
+import type { ToolContext } from "../tools/define";
+import { z } from "zod";
 
 test("native DAW commands require a capable session and cancel queued work", async () => {
   const bridge = new MaxWindowBridge(() => "http://localhost:9123/?view=ask");
@@ -40,7 +43,7 @@ export async function nativeDawFixture() {
     get info() { return objects[this.path]?.info ?? ""; }
     get(key: string) { if (!(key in objects[this.path])) throw new Error(`unsupported ${key}`); return objects[this.path][key]; }
     set(key: string, value: unknown) { writes.push([this.path, key, value]); objects[this.path][key] = value; }
-    call(name: string, ...args: unknown[]) { writes.push([this.path, name, ...args]); }
+    call(name: string, ...args: unknown[]) { writes.push([this.path, name, ...args]); return objects[this.path]?.call?.(name, ...args); }
   }
   const vm: any = { LiveAPI, running: true, session: "private", ODE_DAW: MAX_DAW, ODE_DAW_COPY: nativeStrings.maxDaw,
     http: (_path: string, body: any) => sent.push(body.message) };
@@ -53,6 +56,104 @@ export async function nativeDawFixture() {
   };
   return { objects, writes, run, address, vm };
 }
+
+async function nativeNotesFixture() {
+  const fixture = await nativeDawFixture();
+  const path = "live_set tracks 0 arrangement_clips 0";
+  let notes = [
+    { note_id: 11, pitch: 60, start_time: 0, duration: 1, velocity: 90, mute: 0, probability: 1, velocity_deviation: 3, release_velocity: 20, future_field: "keep" },
+    { note_id: 12, pitch: 64, start_time: 1, duration: 0.5, velocity: 70, mute: 0, probability: 0.8, velocity_deviation: 0, release_velocity: 30, future_field: "other" },
+  ];
+  fixture.objects[path] = { id: "9", type: "Clip", name: "Hook", is_audio_clip: 0, is_recording: 0,
+    call(name: string, payload?: string) {
+      if (name === "get_all_notes_extended") return JSON.stringify({ notes });
+      if (name === "apply_note_modifications") {
+        const changes = JSON.parse(payload!).notes;
+        notes = notes.map(note => changes.find((change: any) => change.note_id === note.note_id) ?? note);
+      }
+    } };
+  const address = { path, guards: [{ path: "live_set tracks 0", name: "Lead" }, { path, name: "Hook" }] };
+  return { ...fixture, path, address, notes: () => notes };
+}
+
+test("native note IDs apply absolute fields to only selected returned notes and read back", async () => {
+  const { run, writes, address, notes } = await nativeNotesFixture();
+  const read = run("midi_notes_read", { limit: 1 }, address);
+  assert.equal(read.ok, true, read.error);
+  assert.equal(read.result.notes[0].note_id, 11);
+  assert.equal(read.result.nextOffset, 1);
+  assert.equal(read.result.total, 2);
+  const input = { readToken: read.result.readToken, notes: [{ note_id: 11, pitch: 48, velocity: 80 }] };
+  const written = run("midi_notes_modify", input, address, "native-edit");
+  assert.equal(written.ok, true, written.error);
+  assert.equal(written.result.confirmed, true);
+  assert.equal(written.result.before[0].pitch, 60);
+  assert.equal(written.result.after[0].pitch, 48);
+  const changes = writes.filter(([, name]) => name === "apply_note_modifications");
+  assert.equal(changes.length, 1);
+  const payload = JSON.parse(changes[0]![2]);
+  assert.deepEqual(payload.notes, [{ note_id: 11, pitch: 48, start_time: 0, duration: 1, velocity: 80, mute: 0, probability: 1, velocity_deviation: 3, release_velocity: 20, future_field: "keep" }]);
+  assert.equal(notes()[1]!.pitch, 64);
+  run("midi_notes_modify", input, address, "native-edit");
+  assert.equal(writes.filter(([, name]) => name === "apply_note_modifications").length, 1);
+});
+
+test("native note guards refuse stale, unseen or missing IDs, recording and relative operations", async () => {
+  const { run, writes, address, notes, objects, path } = await nativeNotesFixture();
+  const read = () => run("midi_notes_read", { limit: 1 }, address).result.readToken;
+  const edit = (readToken: string, changes: object[]) => run("midi_notes_modify", { readToken, notes: changes }, address);
+  assert.equal(edit(read(), [{ note_id: 12, pitch: 52 }]).ok, false, "An ID outside the returned page is not authorised.");
+  assert.equal(edit(read(), [{ note_id: 999, pitch: 48 }]).ok, false);
+  assert.equal(edit(read(), [{ note_id: 11, transpose: -12 }]).ok, false);
+  const stale = read(); notes()[1]!.velocity = 71;
+  assert.equal(edit(stale, [{ note_id: 11, pitch: 48 }]).ok, false);
+  const replaced = read(); objects[path].id = "10";
+  assert.equal(edit(replaced, [{ note_id: 11, pitch: 48 }]).ok, false);
+  const recording = read(); objects.live_set.record_mode = 1;
+  assert.equal(edit(recording, [{ note_id: 11, pitch: 48 }]).ok, false);
+  objects.live_set.record_mode = 0; objects[path].is_recording = 1;
+  assert.equal(edit(read(), [{ note_id: 11, pitch: 48 }]).ok, false);
+  assert.equal(writes.filter(([, name]) => name === "apply_note_modifications").length, 0);
+});
+
+test("native note tools negotiate updated devices and reject malformed patches before dispatch", async () => {
+  const registry = new ToolRegistry({} as ToolContext);
+  assert.equal(registry.group("midi_clip_get_notes_native"), "daw_read");
+  assert.equal(registry.group("midi_clip_modify_notes_native"), "daw_write");
+  const schema = z.object(registry.find("midi_clip_modify_notes_native")!.input);
+  const base = { clip: { track: { index: 0 }, start: 0 }, readToken: "read" };
+  assert.equal(schema.safeParse({ ...base, notes: [{ note_id: 11, pitch: 48 }] }).success, true);
+  for (const notes of [[{ note_id: 11 }], [{ note_id: 11, transpose: -12 }], [{ note_id: 11, pitch: 128 }], [{ note_id: 11, pitch: 48 }, { note_id: 11, velocity: 80 }]]) {
+    assert.equal(schema.safeParse({ ...base, notes }).success, false);
+  }
+  const bridge = new MaxWindowBridge(() => "http://localhost:9123/?view=ask");
+  const control = new MaxDawControl(bridge);
+  bridge.connect(bridge.prepare({ deviceId: "d", setId: "s" }).capability, undefined, undefined, 1);
+  await assert.rejects(control.run("midi_notes_read" as never, null, {}, "request"), /updated/i);
+  const { session } = bridge.connect(bridge.prepare({ deviceId: "d", setId: "s" }).capability, undefined, undefined, MAX_DAW.version);
+  const pending = control.run("midi_notes_read" as never, null, {}, "request");
+  const command = bridge.poll(session).daw!;
+  assert.equal(command.op, "midi_notes_read");
+  control.receive(session, { id: command.id, ok: true, result: { notes: [] } });
+  assert.deepEqual(await pending, { notes: [] });
+  const fixture = await nativeNotesFixture();
+  const tools = new ToolRegistry({ song: { read: async () => ({ locked: [] }) },
+    live: { extension: { call: async () => fixture.address } },
+    maxDaw: { run: async (op: string, address: unknown, args: object) => {
+      const reply = fixture.run(op, args, address);
+      if (!reply.ok) throw new Error(reply.error);
+      return reply.result;
+    } },
+  } as unknown as ToolContext);
+  assert.equal(tools.functions(["midi_clip_get_notes_native", "midi_clip_modify_notes_native"]).length, 2);
+  const read = await tools.run("midi_clip_get_notes_native", { clip: base.clip }, undefined, { exchangeId: "request" });
+  assert.equal(read.ok, true, read.text);
+  const changed = await tools.run("midi_clip_modify_notes_native", { ...base, readToken: JSON.parse(read.text).readToken, notes: [{ note_id: 11, pitch: 48 }] }, undefined, { exchangeId: "request" });
+  assert.equal(changed.ok, true, changed.text);
+  assert.equal(JSON.parse(changed.text).confirmed, true);
+  assert.equal(changed.receipts?.[0]?.kind, "unverified", "History must not infer an inverse that would replace IDs/MPE.");
+  assert.match(changed.receipts?.[0]?.reason ?? "", /MPE/);
+});
 
 test("loaded plugin presets use native values, stale guards and replay protection", async () => {
   const { run, writes, objects, address } = await nativeDawFixture();

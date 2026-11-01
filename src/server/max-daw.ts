@@ -27,6 +27,7 @@ export class MaxDawControl implements MaxDaw {
   async run(op: DawOperation, address: MaxDawAddress | null, args: Record<string, unknown>, scope: string, signal?: AbortSignal): Promise<Record<string, unknown>> {
     signal?.throwIfAborted();
     if (!this.window.supportsDaw) throw new Error(t("maxDaw.unavailable"));
+    if ((op === "midi_notes_read" || op === "midi_notes_modify") && !this.window.supportsDawNoteEdits) throw new Error(t("maxDaw.unavailable"));
     if (!DAW_OPERATIONS.includes(op) || !scope.trim()) throw new Error(t("maxDaw.invalid"));
     if (this.pending.size >= MAX_DAW.maxPending) throw new Error(t("maxDaw.busy"));
     const command = { id: randomUUID(), op, address, args, scope, expiresAt: Date.now() + MAX_DAW.timeoutMs };

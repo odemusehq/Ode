@@ -2,7 +2,7 @@ import { t } from "../shared/i18n";
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { DialogView } from "../shared/config";
 import { MAX_AUDIO, type MaxAudioCommand } from "../shared/max-audio";
-import type { MaxDawCommand } from "../shared/max-daw";
+import { MAX_DAW, type MaxDawCommand } from "../shared/max-daw";
 import type { MaxParameterCommand } from "../shared/max-parameters";
 import { MAX_WINDOW, type MaxWindowAcknowledgement, type MaxWindowBinding, type MaxWindowBootstrap, type MaxWindowCommand, type MaxWindowConnection, type MaxWindowPoll } from "../shared/max-window";
 
@@ -49,7 +49,8 @@ export class MaxWindowBridge {
   get supportsParameters(): boolean { return this.connected && this.device?.session?.parametersVersion === 1; }
 
   attachDaw(daw: { poll(session: string): MaxDawCommand | null; invalidate(): void }): void { this.daw = daw; }
-  get supportsDaw(): boolean { return this.connected && this.device?.session?.dawVersion === 1; }
+  get supportsDaw(): boolean { return this.connected && [1, MAX_DAW.version].includes(this.device?.session?.dawVersion ?? 0); }
+  get supportsDawNoteEdits(): boolean { return this.connected && this.device?.session?.dawVersion === MAX_DAW.version; }
 
   verifySession(session: string): MaxWindowBinding {
     const device = this.authorized(session);
@@ -97,7 +98,7 @@ export class MaxWindowBridge {
     const command = this.pending.values().next().value?.command ?? null;
     return { command, ...(this.supportsAudio ? { audio: this.audio?.poll() ?? null } : {}),
       ...(device.session!.parametersVersion === 1 ? { parameters: this.parameters?.poll(session) ?? null } : {}),
-      ...(device.session!.dawVersion === 1 ? { daw: this.daw?.poll(session) ?? null } : {}) };
+      ...(this.supportsDaw ? { daw: this.daw?.poll(session) ?? null } : {}) };
   }
 
   /** A native Open succeeds only after jweb reports that its page handled this exact command. */

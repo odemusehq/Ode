@@ -149,7 +149,7 @@ export class ToolRegistry {
       const extension = this.ctx.live.extension;
       const live = signal ? { extension: { call: <R>(op: string, args: unknown) => extension.call<R>(op, args, signal) } } : this.ctx.live;
       const result = (await definition.run(actual, { ...this.ctx, live, signal, ...execution, midiMaterials: scope })) ?? { done: true };
-      const covered = new Set(["midi_clip_set_notes", "lyrics_write", "lead_sheet_update", "hook_retain"]);
+      const covered = new Set(["midi_clip_set_notes", "midi_clip_modify_notes_native", "lyrics_write", "lead_sheet_update", "hook_retain"]);
       const clean = (value: unknown): unknown => {
         if (Array.isArray(value)) return value.map(clean);
         if (!value || typeof value !== "object") return value;

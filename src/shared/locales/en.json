@@ -908,6 +908,8 @@
     "notPlugin": "This device is not a loaded PluginDevice. Use its native parameters or ask the musician to load the required plugin.",
     "unsupported": "Live does not expose this control on the selected object.",
     "nativeUndo": "This control is outside Ode's saved-state restoration. Use Live's Undo where supported, or restore it in the device.",
+    "midiRestoration": "Live modifies existing note IDs and retains their attached expression. Ode's saved-state restoration cannot represent these IDs or MPE; this edit has no safe History inverse. Use Live's Undo where supported and inspect the result. A fresh read does not prevent repeating the same musical edit.",
+    "midiReadback": "The native note modification was submitted, but readback is unavailable. Inspect the actual clip before continuing; do not repeat this call.",
     "tooLarge": "The native reply is too large. Read a smaller page before continuing; inspect Live before retrying a change.",
     "activityPreset": "{device} · Choose preset",
     "activityShow": "{device} · Open in Live",

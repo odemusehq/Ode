@@ -106,6 +106,79 @@ function ode_daw_clip(target) {
   state.groove = groove === null ? null : { id: String(ode_daw_ids(groove)[0] || 0) };
   return state;
 }
+function ode_daw_midi_state(target) {
+  if (target.api.type !== "Clip" || ode_daw_get(target.api, "is_audio_clip") !== 0) throw new Error(ODE_DAW_COPY.unsupported);
+  // Cycling '74's official notes API JavaScript example uses JSON strings for these calls.
+  var serialized = ode_daw_scalar(target.api.call("get_all_notes_extended"));
+  if (typeof serialized !== "string") throw new Error(ODE_DAW_COPY.unsupported);
+  if (serialized.length > ODE_DAW.midiMaxStateChars) throw new Error(ODE_DAW_COPY.tooLarge);
+  var notes = JSON.parse(serialized).notes, ids = {};
+  if (!Array.isArray(notes) || notes.length > ODE_DAW.midiMaxNotes) throw new Error(ODE_DAW_COPY.tooLarge);
+  notes.forEach(function (note) {
+    if (!note || !Number.isSafeInteger(note.note_id) || note.note_id < 0 || ids[note.note_id] ||
+      !Number.isInteger(note.pitch) || note.pitch < 0 || note.pitch > 127 ||
+      !Number.isFinite(note.start_time) || !Number.isFinite(note.duration) || note.duration <= 0) throw new Error(ODE_DAW_COPY.unsupported);
+    ids[note.note_id] = true;
+  });
+  notes.sort(function (a, b) { return a.note_id - b.note_id; });
+  return { name: String(ode_daw_get(target.api, "name")), notes: notes, isRecording: ode_daw_optional(target.api, "is_recording") };
+}
+function ode_daw_midi_visible(note) {
+  var result = {};
+  ["note_id", "pitch", "start_time", "duration", "velocity", "mute", "probability", "velocity_deviation", "release_velocity"].forEach(function (field) {
+    if (note[field] !== undefined) result[field] = note[field];
+  });
+  return result;
+}
+function ode_daw_midi_command(command, target) {
+  var state = ode_daw_midi_state(target), args = command.args;
+  if (command.op === "midi_notes_read") {
+    var offset = args.offset === undefined ? 0 : args.offset, limit = args.limit === undefined ? ODE_DAW.midiPageSize : args.limit;
+    if (!Number.isInteger(offset) || offset < 0 || !Number.isInteger(limit) || limit < 1 || limit > ODE_DAW.midiPageSize) throw new Error(ODE_DAW_COPY.invalid);
+    var page = state.notes.slice(offset, offset + limit);
+    ode_daw_remember(command, target, state);
+    odeDaw.reads[command.id].noteIds = page.map(function (note) { return note.note_id; });
+    return { readToken: command.id, name: state.name, notes: page.map(ode_daw_midi_visible), total: state.notes.length,
+      offset: offset, nextOffset: offset + page.length < state.notes.length ? offset + page.length : null };
+  }
+  var saved = odeDaw.reads[args.readToken];
+  ode_daw_check(command, target, state);
+  if (ode_daw_recording() || state.isRecording !== 0) throw new Error(ODE_DAW_COPY.recording);
+  if (!saved.noteIds || !Array.isArray(args.notes) || args.notes.length < 1 || args.notes.length > ODE_DAW.midiMaxEdits) throw new Error(ODE_DAW_COPY.invalid);
+  var originals = {}, used = {};
+  state.notes.forEach(function (note) { originals[note.note_id] = note; });
+  var modified = args.notes.map(function (patch) {
+    if (!patch || !Number.isSafeInteger(patch.note_id) || saved.noteIds.indexOf(patch.note_id) === -1 || !originals[patch.note_id] || used[patch.note_id]) throw new Error(ODE_DAW_COPY.changed);
+    used[patch.note_id] = true;
+    var fields = Object.keys(patch), next = JSON.parse(JSON.stringify(originals[patch.note_id]));
+    if (fields.length < 2) throw new Error(ODE_DAW_COPY.invalid);
+    fields.forEach(function (field) {
+      var value = patch[field];
+      if (field === "note_id") return;
+      if (field === "mute") { if (typeof value !== "boolean") throw new Error(ODE_DAW_COPY.invalid); }
+      else {
+        if (["pitch", "start_time", "duration", "velocity", "probability", "velocity_deviation", "release_velocity"].indexOf(field) === -1 || typeof value !== "number" || !Number.isFinite(value)) throw new Error(ODE_DAW_COPY.invalid);
+        if (field === "pitch" && (!Number.isInteger(value) || value < 0 || value > 127) || field === "duration" && value <= 0 ||
+          (field === "velocity" || field === "release_velocity") && (value < 0 || value > 127) ||
+          field === "probability" && (value < 0 || value > 1) || field === "velocity_deviation" && (value < -127 || value > 127)) throw new Error(ODE_DAW_COPY.invalid);
+      }
+      next[field] = value;
+    });
+    return next;
+  });
+  var before = args.notes.map(function (patch) { return ode_daw_midi_visible(originals[patch.note_id]); });
+  target.api.call("apply_note_modifications", JSON.stringify({ notes: modified }));
+  var result = { submitted: true, confirmed: false, before: before, after: null, restoration: ODE_DAW_COPY.midiRestoration };
+  try {
+    var after = ode_daw_midi_state(target).notes, found = {};
+    after.forEach(function (note) { found[note.note_id] = note; });
+    result.after = args.notes.map(function (patch) { return found[patch.note_id] ? ode_daw_midi_visible(found[patch.note_id]) : null; });
+    result.confirmed = args.notes.every(function (patch) { return found[patch.note_id] && Object.keys(patch).every(function (field) {
+      return field === "mute" ? Boolean(found[patch.note_id][field]) === patch[field] : found[patch.note_id][field] === patch[field];
+    }); });
+  } catch (_) { result.warning = ODE_DAW_COPY.midiReadback; }
+  return result;
+}
 function ode_daw_groove_pool(args) {
   var pool = new LiveAPI(null, "live_set groove_pool");
   if (!pool.id || String(pool.id) === "0") throw new Error(ODE_DAW_COPY.unsupported);
@@ -270,6 +343,7 @@ function ode_daw_execute(command) {
   if (command.op === "groove_pool_read") return ode_daw_groove_pool(command.args);
   if (command.op === "transport_read" || command.op === "transport_set") return ode_daw_transport_command(command);
   var target = ode_daw_target(command.address), args = command.args;
+  if (command.op === "midi_notes_read" || command.op === "midi_notes_modify") return ode_daw_midi_command(command, target);
   if (command.op === "device_info") {
     if (!/ devices \d+$/.test(target.path)) throw new Error(ODE_DAW_COPY.invalid);
     var info = target.api.info;
