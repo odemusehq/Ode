@@ -98,20 +98,24 @@ function http(path, body, callback) {
   // Max 9.1 retains native sockets per client. Reuse clients across PCM chunks and polls.
   var xhr = idleRequests.pop() || new XMLHttpRequest();
   var finished = false;
-  var timer = new Task(function () { finish(null, 0); try { xhr.abort(); } catch (_) {} }, this);
-  var request = { xhr: xhr, timer: timer, cancel: function () { finish(null, 0); try { xhr.abort(); } catch (_) {} } };
+  var timer = new Task(function () { finish(null, 0, false); }, this);
+  var request = { xhr: xhr, timer: timer, cancel: function () { finish(null, 0, false); } };
   requests.push(request);
-  function finish(value, code) {
+  function finish(value, code, completed) {
     if (finished) return;
     finished = true;
     releaseTask(timer);
     var index = requests.indexOf(request);
     if (index >= 0) requests.splice(index, 1);
     xhr.onreadystatechange = null;
-    try { if (running && expected === generation) callback(value, code); }
+    var current = running && expected === generation;
+    var reusable = completed && current;
+    // Retire incomplete/stale native clients before a failure callback can start other work.
+    if (!reusable) { try { xhr.abort(); } catch (_) {} }
+    try { if (current) callback(value, code); }
     finally {
-      if (running) idleRequests.push(xhr);
-      else { try { xhr.abort(); } catch (_) {} }
+      if (reusable && running && expected === generation) idleRequests.push(xhr);
+      else if (reusable) { try { xhr.abort(); } catch (_) {} }
     }
   }
   try {
@@ -121,11 +125,11 @@ function http(path, body, callback) {
       if (xhr.readyState !== 4) return;
       var result = null;
       try { result = JSON.parse(xhr.responseText); } catch (_) {}
-      finish(result, Number(xhr.status));
+      finish(result, Number(xhr.status), Number(xhr.status) > 0);
     };
     timer.schedule(Math.min(3000, ODE_WINDOW.leaseMs - ODE_WINDOW.pollMs));
     xhr.send(JSON.stringify(body));
-  } catch (_) { finish(null, 0); }
+  } catch (_) { finish(null, 0, false); }
 }
 
 function safeUrl(url) {

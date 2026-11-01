@@ -1,9 +1,53 @@
 import assert from "node:assert/strict";
-import { access } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { Script, createContext } from "node:vm";
 import { test } from "node:test";
+import { MAX_WINDOW } from "../shared/max-window";
 
 const deviceFile = new URL("../live/max/device.ts", import.meta.url);
+
+test("Max HTTP reuses completed clients but retires cancelled, timed-out and stale requests", async () => {
+  const clients: Client[] = [];
+  class Client {
+    readyState = 0; status = 0; responseText = "{}"; aborted = false;
+    onreadystatechange: (() => void) | null = null;
+    constructor() { clients.push(this); }
+    open() { this.readyState = 1; }
+    setRequestHeader() {}
+    send() {}
+    abort() { this.aborted = true; this.readyState = 0; }
+    reply() { this.readyState = 4; this.status = 200; this.onreadystatechange?.(); }
+  }
+  class Task {
+    constructor(readonly fire: () => void) {}
+    schedule() {} cancel() {} freepeer() {}
+  }
+  const context = createContext({ XMLHttpRequest: Client, Task, ODE_WINDOW: MAX_WINDOW, patcher: {} });
+  new Script(await readFile(new URL("../live/max/window.js", import.meta.url), "utf8")).runInContext(context);
+  context.running = true; context.port = 43123;
+  context.http("/complete", {}, () => {}); clients[0]!.reply();
+  context.http("/reuse", {}, () => {});
+  assert.equal(clients.length, 1, "Normal completed current-generation clients remain reusable.");
+  clients[0]!.reply();
+  for (const cause of ["timeout", "cancel", "stale"]) {
+    let delivered = 0;
+    context.http(`/${cause}`, {}, () => {
+      delivered++;
+      assert.equal(client.aborted, true, "Failed clients must abort before notifying callers.");
+    });
+    const active = context.requests[0], client: Client = active.xhr;
+    const late = client.onreadystatechange!;
+    if (cause === "timeout") active.timer.fire();
+    else if (cause === "cancel") active.cancel();
+    else { context.generation++; client.reply(); }
+    assert.equal(context.idleRequests.length, 0, `${cause} must not return a native client to the pool.`);
+    assert.equal(delivered, cause === "stale" ? 0 : 1);
+    client.readyState = 4; late();
+    assert.equal(context.idleRequests.length, 0, "A late callback must not revive the retired client.");
+    assert.equal(context.requests.length, 0);
+  }
+  assert.equal(clients.length, 3, "Each request after a retired client gets a new native client.");
+});
 
 test("Max device packages its embedded client, transient controls and untouched stereo path", async () => {
   assert.equal(await access(deviceFile).then(() => true, () => false), true, "The Max device builder is missing");
