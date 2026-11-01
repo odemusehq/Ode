@@ -4,6 +4,8 @@ import type { FormEvent } from "react";
 import { Button, ButtonVariant, IconButton, IconName } from "../../ui-kit";
 import { errorMessage } from "../app/api";
 import { useAppState, useClient } from "../app/hooks";
+import { REFERENCE_ACCEPT, selectedReferences, droppedReferences, type ReferenceSelection } from "../app/references";
+import { ReferenceChips } from "./ReferenceChips";
 import { DictationRecorder, dictationSupported } from "../app/dictation";
 
 type DictationPhase = "idle" | "permission" | "recording" | "transcribing";
@@ -25,6 +27,11 @@ export function NowInput() {
   const composer = useSyncExternalStore(client.composer.subscribe, client.composer.getSnapshot);
   const { text, attachments } = composer.draft;
   const [sending, setSending] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [addMenu, setAddMenu] = useState(false);
+  const attachMenu = useRef<HTMLDivElement>(null);
+  const filesInput = useRef<HTMLInputElement>(null);
+  const folderInput = useRef<HTMLInputElement>(null);
   const [voicePhase, setVoicePhase] = useState<DictationPhase>("idle");
   const [supportsDictation] = useState(dictationSupported);
   const inputId = useId();
@@ -141,9 +148,29 @@ export function NowInput() {
     }
   };
 
+  useEffect(() => {
+    if (!addMenu) return;
+    attachMenu.current?.querySelector<HTMLButtonElement>("[role=menuitem]")?.focus();
+    const outside = (event: PointerEvent) => { if (!attachMenu.current?.contains(event.target as Node)) setAddMenu(false); };
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") { setAddMenu(false); field.current?.focus(); } };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => { document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", escape); };
+  }, [addMenu]);
+  useEffect(() => { setAddMenu(false); setAdding(false); }, [songId]);
+
+  const attach = async (selection: Promise<ReferenceSelection[]> | ReferenceSelection[]) => {
+    const intendedSong = currentSong.current;
+    if (!intendedSong || adding || sending || !composer.loaded) return;
+    setAddMenu(false); setAdding(true); client.store.setError(null);
+    try { await client.attachReferences(await selection, intendedSong); }
+    catch (error) { if (mounted.current && currentSong.current === intendedSong) client.store.setError(errorMessage(error)); }
+    finally { if (mounted.current && currentSong.current === intendedSong) { setAdding(false); field.current?.focus(); } }
+  };
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if ((!text.trim() && attachments.length === 0) || sending || voice.current) return;
+    if ((!text.trim() && attachments.length === 0) || sending || adding || voice.current) return;
     setSending(true);
     try {
       await client.sendDraft();
@@ -154,13 +181,11 @@ export function NowInput() {
   };
 
   return (
-    <form className="now__composer" onSubmit={(event) => void submit(event)}>
-      {attachments.length > 0 && <ul className="now__attachments" aria-label={t("chat.attachedAudio")}>
-        {attachments.map((file) => <li key={file.entryId}>
-          <span>{file.name}</span>
-          <IconButton icon={IconName.Close} label={t("chat.removeAttachment", { name: (file.name) })} onClick={() => client.composer.removeAttachment(file.entryId)} />
-        </li>)}
-      </ul>}
+    <form className="now__composer" onSubmit={(event) => void submit(event)}
+      onDragOver={event => { if (event.dataTransfer.types.includes("Files")) { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; } }}
+      onDrop={event => { if (event.dataTransfer.types.includes("Files")) { event.preventDefault(); void attach(droppedReferences(event.dataTransfer)); } }}
+      onPaste={event => { const images = Array.from(event.clipboardData.files).filter(file => file.type.startsWith("image/")); if (images.length) { event.preventDefault(); void attach(selectedReferences(images)); } }}>
+      <ReferenceChips files={attachments} remove={id => client.composer.removeAttachment(id)} />
       <label htmlFor={inputId} className="ode-visually-hidden">{t("chat.messageLabel")}</label>
       <textarea ref={field} id={inputId} className="ode-input now__field" value={text} rows={2} disabled={!composer.loaded || composer.songId !== songId}
         placeholder={t("chat.messagePlaceholder")}
@@ -173,6 +198,16 @@ export function NowInput() {
           }
         }} />
       <div className="now__composer-actions">
+        <div className="now__attach" ref={attachMenu}>
+          <IconButton icon={IconName.Plus} label={t("references.add")} aria-expanded={addMenu} aria-haspopup="menu" disabled={adding || sending || !composer.loaded} onClick={() => setAddMenu(!addMenu)} />
+          {addMenu && <div className="now__attach-menu" role="menu" aria-label={t("references.add")}>
+            <Button variant={ButtonVariant.Quiet} role="menuitem" onClick={() => { setAddMenu(false); filesInput.current?.click(); }}>{t("references.files")}</Button>
+            <Button variant={ButtonVariant.Quiet} role="menuitem" onClick={() => { setAddMenu(false); folderInput.current?.click(); }}>{t("references.folder")}</Button>
+          </div>}
+          <input hidden ref={filesInput} type="file" multiple accept={REFERENCE_ACCEPT} onChange={event => { const selected = selectedReferences(Array.from(event.currentTarget.files ?? [])); event.currentTarget.value = ""; void attach(selected); }} />
+          <input hidden ref={folderInput} type="file" multiple {...{ webkitdirectory: "" }} onChange={event => { const selected = selectedReferences(Array.from(event.currentTarget.files ?? [])); event.currentTarget.value = ""; void attach(selected); }} />
+        </div>
+        {adding && <span className="small muted" role="status">{t("references.adding")}</span>}
         <IconButton icon={voicePhase === "recording" ? IconName.Stop : IconName.Microphone}
           className="now__voice"
           disabled={voicePhase === "permission" || voicePhase === "transcribing" || (voicePhase === "idle" && (!supportsDictation || !dictationReady || !songId || !composer.loaded || sending))}
@@ -183,7 +218,7 @@ export function NowInput() {
         {voicePhase !== "idle" && <IconButton icon={IconName.Close} label={t("chat.cancelDictation")} onClick={() => { cancelDictation(); field.current?.focus(); }} />}
         {((busy && stoppable) || sending || composer.pending) && <IconButton icon={IconName.Stop} label={t("chat.stop")} onClick={() => { cancelDictation(); void client.stopRequest(); }} />}
         <IconButton type="submit" className="now__send" icon={IconName.Send} label={t("chat.send")} aria-busy={sending}
-          disabled={sending || !composer.loaded || !composer.valid || composer.conflicts.length > 0 || voicePhase !== "idle" || (!text.trim() && attachments.length === 0)} />
+          disabled={sending || adding || !composer.loaded || !composer.valid || composer.conflicts.length > 0 || voicePhase !== "idle" || (!text.trim() && attachments.length === 0)} />
       </div>
       {composer.error && <p className="small" role="status">{composer.error} {composer.conflicts.length === 0 && <Button variant={ButtonVariant.Quiet} onClick={() => { void (composer.loaded ? client.composer.flush() : client.composer.open(songId, true)); }}>{t("common.retry")}</Button>}</p>}
       {composer.conflicts.length > 0 && <p className="small" role="status">{t("chat.draftConflict")} <Button variant={ButtonVariant.Quiet} disabled={composer.saving} onClick={() => { void client.composer.resolve("local").catch((error: unknown) => client.store.setError(errorMessage(error))); }}>{t("chat.keepDraft")}</Button> <Button variant={ButtonVariant.Quiet} disabled={composer.saving} onClick={() => { void client.composer.resolve("saved").catch((error: unknown) => client.store.setError(errorMessage(error))); }}>{t("chat.useSavedDraft")}</Button></p>}

@@ -192,7 +192,7 @@ export class OdeServer {
       const legacyMax = MAX_WINDOW_PATHS.has(c.req.path) && origin === undefined && contentType === "application/x-www-form-urlencoded";
       if (upload && origin === undefined) return c.text(OPEN_FROM_LIVE, 403);
       if (!(upload ? contentType.startsWith("multipart/form-data;") : contentType.startsWith(JSON_TYPE) || legacyMax)) {
-        return c.json({ error: upload ? t("server.http.chooseAnAudioFileToAttach") : t("server.http.sendTheRequestAsJSON") }, 415);
+        return c.json({ error: upload ? t(c.req.path === API.referenceImport ? "references.invalidSelection" : "server.http.chooseAnAudioFileToAttach") : t("server.http.sendTheRequestAsJSON") }, 415);
       }
     }
     // Dictation has no song writes. Its captured song id and final check permit switching while ASR runs.

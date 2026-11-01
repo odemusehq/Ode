@@ -204,6 +204,20 @@ export class OdeClient {
     } finally { this.sending.delete(controller); }
   }
 
+  async attachReferences(selections: readonly import("./references").ReferenceSelection[], songId: string): Promise<void> {
+    for (const selection of selections) {
+      if (!await this.composer.flush(songId)) throw new Error(t("client.saveBeforeAttaching"));
+      const entryId = crypto.randomUUID(), context = this.composer.uploadContext(songId);
+      try {
+        const result = await this.api.importReference(selection, { ...context, entryId });
+        this.composer.uploaded(songId, entryId, result.composer, result.linked);
+      } catch (error) {
+        if (error instanceof ApiError && error.composer) this.composer.uploaded(songId, entryId, error.composer);
+        throw error;
+      }
+    }
+  }
+
   async attachAudio(file: File, scope: AudioScope, source: string, songId: string): Promise<void> {
     if (!await this.composer.flush(songId)) throw new Error(t("client.saveBeforeAttaching"));
     const entryId = crypto.randomUUID();

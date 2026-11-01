@@ -140,11 +140,15 @@
 .now__field.ode-input { resize: none; max-height: 180px; min-height: 48px; overflow-y: auto; padding: var(--space-2); border: 0; outline: none; box-shadow: none; background: transparent; }
 .now__composer-actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2); }
 .now__composer-actions .ode-icon-button { border-radius: var(--radius-round); }
+.now__attach { position: relative; margin-right: auto; flex: none; }
+.now__attach-menu { position: absolute; z-index: 5; left: 0; bottom: calc(100% + var(--space-2)); display: flex; flex-direction: column; align-items: stretch; min-width: 10rem; padding: var(--space-2); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-md); background: var(--color-surface-raised); box-shadow: var(--shadow-popover); }
+.now__attach-menu .ode-button { justify-content: flex-start; }
 .now__voice[aria-pressed="true"] { color: var(--color-danger); }
 .now__send.ode-button { background: var(--color-accent); color: var(--color-on-accent); }
 .now__send.ode-button:hover:not(:disabled) { background: var(--color-accent-hover); }
 .now__attachments { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); max-height: 10vh; overflow-y: auto; }
-.now__attachments li { display: flex; align-items: center; gap: var(--space-2); max-width: 100%; font-size: var(--font-size-sm); }
+.now__attachments li { display: flex; align-items: center; gap: var(--space-2); max-width: 100%; font-size: var(--font-size-sm); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-1) var(--space-2); }
+.now__attachments img { width: 32px; height: 32px; object-fit: cover; border-radius: var(--radius-md); }
 .now__attachments li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .now__attachments .ode-button { min-height: var(--control-height-sm); padding-inline: var(--space-2); }
 .now__custom-answer { display: flex; gap: var(--space-2); margin-top: var(--space-3); flex-wrap: wrap; }

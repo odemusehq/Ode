@@ -38,8 +38,9 @@ test("attached folders keep paths and offer filtered pages without reading every
   assert.equal(page.files.length, 1);
   assert.equal(page.files[0]!.path, "ideas/verse.md");
   assert.equal(page.skipped, 1);
-  assert.equal((await refs.read(page.files[0]!.id, 0, 5)).media.length, 0);
-  assert.equal((await refs.read(page.files[0]!.id, 0, 5)).text && ((await refs.read(page.files[0]!.id, 0, 5)).text as { text: string }).text, "First");
+  const excerpt = await refs.read(page.files[0]!.id, 0, 5);
+  assert.equal(excerpt.media.length, 0);
+  assert.equal((excerpt.text as { text: string }).text, "First");
   const context = await refs.context([{ ...folder, entryId: randomUUID() }]);
   assert.equal(context.some(part => part.type === "image_url"), false);
   assert.equal(JSON.stringify(context).includes("PRIVATE_KEY"), false);

@@ -8,11 +8,12 @@ test("the configured agent sends tool audio with its conversation and tools, wit
   try {
     const data = Uint8Array.from([82, 73, 70, 70, 1, 2, 3, 4]);
     const audio: AudioContent = { type: "audio", data, format: "wav", durationSeconds: 6 };
+    const image = { type: "image_url" as const, image_url: { url: "data:image/png;base64,aW1hZ2U=" } };
     const messages: ChatMessage[] = [
       { role: "user", content: "Listen to the captured passage." },
       { role: "assistant", content: null, tool_calls: [{ id: "capture", type: "function", function: { name: "audio_read", arguments: "{}" } }] },
       { role: "tool", tool_call_id: "capture", content: '{"sha256":"captured-source"}' },
-      { role: "user", content: [{ type: "text", text: "Audio returned by audio_read (capture)." }, audio] },
+      { role: "user", content: [{ type: "text", text: "Audio returned by audio_read (capture)." }, audio, image] },
     ];
     for (const provider of ["meta", "baseten", "modal"]) {
       let calls = 0;
@@ -29,6 +30,7 @@ test("the configured agent sends tool audio with its conversation and tools, wit
         assert.deepEqual(Buffer.from(encoded, "base64"), Buffer.from(data));
         assert.equal(part.type, provider === "baseten" ? "audio_url" : "input_audio");
         assert.equal(body.tools[0].function.name, "song_get");
+        assert.deepEqual(body.messages[3].content[2], image, "The same request carries native image content too.");
         return Response.json({ choices: [{ finish_reason: "stop", message: { role: "assistant", content: "Observed.", refusal: null } }], usage: { total_tokens: 30, prompt_tokens: 20 } });
       };
       const agent = new OpenAiCompatibleText({ provider, baseUrl: "https://example.invalid/v1", apiKey: "offline", model: "configured-agent" });

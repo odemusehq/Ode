@@ -74,6 +74,17 @@ export class OdeApi {
     return this.request(HttpMethod.Get, API.conversation);
   }
 
+  async importReference(selection: import("./references").ReferenceSelection, link: { songId: string; writerId: string; entryId: string; baseRevision: number; snapshot: ComposerDraft }): Promise<{ id: string; linked: boolean; composer: ComposerState }> {
+    const form = new FormData();
+    for (const item of selection.files) { form.append("file", item.file); form.append("path", item.path); }
+    if (selection.folder) form.set("folder", selection.folder);
+    for (const [key, value] of Object.entries(link)) form.set(key, typeof value === "object" ? JSON.stringify(value) : String(value));
+    const response = await fetch(API.referenceImport, { method: HttpMethod.Post, body: form });
+    const value = await response.json();
+    if (!response.ok) throw new ApiError(response.status, value.error ?? t("references.invalidSelection"), value.composer);
+    return value;
+  }
+
   async importAudio(file: File, scope: AudioScope, sourceDescription: string, link?: { songId: string; writerId: string; entryId: string; baseRevision: number; snapshot: ComposerDraft }): Promise<AudioAttachment> {
     const body = new FormData();
     body.set("file", file);

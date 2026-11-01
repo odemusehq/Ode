@@ -54,7 +54,8 @@ export class ReferenceFiles {
       else {
         if (kind === "text") {
           if (file.bytes.length > 2 * 1024 * 1024) throw new Error(t("references.textLarge", { name: name }));
-          new TextDecoder("utf-8", { fatal: true }).decode(file.bytes);
+          try { new TextDecoder("utf-8", { fatal: true }).decode(file.bytes); }
+          catch { throw new Error(t("references.textEncoding", { name })); }
           if (file.bytes.includes(0)) throw new Error(t("references.textEncoding", { name: name }));
         } else {
           if (file.bytes.length > 20 * 1024 * 1024) throw new Error(t("references.imageLarge", { name: name }));

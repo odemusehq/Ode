@@ -3,6 +3,7 @@ import { useLayoutEffect, useRef } from "react";
 import { Button, ButtonVariant, cx } from "../../ui-kit";
 import { useAppState, useClient } from "../app/hooks";
 import { ApplyCard } from "./ApplyCard";
+import { ReferenceChips } from "./ReferenceChips";
 import { NowInput } from "./NowInput";
 import { QuestionCard } from "./QuestionCard";
 import { ActualChanges, RequestFeedback, ResultLine } from "./ResultLine";
@@ -39,7 +40,7 @@ export function NowPanel() {
       }}>
         <div role="log" aria-label={t("chat.savedConversation")} aria-live="polite" aria-relevant="additions text">
           {exchanges.map((exchange) => <article className="now__exchange" key={exchange.id}>
-            {exchange.request && <div className="now__message now__message--user"><h2>{t("common.you")}</h2><p>{exchange.request}</p></div>}
+            {(exchange.request || exchange.attachments?.length) && <div className="now__message now__message--user"><h2>{t("common.you")}</h2>{exchange.request && <p>{exchange.request}</p>}<ReferenceChips files={exchange.attachments ?? []} /></div>}
             <WorkingSteps steps={exchange.id === activeId && busy ? mergeSteps(exchange.activity ?? [], steps) : exchange.activity ?? []}
               rationale={exchange.id === activeId && busy ? thought ?? exchange.rationale : exchange.rationale}
               progress={exchange.id === activeId && busy ? progress : null} active={exchange.id === activeId} waiting={exchange.id === activeId && waiting > 0} />

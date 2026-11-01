@@ -76,7 +76,7 @@ function addMessage(state: AppState, event: Extract<UiEvent, { type: "message" }
   const known = exchanges[at];
   if (event.role === "user") {
     if (known && known.request === event.text) return state;
-    const exchange: ConversationExchange = { id: event.id ?? `message-${Date.now()}-${exchanges.length}`, request: event.text, reply: "", at: new Date().toISOString(), status: "running" };
+    const exchange: ConversationExchange = { id: event.id ?? `message-${Date.now()}-${exchanges.length}`, request: event.text, ...(event.attachments?.length ? { attachments: event.attachments } : {}), reply: "", at: new Date().toISOString(), status: "running" };
     if (known && event.id) exchanges[at] = { ...known, ...exchange };
     else exchanges.push(exchange);
   } else if (known) {
