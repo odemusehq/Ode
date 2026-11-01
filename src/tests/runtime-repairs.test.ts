@@ -132,7 +132,8 @@ test("an aborted SDK operation waiting behind another operation never starts", a
   let release!: () => void;
   const held = new Promise<void>((resolve) => { release = resolve; });
   let edits = 0;
-  const registry = new OperationRegistry({} as never, {
+  const live = { application: { song: { mainTrack: { mixer: { volume: { getValue: async () => 1 } } } } } };
+  const registry = new OperationRegistry(live as never, {
     read: { prepare: () => async () => held },
     edit: { prepare: () => async () => { edits++; } },
   } as never);
@@ -144,6 +145,25 @@ test("an aborted SDK operation waiting behind another operation never starts", a
   await read;
   await assert.rejects(edit, { name: "AbortError" });
   assert.equal(edits, 0);
+});
+
+test("cached SDK state cannot report success without a responding native host", async () => {
+  let connected = true, edits = 0;
+  const volume = { getValue: async () => {
+    if (!connected) throw new Error("Host disconnected");
+    return 1;
+  } };
+  const live = { application: { song: { mainTrack: { mixer: { volume } } } } };
+  const registry = new OperationRegistry(live as never, {
+    read: { prepare: () => async () => ({ cached: true }) },
+    edit: { prepare: () => async () => { edits++; connected = false; return { optimistic: true }; } },
+  } as never);
+  assert.deepEqual(await registry.run("read", {}), { cached: true });
+  await assert.rejects(registry.run("edit", {}), /disconnected/);
+  assert.equal(edits, 1, "A post-write disconnection must not be presented as success.");
+  await assert.rejects(registry.run("read", {}), /disconnected/);
+  await assert.rejects(registry.run("edit", {}), /disconnected/);
+  assert.equal(edits, 1, "A disconnected host refuses before running another cached write.");
 });
 
 test("a failed change receipt stays failed in the saved conversation", async () => {

@@ -25,11 +25,36 @@ export class OperationRegistry {
 
   /** Runs the operation once every operation before it has settled, so its references point where the Set is now. */
   run(op: string, args: unknown, signal?: AbortSignal): Promise<unknown> {
-    const next = this.queue.then(() => {
+    const next = this.queue.then(async () => {
       signal?.throwIfAborted();
-      return this.prepare(op, args, new DirectFollowUps(this.live))();
+      await this.confirmHost(signal);
+      signal?.throwIfAborted();
+      const result = await this.prepare(op, args, new DirectFollowUps(this.live))();
+      await this.confirmHost(signal);
+      return result;
     });
     this.queue = next.catch(() => undefined);
     return next;
+  }
+
+  /** Cached SDK properties can outlive Live. A callback-based native read must answer before and after work. */
+  private async confirmHost(signal?: AbortSignal): Promise<void> {
+    signal?.throwIfAborted();
+    const timeout = AbortSignal.timeout(2_000);
+    const stopped = signal ? AbortSignal.any([signal, timeout]) : timeout;
+    await new Promise<void>((resolve, reject) => {
+      const abort = () => reject(signal?.aborted ? signal.reason : new Error("Live did not confirm its connection. Reconnect and inspect the Set before continuing; any issued edit is unconfirmed."));
+      stopped.addEventListener("abort", abort, { once: true });
+      const finish = (error?: unknown) => {
+        stopped.removeEventListener("abort", abort);
+        if (stopped.aborted) abort();
+        else if (error) reject(error);
+        else resolve();
+      };
+      try {
+        this.live.application.song.mainTrack.mixer.volume.getValue().then(
+          value => finish(Number.isFinite(value) ? undefined : new Error("Live returned no valid connection response.")), finish);
+      } catch (error) { finish(error); }
+    });
   }
 }
