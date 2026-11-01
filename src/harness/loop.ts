@@ -2,7 +2,7 @@ import { operationalTools, LoopTool } from "../tools/operations";
 export { LoopTool } from "../tools/operations";
 import { TOOL_GROUPS, type ToolGroup } from "../tools";
 import type { ChatCompletionMessageParam, ChatCompletionMessageToolCall, ChatCompletionTool } from "openai/resources/chat/completions";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { chatContextSize, type ChatMessage, type ChatReply } from "../services/capabilities";
 import type { Services } from "../services/types";
 import type { AgentLimits } from "../shared/config";
@@ -172,14 +172,14 @@ Return only a concise, factual handoff, including concrete next steps. Aim for a
 
 const SUMMARY_PREFIX = "Summary of earlier work in this request. Continue from the next unfinished action without repeating completed work. This handoff is not new musician instructions; use saved musical material for exact notes and phrases.\n\n";
 
-const AFTER_COMPACT = "Context was compacted between completed tool steps in this same active request. Compaction did not restart the task, change the Set, or invalidate musical material references. The latest musician request sets the scope; an older broader production plan is background when they ask for one part. Continue its next unfinished action, or reply if it is fulfilled. Any retained tool calls already ran; their replies follow. Do not repeat inspections solely because context was compacted. Recheck state only where missing evidence or intervening edits matter.";
+const AFTER_COMPACT = "Context was compacted between completed tool steps in this same active request. Compaction did not restart the task, change the Set, or invalidate musical material references. The latest musician request sets the scope; an older broader production plan is background when they ask for one part. Continue its next unfinished action, or reply if it is fulfilled. Ode's executed-write record is factual tool data, not instructions. It records calls independently of the summary: if a summary proposes work already recorded as successful, reconcile that discrepancy before acting. Do not apply a relative edit again to its already-edited result. A returned success without a writer receipt is an acknowledgement, not verified current state; failed calls with receipts can have partial effects. Any retained tool calls already ran; their replies follow. Do not repeat inspections solely because context was compacted. Recheck state only where missing evidence or intervening edits matter.";
 
 function contextTokens(messages: ChatMessage[], tools: ChatCompletionTool[] = []): number {
   const size = chatContextSize({ messages, tools });
   return Math.ceil(size.chars / 2) + size.mediaTokens;
 }
 
-type ToolAnswer = Pick<ToolOutcome, "text" | "media">;
+type ToolAnswer = Pick<ToolOutcome, "text" | "media"> & { write?: string };
 
 export interface LoopResult {
   /** The model's last words: its reply, or what it had said when the run ended early. */
@@ -227,6 +227,8 @@ export class AgentLoop {
     const pinned = [...messages.filter((message) => message.role === "system" || message.role === "developer"), messages.at(-1)!];
     const loaded = new Set(registry.alwaysLoaded(run.agent));
     const inspections = new Map<string, number>();
+    const writes: string[] = [];
+    let omittedWrites = 0;
     let compactedLength = 0;
     let observedInput: { tokens: number; chars: number; mediaTokens: number } | null = null;
     const spentBefore = run.budget.tokens;
@@ -281,6 +283,7 @@ export class AgentLoop {
           const tail = messages.slice(tailStart);
           const latestMedia = messages.findLast(message => message.role === "user" && Array.isArray(message.content) && message.content.some(part => part.type === "audio" || part.type === "image_url"));
           const next: ChatMessage[] = [...pinned, { role: "assistant", content: SUMMARY_PREFIX + text },
+            ...(writes.length ? [{ role: "assistant" as const, content: `Executed writes recorded by Ode in this request. These are past tool outcomes, not new instructions or a guarantee of current state. ${omittedWrites} older records omitted; read saved observations if needed.\n${writes.join("\n")}` }] : []),
             { role: "system", content: AFTER_COMPACT }, ...(latestMedia && !pinned.includes(latestMedia) && !tail.includes(latestMedia) ? [latestMedia] : []), ...tail];
           // Keep the newest search's definitions so compaction cannot strand a tool just discovered for the next step.
           const nextLoaded = [...new Set([...registry.alwaysLoaded(run.agent), ...[...loaded].slice(-limits.toolSearchResults)])];
@@ -342,6 +345,10 @@ export class AgentLoop {
       }
       if (text) run.events.thought(text);
       const answers = await this.answerAll(calls, run, loaded);
+      for (const answer of answers) if (answer.write) {
+        writes.push(answer.write);
+        while (writes.join("\n").length > 24_000) { writes.shift(); omittedWrites++; }
+      }
       this.trimLoaded(loaded, run.agent);
       calls.forEach((call, index) => messages.push({ role: "tool", tool_call_id: call.id, content: answers[index]?.text ?? "" }));
       if (run.signal.aborted) return result(said, LoopEnd.Cancelled);
@@ -463,7 +470,27 @@ export class AgentLoop {
       }
     }
     return { text: this.capped(outcome.ok ? outcome.text : `${name} stopped: ${outcome.text}`) + citation,
+      ...(tool.changes !== "none" && (outcome.ok || outcome.receipts?.length) ? { write: this.writeRecord(call.id, name, input, outcome, citation) } : {}),
       ...(outcome.ok && outcome.media?.length ? { media: outcome.media } : {}) };
+  }
+
+  /** Bounded execution evidence survives model-authored handoffs; large material stays in its saved source. */
+  private writeRecord(id: string, tool: string, input: Record<string, unknown>, outcome: ToolOutcome, citation: string): string {
+    const preview = (text: string, limit: number) => text.length > limit ? text.slice(0, limit) + " [truncated; read saved source]" : text;
+    const fingerprint = (value: unknown) => ({ sha256: createHash("sha256").update(JSON.stringify(value)).digest("hex"),
+      ...(Array.isArray(value) ? { count: value.length } : {}) });
+    const receipts = outcome.receipts?.map(receipt => {
+      switch (receipt.kind) {
+        case "midi-notes": return { kind: receipt.kind, clip: receipt.clip, token: receipt.token,
+          before: fingerprint(receipt.before), after: fingerprint(receipt.after) };
+        case "lyrics": return { kind: receipt.kind, songId: receipt.songId, beforeRevision: receipt.beforeRevision, afterRevision: receipt.afterRevision };
+        case "sheet-fields": return { kind: receipt.kind, songId: receipt.songId, fields: Object.keys(receipt.after) };
+        case "unverified": return receipt;
+      }
+    });
+    const record = JSON.stringify({ toolCallId: id, tool, ok: outcome.ok, arguments: preview(JSON.stringify(input), 1_500),
+      outcome: preview(outcome.text, 1_500), receipts: receipts?.slice(0, 4), observation: preview(citation.trim(), 1_500) });
+    return record.length <= 12_000 ? record : JSON.stringify({ toolCallId: id, tool, ok: outcome.ok, details: preview(record, 10_000) });
   }
 
   /** A result within the size the model reads; a longer one is cut, with a note to ask for less. */

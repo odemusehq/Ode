@@ -159,6 +159,24 @@ test("a long run compacts and continues without replaying edits or losing the mu
   assert.equal(history.length, 2, "Compaction must not rewrite the saved conversation.");
 });
 
+test("compaction retains executed writes even when its summary omits them", async () => {
+  const model = new ScriptedModel([
+    answer("Earlier work. ".repeat(10_000), [{ id: "tempo-write", name: "song_set_tempo", args: { tempo: 107 } }]),
+    answer("Next: set the tempo to 107."),
+    answer("The tempo write already ran. Done."),
+  ]);
+  const { loop, run, live } = await rig(model, 40_000);
+  await loop.run(run({ prompt: "Set the tempo to 107." }));
+  const continued = model.turns[2]!.messages;
+  const record = continued.find(message => message.role === "assistant" && String(message.content).startsWith("Executed writes recorded by Ode"));
+  assert.ok(record, "Execution evidence survives independently of the model's summary and oversized tool turn.");
+  assert.match(String(record.content), /tempo-write/);
+  assert.match(String(record.content), /song_set_tempo/);
+  assert.match(String(record.content), /107/);
+  assert.equal(live.calls.filter(call => call.op === "song_set_tempo").length, 1);
+  assert.ok(!continued.some(message => message.role === "tool"), "No unmatched historical tool reply is injected.");
+});
+
 test("tool audio reaches the next agent turn after every sibling tool reply, outside the text limit", async () => {
   const model = new ScriptedModel([
     answer("Read the material.", [{ id: "audio", name: "song_get" }, { id: "track", name: "track_get", args: { track: { index: 0 } } }]),
