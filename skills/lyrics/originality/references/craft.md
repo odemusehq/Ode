@@ -13,7 +13,7 @@ Ode writes new material with the musician. It writes only original lyrics and me
 
 ## Clichés
 
-A cliché was once a fresh image; repetition wore it out. Listeners have heard it so often that it slides past without making them feel anything, and it signals that the writer settled for the nearest phrase and missed the true one.
+A cliché was once a fresh image; repetition wore it out. Listeners have heard it so often that it slides past without making them feel anything, and it may signal an unexamined placeholder. During drafting that placeholder can be useful; revise it when the intended feeling or context calls for more.
 
 - **Stock phrases:** "heart of stone", "tears like rain", "set me free", "end of the road", "light in the darkness".
 - **Stock images:** rain for sadness, fire for passion, chains for being trapped, the open road for freedom, stars for fate.
@@ -40,14 +40,14 @@ The listener works out the tears for themselves, and the familiar tears-and-rain
 ## Lines that look like quotations
 
 - **Warning signs:** a line arrives instantly and fully formed with a famous-sounding ring; a well-known song title is used as the hook; a catchphrase is strongly tied to one song or artist.
-- **Rewrite it.** Replace every line that may echo an existing song; ask Lyricist to consider the suspected source and develop an original alternative when needed.
+- **Rewrite it.** Examine the specific resemblance in supplied context rather than assuming familiarity proves copying; ask Lyricist to consider the suspected source and develop an original alternative when needed.
 - **Titles:** songs share titles all the time, but a famous namesake invites comparison and makes the song harder to find. When it is the musician's own title, keep it and say so in the result line; when Ode is choosing, choose another.
 - **Melodies:** a melody or hook that closely follows a well-known one is a far bigger concern than a shared chord progression, which countless songs have in common. When a melody reminds you of a familiar song, change its rhythm, contour or starting note (the melody skill) and say so in the result line.
 
 ## Repeats of the musician's own songs
 
 - Supply relevant earlier lyrics from Mneme to Lyricist when comparing titles, hook lines, central images, recurring rhyme pairs or opening lines. Do not claim it searched material that was not supplied.
-- Repetition can be deliberate: a signature, a callback, a running theme. That is why a repeat the musician wrote is a question and a repeat Ode wrote is simply fixed.
+- Repetition can be deliberate: a signature, a callback, a running theme. Inspect whether it is an intentional callback or an unhelpful rut before changing it, regardless of who drafted it.
 - When you notice a rut (the same rhyme pairs, the same kind of images, the same point of view in song after song), a take outside their usual style can help; the result line names what is different.
 
 ## "Like artist X"

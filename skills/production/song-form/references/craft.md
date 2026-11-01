@@ -23,7 +23,7 @@ These are habits, and songs bend them. Most sections come in multiples of 2 or 4
 
 ## Bars and time
 
-Seconds = bars × beats per bar × 60 ÷ BPM. At 120 BPM in 4/4 a bar lasts 2 seconds, so 8 bars take 16 seconds; at 96 BPM a bar lasts 2.5 seconds. Live counts positions in beats from the song's start, so bar n begins at beat (n − 1) × beats per bar. Choose section boundaries from the material and brief. Whole phrases, a shortened bar or an abrupt cut can each be appropriate; preserve intentional timing.
+Tool positions use quarter-note beats. For constant tempo and meter, quarter-note beats per bar = numerator × 4 ÷ denominator; seconds = bars × quarter-note beats per bar × 60 ÷ BPM. At 120 BPM in 4/4 a bar lasts 2 seconds, so 8 bars take 16 seconds; at 96 BPM a bar lasts 2.5 seconds. Live counts positions in beats from the song's start, so bar n begins at quarter-note beat (n − 1) × numerator × 4 ÷ denominator. Recalculate across actual meter/tempo changes rather than applying one constant formula. Choose section boundaries from the material and brief. Whole phrases, a shortened bar or an abrupt cut can each be appropriate; preserve intentional timing.
 
 ## Common forms
 
@@ -52,6 +52,17 @@ Energy is how full, loud, high, dense and busy the music feels. Plan it per sect
 ## Contrast between sections
 
 When more contrast is wanted, possible levers include melody register, melodic rhythm, chords or harmonic rhythm, arrangement density, drum pattern, lyric density. A lyric-only change can also define the form when that is the intended repetition. A repeated melody or chord pattern can make sections recognisable; an unchanged return or a larger transformation can also be the chosen form.
+
+## When repeated sections stop developing
+
+Pat Pattison's *Writing Better Lyrics*, second edition, chapters 6-8 and 20-24, offers alternatives to adding another identical structural pass. Inspect both what each passage adds and how its phrase/rhyme shape moves. The number of verse/chorus cycles alone does not establish a problem.
+
+- Distill two overlapping verses while retaining necessary information and the chorus setup.
+- Rework a passage into a bridge with a genuinely different thought and structural/musical function; a new label alone is not contrast.
+- Build internal development into a longer verse rather than repeating the same short unit.
+- Consider a verse/refrain or AABA relationship when it carries the necessary material better, without requiring fixed eight-bar blocks.
+
+Compare the result with its neighbours and every return into the hook. An unchanged chorus may acquire new meaning from the preceding verse; a melodic or arrangement contrast may make that development audible. Do not reorder, shorten or delete approved material merely to populate a conventional form.
 
 ## Intros and outros
 

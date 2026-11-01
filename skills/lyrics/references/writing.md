@@ -1,130 +1,61 @@
 # Writing and rewriting
 
-Optional approaches, interpreted by Lyricist in the artist's current voice.
+Use the configured `lyricist` for all wording and language interpretation. Forward this reference explicitly when the task needs it. The main agent supplies current text/revision, artist direction, relevant memory and musical setting, then saves only the chosen excerpt with ordinary revision-aware tools.
 
-## What each section does
+The techniques below paraphrase practical principles from Pat Pattison's *Writing Better Lyrics*, second edition, chapters 1-3, 5-13 and 20-24, including the co-writing appendix. They are ways to solve the actual writing problem, not compulsory exercises or a fixed form.
 
-These are common roles to borrow or depart from; a section need not perform all of them.
+## Develop the artist's intention
 
-| Section | Its job | How it usually sounds |
-|---|---|---|
-| Verse | Shows: scene, story, characters, specific detail. Each verse moves forward with new information, time or stakes; verse 2 says something verse 1 left unsaid. | Conversational, detailed, more words per line than the chorus. |
-| Pre-chorus | Lifts: builds tension and sets up the title without saying it. Often moves from detail toward feeling. | Shorter phrases, rising energy, unresolved; it leans into the chorus. |
-| Chorus | Sums up: the emotional point and the hook, with the title in its strongest spot. It often carries a meaning that holds after several verses. | Simpler, more general and more repetitive than the verses; open vowels on long notes. |
-| Bridge | Contrasts: a new angle such as a realisation, a confession, a time jump, the other person's view or a change of tense. It makes the last chorus mean more. | New line lengths, rhyme scheme and melody. |
-| Refrain | In songs without a separate chorus, a repeated line (usually the title) that opens or closes each verse and gathers its meaning. | The same words, read differently after each verse. |
+Read the artist's material and relevant Mneme preferences: vocabulary, register, tone, images, sentence shapes, rhyme/delivery habits and things they want to change. Describe observed tendencies without treating them as a recipe to repeat. A current request overrides memory. Do not infer biography or taste from identity, and do not turn a fictional narrator into a fact about the musician.
 
-Post-choruses, tags (a repeated last line), intros and outros carry short repeated hooks or echoes; the pop sub-skill covers post-choruses.
+When the idea is generic or stuck, explore sensory associations from an object, person, place or moment in this song's world. Include sound, touch, bodily feeling and movement as useful, rather than relying only on visual description. Suspend rhyme and polished-line demands while generating; retain details that carry the intended feeling. This can happen quietly through Lyricist; no mandatory user timer or worksheet is needed.
 
-## The musician's voice
+Try strong verbs and meaningful comparisons. An extended metaphor benefits from a coherent governing relationship; a passing simile need not commit every later image to the same domain. Unusual wording is not automatically vivid or clear.
 
-Read their lines and what Ode remembers about their writing, and notice:
+## Showing, telling and familiarity
 
-- **Vocabulary and register:** plain or ornate, slang, swearing, regional words, how formal they are.
-- **Images they reach for:** domestic, urban, nature, work, the body; literal or figurative.
-- **Sentence shape:** short statements, long run-on lines, questions, lists, dialogue.
-- **Point of view** and who "you" usually is.
-- **Rhyme habits:** perfect or near, end rhyme only or internal too, dense or sparse.
-- **Tone:** earnest, wry, angry, tender, playful.
-- **Line length and how much they repeat.**
+A concrete action or detail can make a later statement of feeling mean more, especially when it precedes that statement. Telling can carry attitude, a title or a direct emotional hook. Compare what each line does here rather than demanding that all verses show and all choruses tell.
 
-Write inside those habits by default. Now and then, and especially on Again, a take may break one habit on purpose (a question where they would use an image, a different point of view); name the change only when that context helps. A requested new voice or direction needs no style warning. A habit the musician has said they want to drop stays dropped, and their name, gender, age, nationality and genre stay out of every judgement about their voice.
+A familiar phrase can be a draft placeholder, an effective plain declaration or a phrase renewed by context. Look for depleted meaning, empty rhyme padding or an image that does not belong. Do not ban words such as "light", "shadow" or "fire", and do not replace every abstract line with another household object. Preserve the artist's intentional simplicity.
 
-Avoid words that make lyrics sound generic or machine-written unless the musician uses them: *echoes, whispers, shadows, shattered, embers, neon, tapestry, symphony, ethereal, ignite, soaring*. Choose the plain, specific word a person would say.
+For a weak line, identify the actual problem: meaning, perspective, image, rhyme, phrasing or placement. Generate a few materially different alternatives when useful; choose the one that serves this passage, not whichever sounds most ornate. Criticism should leave a usable next move and should not close down exploration before there is material to compare.
 
-## Show the feeling
+## Development and repetition
 
-Telling names a feeling. Showing gives the listener the evidence and lets them feel it, which is why it lands harder. Verses should mostly show. Choruses may tell: after the verses have shown, a plain statement feels earned.
+For each substantial passage, identify what the listener now understands that was not available before. Progress can be consequence, deepening, a changed angle or a newly exposed stake; time need not advance. Different scenery can still repeat the same thought.
 
-> Telling: *I'm so lonely since you left / I miss you every single day*
->
-> Showing: *Two mugs on the drainer, I only rinse one / I still buy your oat milk and let it go sour*
+Read the verses without their choruses: why do these passages belong together, and why in this order? Then restore each chorus and examine its immediate lead-in. Does the unchanged hook acquire a new implication, addressee, cause or emotional weight? Repeated chorus words can develop through context without being rewritten.
 
-The second leaves "lonely" unsaid, yet the listener sees the habit of two carrying on without the other person, which is what loneliness looks like from the inside.
+Think of developing ideas as nested levels of understanding, independent of whether the song uses verses, refrain, AABA or another form. Do not force every draft into verse 1 / verse 2 / bridge slots. If the current order stalls, consider moving a strong verse later, distilling two passages, delaying a repetition, or converting material into a contrasting bridge. Preserve necessary scene, causal links and chorus setup when deleting.
 
-Ways to show: an object, an action or habit, a place at a particular time, a sound or a smell, something the body does, a line of dialogue, something someone has stopped doing.
+## Power positions
 
-## Concrete imagery
+Openings, endings, internal phrase boundaries and departures from an established pattern attract attention. Put useful meaning in those places; do not reserve every important word for a line ending or melodic peak. A small move or reordered line may improve the passage more than a rewrite.
 
-- **Specific nouns beat general ones.** "Car" is weaker than "the hatchback with the cracked wing mirror". Use details that belong to the song's world. When a detail would be a fact about the musician's life, use only what they have told you or written; biography comes from them alone.
-- **Use more than sight:** sound, smell, taste, touch, temperature, movement, what the body does.
-- **Let verbs do the work.** "The door slams" beats "the loud door".
-- **One fresh image beats three stock ones.** Keep each line's metaphors in one world.
-- **Anchor abstract words.** Love, pain, soul, forever and heart float away unless a concrete detail sits nearby.
-- **Test comparisons for one hearing.** Lyrics are heard once, at tempo; a simile has to be clear immediately and come from the song's world.
+The line before a chorus is particularly consequential: it directs what the repeated words now mean. Test that transition at every return. A bridge needs a thought or function worth the contrast, rather than merely a new label or a generic final confession.
 
-## Point of view and tense
+## Perspective, tense and credibility
 
-- Choose a point of view ("I", "you", "she", "he", "they", "we") and keep it. If "you" starts meaning someone else halfway through, the listener gets lost.
-- Choose a tense for each section and keep it. Change it only with a time cue ("back then", "now"), usually at a section boundary.
-- A deliberate switch, such as a bridge that reveals who the song is really about, is powerful once.
+Distinguish the storyteller, the person addressed and the listener. First-person narration to an audience differs from speaking directly to "you"; narrative "you" and self-address can work differently again. Choose the distance and motivation that serve this song rather than ranking intimacy above every other approach.
 
-## Title placement
+Ask why this speaker says these words to this person now. Direct address can become artificial when it recites facts the addressee already knows solely to inform the audience. A recollection, accusation or disclosure may make those same facts credible. Quoted dialogue can contain I/you inside third-person narration without being a POV mistake.
 
-- Put the title where the melody and rhythm give it the most weight: the first line of the chorus, the last line, or both. In verse-refrain songs, the first or last line of each verse.
-- Make the line before the title set it up, so the title lands as a conclusion or a twist.
-- Repeat it often enough for the listener to learn it.
-- For a prominent title, try an exposed phrase ending, a longer note or a clear accent. A buried, off-beat or unsung title is also a valid choice.
-- Use the title in the verse or pre-chorus only as a deliberate echo.
+Review pronoun referents and changes of time/perspective for intelligibility, not a one-switch limit or a compulsory cue at every section boundary. Test alternatives when an inherited perspective hides the real emotional subject. A pronoun substitution alone may leave observations that the new speaker would not naturally make.
 
-## Clichés and filler
+If fixed refrain wording clashes with an intended time/POV change, consider a less time-bound phrase, an omitted pronoun or another syntactically complete neutral construction. This is a targeted repair, not a requirement that every repeated hook lose tense or perspective.
 
-**Clichés** are stock phrases and images ("heart of stone", "tears like rain"). They save the writer effort and cost the listener interest. The originality skill covers finding and freshening them.
+## Words and structure together
 
-**Filler** is there only for the count:
-- padding words: *just, really, so, very, oh, baby, yeah* when they add only syllables;
-- an unneeded auxiliary: "I do believe", "you did leave";
-- inverted word order to reach a rhyme: "to town we went";
-- saying the same thing twice: "cold and freezing";
-- a vague "it" without a clear thing to point to.
+Compare thought, stressed phrase lengths, rhythm, rhyme placement and rhyme type with the section's purpose. Regularity can provide a stable base; a specific changed expectation can spotlight a turn. Raw syllable totals, printed line counts and ABAB labels cannot decide whether a section works.
 
-Fix filler by spending the same syllables on meaning: a detail, a stronger verb, a name, a time of day.
+Contrast sections where their functions differ. One useful change in phrasing or rhyme timing may be enough; a verse/chorus pair need not differ in every dimension. Repeated structural passes may need distillation, internal development, a genuinely contrasting passage or another form. These are alternatives to audition, not mandatory bridges or chorus deadlines.
 
-## Line length and matching sections
+## Revise and verify in context
 
-- **When the same setting is wanted,** use verse 1's phrase as a reference for verse 2, including its stresses and any melismas. Matching counts are useful for a syllabic melody, not a requirement for varied verses. Keep notes when the request is only about words; adapt them when that is authorised.
-- **Within a section,** equal line lengths feel steady, a shorter line punches, and lengthening lines build (the prosody skill covers how structure carries feeling).
-- **Keep lines singable in one breath** at the song's tempo, or give long lines a natural pause.
-- **End lines on the important word.** The end of a line is where the ear lands and usually where the rhyme sits.
+1. Identify the requested scope, protected words/notes, linked copies and the actual writing problem.
+2. Explore useful wording or structural alternatives through Lyricist, with only the relevant references.
+3. Read the chosen excerpt with its neighbours. Check scene/actions, pronoun references, continuity, rhyme sound and the lead-in to any repeated hook.
+4. For a sung setting, use `lyrics/prosody` with exact notes, tempo, meter and phrase origin. Review semantic emphasis and articulation as well as counts.
+5. Save only authorised edits, read the result back and revisit the complete affected passage. Musical setting may reveal that another lyric revision is needed.
 
-## Conversational phrasing
-
-- Write what a person would say, in normal word order. Read the line aloud at speaking speed and rephrase it until it sounds like something a person would say; a musician who deliberately writes in a formal or poetic style keeps that style.
-- Use the contractions the musician uses.
-- Natural speech already has rhythm, and keeping it helps the stresses land when the line is sung.
-- Questions, direct address and dialogue make lyrics feel alive.
-
-## Rewriting a line
-
-Decide what is wrong before changing anything: the meaning, the image, the sound, the fit with the notes, or the rhyme. Fix that, and keep everything else.
-
-1. **Name the line's job** (what it must show or say) and keep the words that already do it.
-2. **Swap an abstract word for a concrete detail.**
-3. **Find a stronger verb.**
-4. **Cut filler** and spend the space on meaning.
-5. **Reorder** so the key word lands at the end of the line.
-6. **Change the rhyme sound**, for instance by re-ending the other line of the pair (the rhymes skill).
-7. **Change the point of view, tense or addressee** for a new angle.
-8. **Use a different sense.**
-9. **Say the opposite, or understate.**
-10. **Keep the intended setting:** review how the words sit on the notes, rather than requiring equal counts or identical stress patterns.
-
-### Worked example
-
-Verse 1, line 3 (on the lead sheet's locked list): *The kettle clicks, the window shakes*: 8 syllables, stressed on KET-, CLICKS, WIN- and SHAKES, every stress on a beat. Verse 2, line 3 is sung on the same 8 notes: *I'm feeling lonely without you*. Its count fits, but Lyricist's prosody review finds the unstressed "you" on the line's long final note, and it tells the feeling outright. The verse is ABCB, so line 3 is free to stay unrhymed.
-
-The musician clicks "Less telling". Ode rewrites verse 2, line 3 in place: *I cook too much and freeze the rest*. Lyricist's syllable assessment gives 8 for its 8 notes, Lyricist's prosody review reports the stresses fit, Lyricist flags no obvious familiar phrasing, and it shows the absence through a habit of cooking for two that carries on. Result line: "Verse 2, line 3 now 'I cook too much and freeze the rest' · 8 syllables on its 8 notes, stresses fit, familiar phrasing reviewed."
-
-On Again, a clearly different take of the same line: *Who gets your Sunday mornings now?* (8 syllables, stresses fit), described as a direct question if that helps the musician compare the takes.
-
-A fit takes more than a matching count: here the count already matched, and the fix was the stress and the telling. More examples sorted by problem (a cliché, filler, forced word order, a drifting point of view, a buried title, a verse 2 that repeats verse 1, an abstract chorus) are in `references/rewriting-examples.md`.
-
-## Sub-skills
-
-Paths are relative to this skill's folder. Read a sub-skill when it applies; it adds only the genre detail beyond this file.
-
-| Path | Read when |
-|---|---|
-| `pop/SKILL.md` | The musician identifies a pop or pop-leaning direction (dance-pop, synth-pop, pop-rock, pop R&B, electropop), or asks specifically for pop lyric techniques. An existing track, topline or sing-back request alone does not select pop. |
-| `hip-hop/SKILL.md` | You're writing or editing rap verses, bars or hip-hop hooks (boom-bap, trap, drill, grime, or any rapped section in another genre). |
-| `singer-songwriter/SKILL.md` | The song has a singer-songwriter, folk, Americana, country-leaning or indie-folk direction, or the musician wants those story-led techniques. Acoustic or piano instrumentation alone does not define the lyric style. |
+Keep technical analysis in service of the writing. Explain the meaningful choice briefly when useful; do not fill the chat with a craft lecture or treat a model assessment as a quality certificate.
