@@ -49,8 +49,9 @@ export class MaxWindowBridge {
   get supportsParameters(): boolean { return this.connected && this.device?.session?.parametersVersion === 1; }
 
   attachDaw(daw: { poll(session: string): MaxDawCommand | null; invalidate(): void }): void { this.daw = daw; }
-  get supportsDaw(): boolean { return this.connected && [1, MAX_DAW.version].includes(this.device?.session?.dawVersion ?? 0); }
-  get supportsDawNoteEdits(): boolean { return this.connected && this.device?.session?.dawVersion === MAX_DAW.version; }
+  get supportsDaw(): boolean { return this.connected && [1, 2, MAX_DAW.version].includes(this.device?.session?.dawVersion ?? 0); }
+  get supportsDawNoteEdits(): boolean { return this.connected && [2, MAX_DAW.version].includes(this.device?.session?.dawVersion ?? 0); }
+  get supportsDawNoteWindows(): boolean { return this.connected && this.device?.session?.dawVersion === MAX_DAW.version; }
 
   verifySession(session: string): MaxWindowBinding {
     const device = this.authorized(session);

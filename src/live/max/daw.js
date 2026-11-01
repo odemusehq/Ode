@@ -135,11 +135,27 @@ function ode_daw_midi_command(command, target) {
   if (command.op === "midi_notes_read") {
     var offset = args.offset === undefined ? 0 : args.offset, limit = args.limit === undefined ? ODE_DAW.midiPageSize : args.limit;
     if (!Number.isInteger(offset) || offset < 0 || !Number.isInteger(limit) || limit < 1 || limit > ODE_DAW.midiPageSize) throw new Error(ODE_DAW_COPY.invalid);
-    var page = state.notes.slice(offset, offset + limit);
+    var selected = state.notes;
+    if (args.window !== undefined) {
+      var window = args.window;
+      if (!window || Object.keys(window).length !== 2 || !Number.isFinite(window.start) || !Number.isFinite(window.length) || window.length <= 0) throw new Error(ODE_DAW_COPY.invalid);
+      var serialized = ode_daw_scalar(target.api.call("get_notes_extended", 0, 128, window.start, window.length));
+      if (typeof serialized !== "string") throw new Error(ODE_DAW_COPY.unsupported);
+      if (serialized.length > ODE_DAW.midiMaxStateChars) throw new Error(ODE_DAW_COPY.tooLarge);
+      var queried = JSON.parse(serialized).notes, observed = {}, seen = {};
+      if (!Array.isArray(queried) || queried.length > state.notes.length) throw new Error(ODE_DAW_COPY.changed);
+      state.notes.forEach(function (note) { observed[note.note_id] = note; });
+      selected = queried.map(function (note) {
+        if (!note || !Number.isSafeInteger(note.note_id) || !observed[note.note_id] || seen[note.note_id]) throw new Error(ODE_DAW_COPY.changed);
+        seen[note.note_id] = true;
+        return observed[note.note_id];
+      }).sort(function (a, b) { return a.note_id - b.note_id; });
+    }
+    var page = selected.slice(offset, offset + limit);
     ode_daw_remember(command, target, state);
     odeDaw.reads[command.id].noteIds = page.map(function (note) { return note.note_id; });
-    return { readToken: command.id, name: state.name, notes: page.map(ode_daw_midi_visible), total: state.notes.length,
-      offset: offset, nextOffset: offset + page.length < state.notes.length ? offset + page.length : null };
+    return { readToken: command.id, name: state.name, notes: page.map(ode_daw_midi_visible), total: selected.length,
+      offset: offset, nextOffset: offset + page.length < selected.length ? offset + page.length : null };
   }
   var saved = odeDaw.reads[args.readToken];
   ode_daw_check(command, target, state);

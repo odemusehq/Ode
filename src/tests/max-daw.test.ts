@@ -116,6 +116,34 @@ test("native note guards refuse stale, unseen or missing IDs, recording and rela
   assert.equal(writes.filter(([, name]) => name === "apply_note_modifications").length, 0);
 });
 
+test("native beat windows authorise only queried IDs while retaining the complete clip guard", async () => {
+  const { run, writes, address, notes, objects, path } = await nativeNotesFixture();
+  const nativeCall = objects[path].call;
+  objects[path].call = (name: string, ...args: unknown[]) => name === "get_notes_extended"
+    ? JSON.stringify({ notes: [notes()[1]] }) : nativeCall(name, ...args);
+  const window = { start: 0.75, length: 0.5 };
+  const read = () => run("midi_notes_read", { window, limit: 1 }, address);
+  const first = read();
+  assert.equal(first.ok, true, first.error);
+  assert.equal(first.result.total, 1);
+  assert.equal(first.result.notes[0].note_id, 12);
+  assert.deepEqual(writes.find(([, name]) => name === "get_notes_extended"), [path, "get_notes_extended", 0, 128, 0.75, 0.5]);
+  assert.equal(run("midi_notes_modify", { readToken: first.result.readToken, notes: [{ note_id: 11, pitch: 48 }] }, address).ok, false);
+  const stale = read().result.readToken; notes()[0]!.velocity = 89;
+  assert.equal(run("midi_notes_modify", { readToken: stale, notes: [{ note_id: 12, pitch: 52 }] }, address).ok, false);
+  const edited = run("midi_notes_modify", { readToken: read().result.readToken, notes: [{ note_id: 12, pitch: 52 }] }, address);
+  assert.equal(edited.ok, true, edited.error);
+  assert.equal(edited.result.confirmed, true);
+  const bridge = new MaxWindowBridge(() => "http://localhost:9123/?view=ask");
+  const control = new MaxDawControl(bridge);
+  const { session } = bridge.connect(bridge.prepare({ deviceId: "d", setId: "s" }).capability, undefined, undefined, 2);
+  const pending = control.run("midi_notes_read", null, {}, "request");
+  const command = bridge.poll(session).daw!;
+  control.receive(session, { id: command.id, ok: true, result: { notes: [] } });
+  assert.deepEqual(await pending, { notes: [] });
+  await assert.rejects(control.run("midi_notes_read", null, { window }, "request"), /updated/i);
+});
+
 test("native note tools negotiate updated devices and reject malformed patches before dispatch", async () => {
   const registry = new ToolRegistry({} as ToolContext);
   assert.equal(registry.group("midi_clip_get_notes_native"), "daw_read");

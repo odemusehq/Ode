@@ -28,6 +28,7 @@ export class MaxDawControl implements MaxDaw {
     signal?.throwIfAborted();
     if (!this.window.supportsDaw) throw new Error(t("maxDaw.unavailable"));
     if ((op === "midi_notes_read" || op === "midi_notes_modify") && !this.window.supportsDawNoteEdits) throw new Error(t("maxDaw.unavailable"));
+    if (op === "midi_notes_read" && args.window !== undefined && !this.window.supportsDawNoteWindows) throw new Error(t("maxDaw.unavailable"));
     if (!DAW_OPERATIONS.includes(op) || !scope.trim()) throw new Error(t("maxDaw.invalid"));
     if (this.pending.size >= MAX_DAW.maxPending) throw new Error(t("maxDaw.busy"));
     const command = { id: randomUUID(), op, address, args, scope, expiresAt: Date.now() + MAX_DAW.timeoutMs };
