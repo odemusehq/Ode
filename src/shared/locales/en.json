@@ -744,6 +744,9 @@
     "versionIsMissingFromTheHistory": "Version {id} is missing from the history"
   },
   "runtime": {
+    "sdkMessagesUnavailable": "Claude Agent SDK needs a supported Messages endpoint for {provider}. No other provider was selected.",
+    "sdkAudioUnavailable": "Claude Agent SDK cannot deliver this recording as audio to the model. The recording has not been heard. No separate model was called.",
+    "sdkRuntimeMissing": "Ode''s Claude Agent SDK runtime is missing for {platform}. Reinstall a package built for this computer.",
     "thatSongIsNoLongerActiveSendThe": "That song is no longer active. Send the request to the open song.",
     "stoppedBeforeStarting": "Stopped before starting.",
     "continuedWithYourLaterMessage": "Continued with your later message.",
