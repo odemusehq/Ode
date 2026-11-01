@@ -17,20 +17,24 @@ test("lyric work reaches the configured Lyricist with current text, exact notes 
     prefs: { effective: async () => ({ genre: "pop", pronunciation: "uk" }) },
     mneme: { recall: async () => [{ topic: "rhymes", value: "Prefer imperfect rhymes", source: "said", confidence: 1 }] },
     snapshots: { latest: null },
-    skills: { read: async (name: string) => `Selected guidance for ${name}` },
+    skills: { read: async (name: string, file?: string) => `Selected guidance for ${name}${file ? `/${file}` : ""}` },
     services: { chat: async (role: string) => {
       calls.role = role;
       return { json: async (request: JsonRequest<unknown>) => { calls.request = request; return request.parse({ text: "Let the evening in", explanation: "Keep the opening; replace the ending.", cautions: [] }); } };
     } },
   } as unknown as ToolContext;
-  const result = await lyricist.run({ task: "Rewrite the chorus ending, keep the melody", notes, skills: ["lyrics/rhymes"] }, ctx);
+  const result = await lyricist.run({ task: "Rewrite the chorus ending, keep the melody", notes, skills: ["lyrics/rhymes"], references: [{ skill: "lyrics/prosody", file: "references/craft.md" }] }, ctx);
   assert.equal(calls.role, "lyrics_check");
   const sent = JSON.parse(calls.request!.user);
   assert.equal(sent.task, "Rewrite the chorus ending, keep the melody");
   assert.equal(sent.lyrics, sheet.lyrics);
   assert.equal(sent.lyricsRevision, 3);
   assert.deepEqual(sent.notes, notes);
-  assert.deepEqual(sent.guidance.map((entry: { name: string }) => entry.name), ["lyrics", "lyrics/rhymes"]);
+  assert.deepEqual(sent.guidance.map((entry: { name: string; file?: string }) => [entry.name, entry.file]), [
+    ["lyrics", undefined], ["lyrics/rhymes", undefined], ["lyrics/prosody", undefined], ["lyrics/prosody", "references/craft.md"],
+  ]);
+  assert.equal(sent.guidance[3].instructions, "Selected guidance for lyrics/prosody/references/craft.md");
+  assert.ok(!calls.request!.user.includes("references/writing.md"));
   assert.equal(sent.preferences.pronunciation, "uk");
   assert.equal(sent.artistPreferences[0].value, "Prefer imperfect rhymes");
   assert.equal(calls.request?.signal, stopped.signal);
