@@ -15,7 +15,7 @@ test("SDK tool media becomes real audio after all tool results, with the capture
   assert.equal(body.model, "muse-spark-1.3");
   assert.equal(body.store, false);
   assert.deepEqual(body.input.map((item: any) => item.type), ["function_call", "function_call", "function_call_output", "function_call_output", "message"]);
-  const audio = body.input.at(-1)!.content[0];
+  const audio = body.input.at(-1)!.content.find((part: any) => part.type === "input_audio");
   assert.equal(audio.type, "input_audio");
   assert.equal(audio.input_audio.format, "wav");
   assert.deepEqual(Buffer.from(audio.input_audio.data, "base64"), Buffer.from([82, 73, 70, 70, 1, 2, 3]));

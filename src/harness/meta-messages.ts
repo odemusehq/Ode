@@ -33,7 +33,8 @@ export class MetaMessages {
             for (const part of blocks(block.content)) {
               if (part.type === "text") {
                 const extracted = media.extract(String(part.text ?? ""), block.tool_use_id);
-                result.push({ type: "input_text", text: extracted.text }); audio.push(...extracted.audio);
+                result.push({ type: "input_text", text: extracted.text });
+                if (extracted.audio.length) audio.push({ type: "input_text", text: `Recording returned by tool call ${block.tool_use_id}:` }, ...extracted.audio);
               } else if (part.type === "input_audio") audio.push(part);
               else result.push(...MetaMessages.media(part));
             }
@@ -41,7 +42,8 @@ export class MetaMessages {
               output: result.every(part => part.type === "input_text") ? result.map(part => part.text).join("\n") : result });
           } else if (block.type === "text") {
             const extracted = media.extract(String(block.text ?? ""));
-            content.push({ type: "input_text", text: extracted.text }); audio.push(...extracted.audio);
+            content.push({ type: "input_text", text: extracted.text });
+            if (extracted.audio.length) audio.push({ type: "input_text", text: "Musician's audio reference:" }, ...extracted.audio);
           } else if (block.type === "input_audio") audio.push(block);
           else content.push(...MetaMessages.media(block));
         }
@@ -60,7 +62,8 @@ export class MetaMessages {
       if (["web_search", "web_search_20250305", "web_search_20250305_15"].includes(tool.type)) return { type: "web_search", ...(tool.user_location ? { user_location: tool.user_location } : {}) };
       throw new Error(`Unsupported SDK hosted tool: ${tool.type}`);
     });
-    if (body.tool_choice?.type) request.tool_choice = ({ auto: "auto", any: "required", none: "none" } as Block)[body.tool_choice.type] ?? "auto";
+    if (body.tool_choice?.type === "tool") request.tool_choice = { type: "function", name: body.tool_choice.name };
+    else if (body.tool_choice?.type) request.tool_choice = ({ auto: "auto", any: "required", none: "none" } as Block)[body.tool_choice.type] ?? "auto";
     if (body.tool_choice?.disable_parallel_tool_use) request.parallel_tool_calls = false;
     return request;
   }
