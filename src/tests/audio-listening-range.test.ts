@@ -9,6 +9,7 @@ import { TempFolder } from "../mneme/paths";
 import { MusicAudio, audioHash } from "../services/music-audio";
 import { TOOL_MEDIA } from "../tools/define";
 import { listeningTools } from "../tools/daw/state/listening";
+import { attachAudioFile } from "../tools/daw/audio/file-evidence";
 
 test("preparing audio lets the host process its Max heartbeat", async () => {
   const bytes = encodeWav({ sampleRate: 8_000, channels: [new Float32Array(80_000).fill(0.25)] }, WavBitDepth.Float32);
@@ -60,6 +61,9 @@ test("audio_read attaches exact selected frames and source identity without call
     assert.equal(result.source.selection.firstFrame, 8_000);
     assert.equal(result.source.sha256, audioHash(await readFile(path)));
     assert.equal(result.payload.sha256, audioHash(attached.data));
+    const captured: any = await attachAudioFile({ path, capture: { timing: { startedBeat: 48, endedBeat: 100 } } });
+    assert.match(captured[TOOL_MEDIA][0].description, /^Observed Arrangement coverage: beat 48 to 100\./);
+    assert.match(captured[TOOL_MEDIA][0].description, /Do not claim to have heard sections outside/);
     assert.ok(!JSON.stringify(result).includes('"data"'), "Binary content must not become an ordinary saved tool result.");
     await assert.rejects(tool.run({ path, toSeconds: 3 }, ctx), /within this recording/);
     await assert.rejects(tool.run({ track: { tag: "voice" }, start: 0, end: 4, fromSeconds: 1 }, ctx), /file passage/);

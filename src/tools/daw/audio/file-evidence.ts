@@ -9,7 +9,11 @@ export async function attachAudioFile<T extends { path: string }>(result: T, sig
     const read = await new MusicAudio().read(result.path);
     if (signal?.aborted) return result;
     const metadata = { ...result, audioAttached: true, audioPayload: read.payload };
-    return withMedia(metadata, [{ description: JSON.stringify(metadata), content: read.content }]);
+    const timing = (result as { capture?: { timing?: { startedBeat?: number; endedBeat?: number } } }).capture?.timing;
+    const coverage = Number.isFinite(timing?.startedBeat) && Number.isFinite(timing?.endedBeat)
+      ? `Observed Arrangement coverage: beat ${timing!.startedBeat} to ${timing!.endedBeat}. Only this interval was recorded, with the native timing uncertainty reported below. Do not claim to have heard sections outside it.\n`
+      : "";
+    return withMedia(metadata, [{ description: coverage + JSON.stringify(metadata), content: read.content }]);
   } catch (error) {
     // A successful native capture or file copy remains available even if its codec cannot be attached.
     return { ...result, audioAttached: false, audioError: error instanceof Error ? error.message : String(error) };
