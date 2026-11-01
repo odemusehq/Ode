@@ -244,7 +244,7 @@ function openCommand(command, local) {
 
 function frontWindow() {
   var control = windowObjects().control;
-  control.message("window", "flags", "float", "grow", "close", "nozoom", "nomenu");
+  control.message("window", "flags", "float", "grow", "close", "zoom", "nomenu");
   control.message("window", "exec");
   outlet(0, "open");
   control.message("front");

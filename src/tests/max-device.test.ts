@@ -164,6 +164,7 @@ test("embedded Max client consumes bootstrap once and waits for page readiness b
   context.tick();
   assert.deepEqual(requests[1]?.body, { session: "b".repeat(48) });
   requests[1]!.reply({ command: { id: "first", view: "ask", url } });
+  assert.ok(window.some(message => message[0] === "window" && message[1] === "flags" && message.includes("grow") && message.includes("zoom") && !message.includes("nozoom")), "The native window must permit manual resizing and the platform zoom control");
   assert.ok(window.some((message) => message[0] === "front"), "Show the native window before waiting for its hidden jweb renderer to load");
   assert.equal(page[0]?.[0], "read");
   const firstPage = new URL(String(page[0]?.[1]));
