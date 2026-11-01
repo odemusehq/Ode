@@ -2,11 +2,13 @@ import { createHash, randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { z } from "zod";
 import type { ConversationActivity, ConversationExchange } from "../shared/conversation";
+import { ComposerAttachmentSchema, type ComposerAttachment } from "../shared/composer";
 import { JsonFile } from "./json-file";
 
 export const ExchangeSchema = z.object({
   id: z.string().optional(), request: z.string(), reply: z.string(), at: z.string(),
   activity: z.array(z.object({ id: z.string(), label: z.string(), status: z.enum(["running", "done", "error"]), reason: z.string().optional() })).optional(),
+  attachments: z.array(ComposerAttachmentSchema).optional(),
   rationale: z.string().optional(),
   versionId: z.string().nullable().optional(),
   status: z.enum(["running", "complete", "stopped", "failed"]).optional(),
@@ -22,6 +24,7 @@ export class ConversationLog {
   async all(): Promise<ConversationExchange[]> {
     return (await this.file.read()).map((entry) => ({
       request: entry.request, reply: entry.reply, at: entry.at,
+      ...(entry.attachments ? { attachments: entry.attachments } : {}),
       ...(entry.activity === undefined ? {} : { activity: entry.activity }),
       ...(entry.rationale === undefined ? {} : { rationale: entry.rationale }),
       ...(entry.versionId === undefined ? {} : { versionId: entry.versionId }),
@@ -44,7 +47,7 @@ export class ConversationLog {
   }
 
   /** The same accepted request never starts twice, including after a lost HTTP acknowledgement or restart. */
-  async beginOnce(request: string, requestId: string = randomUUID()): Promise<{ id: string; created: boolean }> {
+  async beginOnce(request: string, requestId: string = randomUUID(), attachments?: ComposerAttachment[]): Promise<{ id: string; created: boolean }> {
     let created = false;
     await this.file.update((entries) => {
       const existing = entries.find((entry) => entry.id === requestId);
@@ -53,7 +56,7 @@ export class ConversationLog {
         return entries;
       }
       created = true;
-      return [...entries, { id: requestId, request, reply: "", at: new Date().toISOString(), status: "running" }];
+      return [...entries, { id: requestId, request, ...(attachments?.length ? { attachments } : {}), reply: "", at: new Date().toISOString(), status: "running" }];
     });
     return { id: requestId, created };
   }

@@ -18,7 +18,7 @@ export enum ResultKind {
 
 /** Events the local server streams to the UI over server-sent events. */
 export type UiEvent =
-  | { type: "message"; role: "user" | "assistant"; text: string; id?: string }
+  | { type: "message"; role: "user" | "assistant"; text: string; id?: string; attachments?: import("./composer").ComposerAttachment[] }
   | { type: "conversation"; songId: string; exchanges: ConversationExchange[] }
   | { type: "tool"; id: string; name: string; status: "started" | "done" | "error"; summary?: string }
   | { type: "subagent"; id: string; task: string; status: "started" | "done" }

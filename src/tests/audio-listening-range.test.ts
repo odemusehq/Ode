@@ -7,7 +7,7 @@ import { AudioFileDecoder } from "../audio/decode";
 import { writeWav } from "../audio/wav";
 import { TempFolder } from "../mneme/paths";
 import { MusicAudio, audioHash } from "../services/music-audio";
-import { TOOL_AUDIO } from "../tools/define";
+import { TOOL_MEDIA } from "../tools/define";
 import { listeningTools } from "../tools/daw/state/listening";
 
 test("audio_read attaches exact selected frames and source identity without calling a model", async () => {
@@ -19,7 +19,7 @@ test("audio_read attaches exact selected frames and source identity without call
     const ctx = { temp: new TempFolder(directory) } as never;
     const tool = listeningTools.find(tool => tool.name === "audio_read")!;
     const result: any = await tool.run({ path, fromSeconds: 1, toSeconds: 1.25 }, ctx);
-    const attached = result[TOOL_AUDIO][0].content;
+    const attached = result[TOOL_MEDIA][0].content;
     const decoded = new AudioFileDecoder().decode(attached.data, "context.wav");
     assert.equal(decoded.channels.length, 2);
     assert.equal(decoded.channels[0]!.length, 2_000);

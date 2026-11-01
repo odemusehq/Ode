@@ -924,5 +924,30 @@
     "preparePlayback": "Stop playback, set current_song_time to the requested rehearsal beat, then read transport to confirm both position and start_time before Play.",
     "activityInstrument": "{device} · Set instrument controls",
     "meterUnits": "native 0..1; peak/hold meters, not dBFS, LUFS, true peak or gain reduction"
+  },
+  "references": {
+    "add": "Add reference",
+    "files": "Files",
+    "folder": "Folder",
+    "attached": "References",
+    "adding": "Adding references…",
+    "tooLarge": "Select at most 256 files, totalling at most 128 MiB.",
+    "unavailable": "Reference storage is unavailable.",
+    "invalidSelection": "Choose files or a folder to attach.",
+    "unsupported": "Choose an image, audio recording or UTF-8 text file.",
+    "empty": "The selected reference is empty.",
+    "duplicate": "The reference selection contains duplicate paths.",
+    "oneSelection": "Select one file or a folder of references.",
+    "textLarge": "{name}: text references are limited to 2 MiB.",
+    "textEncoding": "{name}: choose a UTF-8 text file.",
+    "imageLarge": "{name}: images are limited to 20 MiB.",
+    "imageType": "{name}: the image data does not match its file type.",
+    "emptyFolder": "The folder has no supported image, audio or text references.",
+    "fileNotFolder": "This reference is a file. Read it with reference_read.",
+    "notImage": "This reference is not an image.",
+    "changed": "{name} changed. Attach the intended reference again.",
+    "storageBoundary": "Reference storage must stay inside Ode's local storage.",
+    "uploadFailed": "Could not add {name}: {reason}",
+    "remove": "Remove {name}"
   }
 }

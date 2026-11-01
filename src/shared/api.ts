@@ -11,6 +11,8 @@ export const API = {
   composerResolve: "/api/composer/resolve", // POST ComposerResolve → ComposerState
   composerCancel: "/api/composer/cancel", // POST ComposerCancel → ComposerState
   audioImport: "/api/audio/import", // POST explicit multipart audio upload
+  referenceImport: "/api/references/import",
+  referenceImage: "/api/references/image",
   dictation: "/api/dictation", // POST multipart { songId, file: PCM WAV } → DictationResponse; never submits chat
   stop: "/api/stop", // POST → { ok: true }
   events: "/api/events", // GET server-sent events of UiEvent

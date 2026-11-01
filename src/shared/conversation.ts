@@ -10,6 +10,7 @@ export interface ConversationActivity {
 export interface ConversationExchange {
   id: string;
   request: string;
+  attachments?: import("./composer").ComposerAttachment[];
   reply: string;
   at: string;
   activity?: ConversationActivity[];

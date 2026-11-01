@@ -167,7 +167,7 @@ test("tool audio reaches the next agent turn after every sibling tool reply, out
   const { loop, run, registry, limits } = await rig(model);
   const native = registry.run.bind(registry);
   const data = new Uint8Array(100_000);
-  registry.run = async (name, ...args) => name === "song_get" ? { ok: true, text: "Captured source", audio: [
+  registry.run = async (name, ...args) => name === "song_get" ? { ok: true, text: "Captured source", media: [
     { description: "Native Main post-mixer capture", content: { type: "audio", data, format: "wav", durationSeconds: 1 } },
   ] } : native(name, ...args);
   limits.toolResultMaxChars = 100;
@@ -191,11 +191,24 @@ test("Stop after a tool returns audio prevents its next model request", async ()
   const stop = new AbortController();
   registry.run = async () => {
     stop.abort();
-    return { ok: true, text: "Capture completed", audio: [{ description: "Capture", content: { type: "audio", data: Uint8Array.of(1), format: "wav", durationSeconds: 1 } }] };
+    return { ok: true, text: "Capture completed", media: [{ description: "Capture", content: { type: "audio", data: Uint8Array.of(1), format: "wav", durationSeconds: 1 } }] };
   };
   const result = await loop.run(run({ signal: stop.signal }));
   assert.equal(result.end, LoopEnd.Cancelled);
   assert.equal(model.turns.length, 1);
+});
+
+test("initial image attachments remain in the main conversation exactly once after compaction", async () => {
+  const model = new ScriptedModel([answer("Earlier work completed. Inspect the current moodboard."), answer("Seen the reference.")]);
+  const { loop, run } = await rig(model, 40_000);
+  const image = { type: "image_url" as const, image_url: { url: "data:image/png;base64,aW1hZ2U=" } };
+  const result = await loop.run(run({ prompt: "Use this moodboard.", content: [image], history: [{ role: "user", content: "Earlier completed context. ".repeat(10000) }] }));
+  assert.equal(result.reply, "Seen the reference.");
+  assert.equal(model.turns.length, 2);
+  for (const turn of model.turns) {
+    const images = turn.messages.flatMap(message => message.role === "user" && Array.isArray(message.content) ? message.content.filter(part => part.type === "image_url") : []);
+    assert.deepEqual(images, [image]);
+  }
 });
 
 test("a real audio_read reaches the same agent through the registry and survives compaction", async () => {

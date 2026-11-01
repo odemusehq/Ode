@@ -5,7 +5,7 @@ import { z } from "zod";
 import { LocalAudioFiles } from "../../../live/local-audio-files";
 import { MusicAudio } from "../../../services/music-audio";
 import type { TrackRef } from "../../../shared/live";
-import { defineTool, withAudio, type AnyTool, type ToolContext } from "../../define";
+import { defineTool, withMedia, type AnyTool, type ToolContext } from "../../define";
 import { ArrangementAudio } from "../audio/arrangement-audio";
 import { attachAudioFile } from "../audio/file-evidence";
 import { TrackRefSchema } from "../schemas";
@@ -50,7 +50,7 @@ export const listeningTools: AnyTool[] = [
         const source = { ...read.source, ...(input.path ? { path } : { track: input.track, range: { start: input.start, end: input.end }, retained: false }) };
         const result = { source, payload: read.payload, audioAttached: true,
           signalStage: input.path ? "supplied file; stage depends on its native capture or declared provenance" : "pre-effects, pre-fader Arrangement audio" };
-        return withAudio(result, [{ description: JSON.stringify(result), content: read.content }]);
+        return withMedia(result, [{ description: JSON.stringify(result), content: read.content }]);
       });
     },
   }),

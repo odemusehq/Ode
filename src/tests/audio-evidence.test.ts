@@ -7,7 +7,7 @@ import { encodeWav } from "../audio/wav";
 import { LocalAudioFiles } from "../live/local-audio-files";
 import { TempFolder } from "../mneme/paths";
 import { MusicAudio, audioHash } from "../services/music-audio";
-import { TOOL_AUDIO, type ToolContext } from "../tools/define";
+import { TOOL_MEDIA, type ToolContext } from "../tools/define";
 import { listeningTools } from "../tools/daw/state/listening";
 
 test("native audio reads and retained captures attach stable bytes before the temporary render disappears", async () => {
@@ -25,7 +25,7 @@ test("native audio reads and retained captures attach stable bytes before the te
     assert.equal(result.source.retained, false);
     assert.equal("path" in result.source, false);
     assert.equal(await stat(rendered).then(() => true, () => false), false);
-    assert.deepEqual(Buffer.from(result[TOOL_AUDIO][0].content.data), Buffer.from(bytes));
+    assert.deepEqual(Buffer.from(result[TOOL_MEDIA][0].content.data), Buffer.from(bytes));
 
     const capture = listeningTools.find(tool => tool.name === "audio_capture")!;
     const retained: any = await capture.run({ track: { tag: "voice" }, start: 0, end: 4 }, ctx);
@@ -34,9 +34,9 @@ test("native audio reads and retained captures attach stable bytes before the te
     assert.equal(retained.sha256, audioHash(bytes));
     assert.equal(await stat(rendered).then(() => true, () => false), false);
     const opened = await new LocalAudioFiles(root, root).open(retained.id);
-    assert.deepEqual(await readFile(opened.path), Buffer.from(retained[TOOL_AUDIO][0].content.data));
+    assert.deepEqual(await readFile(opened.path), Buffer.from(retained[TOOL_MEDIA][0].content.data));
 
-    const frozen = retained[TOOL_AUDIO][0].content.data;
+    const frozen = retained[TOOL_MEDIA][0].content.data;
     await writeFile(opened.path, encodeWav({ sampleRate: 8_000, channels: [Float32Array.of(0.8)] }));
     assert.equal(audioHash(frozen), retained.audioPayload.sha256, "Later file edits cannot change the material in context.");
     const stop = new AbortController(), freeze = MusicAudio.freeze;

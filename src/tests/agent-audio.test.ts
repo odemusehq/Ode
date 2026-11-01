@@ -45,5 +45,5 @@ test("context size counts audio separately from binary serialization", () => {
   const audio: AudioContent = { type: "audio", data: new Uint8Array(2_000_000), format: "wav", durationSeconds: 6 };
   const size = chatContextSize([{ role: "user", content: [audio] }]);
   assert.ok(size.chars < 200);
-  assert.ok(size.audioTokens >= 75, "The waveform still consumes context even though it is not text.");
+  assert.ok(size.mediaTokens >= 75, "The waveform still consumes context even though it is not text.");
 });

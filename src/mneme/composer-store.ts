@@ -1,8 +1,10 @@
+import { t } from "../shared/i18n";
 import { createHash, randomUUID } from "node:crypto";
 import { basename, join } from "node:path";
 import { z } from "zod";
-import { ComposerConflictSchema, ComposerDraftSchema, ComposerPendingSchema, type ComposerAttachment, type ComposerCancel, type ComposerConflict, type ComposerDraft, type ComposerPrepare, type ComposerResolve, type ComposerState, type ComposerWrite } from "../shared/composer";
+import { ComposerAttachmentSchema, ComposerConflictSchema, ComposerDraftSchema, ComposerPendingSchema, type ComposerAttachment, type ComposerCancel, type ComposerConflict, type ComposerDraft, type ComposerPrepare, type ComposerResolve, type ComposerState, type ComposerWrite } from "../shared/composer";
 import type { AudioFileInput, LocalAudioFiles, ManagedAudio } from "../live/local-audio-files";
+import type { ReferenceFiles, ReferenceInput } from "./references";
 import type { ConversationStore } from "./conversations";
 import { JsonFile } from "./json-file";
 import type { SongStore } from "./song-store";
@@ -15,7 +17,7 @@ const DocumentSchema = z.object({
   writerHeads: z.array(z.object({ writerId: z.uuid(), sequence: z.number().int().min(0), draftHash: z.string(), conflict: z.boolean() })).default([]),
   cancelled: z.array(z.uuid()),
   accepted: z.array(z.object({ requestId: z.uuid(), textEditId: z.uuid(), textHash: z.string().default(""), snapshotHash: z.string().default(""), entryIds: z.array(z.uuid()) })),
-  uploads: z.array(z.object({ entryId: z.uuid(), hash: z.string(), attachment: z.object({ entryId: z.uuid(), id: z.uuid(), name: z.string(), scope: z.enum(["sample", "reference", "processed-bounce"]) }) })),
+  uploads: z.array(z.object({ entryId: z.uuid(), hash: z.string(), attachment: ComposerAttachmentSchema })),
 });
 type Document = z.infer<typeof DocumentSchema>;
 interface SongFile { dir: string; file: JsonFile<Document>; queue: Promise<unknown> }
@@ -30,7 +32,7 @@ export class ComposerError extends Error {
 export class ComposerStore {
   private readonly files = new Map<string, SongFile>();
 
-  constructor(private readonly songs: Pick<SongStore, "directoryFor">, private readonly conversations: ConversationStore, private readonly audio: LocalAudioFiles) {}
+  constructor(private readonly songs: Pick<SongStore, "directoryFor">, private readonly conversations: ConversationStore, private readonly audio: LocalAudioFiles, private readonly references?: ReferenceFiles) {}
 
   async read(songId: string): Promise<ComposerState> {
     return this.withSong(songId, async (song) => this.state(await this.load(song, songId)));
@@ -83,12 +85,12 @@ export class ComposerStore {
       if (input.baseRevision !== doc.revision) throw new ComposerError("The saved draft changed. Review the current draft before sending.", 409, this.state(doc));
       if (doc.pending && !same(doc.pending.snapshot, input.snapshot)) throw new ComposerError("An earlier send still awaits acknowledgement. Stop it before sending an edited draft.", 409, this.state(doc));
       if (this.textWasAccepted(input.snapshot, doc) || doc.accepted.some((item) => item.entryIds.some((id) => input.snapshot.attachments.some((entry) => entry.entryId === id)))) throw new ComposerError("Part of this draft was already sent. Review the current draft before sending again.", 409, this.state(doc));
-      if (!input.snapshot.text.trim() && input.snapshot.attachments.length === 0) throw new ComposerError("Write a message or attach audio before sending.", 400);
+      if (!input.snapshot.text.trim() && input.snapshot.attachments.length === 0) throw new ComposerError("Write a message or attach a reference before sending.", 400);
       if (!doc.pending) {
         // Validate managed references now, without retaining their temporary working paths in the request identity.
         for (const entry of input.snapshot.attachments) {
-          try { await this.audio.verify(entry.id); }
-          catch { throw new ComposerError(`${entry.name} is unavailable or changed. Remove it and attach the intended audio again.`, 400, this.state(doc)); }
+          try { await (entry.kind && entry.kind !== "audio" ? this.references?.verify(entry.id) ?? Promise.reject(new Error("Reference storage unavailable")) : this.audio.verify(entry.id)); }
+          catch { throw new ComposerError(`${entry.name} is unavailable or changed. Remove it and attach the intended reference again.`, 400, this.state(doc)); }
         }
         doc.pending = { requestId: randomUUID(), payload: ComposerStore.payload(input.snapshot), snapshot: structuredClone(input.snapshot) };
         doc.revision++;
@@ -145,22 +147,43 @@ export class ComposerStore {
   async accepted(songId: string, _requestId: string): Promise<ComposerState> { return this.read(songId); }
 
   /** Upload and draft linking share the per-song queue and entry id, so a lost upload ACK cannot create another selection. */
-  async attach(input: { songId: string; writerId: string; entryId: string; baseRevision: number; snapshot: ComposerDraft; scope: ComposerAttachment["scope"]; audio: AudioFileInput }): Promise<ManagedAudio & { entryId: string; linked: boolean; scope: ComposerAttachment["scope"]; composer: ComposerState }> {
+  async attachments(songId: string, requestId: string): Promise<ComposerAttachment[]> {
+    return this.withSong(songId, async song => {
+      const doc = await song.file.read();
+      return structuredClone(doc.pending?.requestId === requestId ? doc.pending.snapshot.attachments : (await this.conversations.log(songId).find(requestId))?.attachments ?? []);
+    });
+  }
+
+  async attach(input: { songId: string; writerId: string; entryId: string; baseRevision: number; snapshot: ComposerDraft; scope: ComposerAttachment["scope"]; audio: AudioFileInput }) {
+    const hash = digest({ name: input.audio.name, scope: input.scope, source: input.audio.source, range: input.audio.range, bytes: createHash("sha256").update(input.audio.bytes).digest("hex") });
+    const linked = await this.attachSelection({ ...input, name: basename(input.audio.name.replaceAll("\\", "/")) }, hash, async () => {
+      const record = await this.audio.add(input.audio);
+      return { id: record.id, scope: input.scope, name: record.name };
+    });
+    return { ...await this.audio.open(linked.id), ...linked };
+  }
+
+  async attachReference(input: { songId: string; writerId: string; entryId: string; baseRevision: number; snapshot: ComposerDraft; files: ReferenceInput[]; folder?: string }) {
+    if (!this.references) throw new Error(t("references.unavailable"));
+    const hash = digest({ folder: input.folder, files: input.files.map(file => ({ name: file.name, hash: createHash("sha256").update(file.bytes).digest("hex") })) });
+    return this.attachSelection({ ...input, scope: "reference", name: input.folder ?? input.files[0]?.name ?? "" }, hash, () => this.references!.add(input.files, input.folder));
+  }
+
+  private async attachSelection(input: { songId: string; writerId: string; entryId: string; baseRevision: number; snapshot: ComposerDraft; scope: ComposerAttachment["scope"]; name: string }, hash: string, create: () => Promise<Omit<ComposerAttachment, "entryId">>) {
     return this.withSong(input.songId, async (song) => {
       const doc = await this.load(song, input.songId);
-      const hash = digest({ name: input.audio.name, scope: input.scope, source: input.audio.source, range: input.audio.range, bytes: createHash("sha256").update(input.audio.bytes).digest("hex") });
+
       const previous = doc.uploads.find((item) => item.entryId === input.entryId);
-      if (previous && previous.hash !== hash) throw new ComposerError("That attachment selection already belongs to different audio.", 409, this.state(doc));
+      if (previous && previous.hash !== hash) throw new ComposerError("That attachment selection already belongs to different files.", 409, this.state(doc));
       let attachment = previous?.attachment;
       if (!attachment) {
         const canAppend = input.baseRevision === doc.revision && same(input.snapshot, doc.draft) || doc.lastWriterId === input.writerId;
         const intended = canAppend ? doc.draft : this.removeAccepted(input.snapshot, doc);
-        if (intended.attachments.length >= 16) throw new ComposerError("Keep at most 16 audio attachments in one message.", 400);
+        if (intended.attachments.length >= 16) throw new ComposerError("Keep at most 16 attachments in one message.", 400);
         const prospective = ComposerDraftSchema.safeParse({ ...intended, attachments: [...intended.attachments, { entryId: input.entryId,
-          id: "00000000-0000-4000-8000-000000000000", scope: input.scope, name: basename(input.audio.name.replaceAll("\\", "/")) }] });
-        if (!prospective.success) throw new ComposerError("This audio would make the saved draft too large. Shorten the message or remove an attachment first.", 400, this.state(doc));
-        const record = await this.audio.add(input.audio);
-        attachment = { entryId: input.entryId, id: record.id, scope: input.scope, name: record.name };
+          id: "00000000-0000-4000-8000-000000000000", scope: input.scope, name: input.name }] });
+        if (!prospective.success) throw new ComposerError("This reference would make the saved draft too large. Shorten the message or remove an attachment first.", 400, this.state(doc));
+        attachment = { ...await create(), entryId: input.entryId };
         doc.uploads.push({ entryId: input.entryId, hash, attachment });
         if (canAppend) { doc.draft.attachments.push(attachment); doc.lastWriterId = input.writerId; }
         else {
@@ -171,11 +194,12 @@ export class ComposerStore {
         doc.revision++;
         await song.file.write(doc);
       }
-      if (doc.conflicts.some((item) => item.draft.attachments.some((entry) => entry.entryId === input.entryId))) throw new ComposerError("This audio is saved with your other draft. Choose which draft to use before sending.", 409, this.state(doc));
+      if (doc.conflicts.some((item) => item.draft.attachments.some((entry) => entry.entryId === input.entryId))) throw new ComposerError("This reference is saved with your other draft. Choose which draft to use before sending.", 409, this.state(doc));
       const linked = doc.draft.attachments.some((entry) => entry.entryId === input.entryId);
-      return { ...await this.audio.open(attachment.id), entryId: attachment.entryId, linked, scope: attachment.scope, composer: this.state(doc) };
+      return { ...attachment, linked, composer: this.state(doc) };
     });
   }
+
 
   private async load(song: SongFile, songId: string): Promise<Document> {
     const doc = await song.file.read();
@@ -223,8 +247,7 @@ export class ComposerStore {
       { writerId: write.writerId, sequence: write.sequence, draftHash: digest(write.draft), conflict }];
   }
   private static payload(draft: ComposerDraft): string {
-    const audio = draft.attachments.map((entry) => `Audio attachment (${entry.scope}): ${JSON.stringify(entry.name)}\nManaged audio ID: ${entry.id} (open with library_audio_open; temporary paths are not saved)`).join("\n\n");
-    return [draft.text.trim(), audio].filter(Boolean).join("\n\n");
+    return draft.text.trim();
   }
   private async withSong<R>(songId: string, work: (song: SongFile) => Promise<R>): Promise<R> {
     const dir = await this.songs.directoryFor(songId);

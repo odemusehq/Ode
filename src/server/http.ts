@@ -46,6 +46,7 @@ import type { Services } from "../services/types";
 import { RoleCheck } from "../services/roles";
 import { Dictation, DictationError, MAX_DICTATION_BYTES } from "./dictation";
 import { ComposerCancelSchema, ComposerDraftSchema, ComposerPrepareSchema, ComposerResolveSchema, ComposerWriteSchema } from "../shared/composer";
+import { ReferenceFiles, MAX_REFERENCE_BYTES, MAX_REFERENCE_FILES } from "../mneme/references";
 import { ComposerError, type ComposerStore } from "../mneme/composer-store";
 
 /** The built UI's files by path ("index.html", "assets/index-….js"), each base64-encoded. */
@@ -63,6 +64,7 @@ export interface ServerDeps {
   models: ModelRoles;
   services: Pick<Services, "transcribe">;
   composer: ComposerStore;
+  references?: ReferenceFiles;
   approvals: Approvals;
   questions: Questions;
   sessions: SessionManager;
@@ -74,7 +76,7 @@ export interface ServerDeps {
   maxDaw?: MaxDawControl;
 }
 
-const TextSchema = z.object({ text: z.string().trim().min(1), requestId: z.uuid().optional(), songId: z.string().min(1).optional() });
+const TextSchema = z.object({ text: z.string().max(32768), requestId: z.uuid().optional(), songId: z.string().min(1).optional() });
 const DecisionSchema = z.object({ decision: z.enum(["allow", "deny"]) });
 const ChoiceSchema = z.object({ choice: z.string() });
 const NameSchema = z.object({ name: z.string() });
@@ -184,7 +186,7 @@ export class OdeServer {
     if (!READS.has(c.req.method)) {
       const origin = c.req.header("origin");
       if (origin !== undefined && !hosts.some((host) => origin === `http://${host}`)) return c.text(OPEN_FROM_LIVE, 403);
-      const upload = c.req.path === API.audioImport || c.req.path === API.dictation;
+      const upload = c.req.path === API.audioImport || c.req.path === API.referenceImport || c.req.path === API.dictation;
       const contentType = c.req.header("content-type") ?? "";
       // Max 9.1 sends its JSON body with this legacy media type despite setRequestHeader.
       const legacyMax = MAX_WINDOW_PATHS.has(c.req.path) && origin === undefined && contentType === "application/x-www-form-urlencoded";
@@ -195,7 +197,7 @@ export class OdeServer {
     }
     // Dictation has no song writes. Its captured song id and final check permit switching while ASR runs.
     const composerWrite = COMPOSER_WRITES.has(c.req.path);
-    if (!READS.has(c.req.method) && c.req.path !== API.stop && c.req.path !== API.dictation && c.req.path !== API.audioImport && !composerWrite && !MAX_WINDOW_PATHS.has(c.req.path)) {
+    if (!READS.has(c.req.method) && c.req.path !== API.stop && c.req.path !== API.dictation && c.req.path !== API.audioImport && c.req.path !== API.referenceImport && !composerWrite && !MAX_WINDOW_PATHS.has(c.req.path)) {
       const switchesSong = c.req.method === "POST" && (c.req.path === API.songs || c.req.path === API.songsOpen);
       if (this.switchingRequest || this.deps.songs.isSwitching || (switchesSong && this.modifyingRequests > 0)) {
         return c.json({ error: t("server.http.odeIsSwitchingSongsOrARequest") }, 409);
@@ -345,7 +347,9 @@ export class OdeServer {
       const songId = song.songId;
       try {
         if (parsed.data.requestId) await this.deps.composer.assertRequest(songId, parsed.data.requestId, parsed.data.text);
-        await sessions.current.accept(parsed.data);
+        const attachments = parsed.data.requestId ? await this.deps.composer.attachments(songId, parsed.data.requestId) : [];
+        if (!parsed.data.text.trim() && !attachments.length) return c.json({ error: t("server.http.sendTextWithWhatTo") }, 400);
+        await sessions.current.accept({ ...parsed.data, ...(attachments.length ? { attachments } : {}) });
         return c.json({ ok: true, ...(parsed.data.requestId ? { composer: await this.deps.composer.accepted(songId, parsed.data.requestId) } : {}) });
       } catch (error) {
         if (error instanceof RequestIdentityError) return c.json({ error: error.message }, 409);
@@ -412,6 +416,33 @@ export class OdeServer {
         if (linking) return c.json(await this.deps.composer.attach({ songId: String(draftIds[0]), writerId: String(draftIds[1]), entryId: String(draftIds[2]), ...draftLink!, scope: String(scope) as "sample" | "reference" | "processed-bounce", audio }));
         const record = await library.add(audio);
         return c.json({ ...await library.open(record.id), scope });
+      } catch (error) {
+        if (error instanceof ComposerError) return c.json({ error: error.message, composer: error.composer }, error.status);
+        if (error instanceof SongNotFoundError) return c.json({ error: error.message }, 404);
+        return c.json({ error: OdeServer.messageOf(error) }, 400);
+      }
+    });
+
+    const references = this.deps.references;
+    app.get(`${API.referenceImage}/:id`, async c => {
+      if (!references) return c.notFound();
+      try {
+        const image = await references.image(c.req.param("id"));
+        return new Response(new Uint8Array(image.bytes), { headers: { "Content-Type": image.mime, "X-Content-Type-Options": "nosniff", "Cache-Control": "private, no-store" } });
+      } catch { return c.notFound(); }
+    });
+    app.post(API.referenceImport, bodyLimit({ maxSize: MAX_REFERENCE_BYTES + 1024 * 1024,
+      onError: c => c.json({ error: t("references.tooLarge") }, 413) }), async c => {
+      if (!references) return c.json({ error: t("references.unavailable") }, 503);
+      try {
+        const form = await c.req.formData();
+        const ids = z.object({ songId: z.uuid(), writerId: z.uuid(), entryId: z.uuid(), baseRevision: z.coerce.number().int().nonnegative(), snapshot: ComposerDraftSchema }).parse({
+          songId: form.get("songId"), writerId: form.get("writerId"), entryId: form.get("entryId"), baseRevision: form.get("baseRevision"), snapshot: JSON.parse(String(form.get("snapshot"))) });
+        const files = form.getAll("file"), paths = form.getAll("path");
+        if (!files.length || files.length > MAX_REFERENCE_FILES || files.some(file => !(file instanceof File)) || paths.length !== files.length) return c.json({ error: t("references.invalidSelection") }, 400);
+        if (files.reduce((sum, file) => sum + (file as File).size, 0) > MAX_REFERENCE_BYTES) return c.json({ error: t("references.tooLarge") }, 413);
+        const selected = await Promise.all(files.map(async (file, index) => ({ name: String(paths[index]), bytes: new Uint8Array(await (file as File).arrayBuffer()) })));
+        return c.json(await this.deps.composer.attachReference({ ...ids, files: selected, ...(form.get("folder") ? { folder: String(form.get("folder")) } : {}) }));
       } catch (error) {
         if (error instanceof ComposerError) return c.json({ error: error.message, composer: error.composer }, error.status);
         if (error instanceof SongNotFoundError) return c.json({ error: error.message }, 404);

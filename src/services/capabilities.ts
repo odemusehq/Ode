@@ -3,7 +3,7 @@ import type { Role } from "../shared/config";
 import type { Transcript } from "./types";
 import type { MusicAudioSource } from "./music-audio";
 
-/** Captured media stays binary in the agent context; the provider adapter encodes it at dispatch. */
+/** Captured audio stays binary in the agent context; the provider adapter encodes it at dispatch. */
 export interface AudioContent {
   type: "audio";
   data: Uint8Array;
@@ -13,20 +13,24 @@ export interface AudioContent {
 
 export type ChatMessage = ChatCompletionMessageParam | {
   role: "user";
-  content: (ChatCompletionContentPart | AudioContent)[];
+  content: string | (ChatCompletionContentPart | AudioContent)[];
 };
 
 /** Estimate media separately: JSON/base64 size is not the waveform's model token count. */
-export function chatContextSize(value: unknown): { chars: number; audioTokens: number } {
-  let audioTokens = 0;
+export function chatContextSize(value: unknown): { chars: number; mediaTokens: number } {
+  let mediaTokens = 0;
   const text = JSON.stringify(value, (_key, part) => {
+    if (part?.type === "image_url" && typeof part.image_url?.url === "string") {
+      mediaTokens += 4096;
+      return { type: "image_url", image_url: { detail: part.image_url.detail, url: "[image content]" } };
+    }
     if (part?.type !== "audio" || !(part.data instanceof Uint8Array)) return part;
     // A conservative allowance above Spark Open's 12.5 embeddings/second; provider usage replaces it.
     // Compressed input with unknown timing uses its byte size rather than inventing a duration.
-    audioTokens += part.durationSeconds === null ? Math.ceil(part.data.byteLength / 128) : Math.ceil(part.durationSeconds * 100);
+    mediaTokens += part.durationSeconds === null ? Math.ceil(part.data.byteLength / 128) : Math.ceil(part.durationSeconds * 100);
     return { type: "audio", format: part.format, durationSeconds: part.durationSeconds, bytes: part.data.byteLength };
   });
-  return { chars: text.length, audioTokens };
+  return { chars: text.length, mediaTokens };
 }
 
 /** One model call in a conversation: the messages so far, the tools on offer, and who it belongs to. */

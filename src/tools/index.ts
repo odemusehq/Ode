@@ -4,13 +4,14 @@ import { MidiMaterials, type MidiMaterialScope } from "../harness/midi-materials
 import { isMutationReceipt, type MutationReceipt } from "../shared/mutation-receipt";
 import { dawActionTools, dawStateTools } from "./daw";
 import { RefNames } from "./daw/ref-names";
-import { TOOL_AUDIO, type AnyTool, type ToolAudio, type ToolContext } from "./define";
+import { TOOL_MEDIA, type AnyTool, type ToolMedia, type ToolContext } from "./define";
 import { assertUnlocked } from "./locked-material";
 import { lyricist } from "./lyrics/lyricist";
 import { lyricTextTools, resolveLyricsEdit } from "./lyrics/text";
 import { midiDescription, midiInputSchema, midiLabelInput, midiOutputPaths, resolveMidiInput } from "./midi-material-adapter";
 import { mnemeTools } from "./mneme";
 import { askMusician } from "./operations/questions";
+import { referenceTools } from "./operations/references";
 
 /** Who a tool list is for: the main agent gets every tool, subagents the read-only ones. */
 export type AgentKind = "main" | "subagent";
@@ -19,7 +20,7 @@ export type AgentKind = "main" | "subagent";
 export interface ToolOutcome {
   ok: boolean;
   text: string;
-  audio?: ToolAudio[];
+  media?: ToolMedia[];
   receipts?: MutationReceipt[];
   /** Canonical, schema-validated arguments actually executed; raw model extras are not evidence. */
   input?: unknown;
@@ -31,7 +32,7 @@ export const TOOL_GROUPS = ["daw_write", "daw_read", "mneme", "lyrics", "operati
 export type ToolGroup = (typeof TOOL_GROUPS)[number];
 const GROUPS: readonly (readonly [ToolGroup, readonly AnyTool[]])[] = [
   ["daw_write", dawActionTools], ["daw_read", dawStateTools], ["mneme", mnemeTools],
-  ["lyrics", [...lyricTextTools, lyricist]], ["operations", [askMusician]],
+  ["lyrics", [...lyricTextTools, lyricist]], ["operations", [askMusician, ...referenceTools]],
 ];
 
 /** Every Ode tool, offered to the model as a function with a JSON Schema for its input. */
@@ -185,7 +186,7 @@ export class ToolRegistry {
         }
       }
       return { ok: true, text: JSON.stringify(projected), input: parsed.data,
-        ...((result as { [TOOL_AUDIO]?: ToolAudio[] })[TOOL_AUDIO]?.length ? { audio: (result as { [TOOL_AUDIO]: ToolAudio[] })[TOOL_AUDIO] } : {}),
+        ...((result as { [TOOL_MEDIA]?: ToolMedia[] })[TOOL_MEDIA]?.length ? { media: (result as { [TOOL_MEDIA]: ToolMedia[] })[TOOL_MEDIA] } : {}),
         ...(definition.observationTargets ? { targets: definition.observationTargets(cleaned) } : {}),
         ...(receipts.length ? { receipts } : {}) };
     } catch (error) {

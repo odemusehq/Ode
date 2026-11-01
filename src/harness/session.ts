@@ -18,6 +18,7 @@ import type { ToolLabels } from "./tool-labels";
 export interface OdeRequest {
   requestId?: string;
   text: string;
+  attachments?: import("../shared/composer").ComposerAttachment[];
   /** Another take of Ode's last change: the Set has already been put back to the version before it. */
   again?: boolean;
   /** The active task before a conversational correction interrupted it. */
@@ -53,6 +54,7 @@ export interface DeletionCheck {
 
 export interface SessionDeps {
   loop: AgentLoop;
+  references?: import("../mneme/references").ReferenceFiles;
   agents: OdeAgents;
   labels: ToolLabels;
   approvals: Approvals;
@@ -126,7 +128,7 @@ export class OdeSession {
     this.accepting += 1;
     this.showBusy();
     const accepted = this.acceptance.then(async () => {
-      const accepted = await this.conversation.beginOnce(request.text, request.requestId);
+      const accepted = await this.conversation.beginOnce(request.text, request.requestId, request.attachments);
       const exchangeId = accepted.id;
       if (!accepted.created) { await this.publishConversation(); return; }
       if (epoch !== this.stopEpoch || (request.requestId && this.cancelledRequests.has(request.requestId))) {
@@ -134,7 +136,7 @@ export class OdeSession {
         await this.publishConversation();
         return;
       }
-      this.deps.emit({ type: "message", role: "user", text: request.text, id: exchangeId });
+      this.deps.emit({ type: "message", role: "user", text: request.text, id: exchangeId, attachments: request.attachments });
       if (this.deps.questions.reply?.(request.text)) {
         await this.conversation.finish(exchangeId, "", "complete");
         await this.publishConversation();
@@ -297,6 +299,7 @@ export class OdeSession {
         try {
           const result = await this.deps.loop.run({
             agent: "main",
+            content: request.attachments?.length ? await this.deps.references?.context(request.attachments) : undefined,
             system: await this.deps.agents.systemPrompt(),
             history: await this.history(),
             prompt: `${hiddenContext}\n\n${request.continuing ? `Continue the task with the latest correction. Earlier work may have partially changed the Set; inspect it before editing. Original task: ${request.continuing}\nLatest message: ` : ""}${request.text}`,
@@ -354,7 +357,7 @@ export class OdeSession {
   /** The song's recent requests and Ode's replies, as the conversation so far. */
   private async history(): Promise<ChatCompletionMessageParam[]> {
     return (await this.conversation.recent()).flatMap((exchange): ChatCompletionMessageParam[] => [
-      { role: "user", content: exchange.request },
+      { role: "user", content: [exchange.request, ...(exchange.attachments ?? []).map(file => `Reference ${JSON.stringify(file.name)}: ${file.id}; reopen with reference_read.`)].join("\n") },
       { role: "assistant", content: [exchange.reply || (exchange.status === "complete" ? "Understood." : "Interrupted; inspect the current Set before continuing."),
         ...(exchange.status === "stopped" || exchange.status === "failed" ? ["Saved activity (not proof of the current Set):", ...(exchange.activity ?? []).map((step) => `${step.status}: ${step.label}`)] : []),
       ].join("\n") },

@@ -6,6 +6,8 @@ export const ComposerAttachmentSchema = z.object({
   id: z.uuid(),
   scope: z.enum(["sample", "reference", "processed-bounce"]),
   name: z.string().min(1).max(255),
+  /** Missing on older audio selections. Bytes are retained separately from drafts and history. */
+  kind: z.enum(["audio", "image", "text", "folder"]).optional(),
 });
 export type ComposerAttachment = z.infer<typeof ComposerAttachmentSchema>;
 

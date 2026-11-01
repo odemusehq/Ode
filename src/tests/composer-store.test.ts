@@ -14,6 +14,13 @@ import type { ComposerDraft, ComposerState } from "../shared/composer";
 import { OdeServer, type ServerDeps } from "../server/http";
 import { API } from "../shared/api";
 import type { Hono } from "hono";
+import { ComposerDraftSchema } from "../shared/composer";
+
+test("saved drafts retain image references without embedding their bytes in the message", () => {
+  const attachment = { entryId: randomUUID(), id: randomUUID(), scope: "reference", name: "mood.png", kind: "image" };
+  const saved = ComposerDraftSchema.parse({ text: "This atmosphere", textEditId: randomUUID(), attachments: [attachment] });
+  assert.deepEqual(saved.attachments[0], attachment);
+});
 
 const draft = (text: string): ComposerDraft => ({ text, textEditId: randomUUID(), attachments: [] });
 async function rig(t: TestContext) {

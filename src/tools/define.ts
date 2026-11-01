@@ -19,11 +19,11 @@ import type { SetSnapshot } from "../shared/set-snapshot";
 import type { AudioContent } from "../services/capabilities";
 import type { RefNames } from "./daw/ref-names";
 
-/** Binary tool output is agent context, never JSON in History, Mneme or the activity feed. */
-export const TOOL_AUDIO = Symbol("tool audio");
-export interface ToolAudio { description: string; content: AudioContent }
-export function withAudio<T extends object>(result: T, audio: ToolAudio[]): T & { [TOOL_AUDIO]: ToolAudio[] } {
-  return Object.assign(result, { [TOOL_AUDIO]: audio });
+/** Tool media is agent context, never JSON in History, Mneme or the activity feed. */
+export const TOOL_MEDIA = Symbol("tool media");
+export interface ToolMedia { description: string; content: AudioContent | import("openai/resources/chat/completions").ChatCompletionContentPart }
+export function withMedia<T extends object>(result: T, audio: ToolMedia[]): T & { [TOOL_MEDIA]: ToolMedia[] } {
+  return Object.assign(result, { [TOOL_MEDIA]: audio });
 }
 
 /** What a tool changes: "none" (it only reads or computes), the Live Set, or Mneme (the lyrics, the lead sheet, memory and settings). */
@@ -75,6 +75,7 @@ export interface ToolContext {
   maxDaw?: MaxDaw;
   /** Read-only discovery within the musician's Settings-approved real sample folders. */
   sampleFolders?: SampleFolders;
+  references?: import("../mneme/references").ReferenceFiles;
   /** Where generated and rendered files go. */
   temp: TempFolder;
   emit: (event: UiEvent) => void;

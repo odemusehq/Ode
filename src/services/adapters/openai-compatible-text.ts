@@ -78,7 +78,7 @@ export class OpenAiCompatibleText implements TextGenerator {
   /** Tokens of a turn, worked out from its length. */
   private static estimate(turn: ChatTurn, answer: string): number {
     const size = chatContextSize(turn.messages);
-    return Math.ceil((size.chars + answer.length) / OpenAiCompatibleText.CHARACTERS_PER_TOKEN) + size.audioTokens;
+    return Math.ceil((size.chars + answer.length) / OpenAiCompatibleText.CHARACTERS_PER_TOKEN) + size.mediaTokens;
   }
 
   /** The same agent request carries media alongside the tool results, using the provider's wire format. */
