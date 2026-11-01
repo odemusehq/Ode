@@ -5,7 +5,7 @@ description: Review or develop rhymes by their intended sound.
 
 # Rhymes
 
-Send lyricist the actual lines, accent, surrounding song and desired emotional effect. Compare stressed vowel and following sounds, not spelling or a requested letter pattern. Whole-song labels retain the same sound identity: new sounds take new letters. Read references/pattison.md for optional craft guidance. Perfect, near and no rhyme are choices; preserve the artist's deliberate preference.
+Send lyricist the actual lines, accent, surrounding song and desired emotional effect. Compare stressed vowel and following sounds, not spelling or a requested letter pattern. Whole-song labels retain the same sound identity: new sounds take new letters. Read references/pattison.md to develop meaningful alternatives through family/additive/subtractive rhyme and expectation. Forward a needed reference with `lyricist.references`; it is not included by an ordinary skill read. Perfect, near and no rhyme are choices; preserve the artist's deliberate preference.
 
 Discover the named tools with `tool_search` using `names` and the appropriate group before calling them. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
 

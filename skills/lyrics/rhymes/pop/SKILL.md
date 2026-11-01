@@ -27,7 +27,7 @@ Lyricist's rhyme assessment (UK) calls "down" / "town" perfect and "round" near 
 ## Pre-choruses
 
 - Internal rhymes and short rhymed phrases build momentum and pull toward the chorus.
-- An unsettled scheme (three rhymed lines, or an unrhymed last line) increases the lift; save the strongest closing rhyme for the chorus.
+- A delayed expected rhyme or altered phrase length can sustain anticipation. Judge the actual grouping and music; three lines or an unrhymed ending alone do not establish lift.
 
 ## Post-choruses
 
@@ -39,12 +39,12 @@ Lyricist's rhyme assessment (UK) calls "down" / "town" perfect and "round" near 
 In pop the rhyme word often lands on the longest note of the line, so its vowel has to sing:
 
 - Open vowels hold beautifully: "go", "slow", "day", "far", "down". The vowel can be open without the pair being stale; still check the pair against the over-used list.
-- Short vowels with hard endings ("bit", "stuck", "pop") cut the note off. Put them on short notes, or choose another rhyme sound for long ones.
+- Short-vowel words with closing consonants ("bit", "stuck", "pop") need a practical sung articulation plan. A singer can sustain the vowel and release the consonant later; review the actual range, tempo and delivery.
 - Inspect a closed-vowel warning against this singer's delivery; vowel modification or keeping the sound may work better than replacing the word.
 
 ## Freshness in a repeated chorus
 
-A chorus is heard four or more times, so a stale pair is exposed every time. If an over-used pair sits in a chorus line you change, make the rest of the line surprising, or re-end the partner line so the line works without the pair, and make the change in every chorus.
+A chorus is heard four or more times, so a stale pair is exposed every time. If an over-used pair sits in a chorus line you change, make the rest of the line surprising, or re-end the partner line so the line works without the pair, and respect the actual linked copies, locks and authorised scope. An intentional later variation remains distinct; unchanged chorus words may already gain meaning through the preceding verse.
 
 ## Verify, on top of the rhymes skill's checks
 

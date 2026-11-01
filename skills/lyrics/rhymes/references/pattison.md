@@ -1,11 +1,28 @@
-# Rhyme as a choice of effect
+# Rhyme choices from Pattison
 
-Optional guidance derived from Pat Pattison's own Berklee article, “Prosody in Music and Songwriting”:
-https://online.berklee.edu/takenote/prosody-in-music-and-songwriting/
+Practical guidance paraphrased from Pat Pattison's *Writing Better Lyrics*, second edition, chapters 4, 17-21 and 24. The book's lyric examples are not drafting material. Use these techniques through the configured Lyricist, not a local sound engine.
 
-- Begin with what the line means and how its intended delivery feels; let the rhyme support that intention.
-- For perfect rhyme, compare the stressed vowel and the sounds after it, with a different onset. Spelling is not the test.
-- Family rhyme keeps the vowel while relating the following consonants; assonance keeps the vowel with a looser ending.
-- Closer matches can suggest resolution; looser matches can leave a thought open. These are expressive options, not fixed mappings from emotions to forms.
+## Expand meaningful alternatives
 
-For Ode, Lyricist assesses these sounds in the specified accent and singing context. Generate useful alternatives from the artist's actual image and meaning before selecting an end word. Reject a forced inversion or generic filler that exists only to satisfy a pattern. Keep deliberate near rhyme, repeated words or no rhyme when that is the artist's voice. Same-sound labels stay global across sections; no dictionary or local sound-comparison engine is involved.
+Start with the song's idea and semantic field: objects, actions, feelings and associations that actually belong to it. Explore several promising end sounds alongside that material, then test candidates in complete lines. A sound worksheet is a way to discover choices, not a compulsory list length or a prescribed rhyme scheme.
+
+Pattison broadens perfect rhyme through these relationships:
+
+- **Family:** retain the stressed vowel while relating the following consonants by sound production, such as plosive, fricative or nasal endings.
+- **Additive/subtractive:** retain the vowel while adding or removing consonant sound after it. These are directions of a search, not different artistic grades.
+- **Assonance:** retain the vowel with more remote ending consonants.
+- **Consonance:** connect consonants while the vowel differs.
+
+Have Lyricist assess the actual sounds, including clusters, accent and sung delivery. These categories suggest candidates; they do not guarantee that two words sound identical or that a lyric feels fresh. Keep the existing structured annotation vocabulary rather than inventing a new UI category for each technique.
+
+## Use expectation
+
+Listen for how quickly the rhyme returns and whether it fulfils an expectation. Nearby rhyme can create local stopping points or momentum; a delayed answer can hold a larger passage together. Changing relative stressed phrase length can counter or reinforce that pull. A withheld rhyme or extra line should spotlight meaningful material.
+
+Consider the desired emotional arrival, but do not translate rhyme type into a fixed emotion. Phrase grouping, harmony, rhythm and syntax also affect resolution. Line-count parity is only one clue when lengths and rhyme movement establish comparable units.
+
+## Preserve choice and continuity
+
+Try another end sound before sacrificing the song's meaning. Compare relevant alternatives, keep protected lines and deliberate artist preferences, and read the whole passage after choosing. A familiar phrase can gain new meaning from its setup; near rhyme is not automatically original and perfect rhyme is not automatically banal.
+
+Ode retains sound-group identities across the whole song. The book's local structural letters also sometimes encode phrase length/rhythm; do not copy those letters into the editor as though they were a global phonetic analysis.
