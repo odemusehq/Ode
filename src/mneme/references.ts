@@ -6,12 +6,12 @@ import type { ChatCompletionContentPart } from "openai/resources/chat/completion
 import { LocalAudioFiles } from "../live/local-audio-files";
 import { MusicAudio } from "../services/music-audio";
 import type { AudioContent } from "../services/capabilities";
-import type { ComposerAttachment } from "../shared/composer";
+import { REFERENCE_LIMITS, type ComposerAttachment } from "../shared/composer";
 import { t } from "../shared/i18n";
 import { JsonFile } from "./json-file";
 
-export const MAX_REFERENCE_BYTES = 128 * 1024 * 1024;
-export const MAX_REFERENCE_FILES = 256;
+export const MAX_REFERENCE_BYTES = REFERENCE_LIMITS.bytes;
+export const MAX_REFERENCE_FILES = REFERENCE_LIMITS.files;
 const IMAGE_TYPES: Record<string, string> = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif" };
 const TEXT = /\.(txt|md|markdown|csv|json|ya?ml|xml|srt|lrc)$/i;
 const AUDIO = /\.(wav|wave|mp3)$/i;

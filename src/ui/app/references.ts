@@ -1,4 +1,5 @@
 import { t } from "../../shared/i18n";
+import { REFERENCE_LIMITS } from "../../shared/composer";
 
 export const REFERENCE_ACCEPT = ".png,.jpg,.jpeg,.webp,.gif,.txt,.md,.markdown,.csv,.json,.yaml,.yml,.xml,.srt,.lrc,.wav,.wave,.mp3";
 export interface ReferenceSelection { files: { file: File; path: string }[]; folder?: string }
@@ -19,7 +20,7 @@ export async function droppedReferences(transfer: DataTransfer): Promise<Referen
     let seen = 0;
     const visit = async (entry: FileSystemEntry, prefix: string): Promise<void> => {
       if (entry.name.startsWith(".") || ["node_modules", "vendor"].includes(entry.name)) return;
-      if (++seen > 512 || files.length >= 256) throw new Error(t("references.tooLarge"));
+      if (++seen > 512 || files.length >= REFERENCE_LIMITS.files) throw new Error(t("references.tooLarge"));
       const path = prefix + entry.name;
       if (entry.isFile) {
         const file = await new Promise<File>((resolve, reject) => (entry as FileSystemFileEntry).file(resolve, reject));

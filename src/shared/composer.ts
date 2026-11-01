@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const REFERENCE_LIMITS = { files: 256, bytes: 128 * 1024 * 1024 } as const;
+
 export const ComposerAttachmentSchema = z.object({
   /** One selection in the composer; reattaching the same audio uses a new entryId. */
   entryId: z.uuid(),

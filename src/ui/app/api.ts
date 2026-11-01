@@ -23,6 +23,7 @@ import type { Mode } from "../../shared/personalisation";
 import type { ChatModelOption, ModelListRequest, SettingsResponse, SettingsUpdate, SettingsView } from "../../shared/settings";
 import type { ConversationExchange } from "../../shared/events";
 import type { ComposerCancel, ComposerDraft, ComposerPrepare, ComposerResolve, ComposerState, ComposerWrite } from "../../shared/composer";
+import { REFERENCE_LIMITS } from "../../shared/composer";
 
 export type AudioScope = "sample" | "reference" | "processed-bounce";
 export interface AudioAttachment {
@@ -75,6 +76,8 @@ export class OdeApi {
   }
 
   async importReference(selection: import("./references").ReferenceSelection, link: { songId: string; writerId: string; entryId: string; baseRevision: number; snapshot: ComposerDraft }): Promise<{ id: string; linked: boolean; composer: ComposerState }> {
+    if (!selection.files.length) throw new Error(t("references.invalidSelection"));
+    if (selection.files.length > REFERENCE_LIMITS.files || selection.files.reduce((bytes, item) => bytes + item.file.size, 0) > REFERENCE_LIMITS.bytes) throw new Error(t("references.tooLarge"));
     const form = new FormData();
     for (const item of selection.files) { form.append("file", item.file); form.append("path", item.path); }
     if (selection.folder) form.set("folder", selection.folder);

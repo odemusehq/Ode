@@ -11,6 +11,7 @@ import { SongStore } from "../mneme/song-store";
 import { userPaths } from "../mneme/paths";
 import { LocalAudioFiles } from "../live/local-audio-files";
 import { chatContextSize } from "../services/capabilities";
+import { OdeApi } from "../ui/app/api";
 
 const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j8Z8AAAAASUVORK5CYII=", "base64");
 async function rig(t: TestContext) {
@@ -18,6 +19,13 @@ async function rig(t: TestContext) {
   t.after(() => rm(root, { recursive: true, force: true }));
   return { root, refs: new ReferenceFiles(root, join(root, "temp")) };
 }
+
+test("oversized folder selections are refused before starting an upload", async () => {
+  const file = new File(["x"], "brief.txt");
+  await assert.rejects(new OdeApi().importReference({ folder: "too-many", files: Array.from({ length: 257 }, (_, i) => ({ file, path: `too-many/${i}.txt` })) }, {
+    songId: randomUUID(), writerId: randomUUID(), entryId: randomUUID(), baseRevision: 0, snapshot: { text: "", textEditId: randomUUID(), attachments: [] },
+  }), /256/);
+});
 
 test("selected images survive reopening and reach context as their original image bytes", async t => {
   const { root, refs } = await rig(t);
