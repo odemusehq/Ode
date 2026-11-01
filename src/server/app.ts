@@ -195,7 +195,7 @@ export class OdeApp {
       references: this.references,
       lyrics: this.lyrics,
       services: this.services,
-      lyricsChecker: new LyricsChecker(this.services, texts, config.lyricsSupport),
+      lyricsChecker: new LyricsChecker(this.services, texts, config.lyricsSupport, join(this.paths.root, "lyrics-checks.json")),
       prefs: this.prefs,
       settings: this.settings,
       models: this.models,

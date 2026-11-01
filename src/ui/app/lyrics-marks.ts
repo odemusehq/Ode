@@ -1,4 +1,4 @@
-import type { LineCheck } from "../../shared/lyrics";
+import type { LineCheck, LyricsCheck } from "../../shared/lyrics";
 import { errorMessage, type OdeApi } from "./api";
 import { UI_CONFIG } from "./config";
 
@@ -26,7 +26,9 @@ export class LyricsMarks {
   private snapshot: MarksSnapshot = { status: SupportStatus.Ready, detail: "", version: 0 };
   private generation = 0;
 
-  constructor(private readonly api: OdeApi) {}
+  constructor(private readonly api: OdeApi, initial?: { lines: readonly string[]; check: LyricsCheck }) {
+    if (initial) this.checked = { key: LyricsMarks.key(initial.lines), lines: initial.check.lines };
+  }
 
   subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
@@ -59,6 +61,7 @@ export class LyricsMarks {
 
   retry(): void {
     this.invalidate();
+    this.checked = null;
     this.publish(SupportStatus.Ready, "");
   }
 
@@ -73,7 +76,6 @@ export class LyricsMarks {
     this.timer = undefined;
     this.asking = false;
     this.activeKey = null;
-    this.checked = null;
   }
 
   private async check(key: string, lines: string[], generation: number): Promise<void> {

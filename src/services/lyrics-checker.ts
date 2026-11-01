@@ -1,4 +1,6 @@
+import { createHash } from "node:crypto";
 import { z } from "zod";
+import { JsonFile } from "../mneme/json-file";
 import type { TextLibrary } from "../harness/texts";
 import type { LyricsSupportSettings } from "../shared/config";
 import type { LyricsCheck, LyricsCheckResponse } from "../shared/lyrics";
@@ -60,6 +62,7 @@ const CHECK_SCHEMA: Record<string, unknown> = {
 
 const ACCENT_NAMES: Readonly<Record<Accent, string>> = { uk: "UK English", us: "US English" };
 const UNMARKED: LyricsCheck["lines"][number] = { words: [], rhyme: { letter: "", quality: "none", part: "", sound: "" } };
+const SavedChecksSchema = z.array(z.object({ key: z.string(), check: LyricsCheckSchema }));
 
 /**
  * Lyrics support: asks the model chosen in Settings for the whole song's syllables, stress and rhymes, in a fixed JSON shape
@@ -68,6 +71,8 @@ const UNMARKED: LyricsCheck["lines"][number] = { words: [], rhyme: { letter: "",
 export class LyricsChecker {
   private static readonly INSTRUCTION = "src/agents/lyrics-check.md";
   private readonly checked = new Map<string, LyricsCheck>();
+  private readonly pending = new Map<string, Promise<LyricsCheck>>();
+  private readonly file?: JsonFile<z.infer<typeof SavedChecksSchema>>;
   /** ModelServices replaces an adapter whenever its provider, model, key or other role settings change. */
   private model: TextGenerator | undefined;
 
@@ -75,42 +80,74 @@ export class LyricsChecker {
     private readonly services: ModelServices,
     private readonly texts: TextLibrary,
     private readonly settings: LyricsSupportSettings,
-  ) {}
+    cacheFile?: string,
+  ) {
+    if (cacheFile) this.file = new JsonFile(cacheFile, SavedChecksSchema, () => [], { mode: 0o600 });
+  }
+
+  /** Restore annotations with the lyrics without generating anything or waiting for a pending model call. */
+  async cached(lines: string[], accent: Accent): Promise<LyricsCheck | undefined> {
+    try {
+      const context = await this.context(lines, accent);
+      return context ? await this.known(context.key) : undefined;
+    } catch { return undefined; }
+  }
 
   async check(lines: string[], accent: Accent, signal?: AbortSignal): Promise<LyricsCheckResponse> {
     signal?.throwIfAborted();
     if (lines.length === 0) return { status: "ok", check: { lines: [] } };
-    const key = JSON.stringify([accent, lines]);
-    const available = await this.services.available();
-    signal?.throwIfAborted();
-    if (!available.lyrics_check) return { status: "setup" };
     try {
-      const model = await this.services.chat("lyrics_check");
+      const context = await this.context(lines, accent);
       signal?.throwIfAborted();
-      if (this.model !== model) {
-        this.checked.clear();
-        this.model = model;
-      }
-      const known = this.checked.get(key);
+      if (!context) return { status: "setup" };
+      const { key, model, instruction } = context;
+      const known = await this.known(key);
+      signal?.throwIfAborted();
       if (known) return { status: "ok", check: known };
-      const instruction = (await this.texts.read(LyricsChecker.INSTRUCTION)).replaceAll("{accent}", ACCENT_NAMES[accent]);
-      const check = await model.json({
-        name: "lyrics_check",
-        schema: CHECK_SCHEMA,
-        system: instruction,
-        user: lines.map((line, index) => `${index + 1}. ${line}`).join("\n"),
-        maxTokens: Math.max(this.settings.maxTokens, Math.min(24_000, lines.length * 400)),
-        signal,
-        parse: (value) => LyricsChecker.aligned(LyricsCheckSchema.parse(value), lines.length),
-      });
-      signal?.throwIfAborted();
-      // A response already in flight from an earlier provider must not enter the current model's cache.
-      if (this.model === model) this.remember(key, check);
+      const generate = async () => {
+        const check = await model.json({
+          name: "lyrics_check",
+          schema: CHECK_SCHEMA,
+          system: instruction,
+          user: lines.map((line, index) => `${index + 1}. ${line}`).join("\n"),
+          maxTokens: Math.max(this.settings.maxTokens, Math.min(24_000, lines.length * 400)),
+          signal,
+          parse: (value) => LyricsChecker.aligned(LyricsCheckSchema.parse(value), lines.length),
+        });
+        signal?.throwIfAborted();
+        // A response already in flight from an earlier provider must not enter the current model's cache.
+        if (this.model === model) await this.remember(key, check);
+        return check;
+      };
+      // Window requests have no cancellation signal: reopening shares the work already in progress.
+      const running = !signal ? this.pending.get(key) : undefined;
+      const request = running ?? generate();
+      if (!signal && !running) {
+        this.pending.set(key, request);
+        void request.finally(() => { if (this.pending.get(key) === request) this.pending.delete(key); }).catch(() => undefined);
+      }
+      const check = await request;
       return { status: "ok", check };
     } catch (error) {
       signal?.throwIfAborted();
       return { status: "unreachable", detail: error instanceof Error ? error.message : String(error) };
     }
+  }
+
+  private async context(lines: string[], accent: Accent) {
+    if (!(await this.services.available()).lyrics_check) return undefined;
+    const model = await this.services.chat("lyrics_check");
+    if (this.model !== model) { this.checked.clear(); this.model = model; }
+    const instruction = (await this.texts.read(LyricsChecker.INSTRUCTION)).replaceAll("{accent}", ACCENT_NAMES[accent]);
+    const identity = this.file ? this.services.identity("lyrics_check", model) : "";
+    const key = createHash("sha256").update(JSON.stringify([identity, instruction, accent, lines])).digest("hex");
+    return { key, model, instruction };
+  }
+
+  private async known(key: string): Promise<LyricsCheck | undefined> {
+    const check = this.checked.get(key) ?? (await this.file?.read())?.find(entry => entry.key === key)?.check;
+    if (check) this.checked.set(key, check);
+    return check;
   }
 
   /** One entry per line sent: a line the answer skipped reads as unmarked, and extra entries are dropped. */
@@ -119,11 +156,12 @@ export class LyricsChecker {
   }
 
   /** Keeps the answer, letting the oldest go once the cache is full. */
-  private remember(key: string, check: LyricsCheck): void {
+  private async remember(key: string, check: LyricsCheck): Promise<void> {
     if (this.checked.size >= this.settings.cacheSize) {
       const oldest = this.checked.keys().next().value;
       if (oldest !== undefined) this.checked.delete(oldest);
     }
     this.checked.set(key, check);
+    await this.file?.update(entries => [...entries.filter(entry => entry.key !== key), { key, check }].slice(-this.settings.cacheSize));
   }
 }

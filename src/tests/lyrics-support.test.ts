@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -96,6 +96,42 @@ test("the marks sit on the letters of the line as typed: bars between syllables,
   assert.equal(MarkLayout.count(check), 3);
 });
 
+test("saved lyric annotations survive a checker restart and reuse only the exact interpretation context", async () => {
+  const root = await mkdtemp(join(tmpdir(), "ode-lyrics-cache-")), file = join(root, "lyrics-checks.json");
+  const answer: LyricsCheck = { lines: [{ words: [{ text: "inside", syllables: ["in", "side"], stress: [0, 1] }], rhyme: { letter: "A", quality: "perfect", part: "ide", sound: "aɪd" } }] };
+  let calls = 0, identity = "model-one", instruction = "Mark {accent}.";
+  const model = { json: async (request: JsonRequest<LyricsCheck>) => { calls++; await new Promise(resolve => setImmediate(resolve)); return request.parse(answer); } };
+  const services = { available: async () => ({ lyrics_check: true }), chat: async () => model, identity: () => identity };
+  const texts = { read: async () => instruction, list: async () => [] };
+  const create = () => new LyricsChecker(services as never, texts, { maxTokens: 6000, cacheSize: 10 }, file);
+  try {
+    const first = create();
+    await Promise.all([first.check(["inside"], "uk"), first.check(["inside"], "uk")]);
+    assert.equal(calls, 1, "reopening during a check must share the running assessment");
+    const reopened = create();
+    assert.deepEqual(await reopened.cached(["inside"], "uk"), answer);
+    assert.deepEqual(await reopened.check(["inside"], "uk"), { status: "ok", check: answer });
+    assert.equal(calls, 1, "reopening must not ask the model again");
+    assert.equal(await reopened.cached(["outside"], "uk"), undefined);
+    assert.equal(await reopened.cached(["inside"], "us"), undefined);
+    identity = "model-two";
+    assert.equal(await reopened.cached(["inside"], "uk"), undefined);
+    identity = "model-one"; instruction = "Updated interpretation {accent}.";
+    assert.equal(await reopened.cached(["inside"], "uk"), undefined);
+    assert.equal((JSON.parse(await readFile(file, "utf8")) as unknown[]).length, 1);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("a reopened editor starts with saved whole-song marks and never flashes another text's annotations", () => {
+  const check: LyricsCheck = { lines: [{ words: [], rhyme: { letter: "A", quality: "perfect", part: "ide", sound: "aɪd" } }] };
+  const marks = new LyricsMarks({} as OdeApi, { lines: ["inside"], check });
+  assert.deepEqual(marks.marksFor(["inside"]), check.lines);
+  marks.request(["inside"]);
+  marks.dispose(); marks.request(["inside"]);
+  assert.deepEqual(marks.marksFor(["inside"]), check.lines, "StrictMode cleanup must retain the saved assessment");
+  assert.deepEqual(marks.marksFor(["outside"]), [null]);
+});
+
 test("changing the lyric model clears cached marks and pending work, and ignores replaced or disposed replies", async (t) => {
   const original = Object.getOwnPropertyDescriptor(globalThis, "window");
   const timers = new Map<number, () => void>();
@@ -137,7 +173,7 @@ test("changing the lyric model clears cached marks and pending work, and ignores
   pending[3]!({ status: "setup" }); await settle();
   assert.deepEqual(marks.getSnapshot(), beforeDispose);
   marks.request(line); runTimers();
-  pending[4]!({ status: "ok", check: { lines: [second] } }); await settle();
+  assert.equal(pending.length, 4, "React cleanup retains completed marks instead of starting another check");
   assert.deepEqual(marks.marksFor(line), [second], "React StrictMode can run effects again after cleanup");
 });
 

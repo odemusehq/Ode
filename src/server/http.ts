@@ -25,6 +25,7 @@ import type { LyricsCheckResponse } from "../shared/lyrics";
 import { Mode } from "../shared/personalisation";
 import { VersionAuthor, type RestoreResult } from "../shared/versions";
 import { LyricsForAnotherSongError, type LyricsStore } from "../mneme/lyrics-store";
+import { LyricsText } from "../mneme/lyrics-text";
 import { VersionNotFoundError } from "../mneme/version-history";
 import type { PreferencesStore } from "../mneme/preferences";
 import type { SettingsStore } from "../mneme/settings-store";
@@ -512,7 +513,14 @@ export class OdeServer {
       return answered ? c.json({ ok: true }) : c.json({ error: t("server.http.thatQuestionIsAnsweredAlreadyOrThe") }, 404);
     });
 
-    app.get(API.lyrics, async (c) => c.json(await lyrics.read()));
+    app.get(API.lyrics, async (c) => {
+      const sheet = await song.read();
+      const state = await lyrics.read();
+      const accent = (await prefs.effective(sheet)).pronunciation;
+      const check = state.text === sheet.lyrics && state.songId === song.songId
+        ? await this.deps.lyricsChecker.cached(LyricsText.sung(state.text), accent) : undefined;
+      return c.json({ ...state, ...(check ? { check } : {}) });
+    });
     app.put(API.lyrics, async (c) => {
       const parsed = LyricsWriteSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: t("server.http.sendTextBaseRevisionWithThe") }, 400);
@@ -524,7 +532,7 @@ export class OdeServer {
       }
     });
 
-    // Lyrics support marks one section: the accent is the song's pronunciation setting.
+    // One whole-song interpretation keeps rhyme identities consistent across sections.
     app.post(API.lyricsCheck, async (c) => {
       const parsed = LyricsCheckSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: t("server.http.sendLinesWithTheSectionS") }, 400);

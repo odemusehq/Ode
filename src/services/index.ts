@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { OdeConfig, ROLES, type Role, type RoleConfig } from "../shared/config";
 import { AdapterRegistry } from "./adapter-registry";
 import { Capability, ROLE_CAPABILITY, type CapabilityAdapters, type TextGenerator } from "./capabilities";
@@ -24,6 +25,13 @@ export class ModelServices implements Services {
 
   chat(role: "main" | "subagent" | "lyrics_check"): Promise<TextGenerator> {
     return this.adapter(role, Capability.Text);
+  }
+
+  /** A private cache identity that changes with the role's settings, without storing or exposing its key. */
+  identity(role: Role, adapter: TextGenerator): string {
+    const cached = this.cache.get(role);
+    if (cached?.adapter !== adapter) throw new Error("The model settings changed while restoring annotations; retry with the current model.");
+    return createHash("sha256").update(cached.settings).digest("hex");
   }
 
   async transcribe(audio: MusicAudioSource, signal?: AbortSignal): Promise<Transcript> {

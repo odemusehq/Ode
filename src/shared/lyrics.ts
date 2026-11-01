@@ -6,6 +6,8 @@ export interface LyricsState {
   revision: number;
   /** The names of the sections that ask for perfect rhymes. */
   strictRhymes: string[];
+  /** Saved model annotations for this exact text and interpretation context, when already available. */
+  check?: LyricsCheck;
 }
 
 /** Turns perfect rhymes on or off for every section with this name. */

@@ -1,4 +1,5 @@
 import { t } from "../../shared/i18n";
+import type { LyricsCheck } from "../../shared/lyrics";
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { LyricsSections, type LyricsSection } from "../../shared/lyrics-sections";
 import { Button, ButtonVariant, Icon, IconName, Menu, MenuAlign, cx } from "../../ui-kit";
@@ -39,7 +40,8 @@ export function LyricsPanel({ settingsRevision = 0 }: { settingsRevision?: numbe
         {t("common.lyrics")}
       </h2>
       {stored ? (
-        <LyricsEditor key={stored.songId} text={text} strictRhymes={strictRhymes ?? []} settingsRevision={settingsRevision} />
+        <LyricsEditor key={stored.songId} text={text} strictRhymes={strictRhymes ?? []} settingsRevision={settingsRevision}
+          initial={stored.check ? { lines: LyricsSections.parse(stored.text).flatMap(section => section.lines.filter(LyricsSections.isSung)), check: stored.check } : undefined} />
       ) : loadError ? (
         <ProblemLine message={loadError} onRetry={() => void client.lyrics.load()} />
       ) : (
@@ -53,6 +55,7 @@ export function LyricsPanel({ settingsRevision = 0 }: { settingsRevision?: numbe
 interface LyricsEditorProps {
   text: string;
   settingsRevision: number;
+  initial?: { lines: readonly string[]; check: LyricsCheck };
   /** The names of the sections that ask for perfect rhymes. */
   strictRhymes: readonly string[];
 }
@@ -69,7 +72,7 @@ interface SectionIntent { section: string; index: number; names: (string | null)
  * The lyrics as section cards. Every change becomes the whole text again, labels included, so Ode reads and writes the
  * same text the musician sees; sections that share a name are linked copies and change together.
  */
-function LyricsEditor({ text, strictRhymes, settingsRevision }: LyricsEditorProps) {
+function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsEditorProps) {
   const client = useClient();
   const sections = useMemo(() => LyricsSections.parse(text), [text]);
   const [renaming, setRenaming] = useState<number | null>(null);
@@ -78,7 +81,8 @@ function LyricsEditor({ text, strictRhymes, settingsRevision }: LyricsEditorProp
   const [partners, setPartners] = useState<string | null>(null);
   const list = useRef<HTMLDivElement>(null);
   const indicator = useRef<HTMLDivElement>(null);
-  const marks = useMemo(() => new LyricsMarks(client.api), [client.api, settingsRevision]);
+  // Seed a new window from the saved assessment; a settings change must request the new model's marks.
+  const marks = useMemo(() => new LyricsMarks(client.api, settingsRevision === 0 ? initial : undefined), [client.api, settingsRevision]);
   useEffect(() => () => marks.dispose(), [marks]);
   const support = useSyncExternalStore(marks.subscribe, marks.getSnapshot);
   const [view, setView] = useState<LyricsView>(() => LyricsViewStore.load());
