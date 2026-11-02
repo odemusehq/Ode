@@ -220,12 +220,13 @@ export class AgentLoop {
           }
           if (message.type === "assistant") {
             observeUsage(message.message.id, message.message.usage);
-            if (!message.parent_tool_use_id) for (const block of message.message.content) if (block.type === "text" && block.text.trim()) { reply = guard.scrub(block.text.trim()); run.events.thought(reply); }
+            if (!run.signal.aborted && !message.parent_tool_use_id) for (const block of message.message.content) if (block.type === "text" && block.text.trim()) { reply = guard.scrub(block.text.trim()); run.events.thought(reply); }
           }
           if (message.type === "result") {
             const cumulative = Object.values(message.modelUsage).reduce((sum, usage) => sum + usage.inputTokens + usage.outputTokens + usage.cacheReadInputTokens + usage.cacheCreationInputTokens, 0);
             tokens = Math.max(tokens, cumulative - (resume ? saved!.usageTokens : 0));
             await session.write({ id: message.session_id, identity: environment.identity, usageTokens: cumulative });
+            if (tokenLimit || run.signal.aborted) return { reply, tokens, end: tokenLimit ? LoopEnd.TokenLimit : LoopEnd.Cancelled };
             if (message.subtype === "error_max_turns") return { reply, tokens, end: LoopEnd.TurnLimit };
             if (message.is_error) {
               const error = message.subtype === "success" ? message.result : message.errors.join("\n");
