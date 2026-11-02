@@ -7,6 +7,7 @@
 name: Release
 
 on:
+  workflow_dispatch:
   push:
     tags: ["v*"]
 
@@ -63,12 +64,21 @@ jobs:
         run: test "$(node -p 'process.platform + "-" + process.arch')" = "$TARGET"
       - run: npm run typecheck
       - run: npm test
-      - run: npm run release:package -- "$GITHUB_REF_NAME"
+      - name: Build the release packages
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = push ] && [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            npm run release:package -- "$GITHUB_REF_NAME"
+          else
+            npm run release:package
+          fi
       - name: Name the platform package
         env:
           TARGET: ${{ matrix.target }}
-        run: mv "release/Ode-${GITHUB_REF_NAME#v}.ablx" "release/Ode-${GITHUB_REF_NAME#v}-$TARGET.ablx"
-      - run: npm run --silent release:notes > release/notes.md
+        run: |
+          ODE_RELEASE_VERSION=$(node -p 'require("./package.json").version')
+          mv "release/Ode-$ODE_RELEASE_VERSION.ablx" "release/Ode-$ODE_RELEASE_VERSION-$TARGET.ablx"
+      - if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: npm run --silent release:notes > release/notes.md
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ode-release-${{ matrix.target }}
@@ -76,6 +86,7 @@ jobs:
           if-no-files-found: error
 
   release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
