@@ -7,6 +7,8 @@ description: Work on actual vocal recordings or explicit MIDI guide parts.
 
 Distinguish a sung recording from a MIDI guide. Edit supplied audio through exposed native tools, or write requested guide/harmony notes through SDK writers. Lyricist handles words. Ode has no singing renderer, voice-cloning or vocal-generation service; do not treat a synth as a finished singer.
 
+Compare vocal ranges using actual MIDI pitches. Middle C is MIDI 60: Live calls it C3, while scientific vocal references call it C4. Convert both ranges to the same convention before choosing a register or transposing; a difference in octave labels is not a reason to move the melody. Use the singer's comfortable tessitura rather than a reference artist's reported extreme notes. State the convention when reporting a range.
+
 Read `production/live-controls` to prepare the real input/track, guide the singer while they operate Live's Record controls. Ode cannot record or manufacture a sung performance. Work with their actual performance. Native clip pitch/markers and explicit warp-marker edits are available; complete comping, phrase fades and detailed automation can require a musician-performed native step. Reveal the clip/device, explain that specific action and inspect the result afterwards.
 
 Use the tool schemas exposed by the SDK; discover missing schemas with `ToolSearch` when available. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
