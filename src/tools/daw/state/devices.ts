@@ -30,7 +30,7 @@ export const rackTools = [
   }),
   extensionTool({
     op: "simpler_get_sample",
-    description: "Read the file path of the sample loaded in a Simpler.",
+    description: "Read the single sample file path exposed by a Simpler. A null path alone does not mean simpler_replace_sample is unsupported; use that native operation's actual result, then read back and audition the loaded sample.",
     input: { device: DeviceRefSchema },
   })
 ];
