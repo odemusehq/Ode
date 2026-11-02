@@ -21,7 +21,7 @@ test("developer Meta settings configure the existing roles and persist owner-onl
   assert.equal(view.provider, "meta");
   assert.equal(view.model, "muse-wonder-1.0");
   assert.equal(view.keySet && view.metaKeySet, true);
-  assert.equal((await stat(file)).mode & 0o777, 0o600);
+  if (process.platform !== "win32") assert.equal((await stat(file)).mode & 0o777, 0o600);
 }));
 
 test("a Meta key preserves other chat, saved fields and Lyricist settings; blank keys preserve saved credentials", () => fixture(async (store, file) => {

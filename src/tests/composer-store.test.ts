@@ -50,7 +50,7 @@ test("composer saves are durable, private, idempotent and song-bound after switc
   await r.store.save(r.write(saved, draft("Keep the late entrance and the breath")));
   assert.equal((await r.reopen().read(r.songId)).draft.text, "Keep the late entrance and the breath");
   assert.equal((await r.reopen().read(other.id)).draft.text, "");
-  assert.equal((await stat(join(await r.song.directoryFor(r.songId), "composer.json"))).mode & 0o777, 0o600);
+  if (process.platform !== "win32") assert.equal((await stat(join(await r.song.directoryFor(r.songId), "composer.json"))).mode & 0o777, 0o600);
 });
 
 test("CAS conflicts survive closure and explicit resolution preserves the replaced draft", async (t) => {

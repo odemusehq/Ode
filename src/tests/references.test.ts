@@ -35,7 +35,7 @@ test("selected images survive reopening and reach context as their original imag
   const part = content.find(part => part.type === "image_url");
   assert.ok(part?.type === "image_url");
   assert.deepEqual(Buffer.from(part.image_url.url.split(",")[1]!, "base64"), png);
-  assert.equal((await stat(join(root, "References", `${image.id}.bin`))).mode & 0o777, 0o600);
+  if (process.platform !== "win32") assert.equal((await stat(join(root, "References", `${image.id}.bin`))).mode & 0o777, 0o600);
   assert.ok(chatContextSize([{ ...part, image_url: { url: "data:image/png;base64," + "a".repeat(200000) } }]).chars < 200);
 });
 
