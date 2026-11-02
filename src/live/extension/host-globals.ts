@@ -29,6 +29,12 @@ class HostGlobals {
     atob,
     btoa,
     crypto: webcrypto,
+    // Node's default abort reason retains its native constructor even when Live omits the global.
+    DOMException: (() => {
+      const controller = new AbortController();
+      controller.abort();
+      return controller.signal.reason.constructor;
+    })(),
     // AbortSignal is an EventTarget, so the host's own EventTarget sits right behind it.
     EventTarget: Object.getPrototypeOf(AbortSignal),
     queueMicrotask: (task: () => void) => void Promise.resolve().then(task),
