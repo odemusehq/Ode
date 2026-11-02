@@ -4,7 +4,6 @@
     "turnsPerRequest": 240,
     "tokensPerRequest": 8000000,
     "tokensPerTurn": 8000,
-    "compactAtTokens": 100000,
     "historyExchanges": 12,
     "toolResultMaxChars": 60000
   },

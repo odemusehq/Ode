@@ -151,7 +151,7 @@ export class AgentLoop {
         canUseTool: async () => ({ behavior: "deny", message: "This tool was not approved by Ode's tool boundary." }),
         maxTurns: this.deps.limits.turnsPerRequest, resume, abortController: controller,
         settings: {
-          autoCompactEnabled: true, autoCompactWindow: Math.max(100_000, this.deps.limits.compactAtTokens),
+          autoCompactEnabled: true,
           autoMemoryEnabled: false, disableBundledSkills: true, disableClaudeAiConnectors: true,
           claudeMdExcludes: ["**/CLAUDE.md", "**/.claude/rules/**"],
         },
