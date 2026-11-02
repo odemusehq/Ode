@@ -3,9 +3,10 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { AudioFileDecoder } from "../audio/decode";
 import type { Transcript } from "../services/types";
+import { MAX_MICROPHONE_SECONDS } from "../shared/api";
 
 export const MAX_DICTATION_BYTES = 16 * 1024 * 1024;
-export const MAX_DICTATION_SECONDS = 60.25;
+export const MAX_DICTATION_SECONDS = MAX_MICROPHONE_SECONDS + 0.25;
 
 export class DictationError extends Error {
   constructor(message: string, readonly status: 400 | 408 | 409 | 413 | 422 | 502 | 503) { super(message); }
@@ -17,7 +18,7 @@ export class Dictation {
 
   static validate(bytes: Uint8Array): void {
     if (bytes.byteLength === 0) throw new DictationError(t("server.dictation.theRecordingIsEmptyDictateAShort"), 400);
-    if (bytes.byteLength > MAX_DICTATION_BYTES) throw new DictationError(t("server.dictation.dictationIsLimitedTo16MiBAnd"), 413);
+    if (bytes.byteLength > MAX_DICTATION_BYTES) throw new DictationError(t("server.dictation.sizeAndDurationLimit"), 413);
     try {
       const decoder = new AudioFileDecoder();
       const info = decoder.inspect(bytes, t("server.dictation.recording"));
@@ -25,7 +26,7 @@ export class Dictation {
         throw new Error(t("server.dictation.useMonoOrStereoPCMWAVRecorded"));
       }
       if (info.frames === 0) throw new Error(t("server.dictation.theRecordingHasNoAudioFrames"));
-      if (info.frames / info.sampleRate > MAX_DICTATION_SECONDS) throw new Error(t("server.dictation.dictationIsLimitedToOneMinute"));
+      if (info.frames / info.sampleRate > MAX_DICTATION_SECONDS) throw new Error(t("server.dictation.durationLimit"));
     } catch (error) {
       throw new DictationError(error instanceof Error ? error.message : t("server.dictation.theRecordingIsUnreadableTryDictatingAgain"), 400);
     }

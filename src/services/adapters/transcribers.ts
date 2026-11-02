@@ -25,11 +25,12 @@ export class MetaTranscriber implements Transcriber {
     form.append("audio", new Blob([prepared.bytes], { type: "audio/wav" }), "audio.wav");
     const requestHash = audioHash(Buffer.from(JSON.stringify({ settings, payloadSha256: prepared.payload.sha256 })));
     const dispatchedAt = new Date().toISOString();
+    const timeout = AbortSignal.timeout(300_000);
     const response = await fetch(`${this.role.baseUrl}/asr/transcribe`, {
       method: "POST",
       headers: { Authorization: `Bearer ${this.role.apiKey}`, Accept: "application/json" },
       body: form,
-      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(120_000)]) : AbortSignal.timeout(120_000),
+      signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
     });
     if (!response.ok) throw new Error(`Transcription failed (${response.status}): ${await response.text()}`);
     const result = (await response.json()) as MetaTranscriptResponse;

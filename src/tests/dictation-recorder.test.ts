@@ -3,16 +3,16 @@ import { test } from "node:test";
 import { AudioFileDecoder } from "../audio/decode";
 import { MicrophoneRecorder, encodeMonoWav } from "../ui/app/microphone";
 
-test("dictation encodes real mono PCM WAV and refuses overlong or damaged speech", () => {
+test("microphone recordings accept five minutes and refuse overlong or damaged audio", () => {
   const bytes = encodeMonoWav([Float32Array.from([1, -1, 0])], 24_000);
   const audio = new AudioFileDecoder().decode(bytes, "dictation.wav");
   assert.equal(audio.sampleRate, 24_000);
   assert.equal(audio.channels.length, 1);
   assert.ok(Math.abs(audio.channels[0]![0]! - 1) < 0.001);
   assert.ok(Math.abs(audio.channels[0]![1]! + 1) < 0.001);
-  const complete = encodeMonoWav([new Float32Array(8_000 * 60.1)], 8_000);
-  assert.equal(new AudioFileDecoder().inspect(complete, "dictation.wav").frames, 8_000 * 60.1);
-  assert.throws(() => encodeMonoWav([new Float32Array(8_000 * 61)], 8_000), /60 seconds/);
+  const complete = encodeMonoWav([new Float32Array(48_000 * 300)], 48_000);
+  assert.equal(new AudioFileDecoder().inspect(complete, "recording.wav").frames, 14_400_000);
+  assert.throws(() => encodeMonoWav([new Float32Array(8_000 * 301)], 8_000), /5 minutes/);
   assert.throws(() => encodeMonoWav([Float32Array.from([0, Number.NaN])], 24_000), /unreadable/);
   assert.throws(() => encodeMonoWav([Float32Array.of(0), Float32Array.of(0)], 24_000), /unreadable/, "The serializer must not downmix channels itself.");
 });

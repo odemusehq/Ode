@@ -3,6 +3,9 @@ import type { LyricsSaved, LyricsState, LyricsWrite } from "./lyrics";
 import type { Mode } from "./personalisation";
 import type { RestoreResult, VersionDetail, VersionListItem } from "./versions";
 
+/** Shared by microphone capture and the local dictation validator. */
+export const MAX_MICROPHONE_SECONDS = 5 * 60;
+
 export const API = {
   chat: "/api/chat", // POST ChatRequest → { ok: true } (a submitted conversation request)
   conversation: "/api/conversation", // GET complete saved transcript

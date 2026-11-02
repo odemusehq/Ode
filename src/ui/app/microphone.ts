@@ -1,5 +1,5 @@
 import { t } from "../../shared/i18n";
-const MAX_SECONDS = 60;
+import { MAX_MICROPHONE_SECONDS as MAX_SECONDS } from "../../shared/api";
 export type RecordingKind = "dictation" | "audio";
 
 /** Feature detection only: permission and the browser's actual recording/decoding can still fail. */

@@ -14,7 +14,8 @@ const wav = (frames = 160, channels = 1, sampleRate = 16000) => encodeWav({ samp
 test("dictation validates actual PCM WAV, dimensions and duration before any provider call", () => {
   assert.doesNotThrow(() => Dictation.validate(wav()));
   assert.doesNotThrow(() => Dictation.validate(wav(240, 1, 24000)));
-  for (const bytes of [new Uint8Array(), new TextEncoder().encode("not WAV"), wav(0), wav(160, 2), wav(160, 3), wav(160, 1, 48000), wav(1450000, 1, 24000)]) {
+  assert.doesNotThrow(() => Dictation.validate(wav(7_200_000, 1, 24000)));
+  for (const bytes of [new Uint8Array(), new TextEncoder().encode("not WAV"), wav(0), wav(160, 2), wav(160, 3), wav(160, 1, 48000), wav(24_000 * 301, 1, 24000)]) {
     assert.throws(() => Dictation.validate(bytes), DictationError);
   }
 });

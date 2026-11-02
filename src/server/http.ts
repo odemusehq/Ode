@@ -452,14 +452,14 @@ export class OdeServer {
     });
 
     app.post(API.dictation, bodyLimit({ maxSize: MAX_DICTATION_BYTES + 64 * 1024,
-      onError: (c) => c.json({ error: t("server.http.dictationIsLimitedTo16MiBAnd") }, 413),
+      onError: (c) => c.json({ error: t("server.http.dictationSizeAndDurationLimit") }, 413),
     }), async (c) => {
       const songId = song.songId;
       const form = await c.req.formData();
       const file = form.get("file");
       if (!(file instanceof File) || typeof form.get("songId") !== "string") return c.json({ error: t("server.http.sendAWAVRecordingAndItsSongId") }, 400);
       if (form.get("songId") !== songId || song.songId !== songId) return c.json({ error: t("server.http.theOpenSongChangedDictateAgainIn") }, 409);
-      if (file.size > MAX_DICTATION_BYTES) return c.json({ error: t("server.http.dictationIsLimitedTo16MiBAnd") }, 413);
+      if (file.size > MAX_DICTATION_BYTES) return c.json({ error: t("server.http.dictationSizeAndDurationLimit") }, 413);
       const role = (await this.deps.models.roles()).transcription;
       if (song.songId !== songId) return c.json({ error: t("server.http.theOpenSongChangedDictateAgainIn") }, 409);
       if (!RoleCheck.isConfigured(role)) return c.json({ error: t("server.http.addAMetaKeyInOdeSettings") }, 503);
