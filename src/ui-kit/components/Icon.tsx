@@ -5,6 +5,7 @@ export enum IconName {
   Stop = "stop",
   Send = "send",
   Microphone = "microphone",
+  Music = "music",
   Sidebar = "sidebar",
   Close = "close",
   Check = "check",
@@ -44,6 +45,8 @@ function iconShape(name: IconName): ReactNode {
       return <path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" />;
     case IconName.Microphone:
       return <path d="M6 4a2 2 0 0 1 4 0v4a2 2 0 0 1-4 0zM3.5 7.5V8a4.5 4.5 0 0 0 9 0v-.5M8 12.5V15M5.5 15h5" />;
+    case IconName.Music:
+      return <><path d="M5.5 12V3.5l7-1.5v8.5M5.5 5.5l7-1.5" /><g className="ode-icon__fill"><ellipse cx="4" cy="12" rx="1.5" ry="1.25" /><ellipse cx="11" cy="10.5" rx="1.5" ry="1.25" /></g></>;
     case IconName.Stop:
       return <rect className="ode-icon__fill" x="4" y="4" width="8" height="8" rx="1" />;
     case IconName.Close:

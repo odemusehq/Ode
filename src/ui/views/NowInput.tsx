@@ -6,11 +6,12 @@ import { errorMessage } from "../app/api";
 import { useAppState, useClient } from "../app/hooks";
 import { REFERENCE_ACCEPT, selectedReferences, droppedReferences, type ReferenceSelection } from "../app/references";
 import { ReferenceChips } from "./ReferenceChips";
-import { DictationRecorder, dictationSupported } from "../app/dictation";
+import { MicrophoneRecorder, microphoneSupported, type RecordingKind } from "../app/microphone";
 
-type DictationPhase = "idle" | "permission" | "recording" | "transcribing";
-interface ActiveDictation {
-  recorder: DictationRecorder;
+type RecordingPhase = "idle" | "permission" | "recording" | "transcribing" | "attaching";
+interface ActiveRecording {
+  recorder: MicrophoneRecorder;
+  kind: RecordingKind;
   controller: AbortController;
   songId: string;
   epoch: number;
@@ -32,37 +33,38 @@ export function NowInput() {
   const attachMenu = useRef<HTMLDivElement>(null);
   const filesInput = useRef<HTMLInputElement>(null);
   const folderInput = useRef<HTMLInputElement>(null);
-  const [voicePhase, setVoicePhase] = useState<DictationPhase>("idle");
-  const [supportsDictation] = useState(dictationSupported);
+  const [recordingPhase, setRecordingPhase] = useState<RecordingPhase>("idle");
+  const [recordingKind, setRecordingKind] = useState<RecordingKind | null>(null);
+  const [supportsRecording] = useState(microphoneSupported);
   const inputId = useId();
   const field = useRef<HTMLTextAreaElement>(null);
   const previousSong = useRef(songId);
   const currentSong = useRef(songId);
-  const voice = useRef<ActiveDictation | null>(null);
-  const voiceEpoch = useRef(0);
+  const recording = useRef<ActiveRecording | null>(null);
+  const recordingEpoch = useRef(0);
   const mounted = useRef(true);
   currentSong.current = songId;
 
-  const cancelDictation = useCallback(() => {
-    voiceEpoch.current++;
-    const active = voice.current;
-    voice.current = null;
+  const cancelRecording = useCallback(() => {
+    recordingEpoch.current++;
+    const active = recording.current;
+    recording.current = null;
     active?.controller.abort();
     active?.recorder.cancel();
-    if (mounted.current) setVoicePhase("idle");
+    if (mounted.current) { setRecordingPhase("idle"); setRecordingKind(null); }
   }, []);
 
   useEffect(() => {
     mounted.current = true;
-    return () => { mounted.current = false; cancelDictation(); };
-  }, [cancelDictation]);
+    return () => { mounted.current = false; cancelRecording(); };
+  }, [cancelRecording]);
 
   useEffect(() => {
     if (previousSong.current !== null && songId !== previousSong.current) {
-      cancelDictation();
+      cancelRecording();
     }
     previousSong.current = songId;
-  }, [songId, cancelDictation]);
+  }, [songId, cancelRecording]);
 
   useEffect(() => { void client.composer.open(songId); }, [client, songId]);
 
@@ -72,17 +74,17 @@ export function NowInput() {
   }, [composer.loaded, composer.songId, songId]);
 
   useEffect(() => {
-    if (voicePhase === "idle") return;
+    if (recordingPhase === "idle" || recordingPhase === "attaching") return;
     const escape = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       event.preventDefault();
       event.stopPropagation();
-      cancelDictation();
+      cancelRecording();
       field.current?.focus();
     };
     window.addEventListener("keydown", escape, true);
     return () => window.removeEventListener("keydown", escape, true);
-  }, [voicePhase, cancelDictation]);
+  }, [recordingPhase, cancelRecording]);
 
   useEffect(() => {
     if (!field.current) return;
@@ -90,60 +92,68 @@ export function NowInput() {
     field.current.style.height = `${Math.min(field.current.scrollHeight, 180)}px`;
   }, [text]);
 
-  const isCurrentDictation = (active: ActiveDictation) => mounted.current && voice.current === active &&
-    voiceEpoch.current === active.epoch && currentSong.current === active.songId && !active.controller.signal.aborted;
+  const isCurrentRecording = (active: ActiveRecording) => mounted.current && recording.current === active &&
+    recordingEpoch.current === active.epoch && currentSong.current === active.songId && !active.controller.signal.aborted;
 
-  const finishDictation = async () => {
-    const active = voice.current;
+  const finishRecording = async () => {
+    const active = recording.current;
     if (!active || active.finishing) return;
     active.finishing = true;
-    setVoicePhase("transcribing");
+    setRecordingPhase(active.kind === "audio" ? "attaching" : "transcribing");
     try {
       const file = await active.recorder.finish();
-      if (!isCurrentDictation(active)) return;
-      const result = await client.api.transcribe(file, active.songId, active.controller.signal);
-      if (!isCurrentDictation(active)) return;
-      if (result.songId !== active.songId) throw new Error(t("chat.dictationSongChanged"));
-      const transcript = result.text.trim();
-      if (!transcript) throw new Error(t("chat.dictationEmpty"));
-      // Functional append preserves edits made while permission, recording or transcription was pending.
-      client.composer.appendText(transcript);
+      if (!isCurrentRecording(active)) return;
+      if (active.kind === "audio") {
+        // The saved reference supplies the actual waveform to the main agent when Send is pressed.
+        await client.attachReferences(selectedReferences([file]), active.songId);
+      } else {
+        const result = await client.api.transcribe(file, active.songId, active.controller.signal);
+        if (!isCurrentRecording(active)) return;
+        if (result.songId !== active.songId) throw new Error(t("chat.dictationSongChanged"));
+        const transcript = result.text.trim();
+        if (!transcript) throw new Error(t("chat.dictationEmpty"));
+        // Functional append preserves edits made while permission, recording or transcription was pending.
+        client.composer.appendText(transcript);
+      }
     } catch (error) {
-      if (isCurrentDictation(active)) client.store.setError(t("chat.dictationStopped", { error: (errorMessage(error)) }));
+      if (isCurrentRecording(active)) client.store.setError(t(active.kind === "audio" ? "chat.audioRecordingStopped" : "chat.dictationStopped", { error: errorMessage(error) }));
     } finally {
       active.recorder.cancel();
-      if (voice.current === active) {
-        voice.current = null;
-        if (mounted.current) { setVoicePhase("idle"); field.current?.focus(); }
+      if (recording.current === active) {
+        recording.current = null;
+        if (mounted.current) { setRecordingPhase("idle"); setRecordingKind(null); field.current?.focus(); }
       }
     }
   };
 
-  const startDictation = async () => {
+  const startRecording = async (kind: RecordingKind) => {
     const intendedSong = currentSong.current;
-    if (voice.current || !intendedSong || !composer.loaded || !dictationReady || !supportsDictation || sending) return;
-    const active: ActiveDictation = {
+    if (recording.current || !intendedSong || !composer.loaded || composer.songId !== intendedSong ||
+      (kind === "dictation" && !dictationReady) || !supportsRecording || sending || adding) return;
+    const active: ActiveRecording = {
+      kind,
       songId: intendedSong,
-      epoch: ++voiceEpoch.current,
+      epoch: ++recordingEpoch.current,
       controller: new AbortController(),
       finishing: false,
-      recorder: new DictationRecorder(() => { void finishDictation(); }, (error) => {
-        if (!isCurrentDictation(active)) return;
+      recorder: new MicrophoneRecorder(() => { void finishRecording(); }, (error) => {
+        if (!isCurrentRecording(active)) return;
         client.store.setError(errorMessage(error));
-        cancelDictation();
-      }),
+        cancelRecording();
+      }, kind),
     };
-    voice.current = active;
-    setVoicePhase("permission");
+    recording.current = active;
+    setRecordingKind(kind);
+    setRecordingPhase("permission");
     client.store.setError(null);
     try {
       await active.recorder.start();
-      if (isCurrentDictation(active)) setVoicePhase("recording");
+      if (isCurrentRecording(active)) setRecordingPhase("recording");
       else active.recorder.cancel();
     } catch (error) {
-      if (isCurrentDictation(active)) {
-        client.store.setError(t("chat.dictationStartFailed", { error: (errorMessage(error)) }));
-        cancelDictation();
+      if (isCurrentRecording(active)) {
+        client.store.setError(t(kind === "audio" ? "chat.audioRecordingStartFailed" : "chat.dictationStartFailed", { error: errorMessage(error) }));
+        cancelRecording();
       }
     }
   };
@@ -161,7 +171,7 @@ export function NowInput() {
 
   const attach = async (selection: Promise<ReferenceSelection[]> | ReferenceSelection[]) => {
     const intendedSong = currentSong.current;
-    if (!intendedSong || adding || sending || !composer.loaded) return;
+    if (!intendedSong || recording.current || adding || sending || !composer.loaded) return;
     setAddMenu(false); setAdding(true); client.store.setError(null);
     try { await client.attachReferences(await selection, intendedSong); }
     catch (error) { if (mounted.current && currentSong.current === intendedSong) client.store.setError(errorMessage(error)); }
@@ -170,7 +180,7 @@ export function NowInput() {
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if ((!text.trim() && attachments.length === 0) || sending || adding || voice.current) return;
+    if ((!text.trim() && attachments.length === 0) || sending || adding || recording.current) return;
     setSending(true);
     try {
       await client.sendDraft();
@@ -179,6 +189,10 @@ export function NowInput() {
       field.current?.focus();
     }
   };
+
+  const recordingDisabled = (kind: RecordingKind) => recordingPhase === "idle"
+    ? !supportsRecording || !songId || !composer.loaded || composer.songId !== songId || sending || adding || (kind === "dictation" && !dictationReady)
+    : recordingPhase !== "recording" || recordingKind !== kind;
 
   return (
     <form className="now__composer" onSubmit={(event) => void submit(event)}
@@ -199,7 +213,7 @@ export function NowInput() {
         }} />
       <div className="now__composer-actions">
         <div className="now__attach" ref={attachMenu}>
-          <IconButton icon={IconName.Plus} label={t("references.add")} aria-expanded={addMenu} aria-haspopup="menu" disabled={adding || sending || !composer.loaded} onClick={() => setAddMenu(!addMenu)} />
+          <IconButton icon={IconName.Plus} label={t("references.add")} aria-expanded={addMenu} aria-haspopup="menu" disabled={adding || sending || !composer.loaded || recordingPhase !== "idle"} onClick={() => setAddMenu(!addMenu)} />
           {addMenu && <div className="now__attach-menu" role="menu" aria-label={t("references.add")}>
             <Button variant={ButtonVariant.Quiet} role="menuitem" onClick={() => { setAddMenu(false); filesInput.current?.click(); }}>{t("references.files")}</Button>
             <Button variant={ButtonVariant.Quiet} role="menuitem" onClick={() => { setAddMenu(false); folderInput.current?.click(); }}>{t("references.folder")}</Button>
@@ -208,21 +222,29 @@ export function NowInput() {
           <input hidden ref={folderInput} type="file" multiple {...{ webkitdirectory: "" }} onChange={event => { const selected = selectedReferences(Array.from(event.currentTarget.files ?? [])); event.currentTarget.value = ""; void attach(selected); }} />
         </div>
         {adding && <span className="small muted" role="status">{t("references.adding")}</span>}
-        <IconButton icon={voicePhase === "recording" ? IconName.Stop : IconName.Microphone}
+        <IconButton icon={recordingKind === "audio" && recordingPhase === "recording" ? IconName.Stop : IconName.Music}
+          className="now__voice" disabled={recordingDisabled("audio")}
+          aria-pressed={recordingKind === "audio" && recordingPhase === "recording"}
+          aria-busy={recordingKind === "audio" && (recordingPhase === "permission" || recordingPhase === "attaching")}
+          label={recordingKind === "audio" && recordingPhase === "recording" ? t("chat.finishAudioRecording") : t("chat.recordAudio")}
+          title={!supportsRecording ? t("chat.microphoneUnavailable") : recordingKind === "audio" && recordingPhase === "recording" ? t("chat.finishAudioRecording") : t("chat.recordAudio")}
+          onClick={() => { if (recordingKind === "audio" && recordingPhase === "recording") void finishRecording(); else void startRecording("audio"); }} />
+        <IconButton icon={recordingKind === "dictation" && recordingPhase === "recording" ? IconName.Stop : IconName.Microphone}
           className="now__voice"
-          disabled={voicePhase === "permission" || voicePhase === "transcribing" || (voicePhase === "idle" && (!supportsDictation || !dictationReady || !songId || !composer.loaded || sending))}
-          aria-pressed={voicePhase === "recording"} aria-busy={voicePhase === "permission" || voicePhase === "transcribing"}
-          label={voicePhase === "recording" ? t("chat.finishDictation") : t("chat.dictateMessage")}
-          title={!supportsDictation ? t("chat.microphoneUnavailable") : !dictationReady ? t("chat.dictationSetup") : voicePhase === "recording" ? t("chat.finishDictation") : t("chat.dictateMessage")}
-          onClick={() => { if (voicePhase === "recording") void finishDictation(); else void startDictation(); }} />
-        {voicePhase !== "idle" && <IconButton icon={IconName.Close} label={t("chat.cancelDictation")} onClick={() => { cancelDictation(); field.current?.focus(); }} />}
-        {((busy && stoppable) || sending || composer.pending) && <IconButton icon={IconName.Stop} label={t("chat.stop")} onClick={() => { cancelDictation(); void client.stopRequest(); }} />}
+          disabled={recordingDisabled("dictation")}
+          aria-pressed={recordingKind === "dictation" && recordingPhase === "recording"}
+          aria-busy={recordingKind === "dictation" && (recordingPhase === "permission" || recordingPhase === "transcribing")}
+          label={recordingKind === "dictation" && recordingPhase === "recording" ? t("chat.finishDictation") : t("chat.dictateMessage")}
+          title={!supportsRecording ? t("chat.microphoneUnavailable") : !dictationReady ? t("chat.dictationSetup") : recordingKind === "dictation" && recordingPhase === "recording" ? t("chat.finishDictation") : t("chat.dictateMessage")}
+          onClick={() => { if (recordingKind === "dictation" && recordingPhase === "recording") void finishRecording(); else void startRecording("dictation"); }} />
+        {recordingPhase !== "idle" && recordingPhase !== "attaching" && <IconButton icon={IconName.Close} label={t(recordingKind === "audio" ? "chat.cancelAudioRecording" : "chat.cancelDictation")} onClick={() => { cancelRecording(); field.current?.focus(); }} />}
+        {((busy && stoppable) || sending || composer.pending) && <IconButton icon={IconName.Stop} label={t("chat.stop")} onClick={() => { cancelRecording(); void client.stopRequest(); }} />}
         <IconButton type="submit" className="now__send" icon={IconName.Send} label={t("chat.send")} aria-busy={sending}
-          disabled={sending || adding || !composer.loaded || !composer.valid || composer.conflicts.length > 0 || voicePhase !== "idle" || (!text.trim() && attachments.length === 0)} />
+          disabled={sending || adding || !composer.loaded || !composer.valid || composer.conflicts.length > 0 || recordingPhase !== "idle" || (!text.trim() && attachments.length === 0)} />
       </div>
       {composer.error && <p className="small" role="status">{composer.error} {composer.conflicts.length === 0 && <Button variant={ButtonVariant.Quiet} onClick={() => { void (composer.loaded ? client.composer.flush() : client.composer.open(songId, true)); }}>{t("common.retry")}</Button>}</p>}
       {composer.conflicts.length > 0 && <p className="small" role="status">{t("chat.draftConflict")} <Button variant={ButtonVariant.Quiet} disabled={composer.saving} onClick={() => { void client.composer.resolve("local").catch((error: unknown) => client.store.setError(errorMessage(error))); }}>{t("chat.keepDraft")}</Button> <Button variant={ButtonVariant.Quiet} disabled={composer.saving} onClick={() => { void client.composer.resolve("saved").catch((error: unknown) => client.store.setError(errorMessage(error))); }}>{t("chat.useSavedDraft")}</Button></p>}
-      {voicePhase !== "idle" && <p className="small muted" role="status">{voicePhase === "permission" ? t("chat.microphonePermission") : voicePhase === "recording" ? t("chat.recording") : t("chat.transcribing")}</p>}
+      {recordingPhase !== "idle" && <p className="small muted" role="status">{recordingPhase === "permission" ? t("chat.microphonePermission") : recordingPhase === "recording" ? t("chat.recording") : recordingPhase === "attaching" ? t("chat.attachingRecording") : t("chat.transcribing")}</p>}
     </form>
   );
 }

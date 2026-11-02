@@ -87,13 +87,13 @@
     "saveDraftFailed": "Saving the draft failed."
   },
   "dictation": {
-    "unreadableAudio": "The microphone returned unreadable audio. Record again or type your message.",
-    "tooLong": "The recording exceeded 60 seconds. Record a shorter message so words are not lost.",
-    "newRecordingRequired": "Start a new recording for each dictated message.",
-    "recordingFailed": "The browser could not record the microphone. Record again or type your message.",
+    "unreadableAudio": "The microphone returned unreadable audio. Try recording again.",
+    "tooLong": "Recordings are limited to 60 seconds.",
+    "newRecordingRequired": "Start a new recording for each take.",
+    "recordingFailed": "Could not record the microphone. Try recording again.",
     "notReady": "The microphone is not ready to finish recording.",
-    "emptyRecording": "No microphone audio was recorded. Record again or type your message.",
-    "cancelled": "Dictation cancelled."
+    "emptyRecording": "The recording is empty. Try recording again.",
+    "cancelled": "Recording cancelled."
   },
   "chat": {
     "mode": "Mode",
@@ -108,6 +108,13 @@
     "dictateMessage": "Dictate message",
     "finishDictation": "Finish dictation",
     "cancelDictation": "Cancel dictation",
+    "recordAudio": "Record audio",
+    "finishAudioRecording": "Stop and attach recording",
+    "cancelAudioRecording": "Cancel recording",
+    "audioRecordingStopped": "Recording stopped: {error}",
+    "audioRecordingStartFailed": "Recording could not start: {error}",
+    "audioFileName": "Recording.wav",
+    "attachingRecording": "Attaching recording…",
     "microphoneUnavailable": "Microphone recording is unavailable.",
     "dictationSetup": "Add your Meta key in Settings to use dictation.",
     "dictationSongChanged": "The open song changed. Record the message again in the intended song.",

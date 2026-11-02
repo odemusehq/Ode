@@ -1,8 +1,9 @@
 import { t } from "../../shared/i18n";
 const MAX_SECONDS = 60;
+export type RecordingKind = "dictation" | "audio";
 
 /** Feature detection only: permission and the browser's actual recording/decoding can still fail. */
-export function dictationSupported(): boolean {
+export function microphoneSupported(): boolean {
   return typeof window !== "undefined" && window.isSecureContext && Boolean(navigator.mediaDevices?.getUserMedia) &&
     typeof MediaRecorder !== "undefined" && typeof AudioContext !== "undefined" && typeof OfflineAudioContext !== "undefined";
 }
@@ -30,7 +31,7 @@ export function encodeMonoWav(channels: readonly Float32Array[], sampleRate: num
 }
 
 /** One explicit microphone recording, with cancellation even while the browser's permission prompt is pending. */
-export class DictationRecorder {
+export class MicrophoneRecorder {
   private cancelled = false;
   private started = false;
   private finishing = false;
@@ -44,14 +45,17 @@ export class DictationRecorder {
   constructor(
     private readonly onLimit: () => void,
     private readonly onError: (error: Error) => void,
-    private readonly getMedia = () => navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } }),
+    private readonly kind: RecordingKind = "dictation",
+    private readonly getMedia = (constraints: MediaStreamConstraints) => navigator.mediaDevices.getUserMedia(constraints),
   ) {}
 
   async start(): Promise<void> {
     if (this.started) throw new Error(t("dictation.newRecordingRequired"));
     this.started = true;
-    const stream = await this.getMedia();
-    if (this.cancelled) { stream.getTracks().forEach((track) => track.stop()); throw DictationRecorder.aborted(); }
+    const speech = this.kind === "dictation";
+    const stream = await this.getMedia({ audio: { channelCount: 1, echoCancellation: speech, noiseSuppression: speech,
+      ...(!speech ? { autoGainControl: false } : {}) } });
+    if (this.cancelled) { stream.getTracks().forEach((track) => track.stop()); throw MicrophoneRecorder.aborted(); }
     this.stream = stream;
     try {
       const recorder = new MediaRecorder(stream);
@@ -60,7 +64,7 @@ export class DictationRecorder {
       this.capture = new Promise((resolve, reject) => {
         this.rejectCapture = reject;
         recorder.ondataavailable = (event) => { if (!this.cancelled && event.data.size) chunks.push(event.data); };
-        recorder.onstop = () => this.cancelled ? reject(DictationRecorder.aborted()) : resolve(new Blob(chunks, { type: recorder.mimeType }));
+        recorder.onstop = () => this.cancelled ? reject(MicrophoneRecorder.aborted()) : resolve(new Blob(chunks, { type: recorder.mimeType }));
         recorder.onerror = () => {
           const error = new Error(t("dictation.recordingFailed"));
           reject(error);
@@ -76,7 +80,7 @@ export class DictationRecorder {
   }
 
   async finish(): Promise<File> {
-    if (this.cancelled) throw DictationRecorder.aborted();
+    if (this.cancelled) throw MicrophoneRecorder.aborted();
     if (!this.recorder || !this.capture || this.finishing) throw new Error(t("dictation.notReady"));
     this.finishing = true;
     this.clearTimer();
@@ -87,25 +91,26 @@ export class DictationRecorder {
       this.releaseTracks();
       // stop fires after the final dataavailable event; a partial compressed chunk is not a complete recording.
       const blob = await capture;
-      if (this.cancelled) throw DictationRecorder.aborted();
+      if (this.cancelled) throw MicrophoneRecorder.aborted();
       if (!blob.size) throw new Error(t("dictation.emptyRecording"));
-      try { context = new AudioContext({ sampleRate: 24_000 }); }
+      const sampleRate = this.kind === "audio" ? 48_000 : 24_000;
+      try { context = new AudioContext({ sampleRate }); }
       catch { context = new AudioContext(); }
       this.context = context;
       const audio = await context.decodeAudioData(await blob.arrayBuffer());
-      if (this.cancelled) throw DictationRecorder.aborted();
+      if (this.cancelled) throw MicrophoneRecorder.aborted();
       if (!Number.isFinite(audio.duration) || audio.duration <= 0) throw new Error(t("dictation.unreadableAudio"));
       if (audio.duration > MAX_SECONDS + 0.25) throw new Error(t("dictation.tooLong"));
       // The browser performs channel mixing and sample-rate conversion through its native audio graph.
-      const output = new OfflineAudioContext(1, Math.ceil(audio.duration * 24_000), 24_000);
+      const output = new OfflineAudioContext(1, Math.ceil(audio.duration * sampleRate), sampleRate);
       const source = output.createBufferSource();
       source.buffer = audio;
       source.connect(output.destination);
       source.start();
       const mono = await output.startRendering();
-      if (this.cancelled) throw DictationRecorder.aborted();
+      if (this.cancelled) throw MicrophoneRecorder.aborted();
       const bytes = encodeMonoWav([mono.getChannelData(0)], mono.sampleRate);
-      return new File([bytes], "dictation.wav", { type: "audio/wav" });
+      return new File([bytes], this.kind === "audio" ? t("chat.audioFileName") : "dictation.wav", { type: "audio/wav" });
     } finally {
       this.releaseTracks();
       if (context && context.state !== "closed") await context.close().catch(() => undefined);
@@ -117,7 +122,7 @@ export class DictationRecorder {
   cancel(): void {
     this.cancelled = true;
     this.clearTimer();
-    this.rejectCapture(DictationRecorder.aborted());
+    this.rejectCapture(MicrophoneRecorder.aborted());
     if (this.recorder && this.recorder.state !== "inactive") {
       try { this.recorder.stop(); } catch { /* Tracks are still released when a browser rejects stop. */ }
     }

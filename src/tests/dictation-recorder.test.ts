@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { AudioFileDecoder } from "../audio/decode";
-import { DictationRecorder, encodeMonoWav } from "../ui/app/dictation";
+import { MicrophoneRecorder, encodeMonoWav } from "../ui/app/microphone";
 
 test("dictation encodes real mono PCM WAV and refuses overlong or damaged speech", () => {
   const bytes = encodeMonoWav([Float32Array.from([1, -1, 0])], 24_000);
@@ -21,10 +21,22 @@ test("cancelling an unanswered microphone permission releases any stream granted
   let grant!: (stream: MediaStream) => void;
   let stopped = 0;
   const permission = new Promise<MediaStream>((resolve) => { grant = resolve; });
-  const recorder = new DictationRecorder(() => undefined, () => undefined, () => permission);
+  const recorder = new MicrophoneRecorder(() => undefined, () => undefined, "dictation", () => permission);
   const starting = recorder.start();
   recorder.cancel();
   grant({ getTracks: () => [{ stop: () => { stopped++; } }] } as unknown as MediaStream);
   await assert.rejects(starting, { name: "AbortError" });
   assert.equal(stopped, 1);
+});
+
+test("music recording requests a microphone without speech processing", async () => {
+  let grant!: (stream: MediaStream) => void, constraints: MediaStreamConstraints | undefined;
+  const permission = new Promise<MediaStream>(resolve => { grant = resolve; });
+  const recorder = new MicrophoneRecorder(() => undefined, () => undefined, "audio",
+    requested => { constraints = requested; return permission; });
+  const starting = recorder.start();
+  recorder.cancel();
+  grant({ getTracks: () => [{ stop: () => undefined }] } as unknown as MediaStream);
+  await assert.rejects(starting, { name: "AbortError" });
+  assert.deepEqual(constraints, { audio: { channelCount: 1, echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
 });

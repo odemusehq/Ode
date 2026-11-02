@@ -12,6 +12,7 @@ import { userPaths } from "../mneme/paths";
 import { LocalAudioFiles } from "../live/local-audio-files";
 import { chatContextSize } from "../services/capabilities";
 import { OdeApi } from "../ui/app/api";
+import { encodeMonoWav } from "../ui/app/microphone";
 
 const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j8Z8AAAAASUVORK5CYII=", "base64");
 async function rig(t: TestContext) {
@@ -37,6 +38,17 @@ test("selected images survive reopening and reach context as their original imag
   assert.deepEqual(Buffer.from(part.image_url.url.split(",")[1]!, "base64"), png);
   if (process.platform !== "win32") assert.equal((await stat(join(root, "References", `${image.id}.bin`))).mode & 0o777, 0o600);
   assert.ok(chatContextSize([{ ...part, image_url: { url: "data:image/png;base64," + "a".repeat(200000) } }]).chars < 200);
+});
+
+test("recorded audio references retain their waveform in the agent context", async t => {
+  const { refs } = await rig(t);
+  const bytes = encodeMonoWav([Float32Array.from([0, 0.25, -0.25, 0.5])], 48_000);
+  const recording = await refs.add([{ name: "Recording.wav", bytes }]);
+  const content = await refs.context([{ ...recording, entryId: randomUUID() }]);
+  const audio = content.find(part => part.type === "audio");
+  assert.ok(audio?.type === "audio");
+  assert.equal(audio.format, "wav");
+  assert.deepEqual(Buffer.from(audio.data), Buffer.from(bytes));
 });
 
 test("attached folders keep paths and offer filtered pages without reading every file into context", async t => {
