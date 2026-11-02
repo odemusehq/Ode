@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { SkillLibrary } from "../harness/skills";
-import { FolderTexts } from "../harness/texts";
+import { BundledTexts, FolderTexts } from "../harness/texts";
 import { Mneme } from "../mneme/artist";
 import { ConversationStore } from "../mneme/conversations";
 import { ProductionTaskStore } from "../mneme/production-task";
@@ -69,6 +69,13 @@ test("skills are read by name and sub-skills by path; their test cases stay with
   assert.match(await skills.read("lyrics/rhymes"), /^---/);
   await assert.rejects(skills.read("lyrics/rhymes", "../../package.json"), /Ode's skills are/);
   await assert.rejects(skills.read("production/song-form", "evals/mark-sections-with-locators/case.yaml"), /test cases/);
+});
+
+test("skill descriptions survive Windows line endings", async () => {
+  const skills = new SkillLibrary(new BundledTexts({
+    "skills/lyrics/SKILL.md": "---\r\nname: lyrics\r\ndescription: Write lyrics.\r\n---\r\n# Lyrics\r\n",
+  }));
+  assert.deepEqual(await skills.index(), [{ name: "lyrics", description: "Write lyrics." }]);
 });
 
 test("a song's conversation keeps its latest exchanges", async () => {

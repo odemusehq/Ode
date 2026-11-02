@@ -15,7 +15,7 @@ export class SkillLibrary {
   private static readonly SKILL_FILE = "SKILL.md";
   /** Test cases for the skills, kept out of the agent's reach. */
   private static readonly EVALS = "/evals/";
-  private static readonly FRONT_MATTER = /^---\n([\s\S]*?)\n---/;
+  private static readonly FRONT_MATTER = /^---\r?\n([\s\S]*?)\r?\n---/;
 
   constructor(private readonly texts: TextLibrary) {}
 
