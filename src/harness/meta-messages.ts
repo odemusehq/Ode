@@ -16,6 +16,7 @@ export class MetaMessages {
       if (message.role === "assistant") {
         for (const block of blocks(message.content)) {
           if (block.type === "tool_use") input.push({ type: "function_call", call_id: block.id, name: block.name, arguments: JSON.stringify(block.input ?? {}) });
+          else if (block.type === "server_tool_use" && block.name === "web_search") input.push({ type: "web_search_call", id: block.id, status: "completed", action: { type: "search", query: block.input.query } });
           else if (block.type === "redacted_thinking") input.push({ type: "reasoning", summary: [], encrypted_content: block.data ?? block.redacted_thinking });
           else if (block.type === "text") input.push({ role: "assistant", content: [{ type: "output_text", text: block.text }] });
           else if (block.type !== "thinking") throw new Error(`Unsupported SDK assistant block: ${block.type}`);
@@ -65,7 +66,13 @@ export class MetaMessages {
     if (body.tools?.length) request.tools = body.tools.map((tool: Block) => {
       if (!tool.type || tool.type === "custom") return { type: "function", name: tool.name, description: tool.description,
         parameters: tool.input_schema ?? tool.parameters, ...(tool.strict === undefined ? {} : { strict: tool.strict }) };
-      if (["web_search", "web_search_20250305", "web_search_20250305_15"].includes(tool.type)) return { type: "web_search", ...(tool.user_location ? { user_location: tool.user_location } : {}) };
+      if (["web_search", "web_search_20250305", "web_search_20250305_15"].includes(tool.type)) {
+        if (tool.blocked_domains?.length) throw new Error("Meta search does not expose blocked_domains. Use allowed_domains or narrow the query.");
+        request.include.push("web_search_call.results", "web_search_call.action.sources");
+        if (tool.max_uses !== undefined) request.max_tool_calls = tool.max_uses;
+        return { type: "web_search", ...(tool.user_location ? { user_location: tool.user_location } : {}),
+          ...(tool.allowed_domains?.length ? { filters: { allowed_domains: tool.allowed_domains } } : {}) };
+      }
       throw new Error(`Unsupported SDK hosted tool: ${tool.type}`);
     });
     if (body.tool_choice?.type === "tool") request.tool_choice = { type: "function", name: body.tool_choice.name };
@@ -93,11 +100,20 @@ export class MetaMessages {
   static message(response: Block): Block {
     if (response.status === "failed" || response.error) throw new Error(response.error?.message ?? "The provider request failed.");
     const content: Block[] = [];
+    const sources = new Map<string, string>();
+    const source = (item: Block) => { if (typeof item.url === "string" && /^https?:\/\//.test(item.url)) sources.set(item.url, item.title || sources.get(item.url) || item.url); };
     let tools = false;
     for (const item of response.output ?? []) {
       if (item.type === "reasoning" && item.encrypted_content) content.push({ type: "redacted_thinking", data: item.encrypted_content });
+      if (item.type === "web_search_call") {
+        content.push({ type: "server_tool_use", id: item.id, name: "web_search", input: { query: item.action?.query ?? item.action?.queries?.join("; ") ?? "" } });
+        for (const result of [...(item.results ?? []), ...(item.action?.sources ?? [])]) source(result);
+      }
       if (item.type === "message") for (const part of item.content ?? []) {
-        if (part.type === "output_text") content.push({ type: "text", text: part.text });
+        if (part.type === "output_text") {
+          content.push({ type: "text", text: part.text });
+          for (const annotation of part.annotations ?? []) if (annotation.type === "url_citation") source(annotation);
+        }
         else if (part.type === "refusal") content.push({ type: "text", text: part.refusal });
       }
       if (item.type === "function_call" && response.status !== "incomplete" && item.status !== "incomplete") {
@@ -106,6 +122,8 @@ export class MetaMessages {
         content.push({ type: "tool_use", id: item.call_id, name: item.name, input }); tools = true;
       }
     }
+    // The native SDK search handler reads text and links; provider-specific citation objects would be lost.
+    if (sources.size) content.push({ type: "text", text: "Sources:\n" + [...sources].map(([url, title]) => `- [${String(title).replace(/[\[\]\n]/g, " ")}](${url})`).join("\n") });
     const usage = response.usage ?? {}, cached = usage.input_tokens_details?.cached_tokens ?? 0;
     return { type: "message", id: response.id, role: "assistant", model: response.model, content,
       stop_reason: response.status === "incomplete" ? "max_tokens" : tools ? "tool_use" : "end_turn", stop_sequence: null,

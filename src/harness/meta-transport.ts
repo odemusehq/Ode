@@ -84,9 +84,10 @@ export class MetaTransport {
       // Account for this completed inference before the SDK can dispatch any returned tool call.
       send("message_start", { message: { ...completed, id: `msg_${randomUUID()}`, content: [], stop_reason: null } });
       for (const [index, block] of completed.content.entries()) {
-        send("content_block_start", { index, content_block: block.type === "tool_use" ? { ...block, input: {} } : block.type === "text" ? { type: "text", text: "" } : block });
+        const call = block.type === "tool_use" || block.type === "server_tool_use";
+        send("content_block_start", { index, content_block: call ? { ...block, input: {} } : block.type === "text" ? { type: "text", text: "" } : block });
         if (block.type === "text") send("content_block_delta", { index, delta: { type: "text_delta", text: block.text } });
-        if (block.type === "tool_use") send("content_block_delta", { index, delta: { type: "input_json_delta", partial_json: JSON.stringify(block.input) } });
+        if (call) send("content_block_delta", { index, delta: { type: "input_json_delta", partial_json: JSON.stringify(block.input) } });
         send("content_block_stop", { index });
       }
       send("message_delta", { delta: { stop_reason: completed.stop_reason, stop_sequence: null }, usage: completed.usage });

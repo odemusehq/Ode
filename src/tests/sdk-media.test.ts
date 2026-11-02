@@ -68,3 +68,21 @@ test("incomplete provider arguments cannot become an executable SDK tool call", 
   assert.deepEqual(complete.content[1], { type: "tool_use", id: "edit", name: "track_set", input: { track: "bass" } });
   assert.equal(complete.usage.input_tokens + complete.usage.cache_read_input_tokens, 30);
 });
+
+test("native SDK search retains actual server calls, search limits and source links", () => {
+  const request = MetaMessages.request({ model: "chosen-model", messages: [{ role: "user", content: "Find the Live manual" }],
+    tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 8, allowed_domains: ["ableton.com"] }],
+  }, new AgentMedia());
+  assert.deepEqual(request.tools, [{ type: "web_search", filters: { allowed_domains: ["ableton.com"] } }]);
+  assert.ok(request.include.includes("web_search_call.results"));
+  assert.equal(request.max_tool_calls, 8);
+  const message = MetaMessages.message({ id: "response", model: "chosen-model", status: "completed", output: [
+    { type: "web_search_call", id: "real-search", action: { type: "search", query: "Live instruments" }, results: [{ title: "Live Manual", url: "https://www.ableton.com/en/manual/live-instrument-reference/" }] },
+    { type: "message", content: [{ type: "output_text", text: "Live includes native instruments.", annotations: [{ type: "url_citation", title: "Manual", url: "https://www.ableton.com/en/manual/live-instrument-reference/" }] }] },
+  ] });
+  assert.deepEqual(message.content[0], { type: "server_tool_use", id: "real-search", name: "web_search", input: { query: "Live instruments" } });
+  assert.match(message.content.filter((part: any) => part.type === "text").map((part: any) => part.text).join("\n"), /https:\/\/www\.ableton\.com\/en\/manual/);
+  const replay = MetaMessages.request({ model: "chosen-model", messages: [{ role: "assistant", content: message.content }] }, new AgentMedia());
+  assert.equal(replay.input[0].type, "web_search_call");
+  assert.equal(replay.input[0].id, "real-search");
+});
