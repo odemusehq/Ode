@@ -19,3 +19,22 @@ test("only declared current execution gets one reminder; old plans and partial q
   assert.match(await next.execute("task", "what remains?"), /linking/);
   assert.equal(await next.afterReply(), null);
 });
+
+test("tool work gets one completion review without treating a saved task as authorisation", async () => {
+  let reads = 0;
+  const run = new ProductionRun({ read: async () => { reads++; throw new Error("An undeclared old plan must not enter this review"); },
+    interrupt: async () => null }, "exchange", "Why is the chorus louder?", new AbortController().signal);
+  const review = await run.afterReply(true);
+  assert.match(review!, /current request/i);
+  assert.match(review!, /question/i);
+  assert.match(review!, /not.*authoris/i);
+  assert.equal(reads, 0);
+  assert.equal(await run.afterReply(true), null);
+});
+
+test("completion review cannot continue a cancelled request", async () => {
+  const controller = new AbortController();
+  const run = new ProductionRun({ read: async () => null, interrupt: async () => null }, "exchange", "finish", controller.signal);
+  controller.abort();
+  assert.equal(await run.afterReply(true), null);
+});

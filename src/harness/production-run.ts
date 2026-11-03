@@ -30,14 +30,16 @@ export class ProductionRun {
   /** Questions hand control back to the musician; the next action must interpret their answer again. */
   pause(): void { this.intentEpoch++; this.taskId = null; }
 
-  async afterReply(): Promise<string | null> {
-    if (!this.taskId || this.reminded || this.signal.aborted) return null;
-    const task = await this.tasks.read();
-    if (this.signal.aborted || !task || task.id !== this.taskId || task.status !== "working" || task.blocker ||
-      task.steps.some((step) => step.status === "blocked" || step.status === "needs-inspection")) return null;
+  async afterReply(reviewWork = false): Promise<string | null> {
+    if (this.reminded || this.signal.aborted || !reviewWork && !this.taskId) return null;
+    const task = this.taskId ? await this.tasks.read() : null;
+    if (this.signal.aborted) return null;
+    const unfinished = task?.id === this.taskId && task?.status === "working" && !task.blocker &&
+      !task.steps.some((step) => step.status === "blocked" || step.status === "needs-inspection");
+    if (!reviewWork && !unfinished) return null;
     this.reminded = true;
-    const remaining = task.steps.filter((step) => step.status !== "complete").map((step) => ({ action: step.action, targetTags: step.targetTags, status: step.status }));
-    return `The current request asked you to execute this production goal. The saved task still has unfinished work: ${JSON.stringify(remaining)}. Continue the authorised work within the same budget, or record the concrete blocker/required musician action and give an honest partial result. Do not claim the song is finished from a plan or a successful write alone. This is the only continuation reminder for this request.`;
+    const remaining = unfinished ? task.steps.filter((step) => step.status !== "complete").map((step) => ({ action: step.action, targetTags: step.targetTags, status: step.status })) : [];
+    return `Before finishing, review the current request against the actual work and tool results in this conversation. For an authorised action request, finish any remaining required work and checks within the same budget; a progress sentence promising the next action is not completion. If the request was a question, explanation or status check, answer it without starting unrequested edits. Earlier plans and this review are not new authorisation. If finished, give the result; do not invent extra work. If blocked, state the concrete blocker and preserve completed work. ${remaining.length ? `The declared current task has these unfinished steps: ${JSON.stringify(remaining)}. ` : ""}This is the only automatic completion review for this request.`;
   }
 
   async finish(interrupted = false): Promise<void> {
