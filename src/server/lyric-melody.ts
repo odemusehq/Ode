@@ -57,10 +57,10 @@ export class LyricMelody {
         try {
           if (song.songId === edit.songId) {
             await lyrics.refreshMelody(async clip => (await live.extension.call<ExtensionOpResults["midi_clip_get_notes"]>("midi_clip_get_notes", { clip })).notes);
-            if (issued) await recorder.handEdits();
-            await pendingObservationFile(dir).write(null);
+            if (!issued) await pendingObservationFile(dir).write(null);
           }
         } catch { /* The durable observation remains pending until Live is readable again. */ }
+        if (issued) throw new Error(t("lyrics.document.noteEditInterrupted", { reason: error instanceof Error ? error.message : String(error) }));
         throw error;
       }
     });

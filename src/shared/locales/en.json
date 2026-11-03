@@ -346,7 +346,6 @@
       "noteEditorUnavailable": "Melody editing is unavailable. Update and reload Ode.",
       "pitchForSyllable": "Pitch for {syllable}",
       "rhythmForSyllable": "Note value for {syllable}",
-      "noteValue": "{name} · {duration} {single, select, true {beat} other {beats}}",
       "noteValueCurrent": "{duration} {single, select, true {beat} other {beats}}",
       "wholeNote": "Whole note",
       "halfNote": "Half note",
@@ -358,7 +357,8 @@
       "dottedQuarterNote": "Dotted quarter note",
       "dottedEighthNote": "Dotted eighth note",
       "quarterTriplet": "Quarter-note triplet",
-      "eighthTriplet": "Eighth-note triplet"
+      "eighthTriplet": "Eighth-note triplet",
+      "noteEditInterrupted": "Live may have received the edit, but it could not be confirmed as fully saved. Review the refreshed notes before retrying: {reason}"
     }
   },
   "settings": {

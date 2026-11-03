@@ -1,3 +1,4 @@
+import { pendingObservationFile } from "../mneme/pending-observation";
 import assert from "node:assert/strict";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -86,4 +87,17 @@ test("unrepresentable score changes are rejected before any native write", async
   await assert.rejects(editor.edit({ ...request, pitch: undefined, duration: 4, notationRevision: current.notation!.revision }), /extend|measure/i);
   assert.equal(live.calls.some(call => call.op === "midi_clip_set_notes"), false);
   assert.equal((await lyrics.read()).notation!.clips[0]!.notes[0]!.duration, 0.5);
+});
+
+test("a lost native write reply leaves the actual notes visible and its recovery observation pending", async () => {
+  const { song, editor, request, lyrics, live } = await open();
+  const call = live.extension.call.bind(live.extension);
+  live.extension.call = async (op, args) => {
+    const result = await call(op, args);
+    if (op === "midi_clip_set_notes") throw new Error("Lost native reply");
+    return result as never;
+  };
+  await assert.rejects(editor.edit(request), /Lost native reply/);
+  assert.ok((await lyrics.read()).notation!.clips[0]!.notes.some(note => note.pitch === 72));
+  assert.notEqual(await pendingObservationFile(song.dataDir).read(), null);
 });
