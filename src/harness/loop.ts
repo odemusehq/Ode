@@ -117,7 +117,7 @@ export class AgentLoop {
       const saved = await session.read();
       const resume = saved?.identity === environment.identity ? saved.id : undefined;
       const tools = new AgentTools(this.deps, run, media);
-      let reply = "", tokens = 0, tokenLimit = false, children = 0, usedMainTools = false;
+      let reply = "", tokens = 0, tokenLimit = false, children = 0, mainToolUses = 0;
       const seenUsage = new Map<string, Record<string, number>>();
       const activeMessages = new Map<string, string>();
       const observeUsage = (id: string, usage: object) => {
@@ -174,7 +174,7 @@ export class AgentLoop {
                 : ++children > this.deps.limits.subagentsPerRequest ? "This request has reached its subagent limit." : null;
               if (!refusal) run.events.subagentStarted(input.tool_use_id, String((input.tool_input as { description?: string }).description ?? "Production review"));
             } else refusal = await tools.authorize(input);
-            if (refusal === null && !input.agent_id) usedMainTools = true;
+            if (refusal === null && !input.agent_id) mainToolUses++;
             return { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: refusal === null ? "allow" : "deny", ...(refusal ? { permissionDecisionReason: refusal } : {}) } };
           }] }],
           PostToolUse: [{ hooks: [async input => { if (input.hook_event_name === "PostToolUse") { if (input.tool_name === "Agent") run.events.subagentFinished(input.tool_use_id); if (RESEARCH_TOOLS.includes(input.tool_name)) run.events.toolFinished(input.tool_use_id, true); } return {}; }] }],
@@ -182,8 +182,9 @@ export class AgentLoop {
           PreCompact: [{ hooks: [async () => { compacting = true; run.events.toolStarted(compactionId, "context_compact", t("runtime.compacting")); return {}; }] }],
           PostCompact: [{ hooks: [async () => { compacting = false; run.events.toolFinished(compactionId, true); return {}; }] }],
           Stop: [{ hooks: [async input => {
-            if (input.hook_event_name !== "Stop" || input.agent_id || input.stop_hook_active || run.signal.aborted) return {};
-            const reason = await run.production?.afterReply(usedMainTools);
+            if (input.hook_event_name !== "Stop" || input.agent_id || run.signal.aborted) return {};
+            // Repeated Stops need new main-agent tool work; the same SDK turn/token limits still apply.
+            const reason = await run.production?.afterReply(mainToolUses);
             return reason ? { decision: "block", reason } : {};
           }] }],
         },
