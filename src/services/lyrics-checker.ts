@@ -7,7 +7,7 @@ import type { LyricsCheck, LyricsCheckResponse } from "../shared/lyrics";
 import type { Accent } from "../shared/personalisation";
 import type { ModelServices } from "./index";
 import type { TextGenerator } from "./capabilities";
-import { LyricsCheckSchema, type LyricsNotation } from "../shared/lyrics-document";
+import { LineCheckSchema, LyricsCheckSchema, type LyricsNotation } from "../shared/lyrics-document";
 import { t } from "../shared/i18n";
 
 /** The strict schema the provider holds the answer to: every object closed, every key required. */
@@ -29,13 +29,14 @@ const CHECK_SCHEMA: Record<string, unknown> = {
             items: {
               type: "object",
               additionalProperties: false,
-              required: ["text", "syllables", "stress", "wordStress", "ipa"],
+              required: ["text", "syllables"],
               properties: {
                 text: { type: "string" },
-                syllables: { type: "array", items: { type: "string" } },
-                stress: { type: "array", items: { type: "integer", enum: [0, 1, 2] } },
-                wordStress: { type: "array", items: { type: "integer", enum: [0, 1, 2] } },
-                ipa: { type: "array", items: { type: "string" } },
+                syllables: { type: "array", minItems: 1, items: {
+                  type: "object", additionalProperties: false, required: ["text", "wordStress", "stress", "ipa"],
+                  properties: { text: { type: "string", minLength: 1 }, wordStress: { type: "integer", enum: [0, 1, 2] },
+                    stress: { type: "integer", enum: [0, 1, 2] }, ipa: { type: "string" } },
+                } },
               },
             },
           },
@@ -55,6 +56,13 @@ const CHECK_SCHEMA: Record<string, unknown> = {
     },
   },
 };
+
+// The provider groups each reading with its syllable; storage and the editor retain their existing format.
+const ModelWordSchema = z.object({ text: z.string(), syllables: z.array(z.object({ text: z.string().min(1),
+  wordStress: z.number().int().min(0).max(2), stress: z.number().int().min(0).max(2), ipa: z.string() }).strict()).min(1) }).strict()
+  .transform(({ text, syllables }) => ({ text, syllables: syllables.map(piece => piece.text), wordStress: syllables.map(piece => piece.wordStress),
+    stress: syllables.map(piece => piece.stress), ipa: syllables.map(piece => piece.ipa) }));
+const ModelCheckSchema = LyricsCheckSchema.extend({ lines: z.array(LineCheckSchema.extend({ words: z.array(ModelWordSchema) })) });
 
 const ACCENT_NAMES: Readonly<Record<Accent, string>> = { uk: "UK English", us: "US English" };
 const SavedChecksSchema = z.array(z.object({ key: z.string(), check: LyricsCheckSchema }));
@@ -105,10 +113,10 @@ export class LyricsChecker {
           schema: CHECK_SCHEMA,
           system: instruction,
           user: lines.map((line, index) => `${index + 1}. ${line}`).join("\n") + (performance ? `\n\nSaved artist choices, annotations and linked score (stored context):\n${JSON.stringify(performance)}` : ""),
-          maxTokens: Math.max(this.settings.maxTokens, Math.min(24_000, lines.length * 400)),
+          maxTokens: Math.max(this.settings.maxTokens, Math.min(24_000, lines.length * 600)),
           signal,
           parse: (value) => {
-            const result = LyricsCheckSchema.parse(value);
+            const result = ModelCheckSchema.parse(value);
             if (result.lines.length !== lines.length || result.lines.some(line => !line.review || line.words.some(word => !word.wordStress || word.stress.some(value => value === null) || !word.syllables.length || !word.syllables.every(Boolean) || word.syllables.join("") !== word.text))) throw new Error(t("lyrics.document.checkIncomplete"));
             return result;
           },

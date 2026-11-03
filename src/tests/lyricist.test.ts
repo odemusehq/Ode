@@ -49,3 +49,9 @@ test("a stopped lyric task does not read context or call a model", async () => {
   stopped.abort();
   await assert.rejects(lyricist.run({ task: "Check this rhyme" }, { signal: stopped.signal } as ToolContext), { name: "AbortError" });
 });
+
+test("a failed annotation check is a tool error instead of usable lyric data", async () => {
+  const ctx = { song: { songId: "song-1", read: async () => emptyLeadSheet() }, prefs: { effective: async () => ({ pronunciation: "uk" }) },
+    mneme: { recall: async () => [] }, lyricsChecker: {}, lyrics: { analyse: async () => ({ status: "unreachable", detail: "Invalid syllable interpretation" }), read: async () => ({}) } } as unknown as ToolContext;
+  await assert.rejects(lyricist.run({ task: "Check the current phrase", analyse: true }, ctx), /Invalid syllable interpretation/);
+});

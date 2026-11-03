@@ -16,6 +16,9 @@ import type { OdeApi } from "../ui/app/api";
 
 const SONG = "[Verse 1]\nI kept the window open wide\n\n[Chorus]\nso leave the light on\nwait for me\n\n[Verse 2]\nthe neighbours say\n\n[Chorus]\nso leave the light on\nwait for me";
 
+const modelReply = (check: LyricsCheck) => ({ lines: check.lines.map(line => ({ ...line, words: line.words.map(word => ({ text: word.text,
+  syllables: word.syllables.map((text, at) => ({ text, wordStress: word.wordStress![at], stress: word.stress[at], ipa: word.ipa![at] })) })) })) });
+
 test("Lyrics support runs on Muse Spark 1.3 at minimal effort, with its own key or the Meta key Ode holds", async () => {
   const settings = new SettingsStore(await mkdtemp(join(tmpdir(), "ode-lyrics-")), ProviderCatalog.bundled);
   const roles = new ModelRoles(settings, ProviderCatalog.bundled);
@@ -43,7 +46,7 @@ test("the lyrics split into sections and join back, and a save writes the change
 });
 
 test("a whole-song check sends the strict schema, comes from the cache the second time, and says when setup or the model is missing", async () => {
-  const answer: LyricsCheck = { lines: [{ words: [{ text: "inside", syllables: ["in", "side"], stress: [0, 1], wordStress: [0, 1] }], review: [], rhyme: { letter: "A", quality: "perfect", part: "ide", sound: "aɪd" } }] };
+  const answer: LyricsCheck = { lines: [{ words: [{ text: "inside", syllables: ["in", "side"], stress: [0, 1], wordStress: [0, 1], ipa: ["ɪn", "saɪd"] }], review: [], rhyme: { letter: "A", quality: "perfect", part: "ide", sound: "aɪd" } }] };
   let configured = false;
   let failing = false;
   const requests: JsonRequest<LyricsCheck>[] = [];
@@ -51,7 +54,7 @@ test("a whole-song check sends the strict schema, comes from the cache the secon
     json: async (request: JsonRequest<LyricsCheck>) => {
       requests.push(request);
       if (failing) throw new Error("connect ECONNREFUSED");
-      return request.parse(answer);
+      return request.parse(modelReply(answer));
     },
   });
   let model = makeModel();
@@ -96,11 +99,25 @@ test("the marks sit on the letters of the line as typed: bars between syllables,
   assert.equal(MarkLayout.count(check), 3);
 });
 
+test("the model supplies stress and pronunciation on each syllable, preserving both stress layers", async () => {
+  const word = { text: "window", syllables: [{ text: "win", wordStress: 1, stress: 0, ipa: "wɪn" }, { text: "dow", wordStress: 0, stress: 1, ipa: "doʊ" }] };
+  const rhyme = { letter: "", quality: "none", part: "", sound: "" };
+  const model = { json: async (request: JsonRequest<LyricsCheck>) => {
+    const fields = (request.schema as any).properties.lines.items.properties.words.items;
+    assert.deepEqual(fields.required, ["text", "syllables"]);
+    assert.deepEqual(fields.properties.syllables.items.required, ["text", "wordStress", "stress", "ipa"]);
+    return request.parse({ lines: [{ words: [word], rhyme, review: [] }] });
+  } };
+  const checker = new LyricsChecker({ available: async () => ({ lyrics_check: true }), chat: async () => model } as never,
+    { read: async () => "Mark {accent}.", list: async () => [] }, { maxTokens: 6000, cacheSize: 10 });
+  assert.deepEqual(await checker.check(["window"], "us"), { status: "ok", check: { lines: [{ words: [{ text: "window", syllables: ["win", "dow"], wordStress: [1, 0], stress: [0, 1], ipa: ["wɪn", "doʊ"] }], rhyme, review: [] }] } });
+});
+
 test("saved lyric annotations survive a checker restart and reuse only the exact interpretation context", async () => {
   const root = await mkdtemp(join(tmpdir(), "ode-lyrics-cache-")), file = join(root, "lyrics-checks.json");
-  const answer: LyricsCheck = { lines: [{ words: [{ text: "inside", syllables: ["in", "side"], stress: [0, 1], wordStress: [0, 1] }], review: [], rhyme: { letter: "A", quality: "perfect", part: "ide", sound: "aɪd" } }] };
+  const answer: LyricsCheck = { lines: [{ words: [{ text: "inside", syllables: ["in", "side"], stress: [0, 1], wordStress: [0, 1], ipa: ["ɪn", "saɪd"] }], review: [], rhyme: { letter: "A", quality: "perfect", part: "ide", sound: "aɪd" } }] };
   let calls = 0, identity = "model-one", instruction = "Mark {accent}.";
-  const model = { json: async (request: JsonRequest<LyricsCheck>) => { calls++; await new Promise(resolve => setImmediate(resolve)); return request.parse(answer); } };
+  const model = { json: async (request: JsonRequest<LyricsCheck>) => { calls++; await new Promise(resolve => setImmediate(resolve)); return request.parse(modelReply(answer)); } };
   const services = { available: async () => ({ lyrics_check: true }), chat: async () => model, identity: () => identity };
   const texts = { read: async () => instruction, list: async () => [] };
   const create = () => new LyricsChecker(services as never, texts, { maxTokens: 6000, cacheSize: 10 }, file);

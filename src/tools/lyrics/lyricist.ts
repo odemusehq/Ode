@@ -52,6 +52,7 @@ export const lyricist = defineTool({
       if (!ctx.lyricsChecker) throw new Error(t("lyrics.document.serviceUnavailable"));
       const pronunciation = (await ctx.prefs.effective(await ctx.song.read())).pronunciation;
       const result = await ctx.lyrics.analyse(ctx.lyricsChecker, pronunciation, ctx.signal, JSON.stringify({ task, context, notes, guidance }));
+      if (result.status !== "ok") throw new Error(result.status === "unreachable" ? result.detail : t("lyrics.document.serviceUnavailable"));
       return { ...result, songId: ctx.song.songId, lyrics: await ctx.lyrics.read() };
     }
     ctx.signal?.throwIfAborted();
