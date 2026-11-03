@@ -122,6 +122,14 @@ export class LyricsChecker {
             for (const [index, line] of result.lines.entries()) {
               const wrong = line.words.find(word => word.syllables.join("") !== word.text);
               if (wrong) throw new Error(t("lyrics.document.checkWordSpelling", { word: wrong.text, line: index + 1, spelled: wrong.syllables.join("") }));
+              const source = lines[index]!;
+              let cursor = 0;
+              for (const word of line.words) {
+                const at = source.indexOf(word.text, cursor);
+                if (!word.text || at < 0 || /[\p{L}\p{M}\p{N}]/u.test(source.slice(cursor, at))) throw new Error(t("lyrics.document.checkLineWords", { line: index + 1 }));
+                cursor = at + word.text.length;
+              }
+              if (/[\p{L}\p{M}\p{N}]/u.test(source.slice(cursor))) throw new Error(t("lyrics.document.checkLineWords", { line: index + 1 }));
             }
             return result;
           },

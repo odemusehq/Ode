@@ -65,18 +65,18 @@ test("a whole-song check sends the strict schema, comes from the cache the secon
   const texts = { read: async () => "Mark the lyrics as sung in {accent}.", list: async () => [] };
   const checker = new LyricsChecker(services as never, texts, { maxTokens: 6000, cacheSize: 10 });
 
-  assert.deepEqual(await checker.check(["back inside"], "uk"), { status: "setup" });
+  assert.deepEqual(await checker.check(["inside"], "uk"), { status: "setup" });
   configured = true;
-  assert.deepEqual(await checker.check(["back inside"], "uk"), { status: "ok", check: answer });
-  assert.deepEqual(await checker.check(["back inside"], "uk"), { status: "ok", check: answer });
+  assert.deepEqual(await checker.check(["inside"], "uk"), { status: "ok", check: answer });
+  assert.deepEqual(await checker.check(["inside"], "uk"), { status: "ok", check: answer });
   assert.equal(requests.length, 1);
   assert.equal(requests[0]?.schema.additionalProperties, false);
   assert.equal(requests[0]?.system, "Mark the lyrics as sung in UK English.");
   model = makeModel();
-  assert.deepEqual(await checker.check(["back inside"], "uk"), { status: "ok", check: answer });
+  assert.deepEqual(await checker.check(["inside"], "uk"), { status: "ok", check: answer });
   assert.equal(requests.length, 2, "a changed provider/model adapter must not reuse the earlier model's marks");
   configured = false;
-  assert.deepEqual(await checker.check(["back inside"], "uk"), { status: "setup" });
+  assert.deepEqual(await checker.check(["inside"], "uk"), { status: "setup" });
   configured = true;
   failing = true;
   assert.equal((await checker.check(["another line"], "us")).status, "unreachable");
@@ -124,6 +124,19 @@ test("a malformed written division identifies the word that the model must corre
   const result = await checker.check(["Every"], "us");
   assert.equal(result.status, "unreachable");
   assert.ok(result.status === "unreachable" && /Every/.test(result.detail) && /line 1/.test(result.detail));
+});
+
+test("a lyric check cannot omit source words from an otherwise valid line", async () => {
+  const model = { json: async (request: JsonRequest<LyricsCheck>) => request.parse({ lines: [{ words: [{ text: "inside",
+    syllables: [{ text: "in", wordStress: 0, stress: 0, ipa: "ɪn" }, { text: "side", wordStress: 1, stress: 1, ipa: "saɪd" }] }],
+    rhyme: { letter: "", quality: "none", part: "", sound: "" }, review: [] }] }) };
+  const checker = new LyricsChecker({ available: async () => ({ lyrics_check: true }), chat: async () => model } as never,
+    { read: async () => "Mark {accent}.", list: async () => [] }, { maxTokens: 6000, cacheSize: 10 });
+  for (const line of ["back inside", "inside again", "outside"]) {
+    const result = await checker.check([line], "us");
+    assert.equal(result.status, "unreachable");
+    assert.ok(result.status === "unreachable" && /source words/.test(result.detail) && /line 1/.test(result.detail));
+  }
 });
 
 test("saved lyric annotations survive a checker restart and reuse only the exact interpretation context", async () => {
