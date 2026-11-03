@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { LyricsState } from "../../shared/lyrics";
 import { LyricsDocument } from "../../shared/lyrics-document";
 import { LyricsSections } from "../../shared/lyrics-sections";
@@ -10,9 +10,11 @@ import { LyricNote } from "./LyricNote";
 import type { WordSelection } from "./LyricsTextEditor";
 
 /** A deliberate pronunciation choice, separate from the literal lyrics and native MIDI edits. */
-export function SyllableChoice({ selected, state, onSaved }: { selected: WordSelection; state: LyricsState; onSaved: (state: LyricsState) => void }) {
+export function SyllableChoice({ selected, state, onSaved, onDone }: { selected: WordSelection; state: LyricsState; onSaved: (state: LyricsState) => void; onDone: () => void }) {
   const client = useClient();
-  const [editing, setEditing] = useState(false);
+  const [panel, setPanel] = useState<"pronunciation" | "melody" | null>(null);
+  const melodyId = useId();
+  const editing = panel === "pronunciation";
   const [split, setSplit] = useState(selected.value.syllables.join(" "));
   const [stress, setStress] = useState<(number | null)[]>(selected.value.stress);
   const [busy, setBusy] = useState(false);
@@ -32,7 +34,7 @@ export function SyllableChoice({ selected, state, onSaved }: { selected: WordSel
     setSplit(value);
     setStress(values => next.map((piece, index) => (pieces[index] === piece ? values[index] : undefined) ?? known?.stress[index] ?? null));
   };
-  const cancel = () => { setSplit(selected.value.syllables.join(" ")); setStress(selected.value.stress); setError(""); setEditing(false); };
+  const cancel = () => { setSplit(selected.value.syllables.join(" ")); setStress(selected.value.stress); setError(""); setPanel(null); onDone(); };
   const bindings = state.notation?.clips.flatMap(clip => clip.bindings.filter(binding => binding.line === selected.line && binding.word === selected.word).map(binding => ({ ...binding, clipId: clip.id, actual: binding.notes.flatMap(index => clip.notes[index] ? [{ index, note: clip.notes[index]! }] : []) }))) ?? [];
   const save = async () => {
     if (!valid) return;
@@ -44,16 +46,17 @@ export function SyllableChoice({ selected, state, onSaved }: { selected: WordSel
       const answer = await client.api.chooseSyllables({ songId: state.songId, baseRevision: state.revision, notationRevision: state.notation?.revision ?? 0,
         line: selected.line, word: selected.word, value: { text: selected.value.text, syllables: pieces, stress: stress.map(value => value!),
           ipa: sameSplit(selected.value.syllables) ? selected.value.ipa : suggested && sameSplit(suggested.syllables) ? suggested.ipa : undefined } });
-      onSaved(answer); setEditing(false);
+      onSaved(answer); setPanel(null); onDone();
     } catch (error) { setError(errorMessage(error)); }
     finally { setBusy(false); }
   };
   return <div className="lyrics-pronunciation">
     {!editing && <div className="lyrics-pronunciation__head">
       <strong>{selected.value.syllables.join(" ")}</strong>
-      <button type="button" className="lyrics-pronunciation__edit" aria-label={t("lyrics.document.editPronunciation")} title={t("lyrics.document.editPronunciation")} onClick={() => { setError(""); setEditing(true); }}><Icon name={IconName.Edit} /></button>
+      <button type="button" className="lyrics-pronunciation__edit" aria-label={t("lyrics.document.editPronunciation")} title={t("lyrics.document.editPronunciation")} onClick={() => { setError(""); setPanel("pronunciation"); }}><Icon name={IconName.Edit} /></button>
+      {bindings.length > 0 && <Button className="lyrics-pronunciation__melody" variant={ButtonVariant.Quiet} icon={IconName.Music} aria-expanded={panel === "melody"} aria-controls={melodyId} onClick={() => setPanel(panel === "melody" ? null : "melody")}>{t("lyrics.document.melody")}</Button>}
     </div>}
-    {editing && <form className="lyrics-pronunciation__form" onSubmit={event => { event.preventDefault(); if (valid && !busy) void save(); }}>
+    {editing && <form className="lyrics-pronunciation__form" onSubmit={event => { event.preventDefault(); if (valid && !busy) void save(); }} onKeyDown={event => { if (event.key === "Escape" && !busy) { event.preventDefault(); event.stopPropagation(); cancel(); } }}>
       <label>{t("lyrics.document.syllableSplit")}<input aria-label={t("lyrics.document.syllableSplit")} title={t("lyrics.document.syllableSplitHint")} autoFocus value={split} disabled={busy} onChange={event => changeSplit(event.target.value)} /></label>
       <fieldset className="lyrics-pronunciation__stress"><legend>{t("lyrics.document.wordStress")}</legend>{pieces.map((piece, index) => <label key={index}>{pieces.length > 1 && <span>{piece}</span>}<select aria-label={t("lyrics.document.stressFor", { syllable: piece, index: index + 1 })} disabled={busy} value={stress[index] ?? ""} onChange={event => setStress(values => pieces.map((_, at) => at === index ? Number(event.target.value) : values[at] ?? null))}>
         <option value="" disabled>{t("lyrics.document.chooseStress")}</option>
@@ -66,7 +69,7 @@ export function SyllableChoice({ selected, state, onSaved }: { selected: WordSel
         <Button variant={ButtonVariant.Quiet} title={t("lyrics.document.defaultHint")} disabled={busy || !differs} onClick={() => { if (suggested) { setSplit(suggested.syllables.join(" ")); setStress(suggested.stress); } }}>{t("lyrics.document.default")}</Button>
       </div>
     </form>}
-    {bindings.length > 0 && <div className="lyrics-pronunciation__music" aria-label={t("lyrics.document.savedMelody")} title={t("lyrics.document.savedMelody")}>{bindings.map((binding, index) => <span key={index}>
+    {!editing && bindings.length > 0 && <div id={melodyId} hidden={panel !== "melody"} className="lyrics-pronunciation__music" aria-label={t("lyrics.document.savedMelody")}>{panel === "melody" && bindings.map((binding, index) => <span key={index}>
       {selected.value.syllables[binding.syllable] ?? ""} · {binding.stale ? t("lyrics.document.alignmentStale") : binding.actual.map(({ index: noteIndex, note }, at) => <LyricNote key={at} state={state} clipId={binding.clipId} noteIndex={noteIndex} note={note} syllable={selected.value.syllables[binding.syllable] ?? selected.value.text} />)}
     </span>)}</div>}
     {error && <p role="alert">{error}</p>}

@@ -23,6 +23,7 @@ export function LyricNote({ state, clipId, noteIndex, note, syllable }: { state:
   const [error, setError] = useState("");
   const clip = state.notation!.clips.find(clip => clip.id === clipId)!;
   const position = LyricsDocument.position(clip, note.start);
+  const positionLabel = position ? `${t("lyrics.document.scorePosition", { measure: position.measure, beat: formatBeatFraction(position.beat) })} (${t("lyrics.document.scoreMeter", position.meter)})` : undefined;
   const unit = (position?.meter.beatType ?? 4) / 4;
   const label = (duration: number) => t("lyrics.document.noteValueCurrent", { duration: formatBeatFraction(duration * unit), single: duration * unit <= 1 });
   const values = VALUES.map(value => ({ value: String(value.duration), label: `${value.glyph} ${formatBeatFraction(value.duration * unit)}`, ariaLabel: `${t(`lyrics.document.${value.name}`)} · ${label(value.duration)}` }));
@@ -42,10 +43,9 @@ export function LyricNote({ state, clipId, noteIndex, note, syllable }: { state:
       setError(errorMessage(error));
     } finally { setSaving(false); }
   };
-  return <span className="lyric-note" aria-busy={saving}>
+  return <span className="lyric-note" role="group" aria-label={syllable} aria-description={positionLabel} title={positionLabel} aria-busy={saving}>
     <Select aria-label={t("lyrics.document.pitchForSyllable", { syllable })} value={String(note.pitch)} options={PITCHES} disabled={working || saving} onChange={pitch => void edit({ pitch: Number(pitch) })} />
     <Select aria-label={t("lyrics.document.rhythmForSyllable", { syllable })} value={String(note.duration)} options={values} disabled={working || saving} onChange={duration => void edit({ duration: Number(duration) })} />
-    {position && <span className="lyric-note__position">{t("lyrics.document.scorePosition", { measure: position.measure, beat: formatBeatFraction(position.beat) })} ({t("lyrics.document.scoreMeter", position.meter)})</span>}
     {error && <span className="lyric-note__error" role="alert">{error}</span>}
   </span>;
 }

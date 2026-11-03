@@ -319,7 +319,7 @@ function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsE
         </Button>
       </div>
       {word && stored && stored.text === text && <SyllableChoice key={`${word.line}:${word.word}:${JSON.stringify(word.value)}`} selected={word} state={stored}
-        onSaved={(state) => { client.lyrics.receive(state); marks.retry(); setRetries(count => count + 1); }} />}
+        onSaved={(state) => { client.lyrics.receive(state); marks.retry(); setRetries(count => count + 1); }} onDone={() => editor.current?.focus()} />}
       {support.status !== SupportStatus.Ready && (
         <SupportNotice
           status={support.status}

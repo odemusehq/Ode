@@ -11,7 +11,7 @@ import { lyricTextChanges } from "../app/lyrics-changes";
 import { MarkLayout, RhymeColour } from "./mark-layout";
 
 export interface WordSelection { line: number; word: number; value: LineCheck["words"][number] }
-export interface LyricsTextEditorHandle { replace(text: string): void }
+export interface LyricsTextEditorHandle { replace(text: string): void; focus(): void }
 interface Props {
   text: string;
   checks: readonly (LineCheck | null)[];
@@ -164,7 +164,7 @@ export const LyricsTextEditor = forwardRef<LyricsTextEditorHandle, Props>(functi
     const view = editor.current;
     if (!view || view.state.doc.toString() === text) return;
     view.dispatch({ changes: lyricTextChanges(view.state.doc.toString(), text), annotations: Transaction.userEvent.of("input.section") });
-  } }), []);
+  }, focus() { editor.current?.focus(); } }), []);
 
   return <><div ref={container} className="lyrics-document" />{props.headers.map((header, index) => createPortal(header, hosts.current[index]!, String(index)))}</>;
 });

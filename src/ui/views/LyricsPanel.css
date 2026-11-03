@@ -380,8 +380,9 @@
 .lyrics-document__heading .section__rail { flex-direction: row; gap: 2px; }
 .lyrics-document__heading .section__rail > .ode-menu { position: absolute; left: -23px; }
 .lyrics-document .cm-line .mark-syllable--stressed::after { bottom: -3px; }
-.lyrics-pronunciation { flex: none; padding: var(--space-3) var(--space-5); border-top: var(--border-width) solid var(--color-border); background: var(--color-surface); font-size: var(--font-size-sm); }
+.lyrics-pronunciation { flex: none; max-height: 45%; overflow-y: auto; padding: var(--space-3) var(--space-5); border-top: var(--border-width) solid var(--color-border); background: var(--color-surface); font-size: var(--font-size-sm); }
 .lyrics-pronunciation__head, .lyrics-pronunciation__actions { display: flex; gap: var(--space-4); align-items: center; }
+.lyrics-pronunciation__melody { margin-left: auto; }
 .lyrics-pronunciation__edit { --icon-size: 14px; border: 0; background: none; color: var(--color-text-muted); cursor: pointer; padding: var(--space-2); }
 .lyrics-pronunciation__form { display: flex; flex-direction: column; gap: var(--space-3); }
 .lyrics-pronunciation__form label { display: flex; gap: var(--space-3); align-items: center; }
@@ -391,11 +392,11 @@
 .lyrics-pronunciation__stress legend { color: var(--color-text-muted); padding: 0; margin-bottom: var(--space-2); }
 .lyrics-pronunciation__stress label { min-width: 0; }
 .lyrics-pronunciation__music { display: flex; flex-wrap: wrap; gap: var(--space-3); color: var(--color-text-muted); margin-top: var(--space-2); }
+.lyrics-pronunciation__music[hidden] { display: none; }
 .lyrics-pronunciation [role=alert] { color: var(--color-danger); }
 
 .lyrics-pronunciation__music > span { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); width: 100%; }
 .lyric-note { display: inline-flex; flex: 1; min-width: 0; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .lyric-note .ode-select { flex: none; width: 84px; padding: var(--space-1) var(--space-2); font-size: var(--font-size-sm); min-height: 28px; }
 .lyric-note .ode-select:first-child { width: 64px; }
-.lyric-note__position { color: var(--color-text-muted); white-space: nowrap; }
 .lyric-note__error { flex-basis: 100%; color: var(--color-danger); }
