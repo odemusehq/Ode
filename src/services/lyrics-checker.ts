@@ -11,7 +11,7 @@ import { LineCheckSchema, LyricsCheckSchema, type LyricsNotation } from "../shar
 import { t } from "../shared/i18n";
 
 /** The strict schema the provider holds the answer to: every object closed, every key required. */
-const CHECK_SCHEMA: Record<string, unknown> = {
+const CHECK_SCHEMA = {
   type: "object",
   additionalProperties: false,
   required: ["lines"],
@@ -62,7 +62,7 @@ const ModelWordSchema = z.object({ text: z.string(), syllables: z.array(z.object
   wordStress: z.number().int().min(0).max(2), stress: z.number().int().min(0).max(2), ipa: z.string() }).strict()).min(1) }).strict()
   .transform(({ text, syllables }) => ({ text, syllables: syllables.map(piece => piece.text), wordStress: syllables.map(piece => piece.wordStress),
     stress: syllables.map(piece => piece.stress), ipa: syllables.map(piece => piece.ipa) }));
-const ModelCheckSchema = LyricsCheckSchema.extend({ lines: z.array(LineCheckSchema.extend({ words: z.array(ModelWordSchema) })) });
+const ModelCheckSchema = LyricsCheckSchema.extend({ lines: z.array(LineCheckSchema.extend({ words: z.array(ModelWordSchema), review: z.array(z.string()) })) });
 
 const ACCENT_NAMES: Readonly<Record<Accent, string>> = { uk: "UK English", us: "US English" };
 const SavedChecksSchema = z.array(z.object({ key: z.string(), check: LyricsCheckSchema }));
@@ -110,14 +110,19 @@ export class LyricsChecker {
       const generate = async () => {
         const check = await model.json({
           name: "lyrics_check",
-          schema: CHECK_SCHEMA,
+          schema: { ...CHECK_SCHEMA, properties: { ...CHECK_SCHEMA.properties,
+            lines: { ...CHECK_SCHEMA.properties.lines, minItems: lines.length, maxItems: lines.length } } },
           system: instruction,
           user: lines.map((line, index) => `${index + 1}. ${line}`).join("\n") + (performance ? `\n\nSaved artist choices, annotations and linked score (stored context):\n${JSON.stringify(performance)}` : ""),
           maxTokens: Math.max(this.settings.maxTokens, Math.min(24_000, lines.length * 600)),
           signal,
           parse: (value) => {
             const result = ModelCheckSchema.parse(value);
-            if (result.lines.length !== lines.length || result.lines.some(line => !line.review || line.words.some(word => !word.wordStress || word.stress.some(value => value === null) || !word.syllables.length || !word.syllables.every(Boolean) || word.syllables.join("") !== word.text))) throw new Error(t("lyrics.document.checkIncomplete"));
+            if (result.lines.length !== lines.length) throw new Error(t("lyrics.document.checkLineCount", { actual: result.lines.length, expected: lines.length }));
+            for (const [index, line] of result.lines.entries()) {
+              const wrong = line.words.find(word => word.syllables.join("") !== word.text);
+              if (wrong) throw new Error(t("lyrics.document.checkWordSpelling", { word: wrong.text, line: index + 1, spelled: wrong.syllables.join("") }));
+            }
             return result;
           },
         });

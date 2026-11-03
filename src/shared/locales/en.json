@@ -290,6 +290,8 @@
       "checkChanged": "The lyrics changed during the check. The newer text was kept.",
       "songChanged": "The song changed during the check.",
       "checkIncomplete": "The lyric check does not cover the current sung lines.",
+      "checkLineCount": "The lyric check returned {actual} sung lines; expected {expected}.",
+      "checkWordSpelling": "The syllables for {word} on sung line {line} spell {spelled}. Preserve its written spelling, including apostrophes.",
       "checkStale": "The lyrics changed during the check.",
       "chooseWord": "Select a current analysed word; its syllables must retain the written word exactly.",
       "bindingChanged": "The syllable or note association no longer matches the current text and MIDI.",

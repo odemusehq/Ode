@@ -103,6 +103,8 @@ test("the model supplies stress and pronunciation on each syllable, preserving b
   const word = { text: "window", syllables: [{ text: "win", wordStress: 1, stress: 0, ipa: "wɪn" }, { text: "dow", wordStress: 0, stress: 1, ipa: "doʊ" }] };
   const rhyme = { letter: "", quality: "none", part: "", sound: "" };
   const model = { json: async (request: JsonRequest<LyricsCheck>) => {
+    assert.equal((request.schema as any).properties.lines.minItems, 1);
+    assert.equal((request.schema as any).properties.lines.maxItems, 1);
     const fields = (request.schema as any).properties.lines.items.properties.words.items;
     assert.deepEqual(fields.required, ["text", "syllables"]);
     assert.deepEqual(fields.properties.syllables.items.required, ["text", "wordStress", "stress", "ipa"]);
@@ -111,6 +113,17 @@ test("the model supplies stress and pronunciation on each syllable, preserving b
   const checker = new LyricsChecker({ available: async () => ({ lyrics_check: true }), chat: async () => model } as never,
     { read: async () => "Mark {accent}.", list: async () => [] }, { maxTokens: 6000, cacheSize: 10 });
   assert.deepEqual(await checker.check(["window"], "us"), { status: "ok", check: { lines: [{ words: [{ text: "window", syllables: ["win", "dow"], wordStress: [1, 0], stress: [0, 1], ipa: ["wɪn", "doʊ"] }], rhyme, review: [] }] } });
+});
+
+test("a malformed written division identifies the word that the model must correct", async () => {
+  const model = { json: async (request: JsonRequest<LyricsCheck>) => request.parse({ lines: [{ words: [{ text: "Every",
+    syllables: [{ text: "Ev", wordStress: 1, stress: 1, ipa: "ɛv" }, { text: "ry", wordStress: 0, stress: 0, ipa: "ri" }] }],
+    rhyme: { letter: "", quality: "none", part: "", sound: "" }, review: [] }] }) };
+  const checker = new LyricsChecker({ available: async () => ({ lyrics_check: true }), chat: async () => model } as never,
+    { read: async () => "Mark {accent}.", list: async () => [] }, { maxTokens: 6000, cacheSize: 10 });
+  const result = await checker.check(["Every"], "us");
+  assert.equal(result.status, "unreachable");
+  assert.ok(result.status === "unreachable" && /Every/.test(result.detail) && /line 1/.test(result.detail));
 });
 
 test("saved lyric annotations survive a checker restart and reuse only the exact interpretation context", async () => {
