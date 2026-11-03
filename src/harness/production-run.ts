@@ -31,12 +31,11 @@ export class ProductionRun {
   pause(): void { this.intentEpoch++; this.taskId = null; }
 
   async afterReply(toolUses = 0): Promise<string | null> {
-    if (this.signal.aborted || toolUses <= this.reviewedTools || !toolUses && !this.taskId) return null;
+    if (this.signal.aborted || toolUses <= this.reviewedTools) return null;
     const task = this.taskId ? await this.tasks.read() : null;
     if (this.signal.aborted) return null;
     const unfinished = task?.id === this.taskId && task?.status === "working" && !task.blocker &&
       !task.steps.some((step) => step.status === "blocked" || step.status === "needs-inspection");
-    if (!toolUses && !unfinished) return null;
     this.reviewedTools = toolUses;
     const remaining = unfinished ? task.steps.filter((step) => step.status !== "complete").map((step) => ({ action: step.action, targetTags: step.targetTags, status: step.status })) : [];
     return `Before finishing, review the current request against the actual work and tool results in this conversation. For an authorised action request, finish any remaining required work and checks within the same budget; a progress sentence promising the next action is not completion. If the request was a question, explanation or status check, answer it without starting unrequested edits. Earlier plans and this review are not new authorisation. If finished, give the result; do not invent extra work. If blocked, state the concrete blocker and preserve completed work. ${remaining.length ? `The declared current task has these unfinished steps: ${JSON.stringify(remaining)}. ` : ""}Do not replay completed edits. Give the actual final outcome rather than another promise to act.`;
