@@ -296,6 +296,20 @@
       "detailsDescription": "Written analysis beneath each section",
       "rhymes": "Rhymes",
       "rhymesDescription": "Rhyming letters in colour, stronger on near rhymes"
+    },
+    "document": {
+      "serviceUnavailable": "The shared Lyricist annotation service is unavailable.",
+      "checkChanged": "The lyrics changed during the check. The newer text was kept.",
+      "songChanged": "The song changed during the check.",
+      "checkIncomplete": "The lyric check does not cover the current sung lines.",
+      "checkStale": "The lyrics changed during the check.",
+      "chooseWord": "Select a current analysed word; its syllables must retain the written word exactly.",
+      "bindingChanged": "The syllable or note association no longer matches the current text and MIDI.",
+      "melodySongChanged": "The song changed while reading its melody.",
+      "annotationsSongChanged": "These annotations belong to another song.",
+      "annotationsChanged": "The lyrics or their annotations changed. Read them again before editing this word.",
+      "midiChanged": "The MIDI changed since that read. Read the actual notes again before associating syllables.",
+      "noteOrder": "Syllable notes must exist in the native read and follow musical time."
     }
   },
   "settings": {

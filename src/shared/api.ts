@@ -25,6 +25,8 @@ export const API = {
   lyrics: "/api/lyrics", // GET → LyricsState; PUT LyricsWrite → LyricsSaved (merged when Ode saved in between)
   lyricsCheck: "/api/lyrics/check", // POST LyricsCheckRequest → LyricsCheckResponse (whole-song annotations)
   lyricsStrict: "/api/lyrics/strict", // POST StrictRhymesRequest → LyricsState (perfect rhymes on or off for a section name)
+  lyricsChoice: "/api/lyrics/choice", // PUT LyricsChoiceWrite → LyricsState (deliberate syllable/pronunciation choice)
+  lyricsMusicXml: "/api/lyrics/musicxml", // GET the current editable MusicXML document
   versions: "/api/versions", // GET → VersionListItem[] (newest first)
   versionsCheck: "/api/versions/check", // POST → VersionListItem | null (saves the musician's hand edits now, when Ode is idle)
   version: (id: string) => `/api/versions/${encodeURIComponent(id)}`, // GET → VersionDetail

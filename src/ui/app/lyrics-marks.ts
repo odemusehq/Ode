@@ -26,7 +26,7 @@ export class LyricsMarks {
   private snapshot: MarksSnapshot = { status: SupportStatus.Ready, detail: "", version: 0 };
   private generation = 0;
 
-  constructor(private readonly api: OdeApi, initial?: { lines: readonly string[]; check: LyricsCheck }) {
+  constructor(private readonly api: OdeApi, initial?: { lines: readonly string[]; check: LyricsCheck }, private readonly beforeCheck?: () => Promise<boolean>) {
     if (initial) this.checked = { key: LyricsMarks.key(initial.lines), lines: initial.check.lines };
   }
 
@@ -82,6 +82,8 @@ export class LyricsMarks {
     if (generation !== this.generation) return;
     this.asking = true;
     try {
+      if (this.beforeCheck && !await this.beforeCheck()) return;
+      if (generation !== this.generation) return;
       const answer = await this.api.checkLyrics({ lines });
       if (generation !== this.generation) return;
       if (answer.status === "ok") {

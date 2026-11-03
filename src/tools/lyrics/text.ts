@@ -29,13 +29,33 @@ export const lyricTextTools: AnyTool[] = [
     changes: "none",
     alwaysLoad: true,
     description:
-      'Read all lyrics or a portion with inclusive startLine/endLine, numbered from 1 including labels and blank lines. Returns revision, totalLines and numbered lines. Omit bounds for the whole text. Read the intended portion before replacing it with lyrics_write. This is plain text access; interpretation belongs to Lyricist.',
+      'Read all lyrics or inclusive startLine/endLine, numbered from 1 including headings/blanks. Returns songId, text revision, notationRevision, numbered lines, shared structured word/syllable/stress/IPA/rhyme annotations, and bound melody notes for the portion. Word and syllable indices are zero-based; line numbers are absolute and one-based. Bound MIDI is refreshed through the SDK; melodyVerified=false means it could not be verified, and stale bindings require explicit reconciliation. needsAnalysis signals missing/stale linguistic interpretation: call lyricist with analyse:true, not a local rule engine. Longer notes alone do not create new syllables. Read before lyrics_write or lyrics_choose_syllables.',
     input: { startLine: z.number().int().positive().optional(), endLine: z.number().int().positive().optional() },
     run: async ({ startLine = 1, endLine }, ctx) => {
-      const lyrics = await ctx.lyrics.read();
+      let lyrics = await ctx.lyrics.read();
+      let melodyVerified = !lyrics.notation?.clips.length;
+      if (lyrics.notation?.clips.length && typeof ctx.live.extension.call === "function") {
+        const refreshed = await ctx.lyrics.refreshMelody(async clip => {
+          const result = await ctx.live.extension.call<{ notes: import("../../shared/live").Note[] }>("midi_clip_get_notes", { clip }, ctx.signal);
+          return result.notes;
+        }, ctx.signal);
+        lyrics = refreshed.lyrics;
+        melodyVerified = refreshed.verified;
+      }
       const lines = LyricsText.numbered(lyrics.text);
       if (endLine !== undefined && endLine < startLine) throw new Error(t("lyricText.reverseRange"));
-      return { revision: lyrics.revision, totalLines: lines.length, lines: lines.slice(startLine - 1, endLine) };
+      let sung = 0;
+      const annotations = LyricsText.lines(lyrics.text).flatMap((text, at) => {
+        if (!LyricsText.isSung(text)) return [];
+        const check = lyrics.check?.lines[sung++];
+        return check && at + 1 >= startLine && (endLine === undefined || at < endLine) ? [{ line: at + 1, text, ...check }] : [];
+      });
+      const notation = lyrics.notation;
+      const melody = notation?.clips.flatMap(clip => clip.bindings.filter(binding => binding.line >= startLine && (endLine === undefined || binding.line <= endLine))
+        .map(binding => ({ ...binding, clip: clip.clip, notes: binding.notes.map(index => ({ index, ...clip.notes[index] })) }))) ?? [];
+      return { songId: lyrics.songId, revision: lyrics.revision, notationRevision: notation?.revision ?? 0, totalLines: lines.length, lines: lines.slice(startLine - 1, endLine),
+        annotations, melody, melodyVerified, needsAnalysis: !notation?.analysis || JSON.stringify(LyricsText.sung(notation.analysis.text)) !== JSON.stringify(LyricsText.sung(lyrics.text))
+          || JSON.stringify(notation.analysis.choices ?? []) !== JSON.stringify(notation.choices) };
     },
   }),
   defineTool({

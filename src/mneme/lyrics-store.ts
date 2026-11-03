@@ -1,5 +1,10 @@
+import { t } from "../shared/i18n";
 import { diff3MergeRegions } from "node-diff3";
-import type { LyricsSaved, LyricsState } from "../shared/lyrics";
+import type { LyricsCheck, LyricsCheckResponse, LyricsSaved, LyricsState } from "../shared/lyrics";
+import { LyricsDocument, LyricsChoiceSchema, LyricsCheckSchema, VocalClipSchema, type LyricsChoiceWrite, type WordChoice, type VocalClip } from "../shared/lyrics-document";
+import type { Accent } from "../shared/personalisation";
+import type { LyricsChecker } from "../services/lyrics-checker";
+import type { ClipRef, Note } from "../shared/live";
 import { LyricsSections } from "../shared/lyrics-sections";
 import type { LeadSheet } from "../shared/song";
 import { VersionAuthor } from "../shared/versions";
@@ -160,6 +165,153 @@ export class LyricsStore {
     });
   }
 
+  /** The configured Lyricist supplies interpretation. Unchanged input is served by its exact context cache. */
+  async analyse(checker: LyricsChecker, accent: Accent, signal?: AbortSignal, request?: string): Promise<LyricsCheckResponse> {
+    const current = await this.read();
+    const notation = current.notation ?? LyricsDocument.empty();
+    const answer = await checker.check(LyricsText.sung(current.text), accent, signal, { text: current.text, choices: notation.choices, clips: notation.clips, ...(request ? { request } : {}) });
+    signal?.throwIfAborted();
+    if (answer.status !== "ok") return answer;
+    if (!await this.saveCheck(current.songId, current.text, accent, answer.check, notation.choices)) {
+      return { status: "unreachable", detail: t("lyrics.document.checkChanged") };
+    }
+    const saved = await this.read();
+    if (saved.songId !== current.songId) return { status: "unreachable", detail: t("lyrics.document.songChanged") };
+    return { status: "ok", check: saved.check ?? answer.check };
+  }
+
+  /** A late answer never annotates another text/song. Newer musician choices remain authoritative. */
+  saveCheck(songId: string, text: string, accent: Accent, check: LyricsCheck, choices?: WordChoice[]): Promise<boolean> {
+    return this.enqueue(async () => {
+      if (songId !== this.song.songId) return false;
+      const texts = this.texts();
+      const current = await this.song.read();
+      if (current.lyrics !== text) return false;
+      const valid = LyricsCheckSchema.parse(check);
+      if (valid.lines.length !== LyricsText.sung(text).length) throw new Error(t("lyrics.document.checkIncomplete"));
+      const sheet = await this.song.updateNotation(stored => {
+        if (songId !== this.song.songId) throw new LyricsForAnotherSongError(t("lyrics.document.songChanged"));
+        if (stored.lyrics !== text) throw new StaleLyricsError(t("lyrics.document.checkStale"));
+        const notation = stored.notation ?? LyricsDocument.empty();
+        return { ...notation, revision: notation.revision + 1,
+          analysis: { text, accent, check: valid, choices: structuredClone(choices ?? notation.choices) } };
+      });
+      await this.stored(sheet, songId, texts);
+      return true;
+    });
+  }
+
+  /** Save a literal musician/model pronunciation choice, without guessing a split or rewriting text. */
+  choose(input: LyricsChoiceWrite): Promise<LyricsState> {
+    const choice = LyricsChoiceSchema.parse(input);
+    return this.enqueue(async () => {
+      const texts = this.texts();
+      const sheet = await this.song.updateNotation(current => {
+        this.assertRevision(current, choice.songId, choice.baseRevision, choice.notationRevision);
+        const notation = structuredClone(current.notation ?? LyricsDocument.empty());
+        const lines = LyricsText.lines(current.lyrics);
+        const lineText = lines[choice.line - 1];
+        const sungIndex = lines.slice(0, choice.line - 1).filter(LyricsText.isSung).length;
+        const previous = LyricsDocument.check(notation, current.lyrics)?.lines[sungIndex]?.words[choice.word];
+        if (!lineText || !LyricsText.isSung(lineText) || !previous || previous.text !== choice.value.text || choice.value.syllables.join("") !== previous.text) {
+          throw new Error(t("lyrics.document.chooseWord"));
+        }
+        notation.choices = notation.choices.filter(item => item.line !== choice.line || item.word !== choice.word);
+        notation.choices.push({ line: choice.line, lineText, word: choice.word, value: choice.value });
+        if (previous.syllables.length !== choice.value.syllables.length) {
+          for (const clip of notation.clips) for (const binding of clip.bindings) {
+            if (binding.line === choice.line && binding.word === choice.word) binding.stale = true;
+          }
+        }
+        notation.revision++;
+        return notation;
+      });
+      return this.stored(sheet, choice.songId, texts);
+    });
+  }
+
+  /** Bind model-chosen syllables to notes actually read from Live. Other lines on this clip keep their bindings. */
+  bind(songId: string, baseRevision: number, notationRevision: number, input: VocalClip): Promise<LyricsState> {
+    const clip = VocalClipSchema.parse(input);
+    return this.enqueue(async () => {
+      const texts = this.texts();
+      const sheet = await this.song.updateNotation(current => {
+        this.assertRevision(current, songId, baseRevision, notationRevision);
+        const notation = structuredClone(current.notation ?? LyricsDocument.empty());
+        const lines = LyricsText.lines(current.lyrics);
+        const check = LyricsDocument.check(notation, current.lyrics);
+        for (const binding of clip.bindings) {
+          const lineText = lines[binding.line - 1];
+          const sungIndex = lines.slice(0, binding.line - 1).filter(LyricsText.isSung).length;
+          const word = check?.lines[sungIndex]?.words[binding.word];
+          if (lineText !== binding.text || !word?.syllables[binding.syllable] || binding.notes.some(index => !clip.notes[index]) || new Set(binding.notes).size !== binding.notes.length) {
+            throw new Error(t("lyrics.document.bindingChanged"));
+          }
+        }
+        const previous = notation.clips.find(item => JSON.stringify(item.clip) === JSON.stringify(clip.clip));
+        const replaced = new Set(clip.bindings.map(binding => binding.line));
+        if (previous) {
+          const sameNotes = JSON.stringify(previous.notes) === JSON.stringify(clip.notes);
+          clip.bindings = [...previous.bindings.filter(binding => !replaced.has(binding.line)).map(binding => sameNotes ? binding : { ...binding, stale: true }), ...clip.bindings];
+          clip.id = previous.id;
+        }
+        notation.clips = [...notation.clips.filter(item => JSON.stringify(item.clip) !== JSON.stringify(clip.clip)), clip];
+        notation.revision++;
+        return notation;
+      });
+      return this.stored(sheet, songId, texts);
+    });
+  }
+
+  /** Re-read native notes without inventing their identity. Changed geometry requires explicit re-association. */
+  async refreshMelody(read: (clip: ClipRef) => Promise<Note[]>, signal?: AbortSignal): Promise<{ lyrics: LyricsState; verified: boolean }> {
+    const current = await this.read();
+    const notation = current.notation;
+    if (!notation?.clips.length) return { lyrics: current, verified: true };
+    const results = await Promise.allSettled(notation.clips.map(clip => read(clip.clip)));
+    signal?.throwIfAborted();
+    if (current.songId !== this.song.songId) throw new LyricsForAnotherSongError(t("lyrics.document.melodySongChanged"));
+    const changed = results.some((result, index) => result.status === "fulfilled" && JSON.stringify(result.value) !== JSON.stringify(notation.clips[index]!.notes));
+    if (!changed) {
+      const latest = await this.read();
+      return { lyrics: latest, verified: latest.songId === current.songId && latest.revision === current.revision && latest.notation?.revision === notation.revision && results.every(result => result.status === "fulfilled") };
+    }
+    return this.enqueue(async () => {
+      const texts = this.texts();
+      let verified = results.every(result => result.status === "fulfilled");
+      const sheet = await this.song.updateNotation(stored => {
+        if (current.songId !== this.song.songId) throw new LyricsForAnotherSongError(t("lyrics.document.melodySongChanged"));
+        if (stored.notation?.revision !== notation.revision || stored.lyricsRevision !== current.revision) {
+          verified = false;
+          return stored.notation ?? LyricsDocument.empty();
+        }
+        const next = structuredClone(notation);
+        results.forEach((result, index) => {
+          if (result.status !== "fulfilled") return;
+          const clip = next.clips[index]!;
+          const previous = clip.notes;
+          clip.notes = result.value;
+          for (const binding of clip.bindings) {
+            if (previous.length !== result.value.length || binding.notes.some(at => {
+              const before = previous[at], after = result.value[at];
+              return !before || !after || before.pitch !== after.pitch || before.start !== after.start || before.duration !== after.duration;
+            })) binding.stale = true;
+          }
+        });
+        next.revision++;
+        return next;
+      });
+      return { lyrics: await this.stored(sheet, current.songId, texts), verified };
+    });
+  }
+
+  private assertRevision(sheet: LeadSheet, songId: string, textRevision: number, notationRevision: number): void {
+    if (songId !== this.song.songId) throw new LyricsForAnotherSongError(t("lyrics.document.annotationsSongChanged"));
+    if (sheet.lyricsRevision !== textRevision || (sheet.notation?.revision ?? 0) !== notationRevision) {
+      throw new StaleLyricsError(t("lyrics.document.annotationsChanged"));
+    }
+  }
+
   /** Stores `text` as a new revision as it is, without merging (a restore puts back the lyrics of a version). */
   replace(text: string): Promise<LyricsState> {
     return this.enqueue(async () => {
@@ -200,11 +352,14 @@ export class LyricsStore {
 
   /** Literal saved text only; lyric interpretation belongs to the configured Lyricist. */
   private state(sheet: LeadSheet, song: string): LyricsState {
+    const check = sheet.notation ? LyricsDocument.check(sheet.notation, sheet.lyrics) : undefined;
     return {
       songId: song,
       text: sheet.lyrics,
       revision: sheet.lyricsRevision,
       strictRhymes: sheet.strictRhymes,
+      ...(sheet.notation ? { notation: sheet.notation } : {}),
+      ...(check ? { check } : {}),
     };
   }
 

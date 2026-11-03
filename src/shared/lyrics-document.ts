@@ -23,13 +23,18 @@ export const SyllableBindingSchema = z.object({ ...anchor, word: z.number().int(
 export const VocalClipSchema = z.object({ id: z.string().min(1), clip: ClipRefSchema, notes: z.array(NoteSchema), bindings: z.array(SyllableBindingSchema) });
 export const LyricsNotationSchema = z.object({
   revision: z.number().int().min(0).default(0),
-  analysis: z.object({ text: z.string(), accent: z.enum(["uk", "us"]), check: LyricsCheckSchema }).optional(),
+  analysis: z.object({ text: z.string(), accent: z.enum(["uk", "us"]), check: LyricsCheckSchema, choices: z.array(WordChoiceSchema).optional() }).optional(),
   choices: z.array(WordChoiceSchema).default([]),
   clips: z.array(VocalClipSchema).default([]),
 });
 export type LyricsNotation = z.infer<typeof LyricsNotationSchema>;
 export type WordChoice = z.infer<typeof WordChoiceSchema>;
 export type VocalClip = z.infer<typeof VocalClipSchema>;
+export const LyricsChoiceSchema = z.object({
+  songId: z.string().min(1), baseRevision: z.number().int().min(0), notationRevision: z.number().int().min(0),
+  line: z.number().int().positive(), word: z.number().int().min(0), value: WordCheckSchema,
+});
+export type LyricsChoiceWrite = z.infer<typeof LyricsChoiceSchema>;
 
 const UNMARKED: LineCheck = { words: [], rhyme: { letter: "", quality: "none", part: "", sound: "" } };
 const sung = (line: string) => line.trim().length > 0 && !/^\s*\[[^\]]*\]\s*$/.test(line);
@@ -53,7 +58,8 @@ export class LyricsDocument {
       const moved = unchanged.get(index + 1);
       if (check && moved !== undefined) from.set(moved, check);
     });
-    const complete = text === analysis.text;
+    const complete = JSON.stringify(raw.filter(sung).map(line => line.trim())) === JSON.stringify(old.filter(sung).map(line => line.trim()))
+      && JSON.stringify(analysis.choices ?? []) === JSON.stringify(notation.choices);
     return { lines: raw.flatMap((line, index) => {
       if (!sung(line)) return [];
       const found = from.get(index + 1);

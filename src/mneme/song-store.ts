@@ -9,6 +9,7 @@ import { VersionHistory } from "./version-history";
 import type { MutationReceipt } from "../shared/mutation-receipt";
 import { SongFile } from "./song-file";
 import { LyricsDocument } from "../shared/lyrics-document";
+import type { LyricsNotation } from "../shared/lyrics-document";
 
 /** A song in Ode's list: its folder's id, and its title as its lead sheet has it. */
 export const SongEntrySchema = z.object({ id: z.string(), title: z.string(), updatedAt: z.string() });
@@ -164,6 +165,11 @@ export class SongStore {
   /** The sung lines of the lyrics, without blank and label lines. */
   async lyrics(): Promise<string[]> {
     return LyricsText.sung((await this.read()).lyrics);
+  }
+
+  /** Apply annotations against the actual stored song, inside the same atomic writer as the text. */
+  updateNotation(edit: (sheet: LeadSheet) => LyricsNotation): Promise<LeadSheet> {
+    return this.change(current => LeadSheetSchema.parse({ ...current, notation: edit(current) }));
   }
 
   private use(id: string): void {

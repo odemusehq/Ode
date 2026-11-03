@@ -123,7 +123,10 @@ export class SharedLyrics {
       return true;
     }
     if (stored && state.revision <= stored.revision) {
-      if (state.revision === stored.revision) this.takeStrictRhymes(state);
+      if (state.revision === stored.revision) {
+        this.takeStrictRhymes(state);
+        if ((state.notation?.revision ?? 0) > (stored.notation?.revision ?? 0)) this.update({ stored: state });
+      }
       return false;
     }
     if (this.saving) {

@@ -7,6 +7,7 @@ import { RefNames } from "./daw/ref-names";
 import { TOOL_MEDIA, type AnyTool, type ToolMedia, type ToolContext } from "./define";
 import { assertUnlocked } from "./locked-material";
 import { lyricist } from "./lyrics/lyricist";
+import { lyricMelodyTools } from "./lyrics/melody";
 import { lyricTextTools, resolveLyricsEdit } from "./lyrics/text";
 import { midiDescription, midiInputSchema, midiLabelInput, midiOutputPaths, resolveMidiInput } from "./midi-material-adapter";
 import { mnemeTools } from "./mneme";
@@ -32,7 +33,7 @@ export const TOOL_GROUPS = ["daw_write", "daw_read", "mneme", "lyrics", "operati
 export type ToolGroup = (typeof TOOL_GROUPS)[number];
 const GROUPS: readonly (readonly [ToolGroup, readonly AnyTool[]])[] = [
   ["daw_write", dawActionTools], ["daw_read", dawStateTools], ["mneme", mnemeTools],
-  ["lyrics", [...lyricTextTools, lyricist]], ["operations", [askMusician, ...referenceTools]],
+  ["lyrics", [...lyricTextTools, lyricist, ...lyricMelodyTools]], ["operations", [askMusician, ...referenceTools]],
 ];
 
 /** Every Ode tool, offered to the model as a function with a JSON Schema for its input. */

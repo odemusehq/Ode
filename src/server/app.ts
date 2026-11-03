@@ -55,6 +55,7 @@ export class OdeApp {
   readonly mneme: Mneme;
   readonly song: SongStore;
   readonly lyrics: LyricsStore;
+  readonly lyricsChecker: LyricsChecker;
   readonly conversations: ConversationStore;
   readonly composer: ComposerStore;
   readonly references: ReferenceFiles;
@@ -102,6 +103,7 @@ export class OdeApp {
     this.settings = new SettingsStore(this.paths.root, ProviderCatalog.bundled);
     this.models = new ModelRoles(this.settings, ProviderCatalog.bundled);
     this.services = new ModelServices(this.models);
+    this.lyricsChecker = new LyricsChecker(this.services, texts, config.lyricsSupport, join(this.paths.root, "lyrics-checks.json"));
     this.approvals = new Approvals(emit);
     this.questions = new Questions(emit);
     this.reader = new SnapshotReader(live, this.song);
@@ -119,6 +121,7 @@ export class OdeApp {
       song: this.song,
       lyrics: this.lyrics,
       production: this.production,
+      lyricsChecker: this.lyricsChecker,
       versions: this.versions,
       snapshots: this.reader,
       questions: this.questions,
@@ -196,7 +199,7 @@ export class OdeApp {
       references: this.references,
       lyrics: this.lyrics,
       services: this.services,
-      lyricsChecker: new LyricsChecker(this.services, texts, config.lyricsSupport, join(this.paths.root, "lyrics-checks.json")),
+      lyricsChecker: this.lyricsChecker,
       prefs: this.prefs,
       settings: this.settings,
       models: this.models,

@@ -27,7 +27,7 @@ export const clipTools = [
   extensionTool({
     op: "midi_clip_get_notes",
     alwaysLoad: true,
-    description: "Read the supported performance fields of every MIDI note in a clip and its recoveryToken: pitch, start/duration in beats from clip start, velocity, mute, probability, velocity deviation and release velocity. For a later replacement pass this actual recoveryToken as midi_clip_set_notes.expected.token. The token binds this native clip and its observed note state in this extension lifetime; expired tokens require a fresh read. This is not a history of intermediate edits or unavailable MPE/automation.",
+    description: "Read the supported performance fields of every MIDI note in a clip, its notesHash and recoveryToken: pitch, start/duration in beats from clip start, velocity, mute, probability, velocity deviation and release velocity. notesHash identifies this exact observed list for lyrics_bind_melody. For a later replacement pass this actual recoveryToken as midi_clip_set_notes.expected.token. The token binds this native clip and its observed note state in this extension lifetime; expired tokens require a fresh read. This is not a history of intermediate edits or unavailable MPE/automation.",
     input: { clip: ClipRefSchema },
   }),
   extensionTool({

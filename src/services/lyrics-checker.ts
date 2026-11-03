@@ -7,15 +7,7 @@ import type { LyricsCheck, LyricsCheckResponse } from "../shared/lyrics";
 import type { Accent } from "../shared/personalisation";
 import type { ModelServices } from "./index";
 import type { TextGenerator } from "./capabilities";
-
-const LyricsCheckSchema = z.object({
-  lines: z.array(
-    z.object({
-      words: z.array(z.object({ text: z.string(), syllables: z.array(z.string()), stress: z.array(z.number().int()) })),
-      rhyme: z.object({ letter: z.string(), quality: z.enum(["perfect", "near", "none"]), part: z.string(), sound: z.string() }),
-    }),
-  ),
-});
+import { LyricsCheckSchema, type LyricsNotation } from "../shared/lyrics-document";
 
 /** The strict schema the provider holds the answer to: every object closed, every key required. */
 const CHECK_SCHEMA: Record<string, unknown> = {
@@ -35,11 +27,12 @@ const CHECK_SCHEMA: Record<string, unknown> = {
             items: {
               type: "object",
               additionalProperties: false,
-              required: ["text", "syllables", "stress"],
+              required: ["text", "syllables", "stress", "ipa"],
               properties: {
                 text: { type: "string" },
                 syllables: { type: "array", items: { type: "string" } },
                 stress: { type: "array", items: { type: "integer", enum: [0, 1, 2] } },
+                ipa: { type: "array", items: { type: "string" } },
               },
             },
           },
@@ -93,11 +86,11 @@ export class LyricsChecker {
     } catch { return undefined; }
   }
 
-  async check(lines: string[], accent: Accent, signal?: AbortSignal): Promise<LyricsCheckResponse> {
+  async check(lines: string[], accent: Accent, signal?: AbortSignal, performance?: Pick<LyricsNotation, "choices" | "clips"> & { text?: string; request?: string }): Promise<LyricsCheckResponse> {
     signal?.throwIfAborted();
     if (lines.length === 0) return { status: "ok", check: { lines: [] } };
     try {
-      const context = await this.context(lines, accent);
+      const context = await this.context(lines, accent, performance);
       signal?.throwIfAborted();
       if (!context) return { status: "setup" };
       const { key, model, instruction } = context;
@@ -109,7 +102,7 @@ export class LyricsChecker {
           name: "lyrics_check",
           schema: CHECK_SCHEMA,
           system: instruction,
-          user: lines.map((line, index) => `${index + 1}. ${line}`).join("\n"),
+          user: lines.map((line, index) => `${index + 1}. ${line}`).join("\n") + (performance ? `\n\nSaved artist choices and actual melody (source context):\n${JSON.stringify(performance)}` : ""),
           maxTokens: Math.max(this.settings.maxTokens, Math.min(24_000, lines.length * 400)),
           signal,
           parse: (value) => LyricsChecker.aligned(LyricsCheckSchema.parse(value), lines.length),
@@ -134,13 +127,13 @@ export class LyricsChecker {
     }
   }
 
-  private async context(lines: string[], accent: Accent) {
+  private async context(lines: string[], accent: Accent, performance?: Pick<LyricsNotation, "choices" | "clips"> & { text?: string; request?: string }) {
     if (!(await this.services.available()).lyrics_check) return undefined;
     const model = await this.services.chat("lyrics_check");
     if (this.model !== model) { this.checked.clear(); this.model = model; }
     const instruction = (await this.texts.read(LyricsChecker.INSTRUCTION)).replaceAll("{accent}", ACCENT_NAMES[accent]);
     const identity = this.file ? this.services.identity("lyrics_check", model) : "";
-    const key = createHash("sha256").update(JSON.stringify([identity, instruction, accent, lines])).digest("hex");
+    const key = createHash("sha256").update(JSON.stringify([identity, instruction, accent, lines, ...(performance ? [performance] : [])])).digest("hex");
     return { key, model, instruction };
   }
 

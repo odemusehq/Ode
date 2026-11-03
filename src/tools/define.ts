@@ -57,6 +57,8 @@ export interface ToolContext {
   live: LiveConnections;
   song: SongStore;
   lyrics: LyricsStore;
+  /** The same configured Lyricist and cache used by the editor's initial analysis. */
+  lyricsChecker?: import("../services/lyrics-checker").LyricsChecker;
   versions: SongVersions;
   snapshots: SetReader;
   questions: MusicianQuestions;

@@ -44,11 +44,12 @@ export const songMemoryTools: AnyTool[] = [
     changes: "none",
     alwaysLoad: true,
     description:
-      "Read the song's lead sheet: title, intent, settings, lyrics and revision, sections/chords, tagged clip links, locks, strictRhymes, credits, notes and optional composition (retained hooks, lyric phrase spans and section part activity). compositionStatus reports stale/missing bindings without discarding the plan; rechecked lists phrases from older revisions whose exact text still matches at the same current line. Source-tag hook hashes remain unverified until current clip notes are compared. Composition spans use section-relative quarter-note beats, so pickups can precede the section. Tempo, key and time signature come from Live.",
+      "Read the song's lead sheet: title, intent, settings, lyrics and revision, sections/chords, tagged clip links, locks, strictRhymes, credits, notes and optional composition (retained hooks, lyric phrase spans and section part activity). compositionStatus reports stale/missing bindings without discarding the plan; rechecked lists phrases from older revisions whose exact text still matches at the same current line. Source-tag hook hashes remain unverified until current clip notes are compared. Composition spans use section-relative quarter-note beats, so pickups can precede the section. Use lyrics_read for shared syllables, pronunciations and actual melody associations in a selected text range. Tempo, key and time signature come from Live.",
     input: {},
     run: async (_input, ctx) => {
       const sheet = await ctx.song.read();
-      return { ...sheet, compositionStatus: compositionStatus(sheet) };
+      const { notation, ...summary } = sheet;
+      return { ...summary, notation: notation ? { revision: notation.revision, vocalClips: notation.clips.length, choices: notation.choices.length } : undefined, compositionStatus: compositionStatus(sheet) };
     },
   }),
   defineTool({

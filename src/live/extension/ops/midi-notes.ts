@@ -31,7 +31,7 @@ export class MidiNoteOperations extends OperationGroup<MidiNoteOp> {
         this.targets.set(recoveryToken, recovered);
       }
       const notes = fromLiveNotes(target.notes);
-      return { notes, guardedRecovery: true, recoveryToken: this.remember(String(target.handle.id), notes) };
+      return { notes, notesHash: MidiNoteOperations.hash(notes), guardedRecovery: true, recoveryToken: this.remember(String(target.handle.id), notes) };
     };
   }
 

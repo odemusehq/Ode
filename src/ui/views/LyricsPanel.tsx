@@ -82,7 +82,7 @@ function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsE
   const list = useRef<HTMLDivElement>(null);
   const indicator = useRef<HTMLDivElement>(null);
   // Seed a new window from the saved assessment; a settings change must request the new model's marks.
-  const marks = useMemo(() => new LyricsMarks(client.api, settingsRevision === 0 ? initial : undefined), [client.api, settingsRevision]);
+  const marks = useMemo(() => new LyricsMarks(client.api, settingsRevision === 0 ? initial : undefined, () => client.lyrics.flush()), [client.api, settingsRevision]);
   useEffect(() => () => marks.dispose(), [marks]);
   const support = useSyncExternalStore(marks.subscribe, marks.getSnapshot);
   const [view, setView] = useState<LyricsView>(() => LyricsViewStore.load());

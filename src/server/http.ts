@@ -22,6 +22,8 @@ import { API, type SongsResponse, type StatusResponse } from "../shared/api";
 import type { UiEvent } from "../shared/events";
 import type { DialogView, OdeConfig } from "../shared/config";
 import type { LyricsCheckResponse } from "../shared/lyrics";
+import { LyricsChoiceSchema } from "../shared/lyrics-document";
+import { MusicXml } from "../mneme/musicxml";
 import { Mode } from "../shared/personalisation";
 import { VersionAuthor, type RestoreResult } from "../shared/versions";
 import { LyricsForAnotherSongError, type LyricsStore } from "../mneme/lyrics-store";
@@ -519,7 +521,7 @@ export class OdeServer {
       const accent = (await prefs.effective(sheet)).pronunciation;
       const check = state.text === sheet.lyrics && state.songId === song.songId
         ? await this.deps.lyricsChecker.cached(LyricsText.sung(state.text), accent) : undefined;
-      return c.json({ ...state, ...(check ? { check } : {}) });
+      return c.json({ ...state, ...(!state.check && check ? { check } : {}) });
     });
     app.put(API.lyrics, async (c) => {
       const parsed = LyricsWriteSchema.safeParse(await OdeServer.body(c));
@@ -537,8 +539,22 @@ export class OdeServer {
       const parsed = LyricsCheckSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: t("server.http.sendLinesWithTheSectionS") }, 400);
       const accent = (await prefs.effective(await song.read())).pronunciation;
-      const answer: LyricsCheckResponse = await this.deps.lyricsChecker.check(parsed.data.lines, accent);
+      const state = await lyrics.read();
+      const same = JSON.stringify(LyricsText.sung(state.text)) === JSON.stringify(parsed.data.lines);
+      const answer: LyricsCheckResponse = same ? await lyrics.analyse(this.deps.lyricsChecker, accent)
+        : await this.deps.lyricsChecker.check(parsed.data.lines, accent);
       return c.json(answer);
+    });
+
+    app.put(API.lyricsChoice, async (c) => {
+      const parsed = LyricsChoiceSchema.safeParse(await OdeServer.body(c));
+      if (!parsed.success) return c.json({ error: "Send the current word, syllables and document revisions." }, 400);
+      try { return c.json(await lyrics.choose(parsed.data)); }
+      catch (error) { return c.json({ error: error instanceof Error ? error.message : String(error) }, 409); }
+    });
+    app.get(API.lyricsMusicXml, async (c) => {
+      c.header("Content-Type", "application/vnd.recordare.musicxml+xml; charset=utf-8");
+      return c.body(MusicXml.write(await song.read()));
     });
 
     app.post(API.lyricsStrict, async (c) => {
