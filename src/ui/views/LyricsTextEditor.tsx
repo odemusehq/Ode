@@ -11,6 +11,7 @@ import { lyricTextChanges } from "../app/lyrics-changes";
 import { MarkLayout, RhymeColour } from "./mark-layout";
 
 export interface WordSelection { line: number; word: number; value: LineCheck["words"][number] }
+export interface LineSelection { line: number; text: string; check: LineCheck; word: WordSelection | null; range: boolean }
 export interface LyricsTextEditorHandle { replace(text: string): void; focus(): void }
 interface Props {
   text: string;
@@ -19,7 +20,7 @@ interface Props {
   strictRhymes: readonly string[];
   headers: readonly ReactNode[];
   onChange: (text: string) => void;
-  onWord: (word: WordSelection | null) => void;
+  onSelection: (selection: LineSelection | null) => void;
 }
 const refresh = StateEffect.define<null>();
 const remote = Transaction.userEvent.of("input.remote");
@@ -136,12 +137,13 @@ export const LyricsTextEditor = forwardRef<LyricsTextEditorHandle, Props>(functi
             if (update.docChanged && !update.transactions.every(tr => tr.isUserEvent("input.remote"))) current.current.onChange(update.state.doc.toString());
             if (update.selectionSet || update.docChanged || update.transactions.some(tr => tr.effects.some(effect => effect.is(refresh)))) {
               const selection = update.state.selection.main;
-              const line = update.state.doc.lineAt(selection.head);
+              const line = update.state.doc.lineAt(selection.from);
               const config = current.current;
               const sungIndex = update.state.doc.sliceString(0, line.from).split("\n").filter(LyricsSections.isSung).length;
               const check = update.state.doc.toString() === config.text && LyricsSections.isSung(line.text) ? config.checks[sungIndex] : null;
               const word = check && MarkLayout.locate(line.text, check).find(word => selection.from >= line.from + word.start && selection.to <= line.from + word.end);
-              config.onWord(word && check ? { line: line.number, word: word.index, value: check.words[word.index]! } : null);
+              config.onSelection(check && selection.to <= line.to + 1 ? { line: line.number, text: line.text, check,
+                word: word ? { line: line.number, word: word.index, value: check.words[word.index]! } : null, range: selection.from !== selection.to } : null);
             }
           }),
         ],

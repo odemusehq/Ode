@@ -7,8 +7,8 @@ import { Button, ButtonVariant, Icon, IconName, Menu, MenuAlign, cx } from "../.
 import { useClient, useLyrics } from "../app/hooks";
 import { LyricsMarks, SupportStatus } from "../app/lyrics-marks";
 import { LyricsViewStore, type LyricsView } from "../app/lyrics-view";
-import { LyricsTextEditor, type LyricsTextEditorHandle, type WordSelection } from "./LyricsTextEditor";
-import { SyllableChoice } from "./SyllableChoice";
+import { LyricsTextEditor, type LyricsTextEditorHandle, type LineSelection } from "./LyricsTextEditor";
+import { LyricsSelection } from "./LyricsSelection";
 import { SectionAction, SectionCard, type SectionQuestion } from "./SectionCard";
 import { SectionMover } from "./section-pointer";
 import { MarkLayout } from "./mark-layout";
@@ -78,7 +78,7 @@ function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsE
   const client = useClient();
   const { stored } = useLyrics();
   const editor = useRef<LyricsTextEditorHandle>(null);
-  const [word, setWord] = useState<WordSelection | null>(null);
+  const [selection, setSelection] = useState<LineSelection | null>(null);
   const sections = useMemo(() => LyricsSections.parse(text), [text]);
   const [renaming, setRenaming] = useState<number | null>(null);
   const renamingNow = useRef<number | null>(null);
@@ -283,7 +283,7 @@ function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsE
               {section.lines.filter(LyricsSections.isSung).map((line, lineIndex) => {
                 const check = checks[starts[index]! + lineIndex];
                 return <li key={lineIndex}><p>{line}</p>{check ? <p>
-                  {t("lyrics.lineAnalysis", { count: (MarkLayout.count(check)), words: (check.words.map((word) => t("lyrics.wordAnalysis", { word: (word.text), syllables: (word.syllables.map((syllable, at) => t("lyrics.syllableAnalysis", { syllable: (syllable), stress: (word.stress[at]), wordStress: (word.wordStress?.[at] ?? -1) }))).join(", ") })).join("; ")), rhyme: (t("lyrics.rhymeAnalysis", { hasLetter: Boolean((check.rhyme.letter)), letter: (check.rhyme.letter), quality: (check.rhyme.quality), hasPart: Boolean((check.rhyme.part)), part: (check.rhyme.part) })) })}
+                  {t("lyrics.lineAnalysis", { count: (MarkLayout.count(check)), words: (check.words.map((word) => t("lyrics.wordAnalysis", { word: (word.text), syllables: (word.syllables.map((syllable, at) => t("lyrics.syllableAnalysis", { syllable: (syllable), stress: (word.stress[at] ?? -1), wordStress: (word.wordStress?.[at] ?? -1) }))).join(", ") })).join("; ")), rhyme: (t("lyrics.rhymeAnalysis", { hasLetter: Boolean((check.rhyme.letter)), letter: (check.rhyme.letter), quality: (check.rhyme.quality), hasPart: Boolean((check.rhyme.part)), part: (check.rhyme.part) })) })}
                   {check.rhyme.sound && <code> {check.rhyme.sound}</code>}
                 </p> : <p>{t("lyrics.analysisUnavailable")}</p>}</li>;
               })}
@@ -325,13 +325,13 @@ function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsE
         <div ref={indicator} className="lyrics-editor__drop" hidden />
         <LyricsTextEditor ref={editor} text={text} checks={checks} view={view} strictRhymes={strictRhymes} headers={headers}
           onChange={(next) => client.lyrics.edit(next)}
-          onWord={(next) => setWord(previous => JSON.stringify(previous) === JSON.stringify(next) ? previous : next)} />
+          onSelection={(next) => setSelection(previous => JSON.stringify(previous) === JSON.stringify(next) ? previous : next)} />
         <Button variant={ButtonVariant.Quiet} className="lyrics-editor__add" onClick={addSection}>
           <Icon name={IconName.Plus} />
           {t("lyrics.section")}
         </Button>
       </div>
-      {word && stored && stored.text === text && <SyllableChoice key={`${word.line}:${word.word}:${word.value.text}`} selected={word} state={stored}
+      {selection && stored && stored.text === text && <LyricsSelection key={`${selection.line}:${selection.text}`} selection={selection} state={stored}
         onSaved={(state) => { client.lyrics.receive(state); marks.retry(); setRetries(count => count + 1); }} onDone={() => editor.current?.focus()} />}
       {support.status !== SupportStatus.Ready && (
         <SupportNotice
