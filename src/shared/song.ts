@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { PersonalisationOverridesSchema } from "./personalisation";
+import { LyricsNotationSchema } from "./lyrics-document";
 
 export const SECTION_KINDS = [
   "intro",
@@ -132,6 +133,8 @@ export const LeadSheetSchema = z.object({
   notes: z.array(z.string()).default([]),
   /** Musical decisions survive conversation truncation. Old songs need no composition field. */
   composition: CompositionSchema.optional(),
+  /** Draft syllables and their associations with actual Live MIDI, persisted with the song in MusicXML. */
+  notation: LyricsNotationSchema.optional(),
 });
 export type LeadSheet = z.infer<typeof LeadSheetSchema>;
 

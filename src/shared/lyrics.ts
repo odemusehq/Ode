@@ -8,6 +8,8 @@ export interface LyricsState {
   strictRhymes: string[];
   /** Saved model annotations for this exact text and interpretation context, when already available. */
   check?: LyricsCheck;
+  /** The same saved syllable choices and native melody associations that Ode reads. */
+  notation?: import("./lyrics-document").LyricsNotation;
 }
 
 /** Turns perfect rhymes on or off for every section with this name. */
@@ -39,6 +41,8 @@ export interface WordCheck {
   text: string;
   syllables: string[];
   stress: number[];
+  /** IPA for each sung syllable, when the model or musician supplied it. */
+  ipa?: string[];
 }
 
 /** The rhyme the editor colours at a line's end. */

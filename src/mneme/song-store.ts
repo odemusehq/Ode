@@ -1,12 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
-import { z, type ZodType } from "zod";
+import { z } from "zod";
 import { LeadSheetSchema, emptyLeadSheet, type LeadSheet } from "../shared/song";
 import { JsonFile } from "./json-file";
 import { LyricsText } from "./lyrics-text";
 import type { UserPaths } from "./paths";
 import { VersionHistory } from "./version-history";
 import type { MutationReceipt } from "../shared/mutation-receipt";
+import { SongFile } from "./song-file";
+import { LyricsDocument } from "../shared/lyrics-document";
 
 /** A song in Ode's list: its folder's id, and its title as its lead sheet has it. */
 export const SongEntrySchema = z.object({ id: z.string(), title: z.string(), updatedAt: z.string() });
@@ -29,9 +31,9 @@ export class SongStore {
   private readonly index: JsonFile<SongIndex>;
   private id = "";
   private dir = "";
-  private sheet: JsonFile<LeadSheet> | null = null;
+  private sheet: SongFile | null = null;
   /** One lead-sheet file per song, kept across switches, so every write to a song's file waits its turn in one queue. */
-  private readonly sheets = new Map<string, JsonFile<LeadSheet>>();
+  private readonly sheets = new Map<string, SongFile>();
 
   constructor(
     private readonly paths: UserPaths,
@@ -152,7 +154,11 @@ export class SongStore {
    * stays as it is between the two, so a merge made in `edit` is kept.
    */
   saveLyrics(edit: (current: LeadSheet) => string): Promise<LeadSheet> {
-    return this.change((current) => LeadSheetSchema.parse({ ...current, lyrics: edit(current), lyricsRevision: current.lyricsRevision + 1 }));
+    return this.change((current) => {
+      const lyrics = edit(current);
+      return LeadSheetSchema.parse({ ...current, lyrics, lyricsRevision: current.lyricsRevision + 1,
+        ...(current.notation ? { notation: LyricsDocument.reconcile(current.notation, current.lyrics, lyrics) } : {}) });
+    });
   }
 
   /** The sung lines of the lyrics, without blank and label lines. */
@@ -163,12 +169,12 @@ export class SongStore {
   private use(id: string): void {
     this.id = id;
     this.dir = join(this.paths.songs, id);
-    const sheet = this.sheets.get(id) ?? new JsonFile(join(this.dir, "song.json"), LeadSheetSchema as unknown as ZodType<LeadSheet>, emptyLeadSheet);
+    const sheet = this.sheets.get(id) ?? new SongFile(this.dir);
     this.sheets.set(id, sheet);
     this.sheet = sheet;
   }
 
-  private file(): JsonFile<LeadSheet> {
+  private file(): SongFile {
     if (!this.sheet) throw new Error("Ode opens a song before it reads one.");
     return this.sheet;
   }

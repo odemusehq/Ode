@@ -23,7 +23,7 @@ const LeadSheetPatchSchema = z
     credits: z.array(CreditSchema),
     notes: z.array(z.string()),
     composition: CompositionSchema,
-  } satisfies Record<keyof Omit<LeadSheet, "version" | "lyrics" | "lyricsRevision">, z.ZodType>)
+  } satisfies Record<keyof Omit<LeadSheet, "version" | "lyrics" | "lyricsRevision" | "notation">, z.ZodType>)
   .partial();
 type LeadSheetPatch = z.infer<typeof LeadSheetPatchSchema>;
 const SHEET_FIELD_WORDS: Readonly<Record<keyof LeadSheetPatch, string>> = {

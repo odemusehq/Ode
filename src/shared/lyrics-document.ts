@@ -1,0 +1,103 @@
+import { z } from "zod";
+import { diffIndices } from "node-diff3";
+import { ClipRefSchema, NoteSchema } from "./live-schemas";
+import type { LyricsCheck, LineCheck } from "./lyrics";
+
+export const WordCheckSchema = z.object({
+  text: z.string(), syllables: z.array(z.string()), stress: z.array(z.number().int().min(0).max(2)),
+  ipa: z.array(z.string()).optional(),
+}).refine(word => word.syllables.length === word.stress.length, "Each syllable needs its own stress value.")
+  .refine(word => !word.ipa?.length || word.ipa.length === word.syllables.length, "IPA must align with the syllables.");
+export const LineCheckSchema = z.object({
+  words: z.array(WordCheckSchema),
+  rhyme: z.object({ letter: z.string(), quality: z.enum(["perfect", "near", "none"]), part: z.string(), sound: z.string() }),
+});
+export const LyricsCheckSchema = z.object({ lines: z.array(LineCheckSchema) });
+const anchor = { line: z.number().int().positive(), text: z.string(), stale: z.boolean().optional() };
+// A deliberate choice keeps both the literal line anchor and the literal word; neither is guessed from a new text.
+export const WordChoiceSchema = z.object({
+  line: z.number().int().positive(), lineText: z.string(), word: z.number().int().min(0), value: WordCheckSchema,
+  stale: z.boolean().optional(),
+});
+export const SyllableBindingSchema = z.object({ ...anchor, word: z.number().int().min(0), syllable: z.number().int().min(0), notes: z.array(z.number().int().min(0)).min(1) });
+export const VocalClipSchema = z.object({ id: z.string().min(1), clip: ClipRefSchema, notes: z.array(NoteSchema), bindings: z.array(SyllableBindingSchema) });
+export const LyricsNotationSchema = z.object({
+  revision: z.number().int().min(0).default(0),
+  analysis: z.object({ text: z.string(), accent: z.enum(["uk", "us"]), check: LyricsCheckSchema }).optional(),
+  choices: z.array(WordChoiceSchema).default([]),
+  clips: z.array(VocalClipSchema).default([]),
+});
+export type LyricsNotation = z.infer<typeof LyricsNotationSchema>;
+export type WordChoice = z.infer<typeof WordChoiceSchema>;
+export type VocalClip = z.infer<typeof VocalClipSchema>;
+
+const UNMARKED: LineCheck = { words: [], rhyme: { letter: "", quality: "none", part: "", sound: "" } };
+const sung = (line: string) => line.trim().length > 0 && !/^\s*\[[^\]]*\]\s*$/.test(line);
+
+/** Draft words, model annotations and deliberate choices; actual note values come from Live. */
+export class LyricsDocument {
+  static empty(): LyricsNotation { return { revision: 0, choices: [], clips: [] }; }
+
+  /** The same effective analysis for the musician and Ode. Old rhyme groups never cross a text edit. */
+  static check(notation: LyricsNotation, text: string): LyricsCheck | undefined {
+    const analysis = notation.analysis;
+    if (!analysis) return undefined;
+    const raw = text.split("\n");
+    const old = analysis.text.split("\n");
+    const unchanged = LyricsDocument.lineMap(analysis.text, text);
+    const from = new Map<number, LineCheck>();
+    let at = 0;
+    old.forEach((line, index) => {
+      if (!sung(line)) return;
+      const check = analysis.check.lines[at++];
+      const moved = unchanged.get(index + 1);
+      if (check && moved !== undefined) from.set(moved, check);
+    });
+    const complete = text === analysis.text;
+    return { lines: raw.flatMap((line, index) => {
+      if (!sung(line)) return [];
+      const found = from.get(index + 1);
+      const check = structuredClone(found ?? UNMARKED);
+      if (!complete) check.rhyme = { ...UNMARKED.rhyme };
+      for (const choice of notation.choices) {
+        if (!choice.stale && choice.line === index + 1 && choice.lineText === line && check.words[choice.word]?.text === choice.value.text) {
+          check.words[choice.word] = structuredClone(choice.value);
+        }
+      }
+      return [check];
+    }) };
+  }
+
+  /** Relocate only unchanged literal lines. Changed words keep their music, explicitly awaiting reconciliation. */
+  static reconcile(notation: LyricsNotation, before: string, after: string): LyricsNotation {
+    if (before === after) return notation;
+    const next = structuredClone(notation);
+    const moved = LyricsDocument.lineMap(before, after);
+    for (const clip of next.clips) for (const binding of clip.bindings) {
+      const line = moved.get(binding.line);
+      if (!binding.stale && line !== undefined && after.split("\n")[line - 1] === binding.text) binding.line = line;
+      else binding.stale = true;
+    }
+    for (const choice of next.choices) {
+      const line = moved.get(choice.line);
+      if (!choice.stale && line !== undefined && after.split("\n")[line - 1] === choice.lineText) choice.line = line;
+      else choice.stale = true;
+    }
+    next.revision++;
+    return next;
+  }
+
+  /** Literal text diff only. It supplies no linguistic or musical interpretation. */
+  private static lineMap(before: string, after: string): Map<number, number> {
+    const a = before.split("\n"), b = after.split("\n");
+    const map = new Map<number, number>();
+    let old = 0, current = 0;
+    for (const change of diffIndices(a, b)) {
+      while (old < change.buffer1[0]) map.set(++old, ++current);
+      old = change.buffer1[0] + change.buffer1[1];
+      current = change.buffer2[0] + change.buffer2[1];
+    }
+    while (old < a.length && current < b.length) map.set(++old, ++current);
+    return map;
+  }
+}
