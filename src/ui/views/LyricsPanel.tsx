@@ -93,13 +93,26 @@ function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsE
   const support = useSyncExternalStore(marks.subscribe, marks.getSnapshot);
   const [view, setView] = useState<LyricsView>(() => LyricsViewStore.load());
   const [retries, setRetries] = useState(0);
+  const requested = useRef({ settingsRevision: 0, retries: 0 });
 
   const sung = useMemo(() => sections.flatMap((section) => section.lines.filter(LyricsSections.isSung).map(line => line.trim())), [sections]);
-  const checks = useMemo(() => stored?.text === text && stored.check ? stored.check.lines : marks.marksFor(sung), [stored, text, sung, marks, support.version]);
+  const checks = useMemo(() => {
+    if (stored?.notation?.analysis) {
+      const notation = stored.text === text ? stored.notation : LyricsDocument.reconcile(stored.notation, stored.text, text);
+      return LyricsDocument.check(notation, text)?.lines.map(line => line.words.length ? line : null) ?? marks.marksFor(sung);
+    }
+    return stored?.text === text && stored.check ? stored.check.lines : marks.marksFor(sung);
+  }, [stored, text, sung, marks, support.version]);
   let offset = 0;
   const starts = sections.map((section) => { const start = offset; offset += section.lines.filter(LyricsSections.isSung).length; return start; });
   // One shared assessment keeps rhyme sound identities consistent across every section.
-  useEffect(() => { marks.request(sung); }, [sung, marks, retries, stored?.revision]);
+  useEffect(() => {
+    if (stored?.text !== text) { marks.cancelPending(); return; }
+    const forced = requested.current.settingsRevision !== settingsRevision || requested.current.retries !== retries;
+    requested.current = { settingsRevision, retries };
+    if (forced || !stored?.notation?.analysis || LyricsDocument.needsAnalysis(stored.notation, text)) marks.request(sung, stored?.notation?.revision);
+    else marks.cancelPending();
+  }, [sung, marks, retries, settingsRevision, stored?.revision, stored?.notation?.revision, text]);
 
   const toggleView = (mark: keyof LyricsView) => {
     const next = { ...view, [mark]: !view[mark] };
@@ -270,7 +283,7 @@ function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsE
               {section.lines.filter(LyricsSections.isSung).map((line, lineIndex) => {
                 const check = checks[starts[index]! + lineIndex];
                 return <li key={lineIndex}><p>{line}</p>{check ? <p>
-                  {t("lyrics.lineAnalysis", { count: (MarkLayout.count(check)), words: (check.words.map((word) => t("lyrics.wordAnalysis", { word: (word.text), syllables: (word.syllables.map((syllable, at) => t("lyrics.syllableAnalysis", { syllable: (syllable), stress: (word.stress[at]) }))).join(", ") })).join("; ")), rhyme: (t("lyrics.rhymeAnalysis", { hasLetter: Boolean((check.rhyme.letter)), letter: (check.rhyme.letter), quality: (check.rhyme.quality), hasPart: Boolean((check.rhyme.part)), part: (check.rhyme.part) })) })}
+                  {t("lyrics.lineAnalysis", { count: (MarkLayout.count(check)), words: (check.words.map((word) => t("lyrics.wordAnalysis", { word: (word.text), syllables: (word.syllables.map((syllable, at) => t("lyrics.syllableAnalysis", { syllable: (syllable), stress: (word.stress[at]), wordStress: (word.wordStress?.[at] ?? -1) }))).join(", ") })).join("; ")), rhyme: (t("lyrics.rhymeAnalysis", { hasLetter: Boolean((check.rhyme.letter)), letter: (check.rhyme.letter), quality: (check.rhyme.quality), hasPart: Boolean((check.rhyme.part)), part: (check.rhyme.part) })) })}
                   {check.rhyme.sound && <code> {check.rhyme.sound}</code>}
                 </p> : <p>{t("lyrics.analysisUnavailable")}</p>}</li>;
               })}
@@ -318,7 +331,7 @@ function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsE
           {t("lyrics.section")}
         </Button>
       </div>
-      {word && stored && stored.text === text && <SyllableChoice key={`${word.line}:${word.word}:${JSON.stringify(word.value)}`} selected={word} state={stored}
+      {word && stored && stored.text === text && <SyllableChoice key={`${word.line}:${word.word}:${word.value.text}`} selected={word} state={stored}
         onSaved={(state) => { client.lyrics.receive(state); marks.retry(); setRetries(count => count + 1); }} onDone={() => editor.current?.focus()} />}
       {support.status !== SupportStatus.Ready && (
         <SupportNotice

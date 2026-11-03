@@ -18,7 +18,7 @@ export interface MarksSnapshot {
 
 /** One debounced whole-song assessment; rhyme letters never come from a different song context. */
 export class LyricsMarks {
-  private checked: { key: string; lines: LineCheck[] } | null = null;
+  private checked: { key: string; source: string; lines: LineCheck[] } | null = null;
   private activeKey: string | null = null;
   private timer: number | undefined;
   private asking = false;
@@ -27,7 +27,7 @@ export class LyricsMarks {
   private generation = 0;
 
   constructor(private readonly api: OdeApi, initial?: { lines: readonly string[]; check: LyricsCheck }, private readonly beforeCheck?: () => Promise<boolean>) {
-    if (initial) this.checked = { key: LyricsMarks.key(initial.lines), lines: initial.check.lines };
+    if (initial) this.checked = { key: LyricsMarks.key(initial.lines), source: LyricsMarks.key(initial.lines), lines: initial.check.lines };
   }
 
   subscribe = (listener: () => void): (() => void) => {
@@ -39,12 +39,12 @@ export class LyricsMarks {
 
   /** Only the exact whole input can reuse marks; unchanged lines do not carry old rhyme identities. */
   marksFor(sung: readonly string[]): (LineCheck | null)[] {
-    const lines = this.checked?.key === LyricsMarks.key(sung) ? this.checked.lines : [];
+    const lines = this.checked?.source === LyricsMarks.key(sung) ? this.checked.lines : [];
     return sung.map((_line, index) => lines[index] ?? null);
   }
 
-  request(sung: readonly string[]): void {
-    const key = LyricsMarks.key(sung);
+  request(sung: readonly string[], revision?: number): void {
+    const key = LyricsMarks.key(sung, revision);
     if (this.activeKey === key && (this.timer !== undefined || this.asking || this.checked?.key === key)) return;
     if (this.timer !== undefined) window.clearTimeout(this.timer);
     this.timer = undefined;
@@ -63,6 +63,11 @@ export class LyricsMarks {
     this.invalidate();
     this.checked = null;
     this.publish(SupportStatus.Ready, "");
+  }
+
+  /** An unsaved edit or an already-current stored answer makes an older queued check unnecessary. */
+  cancelPending(): void {
+    if (this.timer !== undefined || this.asking) this.invalidate();
   }
 
   dispose(): void {
@@ -87,7 +92,7 @@ export class LyricsMarks {
       const answer = await this.api.checkLyrics({ lines });
       if (generation !== this.generation) return;
       if (answer.status === "ok") {
-        this.checked = { key, lines: answer.check.lines };
+        this.checked = { key, source: LyricsMarks.key(lines), lines: answer.check.lines };
         this.publish(SupportStatus.Ready, "");
       } else if (answer.status === "setup") {
         this.publish(SupportStatus.Setup, "");
@@ -106,5 +111,5 @@ export class LyricsMarks {
     for (const listener of this.listeners) listener();
   }
 
-  private static key(sung: readonly string[]): string { return JSON.stringify(sung); }
+  private static key(sung: readonly string[], revision?: number): string { return JSON.stringify(revision === undefined ? sung : [sung, revision]); }
 }
