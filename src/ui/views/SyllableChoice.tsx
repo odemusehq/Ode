@@ -55,7 +55,7 @@ export function SyllableChoice({ selected, state, onSaved, onDone }: { selected:
     finally { setBusy(false); }
   };
   return <form className="lyrics-word-form" onSubmit={event => { event.preventDefault(); if (!busy) void save(); }} onKeyDown={event => { if (event.key === "Escape" && !busy) { event.preventDefault(); event.stopPropagation(); cancel(); } }}>
-    <fieldset className="lyrics-word-form__stress"><legend>{t("lyrics.document.wordStress")}</legend>{pieces.map((piece, index) => <label key={index}>
+    <fieldset className="lyrics-word-form__stress" aria-label={t("lyrics.document.wordStress")}>{pieces.map((piece, index) => <label key={index}>
       <span>{piece}</span><select aria-label={t("lyrics.document.stressFor", { syllable: piece, index: index + 1 })} disabled={busy} value={stress[index] ?? ""} onChange={event => { setDirty(true); setStress(values => pieces.map((_, at) => at === index ? Number(event.target.value) : values[at] ?? null)); }}>
         <option value="" disabled>{t("lyrics.document.notAnalysed")}</option><option value={0}>{t("lyrics.document.unstressed")}</option><option value={1}>{t("lyrics.document.primaryStress")}</option><option value={2}>{t("lyrics.document.secondaryStress")}</option>
       </select>
