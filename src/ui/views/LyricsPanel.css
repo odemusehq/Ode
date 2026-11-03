@@ -382,14 +382,15 @@
 .lyrics-document .cm-line .mark-syllable--stressed::after { bottom: -3px; }
 .lyrics-pronunciation { flex: none; padding: var(--space-3) var(--space-5); border-top: var(--border-width) solid var(--color-border); background: var(--color-surface); font-size: var(--font-size-sm); }
 .lyrics-pronunciation__head, .lyrics-pronunciation__actions { display: flex; gap: var(--space-4); align-items: center; }
-.lyrics-pronunciation__split { color: var(--color-text-muted); }
 .lyrics-pronunciation__edit { --icon-size: 14px; border: 0; background: none; color: var(--color-text-muted); cursor: pointer; padding: var(--space-2); }
-.lyrics-pronunciation__form { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-3); }
+.lyrics-pronunciation__form { display: flex; flex-direction: column; gap: var(--space-3); }
 .lyrics-pronunciation__form label { display: flex; gap: var(--space-3); align-items: center; }
 .lyrics-pronunciation__form input, .lyrics-pronunciation__form select { min-width: 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-sunken); color: var(--color-text); font: inherit; }
 .lyrics-pronunciation__form input { flex: 1; }
-.lyrics-pronunciation__stress { display: flex; flex-wrap: wrap; gap: var(--space-3); }
-.lyrics-pronunciation__stress label { flex-direction: column; align-items: flex-start; }
+.lyrics-pronunciation__stress { display: flex; flex-wrap: wrap; gap: var(--space-3); border: 0; padding: 0; margin: 0; min-width: 0; }
+.lyrics-pronunciation__stress legend { color: var(--color-text-muted); padding: 0; margin-bottom: var(--space-2); }
+.lyrics-pronunciation__stress label { min-width: 0; }
+.lyrics-pronunciation__suggestion { align-self: flex-start; color: var(--color-text-muted); }
 .lyrics-pronunciation__music { display: flex; flex-wrap: wrap; gap: var(--space-3); color: var(--color-text-muted); margin-top: var(--space-2); }
 .lyrics-pronunciation [role=alert] { color: var(--color-danger); }
 
