@@ -30,13 +30,14 @@ test("assigned syllables use native MusicXML lyrics and IPA, and native pitch ed
   ], rhyme: { letter: "", quality: "none", sound: "", part: "" } }] } };
   sheet.notation.clips = [{ id: "guide", clip: { tag: "vocal" }, notes: [
     { pitch: 72, start: 0, duration: 1.5, velocity: 83, probability: 0.9 },
-    { pitch: 71, start: 1.5, duration: 0.5, velocity: 78, muted: false },
+    { pitch: 71, start: 1.5 + 1e-15, duration: 0.5, velocity: 78, muted: false },
   ], bindings: [{ line: 2, text: "Music sets us free", word: 3, syllable: 0, notes: [0, 1] }] }];
   const xml = MusicXml.write(sheet);
   const dom = new DOMParser().parseFromString(xml, "application/xml");
   assert.equal(dom.getElementsByTagName("syllabic")[0]?.textContent, "single");
   assert.equal(dom.getElementsByTagName("ipa")[0]?.textContent, "friː");
   assert.equal(dom.getElementsByTagName("extend").length, 2);
+  assert.equal(Array.from(dom.getElementsByTagName("duration")).some(node => /e/i.test(node.textContent ?? "")), false);
   assert.deepEqual(MusicXml.read(xml), sheet);
   dom.getElementsByTagName("step")[0]!.textContent = "D";
   const edited = MusicXml.read(new XMLSerializer().serializeToString(dom));

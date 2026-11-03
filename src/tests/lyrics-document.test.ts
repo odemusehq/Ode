@@ -1,3 +1,4 @@
+import { LyricsDocument } from "../shared/lyrics-document";
 import assert from "node:assert/strict";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -44,6 +45,7 @@ test("late linguistic answers cannot annotate changed text or a different open s
   await lyrics.write("[Verse]\nRain", before.revision, VersionAuthor.Musician);
   assert.equal(await lyrics.saveCheck(song.songId, "[Verse]\nFire", "uk", check), false);
   assert.equal((await lyrics.read()).check, undefined);
+  assert.equal(LyricsDocument.needsAnalysis((await lyrics.read()).notation, (await lyrics.read()).text), true);
   const first = song.songId;
   await song.create("Another");
   assert.equal(await lyrics.saveCheck(first, "[Verse]\nFire", "uk", check), false);

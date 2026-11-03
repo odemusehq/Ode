@@ -17,14 +17,24 @@ function children(parent: Element, name: string): Element[] {
 function child(parent: Element, name: string): Element | undefined { return children(parent, name)[0]; }
 function number(parent: Element, name: string): number {
   const text = child(parent, name)?.textContent;
-  if (text === undefined || text === "" || !Number.isFinite(Number(text))) throw new Error(`Invalid MusicXML ${name}.`);
+  if (text === undefined || text === "" || !Number.isFinite(Number(text))) throw new Error(t("lyrics.document.xmlNumber", { name }));
   return Number(text);
 }
 function add(doc: Document, parent: Element, name: string, text?: string | number): Element {
   const element = doc.createElement(name);
-  if (text !== undefined) element.appendChild(doc.createTextNode(String(text)));
+  if (text !== undefined) element.appendChild(doc.createTextNode(typeof text === "number" ? decimal(text) : text));
   parent.appendChild(element);
   return element;
+}
+
+/** XML Schema decimals do not allow JavaScript's exponent notation, including tiny timing offsets. */
+function decimal(value: number): string {
+  const [mantissa, exponent] = String(value).split("e");
+  if (exponent === undefined) return mantissa!;
+  const negative = mantissa!.startsWith("-"), unsigned = negative ? mantissa!.slice(1) : mantissa!;
+  const digits = unsigned.replace(".", ""), point = (unsigned.split(".")[0]?.length ?? 0) + Number(exponent);
+  const expanded = point <= 0 ? "0." + "0".repeat(-point) + digits : point >= digits.length ? digits + "0".repeat(point - digits.length) : digits.slice(0, point) + "." + digits.slice(point);
+  return (negative ? "-" : "") + expanded;
 }
 
 /** Standard MusicXML musical values, with one named Ode metadata field for draft text and editing relationships. */
@@ -44,7 +54,7 @@ export class MusicXml {
       const partId = `P${index + 1}`;
       const listed = add(doc, list, "score-part");
       listed.setAttribute("id", partId);
-      add(doc, listed, "part-name", clip?.id ?? "Voice");
+      add(doc, listed, "part-name", clip?.id ?? t("lyrics.document.voicePart"));
       const part = add(doc, root, "part");
       part.setAttribute("id", partId);
       const measure = add(doc, part, "measure");
@@ -63,12 +73,12 @@ export class MusicXml {
 
   /** Reads Ode's document, taking actual pitches/times from its standard score, not a duplicate MIDI cache. */
   static read(xml: string): LeadSheet {
-    if (/<!DOCTYPE|<!ENTITY/i.test(xml)) throw new Error("Ode's MusicXML document cannot contain external declarations.");
-    const doc = new DOMParser({ onError: (level, message) => { throw new Error(`Invalid MusicXML: ${level}: ${message}`); } }).parseFromString(xml, "application/xml");
+    if (/<!DOCTYPE|<!ENTITY/i.test(xml)) throw new Error(t("lyrics.document.xmlDeclarations"));
+    const doc = new DOMParser({ onError: (level, message) => { throw new Error(t("lyrics.document.xmlMalformed", { level, message })); } }).parseFromString(xml, "application/xml");
     const root = doc.documentElement;
-    if (!root || root.nodeName !== "score-partwise") throw new Error("This is not a MusicXML partwise score.");
+    if (!root || root.nodeName !== "score-partwise") throw new Error(t("lyrics.document.xmlPartwise"));
     const fields = Array.from(root.getElementsByTagName("miscellaneous-field")).filter(field => field.getAttribute("name") === FIELD);
-    if (fields.length !== 1) throw new Error("This score is missing Ode's editable lyrics metadata; it was not opened as an Ode song.");
+    if (fields.length !== 1) throw new Error(t("lyrics.document.xmlMetadata"));
     const sheet = LeadSheetSchema.parse(JSON.parse(fields[0]!.textContent ?? ""));
     const title = child(child(root, "work") ?? root, "work-title");
     if (title) sheet.title = title.textContent ?? "";
@@ -83,28 +93,28 @@ export class MusicXml {
     const expectedNotes = new Map(Array.from(expected.getElementsByTagName("note")).map(note => [note.getAttribute("id"), underlay(note)]));
     clips.forEach((clip, index) => {
       const part = children(root, "part").find(part => part.getAttribute("id") === `P${index + 1}`);
-      if (!part) throw new Error(`MusicXML is missing the vocal part ${clip.id}.`);
+      if (!part) throw new Error(t("lyrics.document.xmlPartMissing", { id: clip.id }));
       const seen = new Set<number>();
       let divisions = 1, position = 0;
       for (const measure of children(part, "measure")) {
         const attrs = child(measure, "attributes");
         if (attrs && child(attrs, "divisions")) divisions = number(attrs, "divisions");
-        if (divisions <= 0) throw new Error("Invalid MusicXML divisions.");
+        if (divisions <= 0) throw new Error(t("lyrics.document.xmlDivisions"));
         for (const node of Array.from(measure.childNodes).filter((node): node is Element => node.nodeType === 1)) {
           if (node.nodeName === "forward") position += number(node, "duration") / divisions;
           if (node.nodeName === "backup") position -= number(node, "duration") / divisions;
           if (node.nodeName !== "note") continue;
           const id = node.getAttribute("id") ?? "";
           const match = new RegExp(`^v${index}n(\\d+)$`).exec(id);
-          if (!match || child(node, "chord") || child(node, "grace") || child(node, "rest")) throw new Error("The vocal score's note identities or structure changed; its Live association needs explicit reconciliation.");
+          if (!match || child(node, "chord") || child(node, "grace") || child(node, "rest")) throw new Error(t("lyrics.document.xmlIdentity"));
           if (underlay(node) !== expectedNotes.get(id)) throw new Error(t("lyrics.document.scoreUnderlay"));
           const at = Number(match[1]), original = clip.notes[at];
-          if (!original || seen.has(at)) throw new Error("The vocal score contains an unknown or duplicate note identity.");
+          if (!original || seen.has(at)) throw new Error(t("lyrics.document.xmlDuplicate"));
           const pitch = child(node, "pitch");
-          if (!pitch) throw new Error("The vocal score is missing a note pitch.");
+          if (!pitch) throw new Error(t("lyrics.document.xmlPitchMissing"));
           const step = child(pitch, "step")?.textContent ?? "";
           const stepIndex = STEPS.indexOf(step);
-          if (stepIndex < 0) throw new Error("The vocal score contains an invalid pitch step.");
+          if (stepIndex < 0) throw new Error(t("lyrics.document.xmlPitchInvalid"));
           const midi = 12 * (number(pitch, "octave") + 1) + SEMITONES[stepIndex]! + (child(pitch, "alter") ? number(pitch, "alter") : 0);
           const duration = number(node, "duration") / divisions;
           const exactStart = Math.abs(position - original.start) <= Number.EPSILON * Math.max(1, Math.abs(position)) * 8 ? original.start : position;
@@ -113,7 +123,7 @@ export class MusicXml {
           seen.add(at);
         }
       }
-      if (seen.size !== clip.notes.length) throw new Error("The vocal score lost notes; its Live association needs explicit reconciliation.");
+      if (seen.size !== clip.notes.length) throw new Error(t("lyrics.document.xmlNotesMissing"));
     });
     return LeadSheetSchema.parse(sheet);
   }

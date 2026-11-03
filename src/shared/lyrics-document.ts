@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 import { z } from "zod";
 import { diffIndices } from "node-diff3";
 import { ClipRefSchema, NoteSchema } from "./live-schemas";
@@ -6,8 +7,8 @@ import type { LyricsCheck, LineCheck } from "./lyrics";
 export const WordCheckSchema = z.object({
   text: z.string(), syllables: z.array(z.string()), stress: z.array(z.number().int().min(0).max(2)),
   ipa: z.array(z.string()).optional(),
-}).refine(word => word.syllables.length === word.stress.length, "Each syllable needs its own stress value.")
-  .refine(word => !word.ipa?.length || word.ipa.length === word.syllables.length, "IPA must align with the syllables.");
+}).refine(word => word.syllables.length === word.stress.length, t("lyrics.document.stressAlignment"))
+  .refine(word => !word.ipa?.length || word.ipa.length === word.syllables.length, t("lyrics.document.ipaAlignment"));
 export const LineCheckSchema = z.object({
   words: z.array(WordCheckSchema),
   rhyme: z.object({ letter: z.string(), quality: z.enum(["perfect", "near", "none"]), part: z.string(), sound: z.string() }),
