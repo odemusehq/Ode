@@ -332,7 +332,7 @@
       "stressAlignment": "Each syllable needs its own stress value.",
       "ipaAlignment": "IPA must align with the syllables.",
       "savedMelody": "Saved melody",
-      "melody": "Melody",
+      "editMelody": "Edit melody",
       "scoreMeasures": "The score measures must be contiguous, with each full bar matching its MusicXML time signature.",
       "scoreMoreMeasures": "The notes extend beyond the supplied score measures. Supply the next measures or a numbered, metered score before saving.",
       "scoreTooLong": "This vocal part exceeds 10,000 score measures.",

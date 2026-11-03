@@ -383,6 +383,8 @@
 .lyrics-pronunciation { flex: none; max-height: 45%; overflow-y: auto; padding: var(--space-3) var(--space-5); border-top: var(--border-width) solid var(--color-border); background: var(--color-surface); font-size: var(--font-size-sm); }
 .lyrics-pronunciation__head, .lyrics-pronunciation__actions { display: flex; gap: var(--space-4); align-items: center; }
 .lyrics-pronunciation__melody { margin-left: auto; }
+.lyrics-pronunciation__melody[aria-expanded="true"],
+.lyrics-pronunciation__melody[aria-expanded="true"]:hover { background: var(--color-accent-tint); color: var(--color-accent); }
 .lyrics-pronunciation__edit { --icon-size: 14px; border: 0; background: none; color: var(--color-text-muted); cursor: pointer; padding: var(--space-2); }
 .lyrics-pronunciation__form { display: flex; flex-direction: column; gap: var(--space-3); }
 .lyrics-pronunciation__form label { display: flex; gap: var(--space-3); align-items: center; }

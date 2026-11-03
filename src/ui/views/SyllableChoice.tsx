@@ -3,7 +3,7 @@ import type { LyricsState } from "../../shared/lyrics";
 import { LyricsDocument } from "../../shared/lyrics-document";
 import { LyricsSections } from "../../shared/lyrics-sections";
 import { t } from "../../shared/i18n";
-import { Button, ButtonVariant, Icon, IconName } from "../../ui-kit";
+import { Button, ButtonVariant, Icon, IconButton, IconName } from "../../ui-kit";
 import { useClient } from "../app/hooks";
 import { errorMessage } from "../app/api";
 import { LyricNote } from "./LyricNote";
@@ -54,7 +54,7 @@ export function SyllableChoice({ selected, state, onSaved, onDone }: { selected:
     {!editing && <div className="lyrics-pronunciation__head">
       <strong>{selected.value.syllables.join(" ")}</strong>
       <button type="button" className="lyrics-pronunciation__edit" aria-label={t("lyrics.document.editPronunciation")} title={t("lyrics.document.editPronunciation")} onClick={() => { setError(""); setPanel("pronunciation"); }}><Icon name={IconName.Edit} /></button>
-      {bindings.length > 0 && <Button className="lyrics-pronunciation__melody" variant={ButtonVariant.Quiet} icon={IconName.Music} aria-expanded={panel === "melody"} aria-controls={melodyId} onClick={() => setPanel(panel === "melody" ? null : "melody")}>{t("lyrics.document.melody")}</Button>}
+      {bindings.length > 0 && <IconButton className="lyrics-pronunciation__melody" icon={IconName.Music} label={t("lyrics.document.editMelody")} aria-expanded={panel === "melody"} aria-controls={melodyId} onClick={() => setPanel(panel === "melody" ? null : "melody")} />}
     </div>}
     {editing && <form className="lyrics-pronunciation__form" onSubmit={event => { event.preventDefault(); if (valid && !busy) void save(); }} onKeyDown={event => { if (event.key === "Escape" && !busy) { event.preventDefault(); event.stopPropagation(); cancel(); } }}>
       <label>{t("lyrics.document.syllableSplit")}<input aria-label={t("lyrics.document.syllableSplit")} title={t("lyrics.document.syllableSplitHint")} autoFocus value={split} disabled={busy} onChange={event => changeSplit(event.target.value)} /></label>
