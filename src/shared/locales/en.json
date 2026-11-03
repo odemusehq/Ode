@@ -326,7 +326,16 @@
       "voicePart": "Voice",
       "stressAlignment": "Each syllable needs its own stress value.",
       "ipaAlignment": "IPA must align with the syllables.",
-      "savedMelody": "Saved melody"
+      "savedMelody": "Saved melody",
+      "scoreMeasures": "The score measures must be contiguous, with each full bar matching its MusicXML time signature.",
+      "scoreMoreMeasures": "The notes extend beyond the supplied score measures. Supply the next measures or a numbered, metered score before saving.",
+      "scoreTooLong": "This vocal part exceeds 10,000 score measures.",
+      "scoreTime": "This time signature is not supported by Ode yet. Keep a single MusicXML beats/beat-type pair; additive beats such as 3+2/8 are supported.",
+      "scoreTiming": "A score duration is invalid, moves before its measure, or extends beyond a full bar. Reconcile the notes and bar structure before saving.",
+      "scoreTies": "The tied note fragments no longer form one contiguous native note with the same pitch. Reconcile the tie before saving.",
+      "scorePosition": "Bar {measure} · beat {beat}",
+      "scoreMeter": "{beats}/{beatType}",
+      "barContext": "Score position"
     }
   },
   "settings": {

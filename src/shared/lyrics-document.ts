@@ -21,7 +21,12 @@ export const WordChoiceSchema = z.object({
   stale: z.boolean().optional(),
 });
 export const SyllableBindingSchema = z.object({ ...anchor, word: z.number().int().min(0), syllable: z.number().int().min(0), notes: z.array(z.number().int().min(0)).min(1) });
-export const VocalClipSchema = z.object({ id: z.string().min(1), clip: ClipRefSchema, notes: z.array(NoteSchema), bindings: z.array(SyllableBindingSchema) });
+/** MusicXML's beats/beat-type and measure cursor, in quarter-note divisions. */
+export const ScoreMeterSchema = z.object({ beats: z.string().trim().regex(/^[1-9]\d*(?:\s*\+\s*[1-9]\d*)*$/), beatType: z.number().int().positive() });
+export const ScoreMeasureSchema = z.object({ number: z.string().min(1), start: z.number().nonnegative(), length: z.number().positive(), meter: ScoreMeterSchema.optional(), implicit: z.boolean().optional() });
+export type ScoreMeter = z.infer<typeof ScoreMeterSchema>;
+export type ScoreMeasure = z.infer<typeof ScoreMeasureSchema>;
+export const VocalClipSchema = z.object({ id: z.string().min(1), clip: ClipRefSchema, notes: z.array(NoteSchema), bindings: z.array(SyllableBindingSchema), measures: z.array(ScoreMeasureSchema).min(1).optional() });
 export const LyricsNotationSchema = z.object({
   revision: z.number().int().min(0).default(0),
   analysis: z.object({ text: z.string(), accent: z.enum(["uk", "us"]), check: LyricsCheckSchema, choices: z.array(WordChoiceSchema).optional() }).optional(),
@@ -43,6 +48,18 @@ const sung = (line: string) => line.trim().length > 0 && !/^\s*\[[^\]]*\]\s*$/.t
 /** Draft words, model annotations and deliberate choices; actual note values come from Live. */
 export class LyricsDocument {
   static empty(): LyricsNotation { return { revision: 0, choices: [], clips: [] }; }
+
+  /** MusicXML denominator units, not an inferred accent pattern or a lyric syllable counter. */
+  static measureLength(meter: ScoreMeter): number { return meter.beats.split("+").reduce((sum, part) => sum + Number(part.trim()), 0) * 4 / meter.beatType; }
+
+  /** Uses the measure layout read from the score. A short first implicit measure is a pickup. */
+  static position(clip: VocalClip, start: number): { measure: string; beat: number; meter: ScoreMeter } | undefined {
+    const index = clip.measures?.findIndex(measure => start >= measure.start && start < measure.start + measure.length) ?? -1;
+    const measure = clip.measures?.[index];
+    if (!measure?.meter) return undefined;
+    const pickup = index === 0 && measure.implicit ? Math.max(0, LyricsDocument.measureLength(measure.meter) - measure.length) : 0;
+    return { measure: measure.number, beat: 1 + (start - measure.start + pickup) * measure.meter.beatType / 4, meter: measure.meter };
+  }
 
   static needsAnalysis(notation: LyricsNotation | undefined, text: string): boolean {
     return !notation?.analysis || JSON.stringify(notation.analysis.text.split("\n").filter(sung).map(line => line.trim())) !== JSON.stringify(text.split("\n").filter(sung).map(line => line.trim()))

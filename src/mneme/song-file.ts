@@ -22,13 +22,20 @@ export class SongFile {
     return MusicXml.read(xml);
   }
 
-  write(sheet: LeadSheet): Promise<void> { return this.enqueue(() => JsonFile.writeAtomically(this.path, MusicXml.write(sheet))); }
+  write(sheet: LeadSheet): Promise<void> {
+    return this.enqueue(async () => {
+      const xml = MusicXml.write(sheet);
+      MusicXml.read(xml);
+      await JsonFile.writeAtomically(this.path, xml);
+    });
+  }
   update(change: (sheet: LeadSheet) => LeadSheet): Promise<LeadSheet> {
     return this.enqueue(async () => {
       const next = change(await this.read());
       const xml = MusicXml.write(next);
+      const parsed = MusicXml.read(xml);
       await JsonFile.writeAtomically(this.path, xml);
-      return MusicXml.read(xml);
+      return parsed;
     });
   }
   private enqueue<R>(task: () => Promise<R>): Promise<R> {

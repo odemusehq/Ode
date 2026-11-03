@@ -73,3 +73,57 @@ test("legacy songs migrate to one authoritative MusicXML file without deleting t
   await assert.rejects(new SongFile(dir).read());
   assert.equal(JSON.parse(await readFile(join(dir, "song.json"), "utf8")).lyrics, sheet.lyrics);
 });
+
+test("a metered MusicXML score retains barlines and ties without splitting the sung syllable or native note", () => {
+  const sheet = emptyLeadSheet();
+  sheet.lyrics = "[Chorus]\nFire";
+  sheet.notation = LyricsDocument.empty();
+  sheet.notation.analysis = { text: sheet.lyrics, accent: "uk", check: { lines: [{ words: [{ text: "Fire", syllables: ["Fire"], stress: [1] }], rhyme: { letter: "", quality: "none", part: "", sound: "" } }] } };
+  const clip = { id: "guide", clip: { tag: "vocal" }, notes: [{ pitch: 64, start: 2.5, duration: 1.5, velocity: 83, probability: 0.8 }], bindings: [{ line: 2, text: "Fire", word: 0, syllable: 0, notes: [0] }],
+    measures: [{ number: "1", start: 0, length: 3, meter: { beats: "3", beatType: 4 } }, { number: "2", start: 3, length: 3, meter: { beats: "3", beatType: 4 } }] };
+  sheet.notation.clips = [clip];
+  const xml = MusicXml.write(sheet);
+  const dom = new DOMParser().parseFromString(xml, "application/xml");
+  assert.equal(dom.getElementsByTagName("measure").length, 2);
+  assert.equal(dom.getElementsByTagName("beats")[0]?.textContent, "3");
+  assert.equal(dom.getElementsByTagName("tie").length, 2);
+  assert.equal(dom.getElementsByTagName("text").length, 1);
+  const read = MusicXml.read(xml).notation!.clips[0]!;
+  assert.deepEqual(read.notes, clip.notes);
+  assert.deepEqual(read.bindings, clip.bindings);
+  assert.deepEqual(LyricsDocument.position(read, 2.5), { measure: "1", beat: 3.5, meter: { beats: "3", beatType: 4 } });
+  assert.deepEqual(LyricsDocument.position(read, 3), { measure: "2", beat: 1, meter: { beats: "3", beatType: 4 } });
+  const tie = dom.getElementsByTagName("tie")[0]!;
+  tie.parentNode!.removeChild(tie);
+  assert.throws(() => MusicXml.read(new XMLSerializer().serializeToString(dom)), /tie/i);
+  const edge = { ...clip, notes: [{ pitch: 64, start: 3 - 1e-15, duration: 1, velocity: 83, probability: 0.8 }] };
+  const edgeRead = MusicXml.read(MusicXml.write({ ...sheet, notation: { ...sheet.notation!, clips: [edge] } }));
+  assert.deepEqual(edgeRead.notation!.clips[0]!.notes, edge.notes);
+  edge.notes = [{ pitch: 64, start: 128.75, duration: 1 / 3, velocity: 83, probability: 0.8 }];
+  assert.deepEqual(MusicXml.read(MusicXml.write({ ...sheet, notation: { ...sheet.notation!, clips: [edge] } })).notation!.clips[0]!.notes, edge.notes);
+});
+
+test("bar numbers and time changes are read from the native XML, including pickups and denominator beat units", () => {
+  const sheet = emptyLeadSheet();
+  sheet.notation = LyricsDocument.empty();
+  sheet.notation.clips = [{ id: "guide", clip: { tag: "vocal" }, notes: [{ pitch: 60, start: 0, duration: 0.5 }, { pitch: 62, start: 2.5, duration: 0.5 }], bindings: [],
+    measures: [{ number: "0", start: 0, length: 0.5, implicit: true, meter: { beats: "6", beatType: 8 } }, { number: "1", start: 0.5, length: 3, meter: { beats: "6", beatType: 8 } }] }];
+  const dom = new DOMParser().parseFromString(MusicXml.write(sheet), "application/xml");
+  dom.getElementsByTagName("measure")[1]!.setAttribute("number", "Verse-A");
+  const second = dom.getElementsByTagName("measure")[1]!;
+  const padding = second.getElementsByTagName("forward");
+  const lastPadding = padding[padding.length - 1]!;
+  second.removeChild(lastPadding); // The edited 5/8 bar ends with the last note, without the old 6/8 padding.
+  const attributes = dom.getElementsByTagName("attributes")[1]!;
+  const time = dom.createElement("time"), beats = dom.createElement("beats"), unit = dom.createElement("beat-type");
+  beats.textContent = "3+2"; unit.textContent = "8"; time.appendChild(beats); time.appendChild(unit); attributes.appendChild(time);
+  const read = MusicXml.read(new XMLSerializer().serializeToString(dom)).notation!.clips[0]!;
+  assert.deepEqual(LyricsDocument.position(read, 0), { measure: "0", beat: 6, meter: { beats: "6", beatType: 8 } });
+  assert.deepEqual(LyricsDocument.position(read, 2.5), { measure: "Verse-A", beat: 5, meter: { beats: "3+2", beatType: 8 } });
+  assert.match(MusicXml.write({ ...sheet, notation: { ...sheet.notation!, clips: [read] } }), /<beats>3\+2<\/beats>/);
+});
+
+test("unmeasured drafts do not acquire an invented beat grid", () => {
+  const clip = { id: "draft", clip: { tag: "draft" }, notes: [{ pitch: 60, start: 2, duration: 1 }], bindings: [] };
+  assert.equal(LyricsDocument.position(clip, 2), undefined);
+});
