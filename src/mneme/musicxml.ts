@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n";
 import { DOMImplementation, DOMParser, XMLSerializer, type Element, type Document } from "@xmldom/xmldom";
 import { LeadSheetSchema, type LeadSheet } from "../shared/song";
 import { LyricsDocument, type VocalClip } from "../shared/lyrics-document";
@@ -72,6 +73,14 @@ export class MusicXml {
     const title = child(child(root, "work") ?? root, "work-title");
     if (title) sheet.title = title.textContent ?? "";
     const clips = sheet.notation?.clips ?? [];
+    const expected = new DOMParser().parseFromString(MusicXml.write(sheet), "application/xml");
+    if (children(root, "part").length !== Math.max(1, clips.length)) throw new Error(t("lyrics.document.scoreStructure"));
+    if (!clips.length && root.getElementsByTagName("note").length) throw new Error(t("lyrics.document.scoreStructure"));
+    const underlay = (note: Element): string => JSON.stringify([
+      children(note, "lyric").map(lyric => [lyric.getAttribute("number"), Array.from(lyric.childNodes).filter((node): node is Element => node.nodeType === 1).map(node => [node.nodeName, node.getAttribute("type"), node.textContent])]),
+      children(note, "play").flatMap(play => children(play, "ipa").map(ipa => ipa.textContent)),
+    ]);
+    const expectedNotes = new Map(Array.from(expected.getElementsByTagName("note")).map(note => [note.getAttribute("id"), underlay(note)]));
     clips.forEach((clip, index) => {
       const part = children(root, "part").find(part => part.getAttribute("id") === `P${index + 1}`);
       if (!part) throw new Error(`MusicXML is missing the vocal part ${clip.id}.`);
@@ -88,6 +97,7 @@ export class MusicXml {
           const id = node.getAttribute("id") ?? "";
           const match = new RegExp(`^v${index}n(\\d+)$`).exec(id);
           if (!match || child(node, "chord") || child(node, "grace") || child(node, "rest")) throw new Error("The vocal score's note identities or structure changed; its Live association needs explicit reconciliation.");
+          if (underlay(node) !== expectedNotes.get(id)) throw new Error(t("lyrics.document.scoreUnderlay"));
           const at = Number(match[1]), original = clip.notes[at];
           if (!original || seen.has(at)) throw new Error("The vocal score contains an unknown or duplicate note identity.");
           const pitch = child(node, "pitch");
@@ -134,20 +144,23 @@ export class MusicXml {
       position = note.start + note.duration;
       const bound = clip.bindings.filter(binding => !binding.stale && raw[binding.line - 1] === binding.text && binding.notes.includes(index));
       const ipa: string[] = [];
-      let lyric: Element | undefined;
-      for (const binding of bound) {
-        const word = byLine.get(binding.line)?.words[binding.word];
-        const syllable = word?.syllables[binding.syllable];
-        if (syllable === undefined || !word) continue;
-        const first = binding.notes[0] === index;
-        if (lyric) add(doc, lyric, "elision", " ");
-        else lyric = add(doc, element, "lyric");
-        if (first) {
+      for (const line of new Set(bound.map(binding => binding.line))) {
+        const group = bound.filter(binding => binding.line === line).sort((a, b) => a.word - b.word || a.syllable - b.syllable);
+        const valid = group.filter(binding => byLine.get(line)?.words[binding.word]?.syllables[binding.syllable] !== undefined);
+        if (!valid.length) continue;
+        const lyric = add(doc, element, "lyric");
+        lyric.setAttribute("number", String(line));
+        const starts = valid.filter(binding => binding.notes[0] === index);
+        starts.forEach((binding, at) => {
+          const word = byLine.get(line)!.words[binding.word]!;
+          if (at) add(doc, lyric, "elision", " ");
           add(doc, lyric, "syllabic", word.syllables.length === 1 ? "single" : binding.syllable === 0 ? "begin" : binding.syllable === word.syllables.length - 1 ? "end" : "middle");
-          add(doc, lyric, "text", syllable);
+          add(doc, lyric, "text", word.syllables[binding.syllable]!);
           if (word.ipa?.[binding.syllable]) ipa.push(word.ipa[binding.syllable]!);
-        }
-        if (binding.notes.length > 1) add(doc, lyric, "extend").setAttribute("type", first ? "start" : binding.notes.at(-1) === index ? "stop" : "continue");
+        });
+        // A standard underlay has at most one extend after its text/elisions.
+        const extending = starts.length ? starts.at(-1)! : valid.at(-1)!;
+        if (extending.notes.length > 1) add(doc, lyric, "extend").setAttribute("type", extending.notes[0] === index ? "start" : extending.notes.at(-1) === index ? "stop" : "continue");
       }
       if (ipa.length) add(doc, add(doc, element, "play"), "ipa", ipa.join(""));
     }

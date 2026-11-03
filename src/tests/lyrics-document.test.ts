@@ -73,3 +73,14 @@ test("melody bindings use current SDK notes and reject a changed source before s
   assert.equal(refreshed.lyrics.notation!.clips[0]!.bindings[0]!.stale, true);
   assert.deepEqual(refreshed.lyrics.check!.lines[0]!.words[0]!.syllables, ["Fire"]);
 });
+
+test("a new model split retains notes but invalidates their old syllable meaning", async () => {
+  const { song, lyrics } = await open();
+  await lyrics.saveCheck(song.songId, "[Verse]\nFire", "uk", check);
+  const before = await lyrics.read();
+  await lyrics.bind(song.songId, before.revision, before.notation!.revision, { id: "guide", clip: { tag: "vocal" }, notes: [{ pitch: 60, start: 0, duration: 1 }], bindings: [{ line: 2, text: "Fire", word: 0, syllable: 0, notes: [0] }] });
+  await lyrics.saveCheck(song.songId, "[Verse]\nFire", "uk", { lines: [{ ...check.lines[0]!, words: [{ text: "Fire", syllables: ["Fi", "re"], stress: [1, 0] }] }] });
+  const after = await lyrics.read();
+  assert.equal(after.notation!.clips[0]!.bindings[0]!.stale, true);
+  assert.equal(after.notation!.clips[0]!.notes[0]!.pitch, 60);
+});

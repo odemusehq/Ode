@@ -43,6 +43,11 @@ const sung = (line: string) => line.trim().length > 0 && !/^\s*\[[^\]]*\]\s*$/.t
 export class LyricsDocument {
   static empty(): LyricsNotation { return { revision: 0, choices: [], clips: [] }; }
 
+  static needsAnalysis(notation: LyricsNotation | undefined, text: string): boolean {
+    return !notation?.analysis || JSON.stringify(notation.analysis.text.split("\n").filter(sung).map(line => line.trim())) !== JSON.stringify(text.split("\n").filter(sung).map(line => line.trim()))
+      || JSON.stringify(notation.analysis.choices ?? []) !== JSON.stringify(notation.choices);
+  }
+
   /** The same effective analysis for the musician and Ode. Old rhyme groups never cross a text edit. */
   static check(notation: LyricsNotation, text: string): LyricsCheck | undefined {
     const analysis = notation.analysis;

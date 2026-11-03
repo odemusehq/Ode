@@ -43,6 +43,8 @@ test("assigned syllables use native MusicXML lyrics and IPA, and native pitch ed
   assert.equal(edited.notation!.clips[0]!.notes[0]!.pitch, 74);
   assert.equal(edited.notation!.clips[0]!.notes[0]!.probability, 0.9);
   assert.equal(edited.lyrics, sheet.lyrics);
+  dom.getElementsByTagName("text")[0]!.textContent = "different";
+  assert.throws(() => MusicXml.read(new XMLSerializer().serializeToString(dom)), /lyric|underlay/i);
 });
 
 test("a changed line keeps its music for reconciliation and cannot reuse stale syllable assignments", () => {

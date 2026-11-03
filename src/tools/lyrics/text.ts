@@ -1,3 +1,4 @@
+import { LyricsDocument } from "../../shared/lyrics-document";
 import { t } from "../../shared/i18n";
 import { z } from "zod";
 import { LyricsText } from "../../mneme/lyrics-text";
@@ -54,8 +55,7 @@ export const lyricTextTools: AnyTool[] = [
       const melody = notation?.clips.flatMap(clip => clip.bindings.filter(binding => binding.line >= startLine && (endLine === undefined || binding.line <= endLine))
         .map(binding => ({ ...binding, clip: clip.clip, notes: binding.notes.map(index => ({ index, ...clip.notes[index] })) }))) ?? [];
       return { songId: lyrics.songId, revision: lyrics.revision, notationRevision: notation?.revision ?? 0, totalLines: lines.length, lines: lines.slice(startLine - 1, endLine),
-        annotations, melody, melodyVerified, needsAnalysis: !notation?.analysis || JSON.stringify(LyricsText.sung(notation.analysis.text)) !== JSON.stringify(LyricsText.sung(lyrics.text))
-          || JSON.stringify(notation.analysis.choices ?? []) !== JSON.stringify(notation.choices) };
+        annotations, melody, melodyVerified, needsAnalysis: LyricsDocument.needsAnalysis(notation, lyrics.text) };
     },
   }),
   defineTool({

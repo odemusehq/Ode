@@ -193,8 +193,16 @@ export class LyricsStore {
         if (songId !== this.song.songId) throw new LyricsForAnotherSongError(t("lyrics.document.songChanged"));
         if (stored.lyrics !== text) throw new StaleLyricsError(t("lyrics.document.checkStale"));
         const notation = stored.notation ?? LyricsDocument.empty();
-        return { ...notation, revision: notation.revision + 1,
-          analysis: { text, accent, check: valid, choices: structuredClone(choices ?? notation.choices) } };
+        const next = structuredClone({ ...notation, revision: notation.revision + 1,
+          analysis: { text, accent, check: valid, choices: structuredClone(choices ?? notation.choices) } });
+        const previous = LyricsDocument.check(notation, text), updated = LyricsDocument.check(next, text);
+        const lines = LyricsText.lines(text);
+        for (const clip of next.clips) for (const binding of clip.bindings) {
+          const at = lines.slice(0, binding.line - 1).filter(LyricsText.isSung).length;
+          const before = previous?.lines[at]?.words[binding.word], after = updated?.lines[at]?.words[binding.word];
+          if (!before || !after || before.text !== after.text || JSON.stringify(before.syllables) !== JSON.stringify(after.syllables)) binding.stale = true;
+        }
+        return next;
       });
       await this.stored(sheet, songId, texts);
       return true;
@@ -218,7 +226,7 @@ export class LyricsStore {
         }
         notation.choices = notation.choices.filter(item => item.line !== choice.line || item.word !== choice.word);
         notation.choices.push({ line: choice.line, lineText, word: choice.word, value: choice.value });
-        if (previous.syllables.length !== choice.value.syllables.length) {
+        if (JSON.stringify(previous.syllables) !== JSON.stringify(choice.value.syllables)) {
           for (const clip of notation.clips) for (const binding of clip.bindings) {
             if (binding.line === choice.line && binding.word === choice.word) binding.stale = true;
           }

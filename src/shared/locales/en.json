@@ -309,7 +309,20 @@
       "annotationsSongChanged": "These annotations belong to another song.",
       "annotationsChanged": "The lyrics or their annotations changed. Read them again before editing this word.",
       "midiChanged": "The MIDI changed since that read. Read the actual notes again before associating syllables.",
-      "noteOrder": "Syllable notes must exist in the native read and follow musical time."
+      "noteOrder": "Syllable notes must exist in the native read and follow musical time.",
+      "editorLabel": "Song lyrics",
+      "editPronunciation": "Edit pronunciation",
+      "syllableSplit": "Syllables (separate with ·)",
+      "stressFor": "Stress for {syllable}",
+      "unstressed": "Unstressed",
+      "primaryStress": "Primary stress",
+      "secondaryStress": "Secondary stress",
+      "retainSpelling": "The syllables must spell the original word.",
+      "alignmentStale": "Review melody alignment",
+      "beats": "{value} beats",
+      "choiceInput": "Send the current word, syllables and document revisions.",
+      "scoreStructure": "The vocal score structure changed. Its Live associations need explicit reconciliation.",
+      "scoreUnderlay": "The MusicXML lyrics or pronunciation changed outside Ode. Reconcile that underlay before saving; the original document has been preserved."
     }
   },
   "settings": {
