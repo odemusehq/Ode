@@ -15,7 +15,7 @@ export { Dot } from "./components/Dot";
 export type { DotProps } from "./components/Dot";
 export { EmptyState } from "./components/EmptyState";
 export type { EmptyStateProps } from "./components/EmptyState";
-export { formatSyllableCounts, toPlainText } from "./components/format";
+export { formatBeatFraction, formatSyllableCounts, toPlainText } from "./components/format";
 export { Icon, IconName } from "./components/Icon";
 export type { IconProps } from "./components/Icon";
 export { IconButton } from "./components/IconButton";

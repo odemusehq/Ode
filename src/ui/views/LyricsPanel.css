@@ -392,3 +392,10 @@
 .lyrics-pronunciation__stress label { flex-direction: column; align-items: flex-start; }
 .lyrics-pronunciation__music { display: flex; flex-wrap: wrap; gap: var(--space-3); color: var(--color-text-muted); margin-top: var(--space-2); }
 .lyrics-pronunciation [role=alert] { color: var(--color-danger); }
+
+.lyrics-pronunciation__music > span { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); width: 100%; }
+.lyric-note { display: inline-flex; flex: 1; min-width: 0; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.lyric-note .ode-select { flex: none; width: 84px; padding: var(--space-1) var(--space-2); font-size: var(--font-size-sm); min-height: 28px; }
+.lyric-note .ode-select:first-child { width: 64px; }
+.lyric-note__position { color: var(--color-text-muted); white-space: nowrap; }
+.lyric-note__error { flex-basis: 100%; color: var(--color-danger); }

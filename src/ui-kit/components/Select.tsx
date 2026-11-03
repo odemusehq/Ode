@@ -5,6 +5,7 @@ import "./Select.css";
 export interface SelectOption {
   value: string;
   label: string;
+  ariaLabel?: string;
 }
 
 export interface SelectProps extends Omit<ComponentProps<"select">, "onChange"> {
@@ -17,7 +18,7 @@ export function Select({ options, onChange, className, ...rest }: SelectProps) {
   return (
     <select className={cx("ode-select", className)} onChange={(event) => onChange(event.target.value)} {...rest}>
       {options.map((option) => (
-        <option key={option.value} value={option.value}>
+        <option key={option.value} value={option.value} aria-label={option.ariaLabel}>
           {option.label}
         </option>
       ))}

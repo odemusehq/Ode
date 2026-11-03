@@ -1,10 +1,10 @@
-import { LyricsDocument } from "../../shared/lyrics-document";
 import { useState } from "react";
 import type { LyricsState } from "../../shared/lyrics";
 import { t } from "../../shared/i18n";
 import { Button, ButtonVariant, Icon, IconName } from "../../ui-kit";
 import { useClient } from "../app/hooks";
 import { errorMessage } from "../app/api";
+import { LyricNote } from "./LyricNote";
 import type { WordSelection } from "./LyricsTextEditor";
 
 /** A deliberate pronunciation choice, separate from the literal lyrics and native MIDI edits. */
@@ -17,7 +17,7 @@ export function SyllableChoice({ selected, state, onSaved }: { selected: WordSel
   const [error, setError] = useState("");
   const pieces = split.split("·").map(piece => piece.trim());
   const valid = pieces.every(Boolean) && pieces.join("") === selected.value.text;
-  const bindings = state.notation?.clips.flatMap(clip => clip.bindings.filter(binding => binding.line === selected.line && binding.word === selected.word).map(binding => ({ ...binding, actual: binding.notes.flatMap(index => clip.notes[index] ? [{ note: clip.notes[index]!, position: LyricsDocument.position(clip, clip.notes[index]!.start) }] : []) }))) ?? [];
+  const bindings = state.notation?.clips.flatMap(clip => clip.bindings.filter(binding => binding.line === selected.line && binding.word === selected.word).map(binding => ({ ...binding, clipId: clip.id, actual: binding.notes.flatMap(index => clip.notes[index] ? [{ index, note: clip.notes[index]! }] : []) }))) ?? [];
   const save = async () => {
     setBusy(true); setError("");
     try {
@@ -46,21 +46,8 @@ export function SyllableChoice({ selected, state, onSaved }: { selected: WordSel
       <div className="lyrics-pronunciation__actions"><Button type="submit" disabled={!valid || busy}>{t("common.save")}</Button><Button variant={ButtonVariant.Quiet} disabled={busy} onClick={() => setEditing(false)}>{t("common.cancel")}</Button></div>
     </form>}
     {bindings.length > 0 && <div className="lyrics-pronunciation__music" aria-label={t("lyrics.document.savedMelody")} title={t("lyrics.document.savedMelody")}>{bindings.map((binding, index) => <span key={index}>
-      {selected.value.syllables[binding.syllable] ?? ""} · {binding.stale ? t("lyrics.document.alignmentStale") : binding.actual.map(({ note, position }) => `${pitchName(note.pitch)} · ${t("lyrics.document.beats", { value: fraction(note.duration * (position?.meter.beatType ?? 4) / 4), single: note.duration * (position?.meter.beatType ?? 4) / 4 <= 1 })}${position ? ` · ${t("lyrics.document.scorePosition", { measure: position.measure, beat: fraction(position.beat) })} (${t("lyrics.document.scoreMeter", position.meter)})` : ""}`).join(" → ")}
+      {selected.value.syllables[binding.syllable] ?? ""} · {binding.stale ? t("lyrics.document.alignmentStale") : binding.actual.map(({ index: noteIndex, note }, at) => <LyricNote key={at} state={state} clipId={binding.clipId} noteIndex={noteIndex} note={note} syllable={selected.value.syllables[binding.syllable] ?? selected.value.text} />)}
     </span>)}</div>}
     {error && <p role="alert">{error}</p>}
   </div>;
-}
-
-function pitchName(pitch: number): string { return ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"][pitch % 12] + String(Math.floor(pitch / 12) - 1); }
-/** Exact decimal-to-fraction display; never quantises the underlying performance. */
-export function fraction(value: number): string {
-  if (Number.isInteger(value)) return String(value);
-  const whole = Math.floor(value), decimal = String(value);
-  const places = decimal.includes("e") ? 9 : Math.min(9, decimal.split(".")[1]?.length ?? 0);
-  let denominator = 10 ** places, numerator = Math.round((value - whole) * denominator);
-  let a = numerator, b = denominator;
-  while (b) { const rest = a % b; a = b; b = rest; }
-  numerator /= a; denominator /= a;
-  return `${whole ? whole + " " : ""}${numerator}/${denominator}`;
 }

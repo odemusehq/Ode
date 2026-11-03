@@ -19,7 +19,7 @@ import type {
   VersionRequest,
 } from "../../shared/api";
 import type { LyricsCheckRequest, LyricsCheckResponse, StrictRhymesRequest } from "../../shared/lyrics";
-import type { LyricsChoiceWrite } from "../../shared/lyrics-document";
+import type { LyricsChoiceWrite, LyricsMelodyEdit } from "../../shared/lyrics-document";
 import type { Mode } from "../../shared/personalisation";
 import type { ChatModelOption, ModelListRequest, SettingsResponse, SettingsUpdate, SettingsView } from "../../shared/settings";
 import type { ConversationExchange } from "../../shared/events";
@@ -185,6 +185,10 @@ export class OdeApi {
   /** Lyrics support's syllables, stress and rhymes for one section's sung lines. */
   checkLyrics(request: LyricsCheckRequest): Promise<LyricsCheckResponse> {
     return this.request(HttpMethod.Post, API.lyricsCheck, request);
+  }
+
+  editLyricMelody(request: LyricsMelodyEdit): Promise<{ lyrics: LyricsState; warning?: string }> {
+    return this.request(HttpMethod.Put, API.lyricsMelody, request);
   }
 
   chooseSyllables(request: LyricsChoiceWrite): Promise<LyricsState> {
