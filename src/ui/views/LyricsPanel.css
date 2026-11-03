@@ -390,7 +390,6 @@
 .lyrics-pronunciation__stress { display: flex; flex-wrap: wrap; gap: var(--space-3); border: 0; padding: 0; margin: 0; min-width: 0; }
 .lyrics-pronunciation__stress legend { color: var(--color-text-muted); padding: 0; margin-bottom: var(--space-2); }
 .lyrics-pronunciation__stress label { min-width: 0; }
-.lyrics-pronunciation__suggestion { align-self: flex-start; color: var(--color-text-muted); }
 .lyrics-pronunciation__music { display: flex; flex-wrap: wrap; gap: var(--space-3); color: var(--color-text-muted); margin-top: var(--space-2); }
 .lyrics-pronunciation [role=alert] { color: var(--color-danger); }
 

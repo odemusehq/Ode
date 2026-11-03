@@ -59,9 +59,12 @@ export function SyllableChoice({ selected, state, onSaved }: { selected: WordSel
         <option value="" disabled>{t("lyrics.document.chooseStress")}</option>
         <option value={0}>{t("lyrics.document.unstressed")}</option><option value={1}>{t("lyrics.document.primaryStress")}</option><option value={2}>{t("lyrics.document.secondaryStress")}</option>
       </select></label>)}</fieldset>
-      {differs && <Button className="lyrics-pronunciation__suggestion" variant={ButtonVariant.Quiet} disabled={busy} onClick={() => { setSplit(suggested.syllables.join(" ")); setStress(suggested.stress); }}>{t("lyrics.document.useSuggestion", { syllables: suggested.syllables.join(" ") })}</Button>}
       {!spells && <span role="alert">{t("lyrics.document.retainSpelling")}</span>}
-      <div className="lyrics-pronunciation__actions"><Button type="submit" disabled={!valid || busy}>{t("common.save")}</Button><Button variant={ButtonVariant.Quiet} disabled={busy} onClick={cancel}>{t("common.cancel")}</Button></div>
+      <div className="lyrics-pronunciation__actions">
+        <Button type="submit" disabled={!valid || busy}>{t("common.save")}</Button>
+        <Button variant={ButtonVariant.Quiet} disabled={busy} onClick={cancel}>{t("common.cancel")}</Button>
+        <Button variant={ButtonVariant.Quiet} title={t("lyrics.document.defaultHint")} disabled={busy || !differs} onClick={() => { if (suggested) { setSplit(suggested.syllables.join(" ")); setStress(suggested.stress); } }}>{t("lyrics.document.default")}</Button>
+      </div>
     </form>}
     {bindings.length > 0 && <div className="lyrics-pronunciation__music" aria-label={t("lyrics.document.savedMelody")} title={t("lyrics.document.savedMelody")}>{bindings.map((binding, index) => <span key={index}>
       {selected.value.syllables[binding.syllable] ?? ""} · {binding.stale ? t("lyrics.document.alignmentStale") : binding.actual.map(({ index: noteIndex, note }, at) => <LyricNote key={at} state={state} clipId={binding.clipId} noteIndex={noteIndex} note={note} syllable={selected.value.syllables[binding.syllable] ?? selected.value.text} />)}

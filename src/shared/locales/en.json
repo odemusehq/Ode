@@ -286,7 +286,7 @@
       "rhymesDescription": "Letters and colours identify matching rhyme sounds"
     },
     "document": {
-      "serviceUnavailable": "The shared Lyricist annotation service is unavailable.",
+      "serviceUnavailable": "Lyrics analysis is unavailable.",
       "checkChanged": "The lyrics changed during the check. The newer text was kept.",
       "songChanged": "The song changed during the check.",
       "checkIncomplete": "The lyric check does not cover the current sung lines.",
@@ -305,7 +305,8 @@
       "wordStress": "Word stress",
       "stressFor": "Stress for syllable {index}: {syllable}",
       "chooseStress": "Choose stress",
-      "useSuggestion": "Use Lyricist suggestion: {syllables}",
+      "default": "Default",
+      "defaultHint": "Restore default syllables and word stress",
       "unstressed": "Unstressed",
       "primaryStress": "Primary stress",
       "secondaryStress": "Secondary stress",
@@ -367,7 +368,7 @@
   },
   "settings": {
     "modelInfo": "Ode''s main model directs composition, arrangement and production through Live, Max for Live and your installed plug-ins.",
-    "lyricsInfo": "Lyricist writes, revises and reviews lyrics, including syllables, rhymes and their fit to the melody. It also supplies the editor''s annotations.",
+    "lyricsInfo": "Writes, revises and reviews lyrics, including syllables, rhymes and their fit to the melody.",
     "metaInfo": "Meta''s models use this key for transcription and listening to audio.",
     "savingNotice": "Wait for Settings to finish saving.",
     "closeNotice": "Save your settings or choose Cancel before closing Ode.",
@@ -386,7 +387,7 @@
     "key": "Key",
     "metaKey": "Meta key for transcription and listening",
     "optional": "Optional",
-    "lyricsSupport": "Lyricist",
+    "lyricsSupport": "Lyrics",
     "sampleFolders": "Sample folders",
     "sampleFoldersPlaceholder": "~/Music/Samples",
     "sampleFoldersHint": "One full folder path per line. Ode can search these folders and read selected audio. Leave empty to disable.",
@@ -966,7 +967,7 @@
     "setup": {
       "agent": "Choose a provider and model, and add its key, in Ode: Settings",
       "transcription": "This uses Meta''s models: add a Meta key in Ode: Settings",
-      "lyricist": "Choose a Lyricist model and add its provider key in Ode: Settings"
+      "lyricist": "Choose a lyrics model and add its provider key in Settings"
     }
   },
   "lyricText": {
