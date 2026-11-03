@@ -649,9 +649,9 @@
     "menu": {
       "open": "Open Ode",
       "ask": "Ask Ode",
-      "lyrics": "Ode: Lyrics",
-      "history": "Ode: History",
-      "settings": "Ode: Settings"
+      "lyrics": "Lyrics",
+      "history": "History",
+      "settings": "Settings"
     }
   },
   "max": {
