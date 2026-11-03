@@ -9,7 +9,7 @@ import { defineTool, type AnyTool } from "../define";
 export const lyricMelodyTools: AnyTool[] = [
   defineTool({
     name: "lyrics_choose_syllables", changes: "memory",
-    description: "Save a deliberate syllable split, word stress and optional IPA for one currently analysed word. Read lyrics_read first and send its songId, revision as baseRevision, notationRevision and absolute line (including headings/blanks), plus the zero-based word index and exact written word in value. Joined syllable spelling must equal that word; this is literal persistence, not a local linguistic analyser. The musician's choice survives subsequent Lyricist checks. A changed syllable count retains existing MIDI and marks its associations stale for Ode to reconcile. No notes or words are rewritten.",
+    description: "Save a deliberate pronunciation or phrase-emphasis choice for one currently analysed word. wordStress is lexical stress (0 unstressed, 1 primary, 2 secondary); stress is separate sentence/sung emphasis (0 light, 1 strong, 2 secondary). Each supplied array aligns with syllables. Keep automatic syllable divisions unless the musician's intended pronunciation changes. Read lyrics_read first and send its songId, revision as baseRevision, notationRevision and absolute line (including headings/blanks), plus the zero-based word index and exact written word in value. Joined syllable spelling must equal that word; this is literal persistence, not a local linguistic analyser. The choice survives subsequent model checks. A changed division retains all MIDI and marks affected associations stale for explicit reconciliation. No notes or words are rewritten.",
     input: LyricsChoiceSchema.shape,
     run: async (input, ctx) => ctx.lyrics.choose(input),
   }),

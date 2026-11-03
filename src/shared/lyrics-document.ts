@@ -22,6 +22,7 @@ const anchor = { line: z.number().int().positive(), text: z.string(), stale: z.b
 export const WordChoiceSchema = z.object({
   line: z.number().int().positive(), lineText: z.string(), word: z.number().int().min(0), value: WordCheckSchema,
   default: WordCheckSchema.optional(),
+  pronunciation: z.boolean().optional(),
   stale: z.boolean().optional(),
 });
 export const SyllableBindingSchema = z.object({ ...anchor, word: z.number().int().min(0), syllable: z.number().int().min(0), notes: z.array(z.number().int().min(0)).min(1) });
@@ -43,6 +44,7 @@ export type VocalClip = z.infer<typeof VocalClipSchema>;
 export const LyricsChoiceSchema = z.object({
   songId: z.string().min(1), baseRevision: z.number().int().min(0), notationRevision: z.number().int().min(0),
   line: z.number().int().positive(), word: z.number().int().min(0), value: WordCheckSchema,
+  pronunciation: z.boolean().optional().describe("False for a sentence-emphasis-only edit; preserve the current automatic division and lexical wordStress. True or omitted for an explicit pronunciation override."),
 });
 export type LyricsChoiceWrite = z.infer<typeof LyricsChoiceSchema>;
 
@@ -76,6 +78,7 @@ export class LyricsDocument {
   static needsAnalysis(notation: LyricsNotation | undefined, text: string): boolean {
     return !notation?.analysis || JSON.stringify(notation.analysis.text.split("\n").filter(sung).map(line => line.trim())) !== JSON.stringify(text.split("\n").filter(sung).map(line => line.trim()))
       || notation.analysis.revision !== notation.revision
+      || notation.analysis.check.lines.some(line => line.review === undefined)
       || JSON.stringify(notation.analysis.choices ?? []) !== JSON.stringify(notation.choices);
   }
 
@@ -105,6 +108,10 @@ export class LyricsDocument {
       for (const choice of notation.choices) {
         if (!choice.stale && choice.line === index + 1 && choice.lineText === line && check.words[choice.word]?.text === choice.value.text) {
           const automatic = check.words[choice.word]!;
+          if (choice.pronunciation === false) {
+            if (JSON.stringify(choice.value.syllables) === JSON.stringify(automatic.syllables)) check.words[choice.word] = { ...automatic, stress: [...choice.value.stress] };
+            continue;
+          }
           check.words[choice.word] = structuredClone({ ...choice.value,
             ...(!choice.value.wordStress && JSON.stringify(choice.value.syllables) === JSON.stringify(automatic.syllables) && automatic.wordStress ? { wordStress: automatic.wordStress } : {}) });
         }

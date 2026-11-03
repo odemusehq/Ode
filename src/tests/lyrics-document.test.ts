@@ -96,6 +96,8 @@ test("automatic analysis keeps linked divisions; explicit division changes retai
     line: 2, word: 0, value: { text: "Fire", syllables: ["Fi", "re"], stress: [1, 0] } });
   assert.equal(changed.notation!.clips[0]!.bindings[0]!.stale, true);
   assert.deepEqual(changed.notation!.clips[0]!.notes, after.notation!.clips[0]!.notes);
+  await assert.rejects(lyrics.choose({ songId: song.songId, baseRevision: changed.revision, notationRevision: changed.notation!.revision,
+    line: 2, word: 0, pronunciation: false, value: check.lines[0]!.words[0]! }), /annotations changed/i);
 });
 
 test("lexical stress and sung emphasis stay separate, including a saved musician override", async () => {
@@ -105,7 +107,7 @@ test("lexical stress and sung emphasis stay separate, including a saved musician
   const { song, lyrics } = await open();
   await lyrics.saveCheck(song.songId, "[Verse]\nFire", "uk", check);
   const before = await lyrics.read();
-  await lyrics.choose({ songId: song.songId, baseRevision: before.revision, notationRevision: before.notation!.revision, line: 2, word: 0, value: word });
+  await lyrics.choose({ songId: song.songId, baseRevision: before.revision, notationRevision: before.notation!.revision, line: 2, word: 0, pronunciation: false, value: { ...word, wordStress: [2] } });
   await lyrics.saveCheck(song.songId, "[Verse]\nFire", "uk", { lines: [{ ...check.lines[0]!, words: [{ ...word, stress: [1] }] }] });
   const saved = await lyrics.read();
   assert.deepEqual(saved.check!.lines[0]!.words[0], word);
@@ -125,4 +127,45 @@ test("draft edits keep untouched line annotations and all notes while the change
   assert.deepEqual(next.clips[0]!.notes, notation.clips[0]!.notes);
   assert.equal(next.clips[0]!.bindings[0]!.stale, true);
   assert.equal(next.clips[0]!.bindings[1]!.stale, undefined);
+});
+
+test("phrase checks receive the bound score and a late answer cannot replace a newer emphasis choice", async () => {
+  const { song, lyrics } = await open();
+  await lyrics.saveCheck(song.songId, "[Verse]\nFire", "uk", check);
+  const before = await lyrics.read();
+  await lyrics.bind(song.songId, before.revision, before.notation!.revision, { id: "guide", clip: { tag: "vocal" }, notes: [{ pitch: 60, start: 0, duration: 1 }], bindings: [{ line: 2, text: "Fire", word: 0, syllable: 0, notes: [0] }] });
+  let start!: () => void, finish!: (answer: unknown) => void, context: any;
+  const started = new Promise<void>(resolve => { start = resolve; });
+  const pending = lyrics.analyse({ check: async (_lines: unknown, _accent: unknown, _signal: unknown, supplied: unknown) => {
+    context = supplied; start(); return new Promise(resolve => { finish = resolve; });
+  } } as never, "uk");
+  await started;
+  assert.equal(context.clips[0].notes[0].pitch, 60);
+  assert.deepEqual(context.annotations.lines[0].words[0].syllables, ["Fire"]);
+  const current = await lyrics.read();
+  await lyrics.choose({ songId: song.songId, baseRevision: current.revision, notationRevision: current.notation!.revision, line: 2, word: 0,
+    value: { ...check.lines[0]!.words[0]!, stress: [0] } });
+  finish({ status: "ok", check: { lines: [{ ...check.lines[0]!, review: ["Old musical reading"] }] } });
+  assert.equal((await pending).status, "unreachable");
+  const after = await lyrics.read();
+  assert.deepEqual(after.check!.lines[0]!.words[0]!.stress, [0]);
+  assert.equal(after.check!.lines[0]!.review, undefined);
+  assert.deepEqual(after.notation!.clips[0]!.notes, current.notation!.clips[0]!.notes);
+});
+
+test("a newer interpretation supersedes an older accent check without reusing the older review", async () => {
+  const { lyrics } = await open();
+  const pending: ((value: unknown) => void)[] = [];
+  const checker = { check: () => new Promise(resolve => { pending.push(resolve); }) } as never;
+  const uk = lyrics.analyse(checker, "uk");
+  while (pending.length < 1) await new Promise(resolve => setImmediate(resolve));
+  const us = lyrics.analyse(checker, "us");
+  while (pending.length < 2) await new Promise(resolve => setImmediate(resolve));
+  pending[0]!({ status: "ok", check: { lines: [{ ...check.lines[0]!, review: ["UK interpretation"] }] } });
+  assert.equal((await uk).status, "unreachable");
+  pending[1]!({ status: "ok", check: { lines: [{ ...check.lines[0]!, review: ["US interpretation"] }] } });
+  assert.equal((await us).status, "ok");
+  const after = await lyrics.read();
+  assert.equal(after.notation!.analysis!.accent, "us");
+  assert.deepEqual(after.check!.lines[0]!.review, ["US interpretation"]);
 });

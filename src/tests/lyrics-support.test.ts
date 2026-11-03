@@ -43,7 +43,7 @@ test("the lyrics split into sections and join back, and a save writes the change
 });
 
 test("a whole-song check sends the strict schema, comes from the cache the second time, and says when setup or the model is missing", async () => {
-  const answer: LyricsCheck = { lines: [{ words: [{ text: "inside", syllables: ["in", "side"], stress: [0, 1] }], rhyme: { letter: "A", quality: "perfect", part: "ide", sound: "aɪd" } }] };
+  const answer: LyricsCheck = { lines: [{ words: [{ text: "inside", syllables: ["in", "side"], stress: [0, 1], wordStress: [0, 1] }], review: [], rhyme: { letter: "A", quality: "perfect", part: "ide", sound: "aɪd" } }] };
   let configured = false;
   let failing = false;
   const requests: JsonRequest<LyricsCheck>[] = [];
@@ -98,7 +98,7 @@ test("the marks sit on the letters of the line as typed: bars between syllables,
 
 test("saved lyric annotations survive a checker restart and reuse only the exact interpretation context", async () => {
   const root = await mkdtemp(join(tmpdir(), "ode-lyrics-cache-")), file = join(root, "lyrics-checks.json");
-  const answer: LyricsCheck = { lines: [{ words: [{ text: "inside", syllables: ["in", "side"], stress: [0, 1] }], rhyme: { letter: "A", quality: "perfect", part: "ide", sound: "aɪd" } }] };
+  const answer: LyricsCheck = { lines: [{ words: [{ text: "inside", syllables: ["in", "side"], stress: [0, 1], wordStress: [0, 1] }], review: [], rhyme: { letter: "A", quality: "perfect", part: "ide", sound: "aɪd" } }] };
   let calls = 0, identity = "model-one", instruction = "Mark {accent}.";
   const model = { json: async (request: JsonRequest<LyricsCheck>) => { calls++; await new Promise(resolve => setImmediate(resolve)); return request.parse(answer); } };
   const services = { available: async () => ({ lyrics_check: true }), chat: async () => model, identity: () => identity };

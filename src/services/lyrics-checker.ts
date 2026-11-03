@@ -8,6 +8,7 @@ import type { Accent } from "../shared/personalisation";
 import type { ModelServices } from "./index";
 import type { TextGenerator } from "./capabilities";
 import { LyricsCheckSchema, type LyricsNotation } from "../shared/lyrics-document";
+import { t } from "../shared/i18n";
 
 /** The strict schema the provider holds the answer to: every object closed, every key required. */
 const CHECK_SCHEMA: Record<string, unknown> = {
@@ -20,18 +21,20 @@ const CHECK_SCHEMA: Record<string, unknown> = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["words", "rhyme"],
+        required: ["words", "rhyme", "review"],
         properties: {
+          review: { type: "array", items: { type: "string" } },
           words: {
             type: "array",
             items: {
               type: "object",
               additionalProperties: false,
-              required: ["text", "syllables", "stress", "ipa"],
+              required: ["text", "syllables", "stress", "wordStress", "ipa"],
               properties: {
                 text: { type: "string" },
                 syllables: { type: "array", items: { type: "string" } },
                 stress: { type: "array", items: { type: "integer", enum: [0, 1, 2] } },
+                wordStress: { type: "array", items: { type: "integer", enum: [0, 1, 2] } },
                 ipa: { type: "array", items: { type: "string" } },
               },
             },
@@ -54,7 +57,6 @@ const CHECK_SCHEMA: Record<string, unknown> = {
 };
 
 const ACCENT_NAMES: Readonly<Record<Accent, string>> = { uk: "UK English", us: "US English" };
-const UNMARKED: LyricsCheck["lines"][number] = { words: [], rhyme: { letter: "", quality: "none", part: "", sound: "" } };
 const SavedChecksSchema = z.array(z.object({ key: z.string(), check: LyricsCheckSchema }));
 
 /**
@@ -86,7 +88,7 @@ export class LyricsChecker {
     } catch { return undefined; }
   }
 
-  async check(lines: string[], accent: Accent, signal?: AbortSignal, performance?: Pick<LyricsNotation, "choices" | "clips"> & { text?: string; request?: string }): Promise<LyricsCheckResponse> {
+  async check(lines: string[], accent: Accent, signal?: AbortSignal, performance?: Pick<LyricsNotation, "choices" | "clips"> & { text?: string; request?: string; annotations?: LyricsCheck }): Promise<LyricsCheckResponse> {
     signal?.throwIfAborted();
     if (lines.length === 0) return { status: "ok", check: { lines: [] } };
     try {
@@ -102,12 +104,17 @@ export class LyricsChecker {
           name: "lyrics_check",
           schema: CHECK_SCHEMA,
           system: instruction,
-          user: lines.map((line, index) => `${index + 1}. ${line}`).join("\n") + (performance ? `\n\nSaved artist choices and actual melody (source context):\n${JSON.stringify(performance)}` : ""),
+          user: lines.map((line, index) => `${index + 1}. ${line}`).join("\n") + (performance ? `\n\nSaved artist choices, annotations and linked score (stored context):\n${JSON.stringify(performance)}` : ""),
           maxTokens: Math.max(this.settings.maxTokens, Math.min(24_000, lines.length * 400)),
           signal,
-          parse: (value) => LyricsChecker.aligned(LyricsCheckSchema.parse(value), lines.length),
+          parse: (value) => {
+            const result = LyricsCheckSchema.parse(value);
+            if (result.lines.length !== lines.length || result.lines.some(line => !line.review || line.words.some(word => !word.wordStress || !word.syllables.length || !word.syllables.every(Boolean) || word.syllables.join("") !== word.text))) throw new Error(t("lyrics.document.checkIncomplete"));
+            return result;
+          },
         });
         signal?.throwIfAborted();
+        if (this.model !== model) throw new Error(t("lyrics.document.checkChanged"));
         // A response already in flight from an earlier provider must not enter the current model's cache.
         if (this.model === model) await this.remember(key, check);
         return check;
@@ -127,7 +134,7 @@ export class LyricsChecker {
     }
   }
 
-  private async context(lines: string[], accent: Accent, performance?: Pick<LyricsNotation, "choices" | "clips"> & { text?: string; request?: string }) {
+  private async context(lines: string[], accent: Accent, performance?: Pick<LyricsNotation, "choices" | "clips"> & { text?: string; request?: string; annotations?: LyricsCheck }) {
     if (!(await this.services.available()).lyrics_check) return undefined;
     const model = await this.services.chat("lyrics_check");
     if (this.model !== model) { this.checked.clear(); this.model = model; }
@@ -141,11 +148,6 @@ export class LyricsChecker {
     const check = this.checked.get(key) ?? (await this.file?.read())?.find(entry => entry.key === key)?.check;
     if (check) this.checked.set(key, check);
     return check;
-  }
-
-  /** One entry per line sent: a line the answer skipped reads as unmarked, and extra entries are dropped. */
-  private static aligned(check: LyricsCheck, count: number): LyricsCheck {
-    return { lines: Array.from({ length: count }, (_, index) => check.lines[index] ?? UNMARKED) };
   }
 
   /** Keeps the answer, letting the oldest go once the cache is full. */
