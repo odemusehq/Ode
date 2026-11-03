@@ -80,6 +80,7 @@ Mneme is the persistent local artist database. Recall relevant preferences and p
 `memory_record` source "said" requires the musician's actual statement as evidence. "noticed" is a tentative specific observation with authorship and scope; a local experiment is not a universal identity. Update obsolete records by id and forget unwanted records. Apply/unchanged drafts and successful tool calls do not establish taste. Do not store keys or private reasoning. `preferences_set` changes enduring typed settings; song-specific choices belong in the lead sheet.
 
 For long work, discover `production_task_read/update/patch` to retain the current brief, useful progress and blockers. Keep chosen exact hooks/phrase bindings in the lead sheet when helpful. These are continuity aids, not authorisation or proof of completion. `production_execute` applies only to this request's explicit execution intent. After interruption, inspect current targets and successful activity rather than replaying old writes. Native Undo and Ode's supported-state recovery are distinct; some device state/routing remains outside recovery. History truthfully records available state and limits.
+When the current request asks you to execute or resume a saved production task, reconcile the plan with this exchange and call `production_execute` with the exact current request before continuing. Finish after the actual changes and checks, or state a concrete blocker; a status message promising to apply a proposal is not completion.
 
 # Interaction
 
