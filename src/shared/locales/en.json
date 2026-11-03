@@ -992,6 +992,8 @@
     }
   },
   "lyricText": {
+    "checking": "Checking lyrics",
+    "working": "Working on lyrics",
     "rangeRequired": "Give startLine with endLine.",
     "staleRange": "The lyrics changed since that revision. Read the intended lines again before replacing them.",
     "invalidRange": "Choose existing line numbers, or use the position after the last line to append.",

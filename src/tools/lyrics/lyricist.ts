@@ -20,6 +20,7 @@ export const lyricist = defineTool({
   name: "lyricist",
   alwaysLoad: true,
   changes: "none",
+  describe: ({ analyse }) => t(analyse ? "lyricText.checking" : "lyricText.working"),
   description: "Ask the configured Lyricist to write, rewrite or review lyrics, find rhymes, discuss syllables/stress/pronunciation, or fit words to an exact supplied melody. Receives the stored lyrics/revision, brief, locks, linked sections and artist preferences. Give the actual task, relevant skill guidance and conversation context; when fitting words give exact notes and explain their phrase/time origin. Returns structured {text, explanation, cautions, songId, lyricsRevision}: text is only the requested draft or excerpt, null for review-only. Ordinary requests return a proposal without saving words. analyse:true instead stores structured annotations on the exact current text, shared with the editor; it never rewrites text or notes. Apply chosen words with lyrics_write against the supplied revision. No local rule fallback runs when the model is unavailable.",
   input: {
     analyse: z.boolean().optional().describe("True to annotate the stored whole text with structured syllables, stress, IPA and rhyme sounds shared with the editor. Use for missing/stale annotations or an intentional pronunciation review; not merely because a note became longer. No text or notes are rewritten."),
