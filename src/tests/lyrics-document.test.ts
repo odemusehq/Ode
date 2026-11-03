@@ -8,10 +8,11 @@ import { LyricsStore } from "../mneme/lyrics-store";
 import { SongStore } from "../mneme/song-store";
 import { PreferencesStore } from "../mneme/preferences";
 import { userPaths } from "../mneme/paths";
-import type { LyricsCheck } from "../shared/lyrics";
+import type { LyricsCheck, LyricsState, LineCheck } from "../shared/lyrics";
 import { VersionAuthor } from "../shared/versions";
 import { createHash } from "node:crypto";
 import { lyricMelodyTools } from "../tools/lyrics/melody";
+import { lyricTextTools } from "../tools/lyrics/text";
 import type { ToolContext } from "../tools/define";
 
 const check: LyricsCheck = { lines: [{ words: [{ text: "Fire", syllables: ["Fire"], stress: [1], ipa: ["faɪə"] }], rhyme: { letter: "", quality: "none", part: "", sound: "" } }] };
@@ -168,4 +169,26 @@ test("a newer interpretation supersedes an older accent check without reusing th
   const after = await lyrics.read();
   assert.equal(after.notation!.analysis!.accent, "us");
   assert.deepEqual(after.check!.lines[0]!.review, ["US interpretation"]);
+});
+
+test("the main agent can read an unfinished phrase and patch one syllable without dropping its neighbour", async () => {
+  const { song, lyrics } = await open();
+  await lyrics.replace("[Verse]\nFire burns");
+  const words = [{ text: "Fire", syllables: ["Fire"], wordStress: [1], stress: [0] }, { text: "burns", syllables: ["burns"], wordStress: [1], stress: [1] }];
+  await lyrics.saveCheck(song.songId, "[Verse]\nFire burns", "uk", { lines: [{ words, rhyme: check.lines[0]!.rhyme, review: ["Phrase review"] }] });
+  const notes = [{ pitch: 60, start: 0, duration: 1 }, { pitch: 62, start: 1, duration: 1 }, { pitch: 64, start: 2, duration: 1 }];
+  const ctx = { song, lyrics, live: { extension: { call: async () => ({ notes }) } } } as unknown as ToolContext;
+  const read = lyricTextTools.find(tool => tool.name === "lyrics_read")!;
+  const before = await read.run({}, ctx) as { annotations: LineCheck[]; melody: unknown[]; revision: number; notationRevision: number };
+  assert.deepEqual(before.annotations[0]!.words, words);
+  assert.deepEqual(before.annotations[0]!.review, ["Phrase review"]);
+  assert.deepEqual(before.melody, []);
+  const bind = lyricMelodyTools.find(tool => tool.name === "lyrics_bind_melody")!;
+  const input = { clip: { tag: "vocal" }, expectedNotesHash: createHash("sha256").update(JSON.stringify(notes)).digest("hex"), baseRevision: before.revision, notationRevision: before.notationRevision,
+    bindings: [{ line: 2, text: "Fire burns", word: 0, syllable: 0, notes: [0] }, { line: 2, text: "Fire burns", word: 1, syllable: 0, notes: [1] }] };
+  const bound = await bind.run(input, ctx) as LyricsState;
+  const patched = await bind.run({ ...input, baseRevision: bound.revision, notationRevision: bound.notation!.revision, mode: "patch", bindings: [{ ...input.bindings[0]!, notes: [2] }] }, ctx) as LyricsState;
+  assert.equal(patched.notation!.clips[0]!.bindings.length, 2);
+  assert.deepEqual(patched.notation!.clips[0]!.bindings.find(binding => binding.word === 1)!.notes, [1]);
+  assert.deepEqual(patched.notation!.clips[0]!.notes, notes);
 });

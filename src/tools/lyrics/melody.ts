@@ -15,15 +15,16 @@ export const lyricMelodyTools: AnyTool[] = [
   }),
   defineTool({
     name: "lyrics_bind_melody", changes: "memory",
-    description: "Associate current lyric syllables with actual notes in a tagged native MIDI clip, without changing any music. First read midi_clip_get_notes and retain its notesHash; pass it as expectedNotesHash. Read lyrics_read for text/baseRevision/notationRevision and current word/syllable indices. Each binding gives an absolute lyric line, exact line text, zero-based word and syllable, and the note indices in that SDK read, in time order; one syllable may span several notes and several syllables may share a note. Supplied lines replace their previous associations on this clip; other lines are preserved, but marked stale if their source MIDI changed. Refuses stale text/annotations or changed MIDI. Supply meter only to deliberately initialise/replace the MusicXML score time signature; omit it to preserve the score's existing measures and time changes. Bar/beat context comes from that score. Use existing native MIDI tools to change notes, then bind against a fresh read. No melody fitting or syllable analysis algorithm runs here.",
+    description: "Associate current lyric syllables with actual notes in a tagged native MIDI clip, without changing any music. First read midi_clip_get_notes and retain its notesHash; pass it as expectedNotesHash. Read lyrics_read for text/baseRevision/notationRevision and current word/syllable indices. Each binding gives an absolute lyric line, exact line text, zero-based word and syllable, and the note indices in that SDK read, in time order; one syllable may span several notes and several syllables may share a note. Use mode:patch for a small edit: only supplied line/word/syllable associations change. Omitted mode or mode:replace_lines replaces all links on the supplied lines. Other links are preserved, but marked stale if their source MIDI changed. Refuses stale text/annotations or changed MIDI. Supply meter only to deliberately initialise/replace the MusicXML score time signature; omit it to preserve the score's existing measures and time changes. Bar/beat context comes from that score. Use existing native MIDI tools to change notes, then bind against a fresh read. No melody fitting or syllable analysis algorithm runs here.",
     input: {
       clip: z.object({ tag: z.string().min(1) }).describe("A durable clip tag, already present in Live; do not invent a new object identity."),
       meter: ScoreMeterSchema.optional().describe("MusicXML beats/beat-type, for example {beats: '4', beatType: 4}. Only supply an intentionally chosen or verified score metre. Omit to preserve existing measures; unknown metre is never defaulted."),
       expectedNotesHash: z.string().regex(/^[a-f0-9]{64}$/),
       baseRevision: z.number().int().min(0), notationRevision: z.number().int().min(0),
+      mode: z.enum(["patch", "replace_lines"]).optional().describe("Use patch to change only the supplied line/word/syllable links. Omitted or replace_lines replaces all links on the supplied lines."),
       bindings: z.array(SyllableBindingSchema.omit({ stale: true })).min(1),
     },
-    async run({ clip, expectedNotesHash, baseRevision, notationRevision, bindings, meter }, ctx) {
+    async run({ clip, expectedNotesHash, baseRevision, notationRevision, bindings, meter, mode }, ctx) {
       const songId = ctx.song.songId;
       const result = await ctx.live.extension.call<{ notes: unknown }>("midi_clip_get_notes", { clip }, ctx.signal);
       ctx.signal?.throwIfAborted();
@@ -40,7 +41,7 @@ export const lyricMelodyTools: AnyTool[] = [
         }
       }
       const id = "vocal-" + createHash("sha256").update(JSON.stringify(clip)).digest("hex").slice(0, 12);
-      return ctx.lyrics.bind(songId, baseRevision, notationRevision, { id, clip, notes, bindings, ...(meter ? { measures: [{ number: "1", start: 0, length: LyricsDocument.measureLength(meter), meter }] } : {}) });
+      return ctx.lyrics.bind(songId, baseRevision, notationRevision, { id, clip, notes, bindings, ...(meter ? { measures: [{ number: "1", start: 0, length: LyricsDocument.measureLength(meter), meter }] } : {}) }, mode);
     },
   }),
 ];

@@ -261,7 +261,7 @@ export class LyricsStore {
   }
 
   /** Bind model-chosen syllables to notes actually read from Live. Other lines on this clip keep their bindings. */
-  bind(songId: string, baseRevision: number, notationRevision: number, input: VocalClip): Promise<LyricsState> {
+  bind(songId: string, baseRevision: number, notationRevision: number, input: VocalClip, mode: "replace_lines" | "patch" = "replace_lines"): Promise<LyricsState> {
     const clip = VocalClipSchema.parse(input);
     return this.enqueue(async () => {
       const texts = this.texts();
@@ -279,10 +279,12 @@ export class LyricsStore {
           }
         }
         const previous = notation.clips.find(item => JSON.stringify(item.clip) === JSON.stringify(clip.clip));
-        const replaced = new Set(clip.bindings.map(binding => binding.line));
+        const key = (binding: VocalClip["bindings"][number]) => mode === "patch" ? `${binding.line}/${binding.word}/${binding.syllable}` : String(binding.line);
+        const replaced = new Set(clip.bindings.map(key));
+        if (mode === "patch" && replaced.size !== clip.bindings.length) throw new Error(t("lyrics.document.bindingChanged"));
         if (previous) {
           const sameNotes = JSON.stringify(previous.notes) === JSON.stringify(clip.notes);
-          clip.bindings = [...previous.bindings.filter(binding => !replaced.has(binding.line)).map(binding => sameNotes ? binding : { ...binding, stale: true }), ...clip.bindings];
+          clip.bindings = [...previous.bindings.filter(binding => !replaced.has(key(binding))).map(binding => sameNotes ? binding : { ...binding, stale: true }), ...clip.bindings];
           clip.id = previous.id;
           if (!clip.measures && previous.measures) clip.measures = previous.measures;
         }
