@@ -2,13 +2,10 @@ import { t } from "../../shared/i18n";
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
 import type { LyricsSection } from "../../shared/lyrics-sections";
-import { Chip, ChipGroup, ConfirmCard, Icon, IconName, Menu, MenuAlign, TextInput, cx } from "../../ui-kit";
-import { SectionText } from "./SectionText";
-
-/** The names offered while a section is renamed; Verse takes the next free number. */
-export const QUICK_NAMES = [t("lyrics.quickNames.verse"), t("lyrics.quickNames.preChorus"), t("lyrics.quickNames.chorus"), t("lyrics.quickNames.bridge"), t("lyrics.quickNames.intro"), t("lyrics.quickNames.outro")];
+import { ConfirmCard, Icon, IconName, Menu, MenuAlign, TextInput, cx } from "../../ui-kit";
 
 export enum SectionAction {
+  Rename = "rename",
   Duplicate = "duplicate",
   LinkedCopy = "linked-copy",
   Delete = "delete",
@@ -35,14 +32,10 @@ export interface SectionCardProps {
   partner: boolean;
   /** Controls at the right of the section's name, such as Strict rhymes. */
   extras?: ReactNode;
-  /** Drawn behind the section's text, line for line. */
-  renderMarks?: (lines: readonly string[]) => ReactNode;
   analysis?: ReactNode;
   onRename: () => void;
   onName: (name: string) => void;
-  onQuickName: (name: string) => void;
   onStopRenaming: () => void;
-  onLines: (lines: string[]) => void;
   onAction: (action: SectionAction) => void;
   onGrip: (event: PointerEvent<HTMLButtonElement>) => void;
   onStep: (direction: -1 | 1) => void;
@@ -57,11 +50,12 @@ const NAME_BREAKERS = /[[\]\r\n]/g;
 
 /** One section of the lyrics: a rail to move and link it, its name, its actions and its lines. */
 export function SectionCard(props: SectionCardProps) {
-  const { section, index, copies, renaming, question, partner, extras, renderMarks } = props;
+  const { section, index, copies, renaming, question, partner, extras } = props;
   const title = section.name ?? UNTITLED;
   const linked = copies > 1;
 
   const actions = [
+    { id: SectionAction.Rename, label: t("lyrics.rename") },
     { id: SectionAction.Duplicate, label: t("lyrics.duplicate"), description: t("lyrics.duplicateDescription") },
     ...(section.name !== null ? [{ id: SectionAction.LinkedCopy, label: t("lyrics.linkedCopy"), description: t("lyrics.linkedCopyDescription") }] : []),
     { id: SectionAction.Delete, label: t("common.delete") },
@@ -90,9 +84,9 @@ export function SectionCard(props: SectionCardProps) {
           {renaming ? (
             <NameField name={section.name ?? ""} onName={props.onName} onStop={props.onStopRenaming} />
           ) : (
-            <button type="button" className={cx("section__name", section.name === null && "section__name--untitled")} title={t("lyrics.rename")} onClick={props.onRename}>
+            <span className={cx("section__name", section.name === null && "section__name--untitled")}>
               {title}
-            </button>
+            </span>
           )}
           {linked && (
             <span className="section__copies" onPointerEnter={() => props.onPartners(true)} onPointerLeave={() => props.onPartners(false)}>
@@ -107,20 +101,8 @@ export function SectionCard(props: SectionCardProps) {
           )}
           <span className="section__spacer" />
           {extras}
-          <Menu label={t("lyrics.sectionActions", { title: (title) })} icon={IconName.More} items={actions} onSelect={props.onAction} align={MenuAlign.End} />
+          <Menu label={t("lyrics.sectionActions", { title: (title) })} icon={IconName.More} items={actions} onSelect={action => action === SectionAction.Rename ? props.onRename() : props.onAction(action)} align={MenuAlign.End} />
         </div>
-        {renaming && (
-          // The name field keeps focus through a click here, so its blur leaves a chip's choice in place.
-          <div className="section__quick-names" onMouseDown={(event) => event.preventDefault()}>
-            <ChipGroup label={t("lyrics.quickNamesLabel")}>
-              {QUICK_NAMES.map((name) => (
-                <Chip key={name} onClick={() => props.onQuickName(name)}>
-                  {name}
-                </Chip>
-              ))}
-            </ChipGroup>
-          </div>
-        )}
         {question && (
           <ConfirmCard
             message={question.message}
@@ -130,7 +112,6 @@ export function SectionCard(props: SectionCardProps) {
             onCancel={question.onCancel}
           />
         )}
-        <SectionText lines={section.lines} label={t("lyrics.sectionLyrics", { title: (title) })} onLines={props.onLines} renderMarks={renderMarks} />
         {props.analysis}
       </div>
     </div>

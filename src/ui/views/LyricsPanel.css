@@ -192,11 +192,6 @@
   font-family: var(--font-family-heading);
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-heading);
-  cursor: text;
-}
-
-.section__name:hover {
-  background: var(--color-surface-hover);
 }
 
 .section__name--untitled {
@@ -215,68 +210,14 @@
   flex: 1;
 }
 
-.section__quick-names {
-  margin-bottom: var(--space-3);
-}
-
 .section .ode-confirm {
   margin-bottom: var(--space-3);
-}
-
-.section-text {
-  position: relative;
-  font-size: var(--lyrics-font-size);
-  line-height: var(--lyrics-line-height);
-}
-
-.section-text__field {
-  display: block;
-  width: 100%;
-  height: calc(var(--section-rows) * var(--lyrics-line-height));
-  margin: 0;
-  padding: 0 var(--lyrics-meta-width) 0 0;
-  overflow: hidden;
-  border: 0;
-  border-radius: var(--radius-md);
-  outline: none;
-  background: transparent;
-  color: var(--color-text);
-  font: inherit;
-  line-height: inherit;
-  white-space: pre;
-  resize: none;
-}
-
-.section-text__field::placeholder {
-  color: var(--color-text-disabled);
-}
-
-.section-text:focus-within {
-  box-shadow: 0 0 0 var(--focus-ring-width) var(--color-highlight);
-  border-radius: var(--radius-md);
 }
 
 .section__analysis { font-size: var(--font-size-sm); color: var(--color-text-muted); margin-top: var(--space-3); }
 .section__analysis summary { cursor: pointer; padding-block: var(--space-2); }
 .section__analysis ol { padding-left: var(--space-5); }
 .section__analysis li { margin-block: var(--space-3); }
-
-.section-text__marks {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.line-marks {
-  position: relative;
-  height: var(--lyrics-line-height);
-  white-space: pre;
-}
-
-/* The text sits under the field's own text, letter for letter, so only the marks show. */
-.line-marks__text {
-  color: transparent;
-}
 
 .mark-syllable {
   position: relative;
@@ -424,3 +365,30 @@
   background: var(--color-accent-tint);
   color: var(--color-accent);
 }
+
+/* CodeMirror keeps one literal text document; annotations and section controls are not text. */
+.lyrics-document .cm-editor { min-height: 240px; outline: none; background: transparent; }
+.lyrics-document .cm-scroller { font-family: inherit; line-height: var(--lyrics-line-height); overflow: auto; }
+.lyrics-document .cm-content { min-width: 100%; padding: 0 0 var(--space-5); font-size: var(--lyrics-font-size); caret-color: var(--color-text); }
+.lyrics-document .cm-line { position: relative; padding: 0 var(--lyrics-meta-width) 0 calc(var(--lyrics-rail-width) + var(--space-5)); }
+.lyrics-document .cm-line .line-marks__meta { padding-right: var(--space-4); }
+.lyrics-document .cm-selectionBackground, .lyrics-document .cm-focused .cm-selectionBackground { background: var(--color-accent-tint); }
+.lyrics-document .cm-cursor { border-left-color: var(--color-text); }
+.lyrics-document__heading .section { margin-block: var(--space-4) var(--space-2); padding-bottom: 0; }
+.lyrics-document__heading .section__head { min-height: 28px; }
+.lyrics-document__heading .section__bar { display: none; }
+.lyrics-document__heading .section__rail { flex-direction: row; gap: 2px; }
+.lyrics-document__heading .section__rail > .ode-menu { position: absolute; left: -23px; }
+.lyrics-document .cm-line .mark-syllable--stressed::after { bottom: -3px; }
+.lyrics-pronunciation { flex: none; padding: var(--space-3) var(--space-5); border-top: var(--border-width) solid var(--color-border); background: var(--color-surface); font-size: var(--font-size-sm); }
+.lyrics-pronunciation__head, .lyrics-pronunciation__actions { display: flex; gap: var(--space-4); align-items: center; }
+.lyrics-pronunciation__split { color: var(--color-text-muted); }
+.lyrics-pronunciation__edit { --icon-size: 14px; border: 0; background: none; color: var(--color-text-muted); cursor: pointer; padding: var(--space-2); }
+.lyrics-pronunciation__form { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-3); }
+.lyrics-pronunciation__form label { display: flex; gap: var(--space-3); align-items: center; }
+.lyrics-pronunciation__form input, .lyrics-pronunciation__form select { min-width: 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-sunken); color: var(--color-text); font: inherit; }
+.lyrics-pronunciation__form input { flex: 1; }
+.lyrics-pronunciation__stress { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.lyrics-pronunciation__stress label { flex-direction: column; align-items: flex-start; }
+.lyrics-pronunciation__music { display: flex; flex-wrap: wrap; gap: var(--space-3); color: var(--color-text-muted); margin-top: var(--space-2); }
+.lyrics-pronunciation [role=alert] { color: var(--color-danger); }

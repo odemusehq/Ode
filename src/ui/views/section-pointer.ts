@@ -46,7 +46,7 @@ export class SectionMover {
   }
 
   private cards(): HTMLElement[] {
-    return Array.from(this.list.querySelectorAll<HTMLElement>(":scope > .section"));
+    return Array.from(this.list.querySelectorAll<HTMLElement>(".section"));
   }
 
   /** The gap the pointer is nearest: before the first card whose middle lies below it. */
@@ -108,7 +108,7 @@ export class SectionLinker {
   }
 
   private light(target: DropTarget): void {
-    for (const card of this.list.querySelectorAll<HTMLElement>(":scope > .section")) {
+    for (const card of this.list.querySelectorAll<HTMLElement>(".section")) {
       card.classList.toggle("section--target", Number(card.dataset.index) === target);
     }
   }

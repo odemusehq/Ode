@@ -521,7 +521,7 @@ export class OdeServer {
       const accent = (await prefs.effective(sheet)).pronunciation;
       const check = state.text === sheet.lyrics && state.songId === song.songId
         ? await this.deps.lyricsChecker.cached(LyricsText.sung(state.text), accent) : undefined;
-      return c.json({ ...state, ...(!state.check && check ? { check } : {}) });
+      return c.json({ ...state, check: state.notation?.analysis?.accent === accent ? state.check ?? check : check });
     });
     app.put(API.lyrics, async (c) => {
       const parsed = LyricsWriteSchema.safeParse(await OdeServer.body(c));
@@ -548,7 +548,7 @@ export class OdeServer {
 
     app.put(API.lyricsChoice, async (c) => {
       const parsed = LyricsChoiceSchema.safeParse(await OdeServer.body(c));
-      if (!parsed.success) return c.json({ error: "Send the current word, syllables and document revisions." }, 400);
+      if (!parsed.success) return c.json({ error: t("lyrics.document.choiceInput") }, 400);
       try { return c.json(await lyrics.choose(parsed.data)); }
       catch (error) { return c.json({ error: error instanceof Error ? error.message : String(error) }, 409); }
     });

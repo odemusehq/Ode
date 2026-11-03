@@ -1,3 +1,4 @@
+import { LyricsDocument } from "../../shared/lyrics-document";
 import { t } from "../../shared/i18n";
 import type { LyricsCheck } from "../../shared/lyrics";
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
@@ -6,7 +7,8 @@ import { Button, ButtonVariant, Icon, IconName, Menu, MenuAlign, cx } from "../.
 import { useClient, useLyrics } from "../app/hooks";
 import { LyricsMarks, SupportStatus } from "../app/lyrics-marks";
 import { LyricsViewStore, type LyricsView } from "../app/lyrics-view";
-import { LineMarks } from "./LineMarks";
+import { LyricsTextEditor, type LyricsTextEditorHandle, type WordSelection } from "./LyricsTextEditor";
+import { SyllableChoice } from "./SyllableChoice";
 import { SectionAction, SectionCard, type SectionQuestion } from "./SectionCard";
 import { SectionMover } from "./section-pointer";
 import { MarkLayout } from "./mark-layout";
@@ -41,7 +43,7 @@ export function LyricsPanel({ settingsRevision = 0 }: { settingsRevision?: numbe
       </h2>
       {stored ? (
         <LyricsEditor key={stored.songId} text={text} strictRhymes={strictRhymes ?? []} settingsRevision={settingsRevision}
-          initial={stored.check ? { lines: LyricsSections.parse(stored.text).flatMap(section => section.lines.filter(LyricsSections.isSung)), check: stored.check } : undefined} />
+          initial={stored.check && !LyricsDocument.needsAnalysis(stored.notation, stored.text) ? { lines: stored.text.split("\n").filter(LyricsSections.isSung).map(line => line.trim()), check: stored.check } : undefined} />
       ) : loadError ? (
         <ProblemLine message={loadError} onRetry={() => void client.lyrics.load()} />
       ) : (
@@ -69,14 +71,18 @@ interface CardQuestion {
 interface SectionIntent { section: string; index: number; names: (string | null)[] }
 
 /**
- * The lyrics as section cards. Every change becomes the whole text again, labels included, so Ode reads and writes the
+ * One lyric document with section controls. Every change becomes the whole text again, labels included, so Ode reads and writes the
  * same text the musician sees; sections that share a name are linked copies and change together.
  */
 function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsEditorProps) {
   const client = useClient();
+  const { stored } = useLyrics();
+  const editor = useRef<LyricsTextEditorHandle>(null);
+  const [word, setWord] = useState<WordSelection | null>(null);
   const sections = useMemo(() => LyricsSections.parse(text), [text]);
   const [renaming, setRenaming] = useState<number | null>(null);
   const renamingNow = useRef<number | null>(null);
+  const renamingTarget = useRef<SectionIntent | null>(null);
   const [asking, setAsking] = useState<CardQuestion | null>(null);
   const [partners, setPartners] = useState<string | null>(null);
   const list = useRef<HTMLDivElement>(null);
@@ -88,12 +94,12 @@ function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsE
   const [view, setView] = useState<LyricsView>(() => LyricsViewStore.load());
   const [retries, setRetries] = useState(0);
 
-  const sung = useMemo(() => sections.flatMap((section) => section.lines.filter(LyricsSections.isSung)), [sections]);
-  const checks = marks.marksFor(sung);
+  const sung = useMemo(() => sections.flatMap((section) => section.lines.filter(LyricsSections.isSung).map(line => line.trim())), [sections]);
+  const checks = useMemo(() => stored?.text === text && stored.check ? stored.check.lines : marks.marksFor(sung), [stored, text, sung, marks, support.version]);
   let offset = 0;
   const starts = sections.map((section) => { const start = offset; offset += section.lines.filter(LyricsSections.isSung).length; return start; });
   // One shared assessment keeps rhyme sound identities consistent across every section.
-  useEffect(() => { marks.request(sung); }, [sung, marks, retries]);
+  useEffect(() => { marks.request(sung); }, [sung, marks, retries, stored?.revision]);
 
   const toggleView = (mark: keyof LyricsView) => {
     const next = { ...view, [mark]: !view[mark] };
@@ -101,19 +107,11 @@ function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsE
     LyricsViewStore.save(next);
   };
 
-  /** The marks behind a section's text: each sung line takes its own, labels and blank lines take none. */
-  const marksBehind = (strict: boolean, sectionIndex: number) => (rows: readonly string[]) => {
-    const current = rows.filter(LyricsSections.isSung);
-    const expected = sections[sectionIndex]!.lines.filter(LyricsSections.isSung);
-    const found = current.length === expected.length && current.every((line, at) => line === expected[at])
-      ? checks.slice(starts[sectionIndex], starts[sectionIndex]! + current.length) : [];
-    let sung = 0;
-    return rows.map((row, index) => (
-      <LineMarks key={index} line={row} check={LyricsSections.isSung(row) ? (found[sung++] ?? null) : null} strict={strict} />
-    ));
+  const save = (next: LyricsSection[]) => {
+    const text = LyricsSections.join(next);
+    if (editor.current) editor.current.replace(text);
+    else client.lyrics.edit(text);
   };
-
-  const save = (next: LyricsSection[]) => client.lyrics.edit(LyricsSections.join(next));
   const intent = (index: number): SectionIntent => ({ section: JSON.stringify(sections[index]), index, names: sections.map((section) => section.name) });
   const changeLatest = (targets: SectionIntent[], change: (current: LyricsSection[], positions: number[]) => LyricsSection[]) => {
     const current = LyricsSections.parse(client.lyrics.getSnapshot().text);
@@ -133,6 +131,8 @@ function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsE
   const copiesOf = (name: string | null) => (name === null ? 1 : sections.filter((section) => section.name === name).length);
 
   const rename = (index: number | null) => {
+    const current = LyricsSections.parse(client.lyrics.getSnapshot().text);
+    renamingTarget.current = index === null || !current[index] ? null : { section: JSON.stringify(current[index]), index, names: current.map(section => section.name) };
     renamingNow.current = index;
     setRenaming(index);
   };
@@ -150,24 +150,19 @@ function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsE
       },
     });
 
-  /** A section's lines, written into every linked copy. */
-  const setLines = (index: number, lines: string[]) => {
-    const name = sections[index]?.name ?? null;
-    save(sections.map((section, at) => (at === index || (name !== null && section.name === name) ? { ...section, lines } : section)));
-  };
-
   /** Renames a section; a name another section has asks to link them first. */
   const setName = (index: number, name: string) => {
     if (renamingNow.current !== index) return;
+    const original = renamingTarget.current;
     rename(null);
     const section = sections[index];
     if (!section || name === section.name) return;
     const existing = sections.find((other, at) => at !== index && other.name === name);
     if (!existing) {
-      save(sections.map((each, at) => (at === index ? { ...each, name } : each)));
+      if (original) changeLatest([original], (current, [to]) => current.map((each, at) => at === to ? { ...each, name } : each));
       return;
     }
-    const target = intent(index);
+    const target = original ?? intent(index);
     const source = intent(sections.indexOf(existing));
     ask(
       index,
@@ -184,13 +179,6 @@ function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsE
     );
   };
 
-  /** A quick name: Verse takes the next free number, unless the section is a verse already. */
-  const setQuickName = (index: number, name: string) => {
-    const current = sections[index]?.name ?? "";
-    const verse = /^Verse \d+$/;
-    setName(index, name === t("lyrics.quickNames.verse") ? (verse.test(current) ? current : LyricsSections.freeName(sections, t("lyrics.firstVerse"))) : name);
-  };
-
   const act = (index: number, action: SectionAction) => {
     const section = sections[index];
     if (!section) return;
@@ -204,7 +192,7 @@ function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsE
         return;
       case SectionAction.Unlink: {
         const name = LyricsSections.freeName(sections, LyricsSections.baseName(section.name ?? t("lyrics.section")));
-        save(sections.map((each, at) => (at === index ? { ...each, name } : each)));
+        save(sections.map((each, at) => at === index ? { ...each, name } : each));
         rename(index);
         return;
       }
@@ -253,6 +241,53 @@ function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsE
     rename(sections.length);
   };
 
+  const headers = sections.map((section, index) => (
+          <SectionCard
+            key={index}
+            section={section}
+            index={index}
+            copies={copiesOf(section.name)}
+            renaming={renaming === index}
+            question={asking?.index === index ? asking.question : null}
+            partner={partners !== null && section.name === partners}
+            onRename={() => rename(index)}
+            onName={(name) => setName(index, name)}
+            onStopRenaming={() => rename(null)}
+            onAction={(action) => act(index, action)}
+            onGrip={(event) => {
+              if (!list.current || !indicator.current) return;
+              event.preventDefault();
+              new SectionMover(list.current, indicator.current).start(index, move);
+            }}
+            onStep={(direction) => {
+              const to = index + direction;
+              if (to >= 0 && to < sections.length) move(index, to);
+            }}
+            linkTargets={sections.flatMap((other, at) => at !== index && other.name !== section.name ? [{ id: String(at), label: other.name ?? t("lyrics.untitledSection", { index: (at + 1) }) }] : [])}
+            onLinkTo={(to) => link(index, to)}
+            onPartners={(show) => setPartners(show ? section.name : null)}
+            analysis={view.details && <details className="section__analysis"><summary>{t("lyrics.lineAnalysisTitle")}</summary><ol>
+              {section.lines.filter(LyricsSections.isSung).map((line, lineIndex) => {
+                const check = checks[starts[index]! + lineIndex];
+                return <li key={lineIndex}><p>{line}</p>{check ? <p>
+                  {t("lyrics.lineAnalysis", { count: (MarkLayout.count(check)), words: (check.words.map((word) => t("lyrics.wordAnalysis", { word: (word.text), syllables: (word.syllables.map((syllable, at) => t("lyrics.syllableAnalysis", { syllable: (syllable), stress: (word.stress[at]) }))).join(", ") })).join("; ")), rhyme: (t("lyrics.rhymeAnalysis", { hasLetter: Boolean((check.rhyme.letter)), letter: (check.rhyme.letter), quality: (check.rhyme.quality), hasPart: Boolean((check.rhyme.part)), part: (check.rhyme.part) })) })}
+                  {check.rhyme.sound && <code> {check.rhyme.sound}</code>}
+                </p> : <p>{t("lyrics.analysisUnavailable")}</p>}</li>;
+              })}
+            </ol></details>}
+            extras={
+              section.name !== null && (
+                <StrictToggle
+                  on={strictRhymes.includes(section.name)}
+                  onChange={(strict) => {
+                    if (section.name !== null) void client.lyrics.setStrictRhymes(section.name, strict).catch(() => undefined);
+                  }}
+                />
+              )
+            }
+          />
+        ));
+
   return (
     <div
       className={cx(
@@ -275,60 +310,16 @@ function LyricsEditor({ text, strictRhymes, settingsRevision, initial }: LyricsE
       </div>
       <div ref={list} className="lyrics-editor__sections">
         <div ref={indicator} className="lyrics-editor__drop" hidden />
-        {sections.map((section, index) => (
-          <SectionCard
-            key={index}
-            section={section}
-            index={index}
-            copies={copiesOf(section.name)}
-            renaming={renaming === index}
-            question={asking?.index === index ? asking.question : null}
-            partner={partners !== null && section.name === partners}
-            onRename={() => rename(index)}
-            onName={(name) => setName(index, name)}
-            onQuickName={(name) => setQuickName(index, name)}
-            onStopRenaming={() => rename(null)}
-            onLines={(lines) => setLines(index, lines)}
-            onAction={(action) => act(index, action)}
-            onGrip={(event) => {
-              if (!list.current || !indicator.current) return;
-              event.preventDefault();
-              new SectionMover(list.current, indicator.current).start(index, move);
-            }}
-            onStep={(direction) => {
-              const to = index + direction;
-              if (to >= 0 && to < sections.length) move(index, to);
-            }}
-            linkTargets={sections.flatMap((other, at) => at !== index && other.name !== section.name ? [{ id: String(at), label: other.name ?? t("lyrics.untitledSection", { index: (at + 1) }) }] : [])}
-            onLinkTo={(to) => link(index, to)}
-            onPartners={(show) => setPartners(show ? section.name : null)}
-            renderMarks={marksBehind(section.name !== null && strictRhymes.includes(section.name), index)}
-            analysis={view.details && <details className="section__analysis"><summary>{t("lyrics.lineAnalysisTitle")}</summary><ol>
-              {section.lines.filter(LyricsSections.isSung).map((line, lineIndex) => {
-                const check = checks[starts[index]! + lineIndex];
-                return <li key={lineIndex}><p>{line}</p>{check ? <p>
-                  {t("lyrics.lineAnalysis", { count: (MarkLayout.count(check)), words: (check.words.map((word) => t("lyrics.wordAnalysis", { word: (word.text), syllables: (word.syllables.map((syllable, at) => t("lyrics.syllableAnalysis", { syllable: (syllable), stress: (word.stress[at]) }))).join(", ") })).join("; ")), rhyme: (t("lyrics.rhymeAnalysis", { hasLetter: Boolean((check.rhyme.letter)), letter: (check.rhyme.letter), quality: (check.rhyme.quality), hasPart: Boolean((check.rhyme.part)), part: (check.rhyme.part) })) })}
-                  {check.rhyme.sound && <code> {check.rhyme.sound}</code>}
-                </p> : <p>{t("lyrics.analysisUnavailable")}</p>}</li>;
-              })}
-            </ol></details>}
-            extras={
-              section.name !== null && (
-                <StrictToggle
-                  on={strictRhymes.includes(section.name)}
-                  onChange={(strict) => {
-                    if (section.name !== null) void client.lyrics.setStrictRhymes(section.name, strict).catch(() => undefined);
-                  }}
-                />
-              )
-            }
-          />
-        ))}
+        <LyricsTextEditor ref={editor} text={text} checks={checks} view={view} strictRhymes={strictRhymes} headers={headers}
+          onChange={(next) => client.lyrics.edit(next)}
+          onWord={(next) => setWord(previous => JSON.stringify(previous) === JSON.stringify(next) ? previous : next)} />
         <Button variant={ButtonVariant.Quiet} className="lyrics-editor__add" onClick={addSection}>
           <Icon name={IconName.Plus} />
           {t("lyrics.section")}
         </Button>
       </div>
+      {word && stored && stored.text === text && <SyllableChoice key={`${word.line}:${word.word}:${JSON.stringify(word.value)}`} selected={word} state={stored}
+        onSaved={(state) => { client.lyrics.receive(state); marks.retry(); setRetries(count => count + 1); }} />}
       {support.status !== SupportStatus.Ready && (
         <SupportNotice
           status={support.status}

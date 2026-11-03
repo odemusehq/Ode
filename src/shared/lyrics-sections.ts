@@ -68,7 +68,25 @@ export class LyricsSections {
       chosen.set(section.name, changed.lines);
     }
     if (chosen.size === 0) return text;
-    return LyricsSections.join(sections.map((section) => ({ name: section.name, lines: [...((section.name !== null && chosen.get(section.name)) || section.lines)] })));
+    // Replace only linked bodies. Unrelated indentation and blank-line gaps remain literal editor text.
+    const lines = text.split(LINE_BREAK);
+    const spans: { name: string; start: number; end: number }[] = [];
+    for (let at = 0; at < lines.length; at++) {
+      const name = LyricsSections.labelName(lines[at]!);
+      if (name === null) continue;
+      let start = at + 1, end = start;
+      while (end < lines.length && LyricsSections.labelName(lines[end]!) === null) end++;
+      const next = end;
+      while (start < end && !lines[start]!.trim()) start++;
+      while (end > start && !lines[end - 1]!.trim()) end--;
+      spans.push({ name, start, end });
+      at = next - 1;
+    }
+    for (const span of spans.reverse()) {
+      const body = chosen.get(span.name);
+      if (body) lines.splice(span.start, span.end - span.start, ...body);
+    }
+    return lines.join("\n");
   }
 
   /** The name without a trailing number: "Verse 2" gives "Verse". */

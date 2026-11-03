@@ -9,7 +9,8 @@ export interface MarkRun {
   rhyme: [number, number] | null;
 }
 
-interface Located {
+export interface Located {
+  index: number;
   start: number;
   end: number;
   /** Where each syllable starts, with its stress; empty when the pieces fail to spell the word as typed. */
@@ -47,11 +48,11 @@ export class MarkLayout {
     return check.words.reduce((sum, word) => sum + word.syllables.length, 0);
   }
 
-  private static locate(line: string, check: LineCheck): Located[] {
+  static locate(line: string, check: LineCheck): Located[] {
     const lower = line.toLowerCase();
     const located: Located[] = [];
     let cursor = 0;
-    for (const word of check.words) {
+    for (const [index, word] of check.words.entries()) {
       const text = word.text.toLowerCase();
       if (!text) continue;
       const start = lower.indexOf(text, cursor);
@@ -67,7 +68,7 @@ export class MarkLayout {
             return syllable;
           })
         : [];
-      located.push({ start, end, syllables });
+      located.push({ index, start, end, syllables });
     }
     return located;
   }
@@ -100,5 +101,16 @@ export class MarkLayout {
     const from = Math.max(range[0], start);
     const to = Math.min(range[1], end);
     return from < to ? [from - start, to - start] : null;
+  }
+}
+
+/** The rhyme colours: one per letter, A to F, then round again. */
+export class RhymeColour {
+  private static readonly COUNT = 6;
+
+  /** The colour token's suffix for a rhyme letter: "a" for A, "b" for B… */
+  static of(letter: string): string {
+    const index = (letter.toUpperCase().charCodeAt(0) - "A".charCodeAt(0)) % RhymeColour.COUNT;
+    return String.fromCharCode("a".charCodeAt(0) + Math.max(0, index));
   }
 }

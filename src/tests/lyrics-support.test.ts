@@ -208,3 +208,9 @@ test("one whole-song request preserves cross-section model labels and hides old 
   pending[2]!({ status: "ok", check }); await new Promise<void>((resolve) => setImmediate(resolve));
   assert.equal(marks.marksFor(latest)[4]?.rhyme.letter, "C");
 });
+
+test("linked body updates retain the author's other whitespace and blank lines", () => {
+  const before = "\n[Verse]\n  Leave this alone  \n\n\n[Chorus]\nFire\n\n\n[Chorus]\nFire\n\n";
+  const edited = before.replace("Fire", "Flame");
+  assert.equal(LyricsSections.unifyLinked(before, edited), edited.replace("Fire", "Flame"));
+});
