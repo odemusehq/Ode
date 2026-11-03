@@ -100,7 +100,9 @@ test("a metered MusicXML score retains barlines and ties without splitting the s
   const edgeRead = MusicXml.read(MusicXml.write({ ...sheet, notation: { ...sheet.notation!, clips: [edge] } }));
   assert.deepEqual(edgeRead.notation!.clips[0]!.notes, edge.notes);
   edge.notes = [{ pitch: 64, start: 128.75, duration: 1 / 3, velocity: 83, probability: 0.8 }];
-  assert.deepEqual(MusicXml.read(MusicXml.write({ ...sheet, notation: { ...sheet.notation!, clips: [edge] } })).notation!.clips[0]!.notes, edge.notes);
+  const tripletXml = MusicXml.write({ ...sheet, notation: { ...sheet.notation!, clips: [edge] } });
+  assert.match(tripletXml, /<actual-notes>3<\/actual-notes><normal-notes>2<\/normal-notes>/);
+  assert.deepEqual(MusicXml.read(tripletXml).notation!.clips[0]!.notes, edge.notes);
 });
 
 test("bar numbers and time changes are read from the native XML, including pickups and denominator beat units", () => {

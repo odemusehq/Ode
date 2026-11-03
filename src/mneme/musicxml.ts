@@ -11,6 +11,8 @@ const SHARP = new Set([1, 3, 6, 8, 10]);
 const TYPES = new Map<number, [string, boolean]>([[0.125, ["32nd", false]], [0.25, ["16th", false]], [0.5, ["eighth", false]],
   [0.75, ["eighth", true]], [1, ["quarter", false]], [1.5, ["quarter", true]], [2, ["half", false]], [3, ["half", true]], [4, ["whole", false]]]);
 
+const TRIPLETS = new Map<number, string>([[4 / 3, "half"], [2 / 3, "quarter"], [1 / 3, "eighth"], [1 / 6, "16th"], [1 / 12, "32nd"]]);
+
 function children(parent: Element, name: string): Element[] {
   return Array.from(parent.childNodes).filter((node): node is Element => node.nodeType === 1 && node.nodeName === name);
 }
@@ -234,6 +236,14 @@ export class MusicXml {
       if (!last) add(doc, element, "tie").setAttribute("type", "start");
       const type = TYPES.get(duration);
       if (type) { add(doc, element, "type", type[0]); if (type[1]) add(doc, element, "dot"); }
+      else {
+        const triplet = [...TRIPLETS].find(([beats]) => Math.abs(beats - duration) <= 1e-9)?.[1];
+        if (triplet) {
+          add(doc, element, "type", triplet);
+          const ratio = add(doc, element, "time-modification");
+          add(doc, ratio, "actual-notes", 3); add(doc, ratio, "normal-notes", 2); add(doc, ratio, "normal-type", triplet);
+        }
+      }
       if (!first || !last) {
         const notations = add(doc, element, "notations");
         if (!first) add(doc, notations, "tied").setAttribute("type", "stop");
