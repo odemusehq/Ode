@@ -26,6 +26,7 @@ export const API = {
   lyricsCheck: "/api/lyrics/check", // POST LyricsCheckRequest → LyricsCheckResponse (whole-song annotations)
   lyricsStrict: "/api/lyrics/strict", // POST StrictRhymesRequest → LyricsState (perfect rhymes on or off for a section name)
   lyricsChoice: "/api/lyrics/choice", // PUT LyricsChoiceWrite → LyricsState (deliberate syllable/pronunciation choice)
+  lyricsEmphasis: "/api/lyrics/emphasis", // PUT LyricsEmphasisWrite → LyricsState (scoped phrase patches)
   lyricsMelody: "/api/lyrics/melody", // PUT LyricsMelodyEdit → {lyrics, warning?}, native guarded MIDI and MusicXML
   lyricsMusicXml: "/api/lyrics/musicxml", // GET the current editable MusicXML document
   versions: "/api/versions", // GET → VersionListItem[] (newest first)

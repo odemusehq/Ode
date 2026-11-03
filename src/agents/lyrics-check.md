@@ -18,4 +18,6 @@ This analysis is the starting interpretation, not a permanent rule. A longer not
 
 A saved choice with pronunciation:false overrides sentence/sung emphasis only. Its copied syllables, IPA and wordStress are context, not a pronunciation lock. Other saved choices can explicitly override pronunciation. Keep lexical stress independent of an emphasis-only edit and retain existing divisions for words already associated with notes.
 
+A choice with emphasis:false overrides pronunciation only: infer phrase emphasis afresh for its chosen division. Null stress values mean not yet interpreted, never unstressed; your complete new answer must provide numeric emphasis values in context. Never transfer an old syllable index onto a different division merely to retain a value.
+
 When the saved artist context includes a current request, follow that direction for the interpretation while keeping the written words intact. Absolute line numbers in melody associations refer to the supplied full source text, including its headings and blank lines; the numbered analysis output still follows sung lines only.

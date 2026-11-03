@@ -23,7 +23,7 @@ import type { UiEvent } from "../shared/events";
 import type { DialogView, OdeConfig } from "../shared/config";
 import type { LyricsCheckResponse } from "../shared/lyrics";
 import type { LyricMelody } from "./lyric-melody";
-import { LyricsChoiceSchema, LyricsMelodyEditSchema } from "../shared/lyrics-document";
+import { LyricsChoiceSchema, LyricsMelodyEditSchema, LyricsEmphasisSchema } from "../shared/lyrics-document";
 import { MusicXml } from "../mneme/musicxml";
 import { Mode } from "../shared/personalisation";
 import { VersionAuthor, type RestoreResult } from "../shared/versions";
@@ -552,6 +552,12 @@ export class OdeServer {
       const parsed = LyricsChoiceSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: t("lyrics.document.choiceInput") }, 400);
       try { return c.json(await lyrics.choose(parsed.data)); }
+      catch (error) { return c.json({ error: error instanceof Error ? error.message : String(error) }, 409); }
+    });
+    app.put(API.lyricsEmphasis, async (c) => {
+      const parsed = LyricsEmphasisSchema.safeParse(await OdeServer.body(c));
+      if (!parsed.success) return c.json({ error: t("lyrics.document.annotationsChanged") }, 400);
+      try { return c.json(await lyrics.emphasise(parsed.data)); }
       catch (error) { return c.json({ error: error instanceof Error ? error.message : String(error) }, 409); }
     });
     app.put(API.lyricsMelody, async (c) => {

@@ -40,8 +40,8 @@ export interface LyricsSaved extends LyricsState {
 export interface WordCheck {
   text: string;
   syllables: string[];
-  /** Phrase/sung emphasis: 1 strong, 2 secondary, 0 light. Legacy values retain their meaning. */
-  stress: number[];
+  /** Phrase/sung emphasis: 1 strong, 2 secondary, 0 light, null not yet interpreted. Legacy values retain their meaning. */
+  stress: (number | null)[];
   /** Lexical primary/secondary/unstressed syllables, independent of the sentence; absent in legacy analysis. */
   wordStress?: number[];
   /** IPA for each sung syllable, when the model or musician supplied it. */

@@ -1,15 +1,22 @@
 import { t } from "../../shared/i18n";
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { LyricsChoiceSchema, SyllableBindingSchema, ScoreMeterSchema, LyricsDocument } from "../../shared/lyrics-document";
+import { LyricsChoiceSchema, SyllableBindingSchema, ScoreMeterSchema, LyricsDocument, LyricsEmphasisSchema } from "../../shared/lyrics-document";
 import { NoteSchema } from "../../shared/live-schemas";
 import { defineTool, type AnyTool } from "../define";
 
 /** These tools persist explicit artist/model choices; all note values are read through the native SDK. */
 export const lyricMelodyTools: AnyTool[] = [
   defineTool({
+    name: "lyrics_set_emphasis", changes: "memory",
+    description: "Patch explicit sentence/sung emphasis values in one lyric line without changing pronunciation, words, notes or other syllables. Read lyrics_read first. Supply its songId, baseRevision, notationRevision and absolute line; each change identifies the current word index/text/syllables, syllable index and value (0 light, 1 strong, 2 secondary). All changes are saved together or refused together if the source changed. Word stress remains independent; use lyrics_choose_syllables with emphasis:false for a pronunciation-only edit.",
+    input: LyricsEmphasisSchema.shape,
+    describe: ({ line }) => t("lyrics.document.emphasisActivity", { line }),
+    run: async (input, ctx) => ctx.lyrics.emphasise(input),
+  }),
+  defineTool({
     name: "lyrics_choose_syllables", changes: "memory",
-    description: "Save a deliberate pronunciation or phrase-emphasis choice for one currently analysed word. wordStress is lexical stress (0 unstressed, 1 primary, 2 secondary); stress is separate sentence/sung emphasis (0 light, 1 strong, 2 secondary). Each supplied array aligns with syllables. Keep automatic syllable divisions unless the musician's intended pronunciation changes. Read lyrics_read first and send its songId, revision as baseRevision, notationRevision and absolute line (including headings/blanks), plus the zero-based word index and exact written word in value. Joined syllable spelling must equal that word; this is literal persistence, not a local linguistic analyser. The choice survives subsequent model checks. A changed division retains all MIDI and marks affected associations stale for explicit reconciliation. No notes or words are rewritten.",
+    description: "Save a deliberate pronunciation choice for one currently analysed word. Use emphasis:false for a pronunciation-only edit; use lyrics_set_emphasis for individual phrase syllables instead. wordStress is lexical stress (0 unstressed, 1 primary, 2 secondary); stress is separate sentence/sung emphasis (0 light, 1 strong, 2 secondary, null not yet interpreted). Each supplied array aligns with syllables. Keep automatic syllable divisions unless the musician's intended pronunciation changes. Read lyrics_read first and send its songId, revision as baseRevision, notationRevision and absolute line (including headings/blanks), plus the zero-based word index and exact written word in value. Joined syllable spelling must equal that word; this is literal persistence, not a local linguistic analyser. The choice survives subsequent model checks. A changed division retains all MIDI and marks affected associations stale for explicit reconciliation. No notes or words are rewritten.",
     input: LyricsChoiceSchema.shape,
     run: async (input, ctx) => ctx.lyrics.choose(input),
   }),

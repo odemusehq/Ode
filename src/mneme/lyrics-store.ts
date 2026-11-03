@@ -2,7 +2,7 @@ import { MusicXml } from "./musicxml";
 import { t } from "../shared/i18n";
 import { diff3MergeRegions } from "node-diff3";
 import type { LyricsCheck, LyricsCheckResponse, LyricsSaved, LyricsState } from "../shared/lyrics";
-import { LyricsDocument, LyricsChoiceSchema, LyricsMelodyEditSchema, LyricsCheckSchema, VocalClipSchema, type LyricsChoiceWrite, type LyricsMelodyEdit, type WordChoice, type VocalClip } from "../shared/lyrics-document";
+import { LyricsDocument, LyricsChoiceSchema, LyricsMelodyEditSchema, LyricsCheckSchema, VocalClipSchema, type LyricsChoiceWrite, type LyricsMelodyEdit, type WordChoice, type VocalClip, LyricsEmphasisSchema, type LyricsEmphasisWrite } from "../shared/lyrics-document";
 import type { Accent } from "../shared/personalisation";
 import type { LyricsChecker } from "../services/lyrics-checker";
 import type { ClipRef, Note } from "../shared/live";
@@ -230,33 +230,66 @@ export class LyricsStore {
 
   /** Save a literal musician/model pronunciation choice, without guessing a split or rewriting text. */
   choose(input: LyricsChoiceWrite): Promise<LyricsState> {
-    const choice = LyricsChoiceSchema.parse(input);
+    return this.chooseWords([LyricsChoiceSchema.parse(input)]);
+  }
+
+  /** One phrase transaction: patch only the requested syllables, keeping other words and pronunciation. */
+  async emphasise(input: LyricsEmphasisWrite): Promise<LyricsState> {
+    const edit = LyricsEmphasisSchema.parse(input);
+    const state = await this.read();
+    const sungIndex = LyricsText.lines(state.text).slice(0, edit.line - 1).filter(LyricsText.isSung).length;
+    const words = state.check?.lines[sungIndex]?.words;
+    const changed = new Map<number, NonNullable<typeof words>[number]>();
+    for (const patch of edit.changes) {
+      const word = words?.[patch.word];
+      if (!word || word.text !== patch.text || JSON.stringify(word.syllables) !== JSON.stringify(patch.syllables) || patch.syllable >= word.syllables.length) throw new StaleLyricsError(t("lyrics.document.annotationsChanged"));
+      const existing = state.notation?.choices.find(choice => !choice.stale && choice.line === edit.line && choice.word === patch.word && choice.lineText === state.text.split("\n")[edit.line - 1]);
+      const value = changed.get(patch.word) ?? { ...structuredClone(word), stress: existing?.emphasis !== false && JSON.stringify(existing?.value.syllables) === JSON.stringify(word.syllables)
+        ? [...existing!.value.stress] : word.syllables.map(() => null) };
+      value.stress[patch.syllable] = patch.value;
+      changed.set(patch.word, value);
+    }
+    return this.chooseWords([...changed].map(([word, value]) => ({ songId: edit.songId, baseRevision: edit.baseRevision, notationRevision: edit.notationRevision,
+      line: edit.line, word, value, pronunciation: false })));
+  }
+
+  private chooseWords(choices: LyricsChoiceWrite[]): Promise<LyricsState> {
     return this.enqueue(async () => {
+      const first = choices[0]!;
       const texts = this.texts();
       const sheet = await this.song.updateNotation(current => {
-        this.assertRevision(current, choice.songId, choice.baseRevision, choice.notationRevision);
         const notation = structuredClone(current.notation ?? LyricsDocument.empty());
-        const lines = LyricsText.lines(current.lyrics);
-        const lineText = lines[choice.line - 1];
-        const sungIndex = lines.slice(0, choice.line - 1).filter(LyricsText.isSung).length;
-        const previous = LyricsDocument.check(notation, current.lyrics)?.lines[sungIndex]?.words[choice.word];
-        if (!lineText || !LyricsText.isSung(lineText) || !previous || previous.text !== choice.value.text || !choice.value.syllables.every(Boolean) || choice.value.syllables.join("") !== previous.text) {
-          throw new Error(t("lyrics.document.chooseWord"));
-        }
-        if (choice.pronunciation === false && JSON.stringify(previous.syllables) !== JSON.stringify(choice.value.syllables)) throw new StaleLyricsError(t("lyrics.document.annotationsChanged"));
-        const existing = notation.choices.find(item => !item.stale && item.line === choice.line && item.word === choice.word && item.lineText === lineText);
-        const automatic = LyricsDocument.check({ ...notation, choices: [] }, current.lyrics)?.lines[sungIndex]?.words[choice.word];
-        notation.choices = notation.choices.filter(item => item.line !== choice.line || item.word !== choice.word);
-        notation.choices.push({ line: choice.line, lineText, word: choice.word, value: choice.value, default: existing?.default ?? automatic, pronunciation: choice.pronunciation });
-        if (JSON.stringify(previous.syllables) !== JSON.stringify(choice.value.syllables)) {
-          for (const clip of notation.clips) for (const binding of clip.bindings) {
+        for (const choice of choices) {
+          this.assertRevision(current, choice.songId, choice.baseRevision, choice.notationRevision);
+          const lines = LyricsText.lines(current.lyrics);
+          const lineText = lines[choice.line - 1];
+          const sungIndex = lines.slice(0, choice.line - 1).filter(LyricsText.isSung).length;
+          const previous = LyricsDocument.check(notation, current.lyrics)?.lines[sungIndex]?.words[choice.word];
+          if (!lineText || !LyricsText.isSung(lineText) || !previous || previous.text !== choice.value.text || !choice.value.syllables.every(Boolean) || choice.value.syllables.join("") !== previous.text) throw new Error(t("lyrics.document.chooseWord"));
+          const sameDivision = JSON.stringify(previous.syllables) === JSON.stringify(choice.value.syllables);
+          if (choice.pronunciation === false && !sameDivision) throw new StaleLyricsError(t("lyrics.document.annotationsChanged"));
+          const existing = notation.choices.find(item => !item.stale && item.line === choice.line && item.word === choice.word && item.lineText === lineText);
+          const automatic = LyricsDocument.check({ ...notation, choices: [] }, current.lyrics)?.lines[sungIndex]?.words[choice.word];
+          const value = structuredClone(choice.value);
+          let pronunciation = choice.pronunciation, emphasis = choice.emphasis;
+          if (pronunciation === false && existing && existing.pronunciation !== false) {
+            value.syllables = [...existing.value.syllables]; value.wordStress = existing.value.wordStress; value.ipa = existing.value.ipa;
+            pronunciation = existing.pronunciation;
+          }
+          if (emphasis === false) {
+            value.stress = sameDivision ? [...previous.stress] : value.syllables.map(() => null);
+            emphasis = sameDivision && existing ? existing.emphasis : false;
+          }
+          notation.choices = notation.choices.filter(item => item.line !== choice.line || item.word !== choice.word);
+          notation.choices.push({ line: choice.line, lineText, word: choice.word, value, default: existing?.default ?? automatic, pronunciation, emphasis });
+          if (!sameDivision) for (const clip of notation.clips) for (const binding of clip.bindings) {
             if (binding.line === choice.line && binding.word === choice.word) binding.stale = true;
           }
         }
         notation.revision++;
         return notation;
       });
-      return this.stored(sheet, choice.songId, texts);
+      return this.stored(sheet, first.songId, texts);
     });
   }
 

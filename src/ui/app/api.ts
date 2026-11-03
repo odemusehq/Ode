@@ -19,7 +19,7 @@ import type {
   VersionRequest,
 } from "../../shared/api";
 import type { LyricsCheckRequest, LyricsCheckResponse, StrictRhymesRequest } from "../../shared/lyrics";
-import type { LyricsChoiceWrite, LyricsMelodyEdit } from "../../shared/lyrics-document";
+import type { LyricsChoiceWrite, LyricsMelodyEdit, LyricsEmphasisWrite } from "../../shared/lyrics-document";
 import type { Mode } from "../../shared/personalisation";
 import type { ChatModelOption, ModelListRequest, SettingsResponse, SettingsUpdate, SettingsView } from "../../shared/settings";
 import type { ConversationExchange } from "../../shared/events";
@@ -193,6 +193,10 @@ export class OdeApi {
 
   chooseSyllables(request: LyricsChoiceWrite): Promise<LyricsState> {
     return this.request(HttpMethod.Put, API.lyricsChoice, request);
+  }
+
+  setPhraseEmphasis(request: LyricsEmphasisWrite): Promise<LyricsState> {
+    return this.request(HttpMethod.Put, API.lyricsEmphasis, request);
   }
 
   setStrictRhymes(request: StrictRhymesRequest): Promise<LyricsState> {

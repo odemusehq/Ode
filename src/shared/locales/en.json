@@ -304,6 +304,7 @@
       "syllableSplitHint": "Separate syllables with spaces",
       "wordStress": "Word stress",
       "sentenceEmphasis": "Sentence emphasis",
+      "emphasisActivity": "Change emphasis on lyric line {line}",
       "emphasisFor": "Sentence emphasis for syllable {index}: {syllable}",
       "chooseEmphasis": "Choose emphasis",
       "notAnalysed": "Not analysed",

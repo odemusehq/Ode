@@ -5,7 +5,7 @@ import { ClipRefSchema, NoteSchema } from "./live-schemas";
 import type { LyricsCheck, LineCheck } from "./lyrics";
 
 export const WordCheckSchema = z.object({
-  text: z.string(), syllables: z.array(z.string()), stress: z.array(z.number().int().min(0).max(2)),
+  text: z.string(), syllables: z.array(z.string()), stress: z.array(z.number().int().min(0).max(2).nullable()),
   wordStress: z.array(z.number().int().min(0).max(2)).optional(),
   ipa: z.array(z.string()).optional(),
 }).refine(word => word.syllables.length === word.stress.length, t("lyrics.document.stressAlignment"))
@@ -23,6 +23,7 @@ export const WordChoiceSchema = z.object({
   line: z.number().int().positive(), lineText: z.string(), word: z.number().int().min(0), value: WordCheckSchema,
   default: WordCheckSchema.optional(),
   pronunciation: z.boolean().optional(),
+  emphasis: z.boolean().optional(),
   stale: z.boolean().optional(),
 });
 export const SyllableBindingSchema = z.object({ ...anchor, word: z.number().int().min(0), syllable: z.number().int().min(0), notes: z.array(z.number().int().min(0)).min(1) });
@@ -45,8 +46,18 @@ export const LyricsChoiceSchema = z.object({
   songId: z.string().min(1), baseRevision: z.number().int().min(0), notationRevision: z.number().int().min(0),
   line: z.number().int().positive(), word: z.number().int().min(0), value: WordCheckSchema,
   pronunciation: z.boolean().optional().describe("False for a sentence-emphasis-only edit; preserve the current automatic division and lexical wordStress. True or omitted for an explicit pronunciation override."),
+  emphasis: z.boolean().optional().describe("False for a pronunciation-only edit: retain existing phrase emphasis, or leave it unknown after a changed division. True or omitted edits emphasis too."),
 });
 export type LyricsChoiceWrite = z.infer<typeof LyricsChoiceSchema>;
+
+/** Literal emphasis patches in one lyric line, independent of pronunciation and MIDI. */
+export const LyricsEmphasisSchema = z.object({
+  songId: z.string().min(1), baseRevision: z.number().int().nonnegative(), notationRevision: z.number().int().nonnegative(),
+  line: z.number().int().positive(),
+  changes: z.array(z.object({ word: z.number().int().nonnegative(), text: z.string().min(1), syllables: z.array(z.string().min(1)).min(1),
+    syllable: z.number().int().nonnegative(), value: z.number().int().min(0).max(2) })).min(1),
+}).refine(input => new Set(input.changes.map(change => `${change.word}/${change.syllable}`)).size === input.changes.length, t("lyrics.document.annotationsChanged"));
+export type LyricsEmphasisWrite = z.infer<typeof LyricsEmphasisSchema>;
 
 /** A direct musician edit of an existing linked native note; all coordinates are quarter-note beats. */
 export const LyricsMelodyEditSchema = z.object({
@@ -109,11 +120,13 @@ export class LyricsDocument {
         if (!choice.stale && choice.line === index + 1 && choice.lineText === line && check.words[choice.word]?.text === choice.value.text) {
           const automatic = check.words[choice.word]!;
           if (choice.pronunciation === false) {
-            if (JSON.stringify(choice.value.syllables) === JSON.stringify(automatic.syllables)) check.words[choice.word] = { ...automatic, stress: [...choice.value.stress] };
+            if (choice.emphasis !== false && JSON.stringify(choice.value.syllables) === JSON.stringify(automatic.syllables)) check.words[choice.word] = { ...automatic, stress: choice.value.stress.map((value, at) => value ?? automatic.stress[at] ?? null) };
             continue;
           }
           check.words[choice.word] = structuredClone({ ...choice.value,
             ...(!choice.value.wordStress && JSON.stringify(choice.value.syllables) === JSON.stringify(automatic.syllables) && automatic.wordStress ? { wordStress: automatic.wordStress } : {}) });
+          const baseline = JSON.stringify(choice.value.syllables) === JSON.stringify(automatic.syllables) ? automatic.stress : choice.value.syllables.map(() => null);
+          check.words[choice.word]!.stress = choice.emphasis === false ? [...baseline] : choice.value.stress.map((value, at) => value ?? baseline[at] ?? null);
         }
       }
       return [check];

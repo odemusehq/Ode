@@ -109,7 +109,7 @@ export class LyricsChecker {
           signal,
           parse: (value) => {
             const result = LyricsCheckSchema.parse(value);
-            if (result.lines.length !== lines.length || result.lines.some(line => !line.review || line.words.some(word => !word.wordStress || !word.syllables.length || !word.syllables.every(Boolean) || word.syllables.join("") !== word.text))) throw new Error(t("lyrics.document.checkIncomplete"));
+            if (result.lines.length !== lines.length || result.lines.some(line => !line.review || line.words.some(word => !word.wordStress || word.stress.some(value => value === null) || !word.syllables.length || !word.syllables.every(Boolean) || word.syllables.join("") !== word.text))) throw new Error(t("lyrics.document.checkIncomplete"));
             return result;
           },
         });

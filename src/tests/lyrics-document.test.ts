@@ -192,3 +192,32 @@ test("the main agent can read an unfinished phrase and patch one syllable withou
   assert.deepEqual(patched.notation!.clips[0]!.bindings.find(binding => binding.word === 1)!.notes, [1]);
   assert.deepEqual(patched.notation!.clips[0]!.notes, notes);
 });
+
+test("word pronunciation and phrase patches preserve each other and new divisions wait for interpretation", async () => {
+  const { song, lyrics } = await open();
+  await lyrics.saveCheck(song.songId, "[Verse]\nFire", "uk", { lines: [{ ...check.lines[0]!, words: [{ ...check.lines[0]!.words[0]!, wordStress: [1] }] }] });
+  let state = await lyrics.read();
+  state = await lyrics.emphasise({ songId: song.songId, baseRevision: state.revision, notationRevision: state.notation!.revision, line: 2,
+    changes: [{ word: 0, text: "Fire", syllables: ["Fire"], syllable: 0, value: 0 }] });
+  state = await lyrics.choose({ songId: song.songId, baseRevision: state.revision, notationRevision: state.notation!.revision, line: 2, word: 0, emphasis: false,
+    value: { text: "Fire", syllables: ["Fire"], wordStress: [2], stress: [1] } });
+  assert.deepEqual(state.check!.lines[0]!.words[0]!.stress, [0]);
+  state = await lyrics.emphasise({ songId: song.songId, baseRevision: state.revision, notationRevision: state.notation!.revision, line: 2,
+    changes: [{ word: 0, text: "Fire", syllables: ["Fire"], syllable: 0, value: 1 }] });
+  assert.deepEqual(state.check!.lines[0]!.words[0]!.wordStress, [2]);
+  const before = state.notation!.revision;
+  await assert.rejects(lyrics.emphasise({ songId: song.songId, baseRevision: state.revision, notationRevision: before, line: 2,
+    changes: [{ word: 0, text: "Fire", syllables: ["Fire"], syllable: 0, value: 0 }, { word: 1, text: "wrong", syllables: ["wrong"], syllable: 0, value: 1 }] }));
+  assert.equal((await lyrics.read()).notation!.revision, before);
+  state = await lyrics.choose({ songId: song.songId, baseRevision: state.revision, notationRevision: before, line: 2, word: 0, emphasis: false,
+    value: { text: "Fire", syllables: ["Fi", "re"], wordStress: [1, 0], stress: [null, null] } });
+  assert.deepEqual(state.check!.lines[0]!.words[0]!.stress, [null, null]);
+  await lyrics.saveCheck(song.songId, state.text, "uk", { lines: [{ ...check.lines[0]!, words: [{ text: "Fire", syllables: ["Fi", "re"], wordStress: [1, 0], stress: [1, 0] }] }] });
+  state = await lyrics.read();
+  assert.deepEqual(state.check!.lines[0]!.words[0]!.stress, [1, 0]);
+  state = await lyrics.emphasise({ songId: song.songId, baseRevision: state.revision, notationRevision: state.notation!.revision, line: 2,
+    changes: [{ word: 0, text: "Fire", syllables: ["Fi", "re"], syllable: 1, value: 2 }] });
+  assert.deepEqual(state.notation!.choices[0]!.value.stress, [null, 2]);
+  await lyrics.saveCheck(song.songId, state.text, "uk", { lines: [{ ...check.lines[0]!, words: [{ text: "Fire", syllables: ["Fi", "re"], wordStress: [1, 0], stress: [0, 0] }] }] });
+  assert.deepEqual((await lyrics.read()).check!.lines[0]!.words[0]!.stress, [0, 2]);
+});
