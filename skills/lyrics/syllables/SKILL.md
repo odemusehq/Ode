@@ -10,3 +10,5 @@ Ask lyricist with the exact text, pronunciation and relevant melody coordinates.
 Use the tool schemas exposed by the SDK; discover missing schemas with `ToolSearch` when available. Read only the references needed for the current task; the artist's current direction overrides stylistic advice.
 
 - `references/craft.md`: optional detailed techniques and examples.
+
+Use the score position returned by `lyrics_read` for bar/beat context: it comes from MusicXML measure numbers and time signatures, including pickups and changes of metre. Beat values use the time signature's denominator unit, while native MIDI coordinates remain quarter-note beats. Missing metre stays unknown. A tie over a barline continues the same note and syllable. Do not infer a new syllable, word stress or a musical accent merely from the presence of a barline.

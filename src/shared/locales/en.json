@@ -335,7 +335,8 @@
       "scoreTies": "The tied note fragments no longer form one contiguous native note with the same pitch. Reconcile the tie before saving.",
       "scorePosition": "Bar {measure} · beat {beat}",
       "scoreMeter": "{beats}/{beatType}",
-      "barContext": "Score position"
+      "barContext": "Score position",
+      "scoreMidBarTime": "Time signatures and divisions must change at a bar boundary in Ode. This score has a mid-bar or additional timing change; its original XML has been preserved."
     }
   },
   "settings": {

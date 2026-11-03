@@ -30,7 +30,7 @@ export const lyricTextTools: AnyTool[] = [
     changes: "none",
     alwaysLoad: true,
     description:
-      'Read all lyrics or inclusive startLine/endLine, numbered from 1 including headings/blanks. Returns songId, text revision, notationRevision, numbered lines, shared structured word/syllable/stress/IPA/rhyme annotations, and bound melody notes for the portion. Word and syllable indices are zero-based; line numbers are absolute and one-based. Bound MIDI is refreshed through the SDK; melodyVerified=false means it could not be verified, and stale bindings require explicit reconciliation. needsAnalysis signals missing/stale linguistic interpretation: call lyricist with analyse:true, not a local rule engine. Longer notes alone do not create new syllables. Read before lyrics_write or lyrics_choose_syllables.',
+      'Read all lyrics or inclusive startLine/endLine, numbered from 1 including headings/blanks. Returns songId, text revision, notationRevision, numbered lines, shared structured word/syllable/stress/IPA/rhyme annotations, and bound melody notes for the portion. Word and syllable indices are zero-based; line numbers are absolute and one-based. Bound MIDI is refreshed through the SDK; melodyVerified=false means it could not be verified, and stale bindings require explicit reconciliation. needsAnalysis signals missing/stale linguistic interpretation: call lyricist with analyse:true, not a local rule engine. Each bound note includes a score position: the actual MusicXML measure number, beat in the denominator unit and time signature; absent score position means unknown metre, never assumed 4/4. Longer notes alone do not create new syllables. Read before lyrics_write or lyrics_choose_syllables.',
     input: { startLine: z.number().int().positive().optional(), endLine: z.number().int().positive().optional() },
     run: async ({ startLine = 1, endLine }, ctx) => {
       let lyrics = await ctx.lyrics.read();
@@ -53,7 +53,7 @@ export const lyricTextTools: AnyTool[] = [
       });
       const notation = lyrics.notation;
       const melody = notation?.clips.flatMap(clip => clip.bindings.filter(binding => binding.line >= startLine && (endLine === undefined || binding.line <= endLine))
-        .map(binding => ({ ...binding, clip: clip.clip, notes: binding.notes.map(index => ({ index, ...clip.notes[index] })) }))) ?? [];
+        .map(binding => ({ ...binding, clip: clip.clip, notes: binding.notes.map(index => ({ index, ...clip.notes[index], score: clip.notes[index] ? LyricsDocument.position(clip, clip.notes[index]!.start) : undefined })) }))) ?? [];
       return { songId: lyrics.songId, revision: lyrics.revision, notationRevision: notation?.revision ?? 0, totalLines: lines.length, lines: lines.slice(startLine - 1, endLine),
         annotations, melody, melodyVerified, needsAnalysis: LyricsDocument.needsAnalysis(notation, lyrics.text) };
     },

@@ -61,16 +61,21 @@ test("melody bindings use current SDK notes and reject a changed source before s
   const tool = lyricMelodyTools.find(tool => tool.name === "lyrics_bind_melody")!;
   const ctx = { song, lyrics, live: { extension: { call: async () => ({ notes }) } } } as unknown as ToolContext;
   const input = { clip: { tag: "vocal" }, expectedNotesHash: hash, baseRevision: current.revision, notationRevision: current.notation!.revision,
-    bindings: [{ line: 2, text: "Fire", word: 0, syllable: 0, notes: [0] }] };
+    bindings: [{ line: 2, text: "Fire", word: 0, syllable: 0, notes: [0] }], meter: { beats: "3", beatType: 4 } };
   notes = [{ pitch: 65, start: 0, duration: 1.5, velocity: 82 }];
   await assert.rejects(tool.run(input, ctx), /changed/i);
   assert.equal((await lyrics.read()).notation!.clips.length, 0);
   notes = [{ pitch: 64, start: 0, duration: 1.5, velocity: 82 }];
   await tool.run(input, ctx);
   assert.deepEqual((await lyrics.read()).notation!.clips[0]!.notes, notes);
+  assert.deepEqual((await lyrics.read()).notation!.clips[0]!.measures?.[0]?.meter, input.meter);
+  const rebound = await lyrics.read();
+  await tool.run({ ...input, meter: undefined, baseRevision: rebound.revision, notationRevision: rebound.notation!.revision }, ctx);
+  assert.deepEqual((await lyrics.read()).notation!.clips[0]!.measures?.[0]?.meter, input.meter);
   const changed = [{ pitch: 67, start: 0, duration: 2, velocity: 82 }];
   const refreshed = await lyrics.refreshMelody(async () => changed);
   assert.equal(refreshed.verified, true);
+  assert.deepEqual(refreshed.lyrics.notation!.clips[0]!.measures?.[0]?.meter, input.meter);
   assert.deepEqual(refreshed.lyrics.notation!.clips[0]!.notes, changed);
   assert.equal(refreshed.lyrics.notation!.clips[0]!.bindings[0]!.stale, true);
   assert.deepEqual(refreshed.lyrics.check!.lines[0]!.words[0]!.syllables, ["Fire"]);

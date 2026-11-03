@@ -152,6 +152,7 @@ export class MusicXml {
         }
       }
       for (const node of Array.from(measure.childNodes).filter((node): node is Element => node.nodeType === 1)) {
+        if (node.nodeName === "attributes" && (child(node, "time") || child(node, "divisions")) && (node !== attrs || cursor !== 0)) throw new Error(t("lyrics.document.scoreMidBarTime"));
         if (node.nodeName === "forward" || node.nodeName === "backup") {
           const duration = number(node, "duration") / divisions;
           if (duration <= 0) throw new Error(t("lyrics.document.scoreTiming"));

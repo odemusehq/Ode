@@ -1,3 +1,4 @@
+import { LyricsDocument } from "../../shared/lyrics-document";
 import { useState } from "react";
 import type { LyricsState } from "../../shared/lyrics";
 import { t } from "../../shared/i18n";
@@ -16,7 +17,7 @@ export function SyllableChoice({ selected, state, onSaved }: { selected: WordSel
   const [error, setError] = useState("");
   const pieces = split.split("·").map(piece => piece.trim());
   const valid = pieces.every(Boolean) && pieces.join("") === selected.value.text;
-  const bindings = state.notation?.clips.flatMap(clip => clip.bindings.filter(binding => binding.line === selected.line && binding.word === selected.word).map(binding => ({ ...binding, actual: binding.notes.map(index => clip.notes[index]).filter(note => !!note) }))) ?? [];
+  const bindings = state.notation?.clips.flatMap(clip => clip.bindings.filter(binding => binding.line === selected.line && binding.word === selected.word).map(binding => ({ ...binding, actual: binding.notes.flatMap(index => clip.notes[index] ? [{ note: clip.notes[index]!, position: LyricsDocument.position(clip, clip.notes[index]!.start) }] : []) }))) ?? [];
   const save = async () => {
     setBusy(true); setError("");
     try {
@@ -45,7 +46,7 @@ export function SyllableChoice({ selected, state, onSaved }: { selected: WordSel
       <div className="lyrics-pronunciation__actions"><Button type="submit" disabled={!valid || busy}>{t("common.save")}</Button><Button variant={ButtonVariant.Quiet} disabled={busy} onClick={() => setEditing(false)}>{t("common.cancel")}</Button></div>
     </form>}
     {bindings.length > 0 && <div className="lyrics-pronunciation__music" aria-label={t("lyrics.document.savedMelody")} title={t("lyrics.document.savedMelody")}>{bindings.map((binding, index) => <span key={index}>
-      {selected.value.syllables[binding.syllable] ?? ""} · {binding.stale ? t("lyrics.document.alignmentStale") : binding.actual.map(note => `${pitchName(note.pitch)} · ${t("lyrics.document.beats", { value: fraction(note.duration), single: note.duration <= 1 })}`).join(" → ")}
+      {selected.value.syllables[binding.syllable] ?? ""} · {binding.stale ? t("lyrics.document.alignmentStale") : binding.actual.map(({ note, position }) => `${pitchName(note.pitch)} · ${t("lyrics.document.beats", { value: fraction(note.duration * (position?.meter.beatType ?? 4) / 4), single: note.duration * (position?.meter.beatType ?? 4) / 4 <= 1 })}${position ? ` · ${t("lyrics.document.scorePosition", { measure: position.measure, beat: fraction(position.beat) })} (${t("lyrics.document.scoreMeter", position.meter)})` : ""}`).join(" → ")}
     </span>)}</div>}
     {error && <p role="alert">{error}</p>}
   </div>;

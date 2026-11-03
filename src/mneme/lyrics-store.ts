@@ -262,6 +262,7 @@ export class LyricsStore {
           const sameNotes = JSON.stringify(previous.notes) === JSON.stringify(clip.notes);
           clip.bindings = [...previous.bindings.filter(binding => !replaced.has(binding.line)).map(binding => sameNotes ? binding : { ...binding, stale: true }), ...clip.bindings];
           clip.id = previous.id;
+          if (!clip.measures && previous.measures) clip.measures = previous.measures;
         }
         notation.clips = [...notation.clips.filter(item => JSON.stringify(item.clip) !== JSON.stringify(clip.clip)), clip];
         notation.revision++;

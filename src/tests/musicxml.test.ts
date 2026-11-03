@@ -121,6 +121,9 @@ test("bar numbers and time changes are read from the native XML, including picku
   assert.deepEqual(LyricsDocument.position(read, 0), { measure: "0", beat: 6, meter: { beats: "6", beatType: 8 } });
   assert.deepEqual(LyricsDocument.position(read, 2.5), { measure: "Verse-A", beat: 5, meter: { beats: "3+2", beatType: 8 } });
   assert.match(MusicXml.write({ ...sheet, notation: { ...sheet.notation!, clips: [read] } }), /<beats>3\+2<\/beats>/);
+  const late = dom.createElement("attributes");
+  late.appendChild(time.cloneNode(true)); second.appendChild(late);
+  assert.throws(() => MusicXml.read(new XMLSerializer().serializeToString(dom)), /mid-bar|boundary/i);
 });
 
 test("unmeasured drafts do not acquire an invented beat grid", () => {
