@@ -1,7 +1,7 @@
 {
   "name": "Ode",
   "author": "OdeMuse",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "entry": "extension.js",
   "minimumApiVersion": "1.0.0"
 }
