@@ -339,7 +339,7 @@ interface StrictToggleProps {
   onChange: (on: boolean) => void;
 }
 
-/** Perfect rhymes for every section with this name: near rhymes there get a dashed line, and Ode keeps the rhymes perfect. */
+/** A perfect-rhyme preference for linked sections; near rhymes are marked for review. */
 function StrictToggle({ on, onChange }: StrictToggleProps) {
   return (
     <button

@@ -30,7 +30,7 @@ export interface SectionCardProps {
   question: SectionQuestion | null;
   /** Lit while the musician points at a linked copy's badge. */
   partner: boolean;
-  /** Controls at the right of the section's name, such as Strict rhymes. */
+  /** Controls at the right of the section's name, such as Perfect rhymes. */
   extras?: ReactNode;
   analysis?: ReactNode;
   onRename: () => void;

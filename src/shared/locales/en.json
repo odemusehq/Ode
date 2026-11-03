@@ -271,19 +271,19 @@
     "syllableAnalysis": "{syllable} ({stress, plural, =1 {primary stress} other {{stress, plural, =2 {secondary stress} other {unstressed}}}})",
     "rhymeAnalysis": "{hasLetter, select, true {{letter}, {quality, select, perfect {perfect} near {near} other {none}}{hasPart, select, true {, ending {part}} other {}}} other {no partner}}",
     "analysisUnavailable": "Analysis is not available for this line yet.",
-    "strictRhymes": "Strict rhymes",
-    "strictRhymesHint": "Ask for perfect rhymes in this section",
+    "strictRhymes": "Perfect rhymes",
+    "strictRhymesHint": "Prefer perfect rhymes in this section",
     "view": {
       "syllables": "Syllables",
       "syllablesDescription": "Light bars between syllables",
       "counts": "Syllable counts",
       "countsDescription": "The count at the end of each line",
-      "stress": "Stress",
-      "stressDescription": "A dot under each stressed syllable",
+      "stress": "Primary stress",
+      "stressDescription": "A dot under each syllable with primary stress",
       "details": "Line details",
       "detailsDescription": "Optional line-by-line analysis",
-      "rhymes": "Rhymes",
-      "rhymesDescription": "Rhyming letters in colour, stronger on near rhymes"
+      "rhymes": "Rhyme scheme",
+      "rhymesDescription": "Letters and colours identify matching rhyme sounds"
     },
     "document": {
       "serviceUnavailable": "The shared Lyricist annotation service is unavailable.",

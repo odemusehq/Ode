@@ -33,7 +33,7 @@ const SHEET_FIELD_WORDS: Readonly<Record<keyof LeadSheetPatch, string>> = {
   sections: "sections",
   links: "clip links",
   locked: "locked parts",
-  strictRhymes: "sections with strict rhymes",
+  strictRhymes: "sections with a perfect-rhyme preference",
   credits: "credits",
   notes: "notes",
   composition: "musical plan",
