@@ -42,6 +42,14 @@ export const LyricsChoiceSchema = z.object({
 });
 export type LyricsChoiceWrite = z.infer<typeof LyricsChoiceSchema>;
 
+/** A direct musician edit of an existing linked native note; all coordinates are quarter-note beats. */
+export const LyricsMelodyEditSchema = z.object({
+  songId: z.string().min(1), baseRevision: z.number().int().nonnegative(), notationRevision: z.number().int().nonnegative(),
+  clipId: z.string().min(1), note: z.number().int().nonnegative(),
+  pitch: z.number().int().min(0).max(127).optional(), duration: z.number().positive().optional(), start: z.number().nonnegative().optional(),
+}).refine(edit => edit.pitch !== undefined || edit.duration !== undefined || edit.start !== undefined, t("lyrics.document.noteEditRequired"));
+export type LyricsMelodyEdit = z.infer<typeof LyricsMelodyEditSchema>;
+
 const UNMARKED: LineCheck = { words: [], rhyme: { letter: "", quality: "none", part: "", sound: "" } };
 const sung = (line: string) => line.trim().length > 0 && !/^\s*\[[^\]]*\]\s*$/.test(line);
 

@@ -1,7 +1,8 @@
+import { MusicXml } from "./musicxml";
 import { t } from "../shared/i18n";
 import { diff3MergeRegions } from "node-diff3";
 import type { LyricsCheck, LyricsCheckResponse, LyricsSaved, LyricsState } from "../shared/lyrics";
-import { LyricsDocument, LyricsChoiceSchema, LyricsCheckSchema, VocalClipSchema, type LyricsChoiceWrite, type WordChoice, type VocalClip } from "../shared/lyrics-document";
+import { LyricsDocument, LyricsChoiceSchema, LyricsMelodyEditSchema, LyricsCheckSchema, VocalClipSchema, type LyricsChoiceWrite, type LyricsMelodyEdit, type WordChoice, type VocalClip } from "../shared/lyrics-document";
 import type { Accent } from "../shared/personalisation";
 import type { LyricsChecker } from "../services/lyrics-checker";
 import type { ClipRef, Note } from "../shared/live";
@@ -269,6 +270,47 @@ export class LyricsStore {
         return notation;
       });
       return this.stored(sheet, songId, texts);
+    });
+  }
+
+  /** Persist the native result of one deliberate note edit, keeping text and syllable interpretation unchanged. */
+  editMelody(input: LyricsMelodyEdit, apply: (clip: VocalClip, notes: Note[]) => Promise<Note[]>): Promise<{ lyrics: LyricsState; aligned: boolean }> {
+    const edit = LyricsMelodyEditSchema.parse(input);
+    return this.enqueue(async () => {
+      const texts = this.texts();
+      const current = await this.song.read();
+      this.assertRevision(current, edit.songId, edit.baseRevision, edit.notationRevision);
+      const clip = current.notation?.clips.find(clip => clip.id === edit.clipId);
+      if (!clip?.notes[edit.note] || !("tag" in clip.clip) || !clip.bindings.some(binding => !binding.stale && binding.notes.includes(edit.note) && current.lyrics.split("\n")[binding.line - 1] === binding.text)) throw new Error(t("lyrics.document.noteBindingChanged"));
+      const wanted = clip.notes.map((note, index) => index === edit.note ? { ...note, ...(edit.pitch !== undefined ? { pitch: edit.pitch } : {}), ...(edit.duration !== undefined ? { duration: edit.duration } : {}), ...(edit.start !== undefined ? { start: edit.start } : {}) } : { ...note });
+      const preview = structuredClone(current);
+      preview.notation!.clips.find(target => target.id === edit.clipId)!.notes = wanted;
+      MusicXml.read(MusicXml.write(preview));
+      const actual = await apply(structuredClone(clip), structuredClone(wanted));
+      // Live sorts by time and pitch. Match the actual supported values, preserving duplicate multiplicity.
+      const used = new Set<number>();
+      const indices = wanted.map(note => {
+        const index = actual.findIndex((candidate, at) => !used.has(at) && JSON.stringify(candidate) === JSON.stringify(note));
+        if (index >= 0) used.add(index);
+        return index;
+      });
+      const aligned = actual.length === wanted.length && indices.every(index => index >= 0);
+      const sheet = await this.song.updateNotation(stored => {
+        this.assertRevision(stored, edit.songId, edit.baseRevision, edit.notationRevision);
+        const notation = structuredClone(stored.notation!);
+        const target = notation.clips.find(target => target.id === edit.clipId)!;
+        target.notes = actual;
+        target.bindings = target.bindings.map(binding => {
+          const mapped = binding.notes.map(index => indices[index]);
+          if (!aligned || mapped.some(index => index === undefined || index < 0)) return { ...binding, stale: true };
+          const notes = mapped as number[];
+          const ordered = notes.every((index, at) => at === 0 || actual[index]!.start >= actual[notes[at - 1]!]!.start);
+          return { ...binding, notes, ...(!ordered ? { stale: true } : {}) };
+        });
+        notation.revision++;
+        return notation;
+      });
+      return { lyrics: await this.stored(sheet, edit.songId, texts), aligned };
     });
   }
 

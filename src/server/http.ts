@@ -22,7 +22,8 @@ import { API, type SongsResponse, type StatusResponse } from "../shared/api";
 import type { UiEvent } from "../shared/events";
 import type { DialogView, OdeConfig } from "../shared/config";
 import type { LyricsCheckResponse } from "../shared/lyrics";
-import { LyricsChoiceSchema } from "../shared/lyrics-document";
+import type { LyricMelody } from "./lyric-melody";
+import { LyricsChoiceSchema, LyricsMelodyEditSchema } from "../shared/lyrics-document";
 import { MusicXml } from "../mneme/musicxml";
 import { Mode } from "../shared/personalisation";
 import { VersionAuthor, type RestoreResult } from "../shared/versions";
@@ -62,6 +63,7 @@ export interface ServerDeps {
   songs: SongSwitcher;
   lyrics: LyricsStore;
   lyricsChecker: LyricsChecker;
+  melody?: LyricMelody;
   prefs: PreferencesStore;
   settings: SettingsStore;
   models: ModelRoles;
@@ -550,6 +552,13 @@ export class OdeServer {
       const parsed = LyricsChoiceSchema.safeParse(await OdeServer.body(c));
       if (!parsed.success) return c.json({ error: t("lyrics.document.choiceInput") }, 400);
       try { return c.json(await lyrics.choose(parsed.data)); }
+      catch (error) { return c.json({ error: error instanceof Error ? error.message : String(error) }, 409); }
+    });
+    app.put(API.lyricsMelody, async (c) => {
+      const parsed = LyricsMelodyEditSchema.safeParse(await OdeServer.body(c));
+      if (!parsed.success) return c.json({ error: t("lyrics.document.noteEditInput") }, 400);
+      if (!this.deps.melody) return c.json({ error: t("lyrics.document.noteEditorUnavailable") }, 503);
+      try { return c.json(await this.deps.melody.edit(parsed.data)); }
       catch (error) { return c.json({ error: error instanceof Error ? error.message : String(error) }, 409); }
     });
     app.get(API.lyricsMusicXml, async (c) => {

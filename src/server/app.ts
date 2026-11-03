@@ -25,6 +25,7 @@ import { SettingsStore } from "../mneme/settings-store";
 import { SongStore, SongVersions } from "../mneme/song-store";
 import { ContextSummary } from "../mneme/summary";
 import { ModelServices } from "../services";
+import { LyricMelody } from "./lyric-melody";
 import { LyricsChecker } from "../services/lyrics-checker";
 import { ModelRoles } from "../services/model-roles";
 import { ProviderCatalog } from "../services/provider-catalog";
@@ -56,6 +57,7 @@ export class OdeApp {
   readonly song: SongStore;
   readonly lyrics: LyricsStore;
   readonly lyricsChecker: LyricsChecker;
+  readonly melody: LyricMelody;
   readonly conversations: ConversationStore;
   readonly composer: ComposerStore;
   readonly references: ReferenceFiles;
@@ -190,6 +192,7 @@ export class OdeApp {
       sessions: this.sessions,
       emit,
     });
+    this.melody = new LyricMelody({ song: this.song, lyrics: this.lyrics, live, sessions: this.sessions, recorder: this.recorder });
     this.server = new OdeServer({
       config,
       bus: this.bus,
@@ -200,6 +203,7 @@ export class OdeApp {
       lyrics: this.lyrics,
       services: this.services,
       lyricsChecker: this.lyricsChecker,
+      melody: this.melody,
       prefs: this.prefs,
       settings: this.settings,
       models: this.models,
