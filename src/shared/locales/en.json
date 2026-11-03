@@ -303,6 +303,7 @@
       "syllableSplit": "Syllables",
       "syllableSplitHint": "Separate syllables with spaces",
       "wordStress": "Word stress",
+      "boundSplitKept": "Kept the syllable division for {word} because its notes are already linked. Review the pronunciation before changing it.",
       "stressFor": "Stress for syllable {index}: {syllable}",
       "chooseStress": "Choose stress",
       "default": "Default",

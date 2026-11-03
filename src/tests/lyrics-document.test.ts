@@ -1,4 +1,4 @@
-import { LyricsDocument } from "../shared/lyrics-document";
+import { LyricsDocument, WordCheckSchema } from "../shared/lyrics-document";
 import assert from "node:assert/strict";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -81,13 +81,48 @@ test("melody bindings use current SDK notes and reject a changed source before s
   assert.deepEqual(refreshed.lyrics.check!.lines[0]!.words[0]!.syllables, ["Fire"]);
 });
 
-test("a new model split retains notes but invalidates their old syllable meaning", async () => {
+test("automatic analysis keeps linked divisions; explicit division changes retain notes and flag alignment", async () => {
   const { song, lyrics } = await open();
   await lyrics.saveCheck(song.songId, "[Verse]\nFire", "uk", check);
   const before = await lyrics.read();
   await lyrics.bind(song.songId, before.revision, before.notation!.revision, { id: "guide", clip: { tag: "vocal" }, notes: [{ pitch: 60, start: 0, duration: 1 }], bindings: [{ line: 2, text: "Fire", word: 0, syllable: 0, notes: [0] }] });
   await lyrics.saveCheck(song.songId, "[Verse]\nFire", "uk", { lines: [{ ...check.lines[0]!, words: [{ text: "Fire", syllables: ["Fi", "re"], stress: [1, 0] }] }] });
   const after = await lyrics.read();
-  assert.equal(after.notation!.clips[0]!.bindings[0]!.stale, true);
+  assert.equal(after.notation!.clips[0]!.bindings[0]!.stale, undefined);
   assert.equal(after.notation!.clips[0]!.notes[0]!.pitch, 60);
+  assert.deepEqual(after.check!.lines[0]!.words[0]!.syllables, ["Fire"]);
+  assert.ok(after.check!.lines[0]!.review?.length);
+  const changed = await lyrics.choose({ songId: song.songId, baseRevision: after.revision, notationRevision: after.notation!.revision,
+    line: 2, word: 0, value: { text: "Fire", syllables: ["Fi", "re"], stress: [1, 0] } });
+  assert.equal(changed.notation!.clips[0]!.bindings[0]!.stale, true);
+  assert.deepEqual(changed.notation!.clips[0]!.notes, after.notation!.clips[0]!.notes);
+});
+
+test("lexical stress and sung emphasis stay separate, including a saved musician override", async () => {
+  const word = { text: "Fire", syllables: ["Fire"], stress: [0], wordStress: [1], ipa: ["faɪə"] };
+  assert.deepEqual(WordCheckSchema.parse(word), word);
+  assert.equal(WordCheckSchema.safeParse({ ...word, wordStress: [1, 0] }).success, false);
+  const { song, lyrics } = await open();
+  await lyrics.saveCheck(song.songId, "[Verse]\nFire", "uk", check);
+  const before = await lyrics.read();
+  await lyrics.choose({ songId: song.songId, baseRevision: before.revision, notationRevision: before.notation!.revision, line: 2, word: 0, value: word });
+  await lyrics.saveCheck(song.songId, "[Verse]\nFire", "uk", { lines: [{ ...check.lines[0]!, words: [{ ...word, stress: [1] }] }] });
+  const saved = await lyrics.read();
+  assert.deepEqual(saved.check!.lines[0]!.words[0], word);
+  assert.deepEqual(saved.notation!.choices[0]!.default?.syllables, ["Fire"]);
+});
+
+test("draft edits keep untouched line annotations and all notes while the changed line awaits analysis", () => {
+  const text = "[Verse]\nFire\nRain";
+  const rain = { ...check.lines[0]!, words: [{ text: "Rain", syllables: ["Rain"], stress: [1] }] };
+  const notation = { ...LyricsDocument.empty(), analysis: { text, accent: "uk" as const, check: { lines: [check.lines[0]!, rain] } },
+    clips: [{ id: "guide", clip: { tag: "vocal" }, notes: [{ pitch: 60, start: 0, duration: 1 }], bindings: [{ line: 2, text: "Fire", word: 0, syllable: 0, notes: [0] }, { line: 3, text: "Rain", word: 0, syllable: 0, notes: [0] }] }] };
+  const draft = "[Verse]\nLight\nRain";
+  const next = LyricsDocument.reconcile(notation, text, draft);
+  const marks = LyricsDocument.check(next, draft)!;
+  assert.deepEqual(marks.lines[0]!.words, []);
+  assert.deepEqual(marks.lines[1]!.words, rain.words);
+  assert.deepEqual(next.clips[0]!.notes, notation.clips[0]!.notes);
+  assert.equal(next.clips[0]!.bindings[0]!.stale, true);
+  assert.equal(next.clips[0]!.bindings[1]!.stale, undefined);
 });

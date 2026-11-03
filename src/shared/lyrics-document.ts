@@ -6,11 +6,14 @@ import type { LyricsCheck, LineCheck } from "./lyrics";
 
 export const WordCheckSchema = z.object({
   text: z.string(), syllables: z.array(z.string()), stress: z.array(z.number().int().min(0).max(2)),
+  wordStress: z.array(z.number().int().min(0).max(2)).optional(),
   ipa: z.array(z.string()).optional(),
 }).refine(word => word.syllables.length === word.stress.length, t("lyrics.document.stressAlignment"))
+  .refine(word => !word.wordStress || word.wordStress.length === word.syllables.length, t("lyrics.document.stressAlignment"))
   .refine(word => !word.ipa?.length || word.ipa.length === word.syllables.length, t("lyrics.document.ipaAlignment"));
 export const LineCheckSchema = z.object({
   words: z.array(WordCheckSchema),
+  review: z.array(z.string()).optional(),
   rhyme: z.object({ letter: z.string(), quality: z.enum(["perfect", "near", "none"]), part: z.string(), sound: z.string() }),
 });
 export const LyricsCheckSchema = z.object({ lines: z.array(LineCheckSchema) });
@@ -18,6 +21,7 @@ const anchor = { line: z.number().int().positive(), text: z.string(), stale: z.b
 // A deliberate choice keeps both the literal line anchor and the literal word; neither is guessed from a new text.
 export const WordChoiceSchema = z.object({
   line: z.number().int().positive(), lineText: z.string(), word: z.number().int().min(0), value: WordCheckSchema,
+  default: WordCheckSchema.optional(),
   stale: z.boolean().optional(),
 });
 export const SyllableBindingSchema = z.object({ ...anchor, word: z.number().int().min(0), syllable: z.number().int().min(0), notes: z.array(z.number().int().min(0)).min(1) });
@@ -29,7 +33,7 @@ export type ScoreMeasure = z.infer<typeof ScoreMeasureSchema>;
 export const VocalClipSchema = z.object({ id: z.string().min(1), clip: ClipRefSchema, notes: z.array(NoteSchema), bindings: z.array(SyllableBindingSchema), measures: z.array(ScoreMeasureSchema).min(1).optional() });
 export const LyricsNotationSchema = z.object({
   revision: z.number().int().min(0).default(0),
-  analysis: z.object({ text: z.string(), accent: z.enum(["uk", "us"]), check: LyricsCheckSchema, choices: z.array(WordChoiceSchema).optional() }).optional(),
+  analysis: z.object({ text: z.string(), accent: z.enum(["uk", "us"]), check: LyricsCheckSchema, choices: z.array(WordChoiceSchema).optional(), revision: z.number().int().nonnegative().optional() }).optional(),
   choices: z.array(WordChoiceSchema).default([]),
   clips: z.array(VocalClipSchema).default([]),
 });
@@ -71,6 +75,7 @@ export class LyricsDocument {
 
   static needsAnalysis(notation: LyricsNotation | undefined, text: string): boolean {
     return !notation?.analysis || JSON.stringify(notation.analysis.text.split("\n").filter(sung).map(line => line.trim())) !== JSON.stringify(text.split("\n").filter(sung).map(line => line.trim()))
+      || notation.analysis.revision !== notation.revision
       || JSON.stringify(notation.analysis.choices ?? []) !== JSON.stringify(notation.choices);
   }
 
@@ -96,9 +101,12 @@ export class LyricsDocument {
       const found = from.get(index + 1);
       const check = structuredClone(found ?? UNMARKED);
       if (!complete) check.rhyme = { ...UNMARKED.rhyme };
+      if (!complete || analysis.revision !== notation.revision) delete check.review;
       for (const choice of notation.choices) {
         if (!choice.stale && choice.line === index + 1 && choice.lineText === line && check.words[choice.word]?.text === choice.value.text) {
-          check.words[choice.word] = structuredClone(choice.value);
+          const automatic = check.words[choice.word]!;
+          check.words[choice.word] = structuredClone({ ...choice.value,
+            ...(!choice.value.wordStress && JSON.stringify(choice.value.syllables) === JSON.stringify(automatic.syllables) && automatic.wordStress ? { wordStress: automatic.wordStress } : {}) });
         }
       }
       return [check];

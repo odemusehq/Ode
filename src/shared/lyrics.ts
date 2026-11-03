@@ -36,11 +36,14 @@ export interface LyricsSaved extends LyricsState {
   conflicts: number[];
 }
 
-/** How the Lyrics editor marks one word: its sung syllables as spelling pieces, and each one's stress (1 main, 2 secondary, 0 light). */
+/** Automatic syllable spelling, lexical stress and the intended emphasis in this phrase. */
 export interface WordCheck {
   text: string;
   syllables: string[];
+  /** Phrase/sung emphasis: 1 strong, 2 secondary, 0 light. Legacy values retain their meaning. */
   stress: number[];
+  /** Lexical primary/secondary/unstressed syllables, independent of the sentence; absent in legacy analysis. */
+  wordStress?: number[];
   /** IPA for each sung syllable, when the model or musician supplied it. */
   ipa?: string[];
 }
@@ -59,6 +62,8 @@ export interface RhymeCheck {
 export interface LineCheck {
   words: WordCheck[];
   rhyme: RhymeCheck;
+  /** Model observations about this exact phrase and the supplied score; never edits notes. */
+  review?: string[];
 }
 
 /** Lyrics support's marks for the whole song, one entry per line sent, in order. */

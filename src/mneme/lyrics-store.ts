@@ -173,7 +173,9 @@ export class LyricsStore {
     const answer = await checker.check(LyricsText.sung(current.text), accent, signal, { text: current.text, choices: notation.choices, clips: notation.clips, ...(request ? { request } : {}) });
     signal?.throwIfAborted();
     if (answer.status !== "ok") return answer;
-    if (!await this.saveCheck(current.songId, current.text, accent, answer.check, notation.choices)) {
+    if (!await this.saveCheck(current.songId, current.text, accent, answer.check, notation.choices, notation.revision)) {
+      const latest = await this.read();
+      if (latest.songId === current.songId && latest.text === current.text && !LyricsDocument.needsAnalysis(latest.notation, latest.text) && latest.check) return { status: "ok", check: latest.check };
       return { status: "unreachable", detail: t("lyrics.document.checkChanged") };
     }
     const saved = await this.read();
@@ -182,22 +184,36 @@ export class LyricsStore {
   }
 
   /** A late answer never annotates another text/song. Newer musician choices remain authoritative. */
-  saveCheck(songId: string, text: string, accent: Accent, check: LyricsCheck, choices?: WordChoice[]): Promise<boolean> {
+  saveCheck(songId: string, text: string, accent: Accent, check: LyricsCheck, choices?: WordChoice[], expectedRevision?: number): Promise<boolean> {
     return this.enqueue(async () => {
       if (songId !== this.song.songId) return false;
       const texts = this.texts();
       const current = await this.song.read();
       if (current.lyrics !== text) return false;
+      if (expectedRevision !== undefined && (current.notation?.revision ?? 0) !== expectedRevision) return false;
       const valid = LyricsCheckSchema.parse(check);
       if (valid.lines.length !== LyricsText.sung(text).length) throw new Error(t("lyrics.document.checkIncomplete"));
       const sheet = await this.song.updateNotation(stored => {
         if (songId !== this.song.songId) throw new LyricsForAnotherSongError(t("lyrics.document.songChanged"));
         if (stored.lyrics !== text) throw new StaleLyricsError(t("lyrics.document.checkStale"));
         const notation = stored.notation ?? LyricsDocument.empty();
-        const next = structuredClone({ ...notation, revision: notation.revision + 1,
-          analysis: { text, accent, check: valid, choices: structuredClone(choices ?? notation.choices) } });
-        const previous = LyricsDocument.check(notation, text), updated = LyricsDocument.check(next, text);
+        const previous = LyricsDocument.check(notation, text);
         const lines = LyricsText.lines(text);
+        // Background interpretation cannot redefine syllables that already have assigned notes.
+        for (const clip of notation.clips) for (const binding of clip.bindings) {
+          if (binding.stale || lines[binding.line - 1] !== binding.text) continue;
+          const at = lines.slice(0, binding.line - 1).filter(LyricsText.isSung).length;
+          const before = previous?.lines[at]?.words[binding.word], after = valid.lines[at]?.words[binding.word];
+          if (before && after && (before.text !== after.text || JSON.stringify(before.syllables) !== JSON.stringify(after.syllables))) {
+            valid.lines[at]!.words[binding.word] = structuredClone(before);
+            const review = valid.lines[at]!.review ??= [];
+            const warning = t("lyrics.document.boundSplitKept", { word: before.text });
+            if (!review.includes(warning)) review.push(warning);
+          }
+        }
+        const next = structuredClone({ ...notation, revision: notation.revision + 1,
+          analysis: { text, accent, check: valid, choices: structuredClone(choices ?? notation.choices), revision: notation.revision + 1 } });
+        const updated = LyricsDocument.check(next, text);
         for (const clip of next.clips) for (const binding of clip.bindings) {
           const at = lines.slice(0, binding.line - 1).filter(LyricsText.isSung).length;
           const before = previous?.lines[at]?.words[binding.word], after = updated?.lines[at]?.words[binding.word];
@@ -225,8 +241,10 @@ export class LyricsStore {
         if (!lineText || !LyricsText.isSung(lineText) || !previous || previous.text !== choice.value.text || choice.value.syllables.join("") !== previous.text) {
           throw new Error(t("lyrics.document.chooseWord"));
         }
+        const existing = notation.choices.find(item => !item.stale && item.line === choice.line && item.word === choice.word && item.lineText === lineText);
+        const automatic = LyricsDocument.check({ ...notation, choices: [] }, current.lyrics)?.lines[sungIndex]?.words[choice.word];
         notation.choices = notation.choices.filter(item => item.line !== choice.line || item.word !== choice.word);
-        notation.choices.push({ line: choice.line, lineText, word: choice.word, value: choice.value });
+        notation.choices.push({ line: choice.line, lineText, word: choice.word, value: choice.value, default: existing?.default ?? automatic });
         if (JSON.stringify(previous.syllables) !== JSON.stringify(choice.value.syllables)) {
           for (const clip of notation.clips) for (const binding of clip.bindings) {
             if (binding.line === choice.line && binding.word === choice.word) binding.stale = true;
