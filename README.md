@@ -43,7 +43,7 @@ If Live on macOS includes an older Max, install the current version from [Cyclin
 4. Click **Open Ode** on the device. In Ode's **Settings**, choose a provider and model, enter your API key, and save.
 5. Right-click an existing clip, track, or time selection and choose **Ask Ode**. Describe a specific change to try, then inspect and play the result in Live.
 
-The extension is installed once; the device belongs in each Set where you use Ode. Saving it in a Live template makes it available when starting another project. The [getting-started guide](docs/getting-started.md) explains the controls and model settings. The illustrated [song tutorial](docs/tutorial.md) takes a late-night electronic idea through a bass groove, drums, chords, optional lyrics, melody, arrangement and export. Installation and setup screenshots are in [Getting started](docs/getting-started.md).
+The extension is installed once; the device belongs in each Set where you use Ode. Saving it in a Live template makes it available when starting another project. The [getting-started guide](docs/getting-started.md) explains the controls and model settings. The illustrated [song tutorial](docs/tutorial.md) takes a late-night electronic idea through a bass groove, drums, chords, lyrics, vocal melody, arrangement and export. It includes a lyric draft and shows how to revise syllables, emphasis, pitches and note lengths. Installation and setup screenshots are in [Getting started](docs/getting-started.md).
 
 ## What the current implementation covers
 
