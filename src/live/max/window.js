@@ -120,6 +120,8 @@ function http(path, body, callback) {
   }
   try {
     xhr.open("POST", "http://127.0.0.1:" + port + path);
+    // Max 9.2 omits the port from its default Host header.
+    xhr.setRequestHeader("Host", "127.0.0.1:" + port);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.onreadystatechange = function () {
       if (xhr.readyState !== 4) return;

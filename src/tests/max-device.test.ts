@@ -2,9 +2,61 @@ import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import { Script, createContext } from "node:vm";
 import { test } from "node:test";
+import { Hono } from "hono";
+import { OdeServer, type ServerDeps } from "../server/http";
+import { MaxWindowBridge } from "../server/max-window";
 import { MAX_WINDOW } from "../shared/max-window";
 
 const deviceFile = new URL("../live/max/device.ts", import.meta.url);
+
+test("Max transport pairs and polls when the native client omits the port from its default Host", async () => {
+  const bridge = new MaxWindowBridge((view) => `http://localhost:43123/?view=${view}&token=${"a".repeat(48)}`);
+  const bootstrap = bridge.prepare({ deviceId: "device-1", setId: "set-1" });
+  const server = new OdeServer({ maxWindow: bridge, songs: { isSwitching: false } } as unknown as ServerDeps);
+  const local = server as unknown as { app: Hono; port: number; guard: any; authorize: any; routeMaxWindow(): void };
+  local.port = 43123;
+  local.app.use("*", (c, next) => local.guard(c, next));
+  local.app.use("*", (c, next) => local.authorize(c, next));
+  local.routeMaxWindow();
+  // Characterised with Max 9.2.1 inside Live: its default Host is only the hostname.
+  class NativeRequest {
+    readyState = 0; status = 0; responseText = "";
+    onreadystatechange: (() => void) | null = null;
+    private url = "";
+    private headers: Record<string, string> = {};
+    open(_method: string, url: string) { this.url = url; this.headers = { host: new URL(url).hostname }; }
+    setRequestHeader(name: string, value: string) { this.headers[name.toLowerCase()] = value; }
+    send(body: string) {
+      void Promise.resolve(local.app.request(this.url, { method: "POST", headers: this.headers, body })).then(async (response) => {
+        this.status = response.status;
+        this.responseText = await response.text();
+        this.readyState = 4;
+        this.onreadystatechange?.();
+      });
+    }
+    abort() {}
+  }
+  class Task { schedule() {} cancel() {} freepeer() {} }
+  const context = createContext({ XMLHttpRequest: NativeRequest, Task, ODE_WINDOW: MAX_WINDOW, patcher: {} });
+  new Script(await readFile(new URL("../live/max/window.js", import.meta.url), "utf8")).runInContext(context);
+  context.running = true; context.port = 43123;
+  const request = (path: string, body: unknown) => new Promise<{ body: any; status: number }>((resolve) => {
+    context.http(path, body, (body: unknown, status: number) => resolve({ body, status }));
+  });
+  try {
+    const connected = await request(MAX_WINDOW.api.connect, { capability: bootstrap.capability });
+    assert.equal(connected.status, 200, "The embedded device must pass Ode's real loopback Host guard.");
+    assert.equal(connected.body.session.length, 48);
+    const polled = await request(MAX_WINDOW.api.poll, { session: connected.body.session });
+    assert.equal(polled.status, 200);
+    assert.equal(polled.body.command, null);
+    const missingPort = await local.app.request("http://127.0.0.1:43123/max-window/poll", {
+      method: "POST", headers: { host: "127.0.0.1", "content-type": "application/json" },
+      body: JSON.stringify({ session: connected.body.session }),
+    });
+    assert.equal(missingPort.status, 403, "The server must continue requiring the complete authority.");
+  } finally { bridge.invalidate(); }
+});
 
 test("Max HTTP reuses completed clients but retires cancelled, timed-out and stale requests", async () => {
   const clients: Client[] = [];
