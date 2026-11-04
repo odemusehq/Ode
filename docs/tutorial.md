@@ -70,15 +70,20 @@ If the chords make the track feel too sweet, too dramatic or too crowded, tell O
 
 ## Write the lyrics
 
-Give Ode the story behind the track:
+Start with something you want to say. For Night Walk, the narrator could go home, but keeps walking to spend a little longer with someone. Write down these two lines:
 
-> I want to sing over this. It's about walking home with someone and taking the long way because I don't want the night to end. Keep the words conversational, with little details from the walk.
+```text
+I could be home by now
+But I keep pace with you
+```
 
-Open Ode's side panel with the button at the top right, then choose **Lyrics**. You and Ode edit the same lyric document here.
+Ask Ode to help develop that fragment:
+
+> I've got “I could be home by now / But I keep pace with you”. It's a walk home with someone I don't want to leave yet. Can we build a verse around that? I'd rather show what's happening on the street than explain how I feel.
+
+Open Ode's side panel with the button at the top right, then choose **Lyrics**. You and Ode edit the same lyric document here. A verse can grow from the fragment by adding a scene before it:
 
 ![Ode's Lyrics panel](images/tutorial/11-ode-lyrics.jpg)
-
-Paste this starting draft into the editor. The bracketed labels mark the song's sections.
 
 ```text
 [Verse 1]
@@ -86,29 +91,87 @@ The corner shop is closing
 You stop to tie your shoe
 I could be home by now
 But I keep pace with you
+```
+
+The closing shop establishes the time of night. Stopping to tie a shoe gives the two people a small action, and the last two lines reveal why the narrator is still there. The verse stays in **first person**: “I” is the narrator, addressing the other person as “you”.
+
+Put this verse in Lyrics. The bracketed label names the section. Read the four lines aloud over the backing and listen for wording you would not use yourself. Here, “keep pace” feels more formal than the rest. Click the last line in the editor and change it directly:
+
+| First draft | Your edit |
+| --- | --- |
+| But I keep pace with you | So I slow down for you |
+
+The edit changes the action as well as the wording. The narrator now deliberately slows down, which supports the idea of stretching out the walk. Tell Ode what you want to keep as you move on:
+
+> I've changed the last line to “So I slow down for you”. Keep that verse. For the chorus, I like “Take the long way home” as the main phrase. Can we build around that?
+
+### Revise the chorus
+
+The **chorus** is the returning section that carries the song's central idea. Its recognisable phrase, “Take the long way home”, is the **hook**. Work on this draft under the verse:
+
+```text
+[Chorus]
+Take the long way home
+Past the places that we know
+We could keep on walking for another mile
+There's no hurry; let's go slow
+```
+
+The opening makes a request to the other person. The last line repeats that request without adding much: it tells them to slow down again. Ask Ode for a different ending while protecting the lines you want:
+
+> Keep the first three lines. “There's no hurry; let's go slow” is saying the same thing again. Could the last line show that neither of us is trying very hard to get home? I'd like it to rhyme with “know”.
+
+Compare two possible revisions:
+
+| Chorus ending | What it adds |
+| --- | --- |
+| We just let the last bus go | Both people have passed up a way to get home. |
+| You don't say it's time to go | The narrator notices that the other person is willing to stay. |
+
+The first makes their choice visible through an event; the second leaves more uncertainty about what the other person feels. Choose the first for this version:
+
+> Use “We just let the last bus go”. I like that we both chose to miss it. Keep the rest for now.
+
+Read the updated chorus in Lyrics. “Know” and “go” share the same ending vowel sound and form a **perfect rhyme**. In **View → Rhyme scheme**, matching letters identify the endings Ode thinks rhyme. The **Perfect rhymes** control beside a section name sets that section's rhyme preference.
+
+### Shorten a line
+
+Now speak the chorus in time with the groove. “We could keep on walking for another mile” takes much longer to say than the surrounding lines. Ask Ode to tighten the wording:
+
+> The third line is a mouthful. Can we make it shorter but keep the idea of walking another mile? I'd like “mile” to stay at the end so I can hold it.
+
+In Lyrics, open **View** and enable **Syllables** and **Syllable counts**. A **syllable** is a unit of pronunciation, usually centred on a vowel sound. After Ode checks the text, light dividers show the boundaries and a count appears at the end of each line. Compare the original with this shorter revision:
+
+| Version | Spoken syllables | Count |
+| --- | --- | --- |
+| We could keep on walking for another mile | We / could / keep / on / walk / ing / for / a / noth / er / mile | 11 |
+| We can walk another mile | We / can / walk / a / noth / er / mile | 7 |
+
+“Could keep on walking for” becomes “can walk”, removing four syllables while retaining the invitation and the final word “mile”. Speak both versions over the same groove. The shorter line gives you more room to hold “mile” or breathe before the next line. If that is the phrasing you want, ask Ode to apply it:
+
+> Use “We can walk another mile”. Keep “mile” as the word we lean on.
+
+Read the revised verse and chorus together:
+
+```text
+[Verse 1]
+The corner shop is closing
+You stop to tie your shoe
+I could be home by now
+So I slow down for you
 
 [Chorus]
 Take the long way home
 Past the places that we know
 We can walk another mile
-There's no hurry; let's go slow
+We just let the last bus go
 ```
 
-The verse describes a moment on the walk. The chorus returns to the central idea, “Take the long way home.” That repeated, recognisable phrase is the song's **hook**.
+## Check stress and emphasis
 
-Try revising one line with Ode while preserving the rest:
+Read “We can walk another mile” aloud. “Another” has three syllables, with the main word stress on the middle one: a-**NOTH**-er. The whole sentence can also give extra weight to “mile”, because that is how much longer the narrator wants to stay. Ode lets you edit these two choices separately.
 
-> Keep the verse and the first three lines of the chorus. “There's no hurry; let's go slow” sounds too much like an instruction. Can you find a more personal last line that still rhymes with “know”?
-
-Review the replacement in Lyrics and read the chorus aloud over the groove. “Know” and “slow” share the same ending vowel sound and form a **perfect rhyme**; the replacement can keep that rhyme without repeating the same wording. In **View → Rhyme scheme**, matching letters identify the endings Ode thinks rhyme. The **Perfect rhymes** control beside a section name sets that section's rhyme preference.
-
-## Check syllables and emphasis
-
-A **syllable** is a unit of pronunciation, usually centred on a vowel sound. “Take the long way home” has five syllables, while “We can walk another mile” has seven because “another” has three. The longer line does not necessarily need more bars: some syllables can use shorter notes while an important word is held.
-
-In the Lyrics **View** menu, enable **Syllables**, **Syllable counts** and **Emphasis**. After the text has been checked, light dividers show syllable boundaries, a count appears at the end of each line, and dots mark strongly emphasised syllables. You can also enable **Line details** to read the analysis for each line.
-
-There are two different choices to check:
+In the Lyrics **View** menu, enable **Emphasis** to show dots under strongly emphasised syllables. Enable **Line details** if you want to read the analysis for each line. Then check the phrase:
 
 - **Word stress** is part of pronunciation. In “another”, the middle syllable has the main stress: a-**NOTH**-er. Click inside that word and choose **Stress**. If the split needs correcting, open **Syllable division** and enter `a noth er`; the pieces must retain the word's spelling. Set the middle syllable to **Primary stress** and the other two to **Unstressed**, then click **Save**.
 - **Sung emphasis** expresses what matters in the phrase. Select the line “We can walk another mile”, choose **Emphasis**, then select “mile” and choose **Emphasised**. Click **Save**. This marks the word you want the performance to bring forward.
