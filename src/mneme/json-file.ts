@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { chmod, mkdir, open, readFile, rename, rm } from "node:fs/promises";
+import { chmod, mkdir, open, readFile, rename, rm, type FileHandle } from "node:fs/promises";
 import { dirname } from "node:path";
 import type { z } from "zod";
 import defaults from "../shared/defaults.json";
@@ -58,6 +58,15 @@ export class JsonFile<T> {
     return (error as NodeJS.ErrnoException | undefined)?.code === "ENOENT";
   }
 
+  /** Syncs a staged file where allowed; Live's installed host disables fsync through Node's Permission Model. */
+  static async syncFile(file: Pick<FileHandle, "sync">): Promise<void> {
+    try { await file.sync(); }
+    catch (error) {
+      // Closing and publishing still retain complete bytes; other sync failures must abort the write.
+      if ((error as NodeJS.ErrnoException | undefined)?.code !== "ERR_ACCESS_DENIED") throw error;
+    }
+  }
+
   /** Moves a damaged file aside as <path>.unreadable-<time>, keeping it for the musician, so Ode carries on without it. */
   static async setAside(path: string, reason: unknown): Promise<void> {
     const aside = `${path}.unreadable-${Date.now()}`;
@@ -66,8 +75,8 @@ export class JsonFile<T> {
   }
 
   /**
-   * Writes the text to a file of its own beside `path`, syncs it to disk, then renames it over `path`, so a reader
-   * sees the old file or the new one whole. A rename that another program holds up is tried again for a moment.
+   * Writes the text to a file of its own beside `path`, syncs it where the host permits, then renames it over `path`,
+   * so a reader sees the old file or the new one whole. A rename another program holds up is tried again briefly.
    */
   static async writeAtomically(path: string, text: string, mode?: number, signal?: AbortSignal): Promise<void> {
     signal?.throwIfAborted();
@@ -82,7 +91,7 @@ export class JsonFile<T> {
       try {
         signal?.throwIfAborted();
         await file.writeFile(text, "utf8");
-        await file.sync();
+        await JsonFile.syncFile(file);
       } finally {
         await file.close();
       }

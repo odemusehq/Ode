@@ -36,12 +36,14 @@ export class ReleaseNotes {
       `   - Apple silicon Mac: \`Ode-${release.version}-darwin-arm64.ablx\``,
       `   - Intel Mac: \`Ode-${release.version}-darwin-x64.ablx\``,
       `   - Windows: \`Ode-${release.version}-win32-x64.ablx\``,
-      "2. In Live, open Settings → Extensions and drop the downloaded `.ablx` on the page. Developer Mode stays off.",
+      "2. In Live, open Settings → Extensions and drop the downloaded `.ablx` on the page. Developer Mode stays off. Confirm installation, save any open work, then restart Live when prompted.",
       `3. Drag \`${Release.device}\` onto an audio track or the Main track in your Set. Keep one Ode device per Set.`,
       "4. Click **Open Ode** on the device. In Settings, pick the provider and model, enter your key, and save.",
       "5. Chat with Ode in its floating window, or right-click a clip, track or time selection and choose **Ask Ode**. Results appear in Live.",
       "",
       "The extension is installed once. Load the Ode device in each Set where you want to use Ode; saving it in your default template makes it available in new Sets.",
+      "",
+      "If an older Ode extension is already installed, uninstall its entry in Settings → Extensions before installing this version. Live currently refuses installation over an existing extension folder.",
       "",
     ].join("\n");
   }

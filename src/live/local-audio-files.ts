@@ -148,7 +148,7 @@ export class LocalAudioFiles {
     try {
       signal?.throwIfAborted();
       const handle = await open(file, "wx", 0o600); created = true;
-      try { signal?.throwIfAborted(); await handle.writeFile(input.bytes); signal?.throwIfAborted(); await handle.sync(); }
+      try { signal?.throwIfAborted(); await handle.writeFile(input.bytes); signal?.throwIfAborted(); await JsonFile.syncFile(handle); }
       finally { await handle.close(); }
       signal?.throwIfAborted();
       await JsonFile.writeAtomically(this.metadata(record.id), JSON.stringify(record), 0o600, signal);

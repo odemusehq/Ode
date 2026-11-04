@@ -1,3 +1,5 @@
+import { isNativeError } from "node:util/types";
+
 /** A reference whose target is missing from the Set; the message names the reference. */
 export class NotFoundError extends Error {
   constructor(what: string) {
@@ -60,6 +62,6 @@ export function describeError(error: unknown): string {
 }
 
 function reasonOf(error: unknown): string {
-  if (error instanceof Error) return error.message;
+  if (error instanceof Error || isNativeError(error)) return error.message;
   return typeof error === "string" ? error : "";
 }

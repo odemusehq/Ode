@@ -354,13 +354,13 @@ export class VersionHistory {
     }
   }
 
-  /** Adds one version at the end of versions.jsonl, synced to disk; a line a crash cut short is set aside on the next read. */
+  /** Appends a version, syncing where allowed; a line a crash cut short is set aside on the next read. */
   private async append(entries: readonly Entry[], entry: Entry): Promise<void> {
     await mkdir(this.dir, { recursive: true });
     const file = await open(this.file, "a");
     try {
       await file.appendFile(`${entry.line}\n`, "utf8");
-      await file.sync();
+      await JsonFile.syncFile(file);
     } finally {
       await file.close();
     }
