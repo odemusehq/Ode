@@ -6,7 +6,7 @@ Start with [Architecture](architecture.md) if you want to follow the application
 
 ## Requirements and SDK packages
 
-Use Node.js `24.16.0` or later, as required by [package.json](../package.json). Running Ode in Live also requires a compatible Live 12 Suite Beta with Extensions, Developer Mode enabled for the source-development workflow, and Max for Live. Use Max 9.2 or later on macOS for the embedded window's standard editing shortcuts, or Max 9.1 or later on Windows. The [runtime setup](getting-started.md#select-the-max-runtime-on-macos) explains how to select a newer Max when Live bundles an older version.
+Use Node.js `24.16.0` or later, as required by [package.json](../package.json). Running Ode in Live also requires a compatible Live 12 Suite Beta with Extensions, Developer Mode enabled for the source-development workflow, and Max for Live. Use Max 9.2 or later for the embedded window's standard editing shortcuts. The [runtime setup](../README.md#select-the-max-runtime-on-macos) explains how to select a newer Max when Live bundles an older version.
 
 The project pins the Ableton Extensions SDK and CLI to `1.0.0-beta.1`. Obtain the SDK distribution through [Ableton's official SDK page](https://ableton.github.io/extensions-sdk/), then place the two archives in the repository's `vendor/` directory with these names:
 

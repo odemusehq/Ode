@@ -61,7 +61,7 @@ When the musician presses Send, the interface captures that version of the draft
 
 [OdeSession](../src/harness/session.ts) persists acceptance before acknowledging it. Repeating a delivery with the same request identity can therefore find the existing exchange instead of creating another one. Execution proceeds independently once the request is accepted, so context preparation can overlap the HTTP acknowledgement. The acknowledgement confirms persistence rather than acting as an execution-start barrier. The interface consumes the sent draft after acknowledgement, while text typed after the original click remains an unsent draft. Acceptance does not mean the model has finished or Live has changed.
 
-File attachment and speech dictation have their own preparation paths. A selected reference is retained before submission and its identity becomes part of the draft. Dictation sends a temporary speech recording to the transcription service and appends the recognised words to the editable draft. It does not submit the resulting text automatically. Audio recorded as a reference instead becomes sound input when the musician sends the message. [Getting started](getting-started.md) describes those controls.
+File attachment and speech dictation have their own preparation paths. A selected reference is retained before submission and its identity becomes part of the draft. Dictation sends a temporary speech recording to the transcription service and appends the recognised words to the editable draft. It does not submit the resulting text automatically. Audio recorded as a reference instead becomes sound input when the musician sends the message. [Getting started](../README.md#getting-started) describes those controls.
 
 ## Preparing current project context
 
