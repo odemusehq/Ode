@@ -6,7 +6,9 @@ If you are new to Live, a **Set** is its project document. A **track** holds a m
 
 ## Before installing
 
-Use a current **Live 12 Suite Beta** with Extensions enabled. Extensions require version 12.4.5 or later; the [official SDK page](https://ableton.github.io/extensions-sdk/) explains beta access. Ode's code targets Extensions SDK `1.0.0-beta.1`; future SDK versions may expose different capabilities.
+Use a current **Live 12 Suite Beta** with Extensions enabled. Extensions require version 12.4.5 or later; the [official SDK page](https://ableton.github.io/extensions-sdk/) explains beta access. Ode's code targets Extensions SDK `1.0.0-beta.1`; future SDK versions may expose different capabilities. The page below puts the Live Beta and SDK download links together. Choose Live Beta to install and use Ode; the SDK download is for developers building extensions.
+
+![The official page with Live Beta and Extensions SDK download links](images/tutorial/01-beta-and-sdk-downloads.jpg)
 
 You also need **Max for Live running Max 9.2 or later on macOS**, or Max 9.1 or later on Windows. Max for Live is included with Suite, and lets Live load custom `.amxd` devices. Ode's device uses it for the floating interface and native audio and control functions.
 
@@ -17,6 +19,16 @@ Model requests need Internet access and your own provider credentials. Ode store
 Live includes a version of Max, but that bundled version can lag behind Cycling '74's current release. This matters for Ode because Max 9.2.0 fixes Command-key handling in web views inside Max for Live devices. With an older runtime, ordinary typing can work while Copy, Paste, Cut and Select All fail. This is a host issue affecting standard text fields. [Max 9.2.0 release notes](https://cycling74.com/releases/max/9.2.0).
 
 If Live's bundled Max is older than 9.2, download the current macOS version from [Cycling '74](https://cycling74.com/downloads) and install `Max.app` in Applications. In **Live Settings → File & Folder**, find **Max Application**, click **Browse**, and select the installed `Max.app`. Save your work and restart Live so the setting takes effect. Ableton documents this application-path setting in [Setting Up Max for Live](https://www.ableton.com/en/live-manual/12/max-for-live/#setting-up-max-for-live).
+
+![Download Max for macOS from Cycling '74](images/tutorial/01b-max-runtime-download.jpg)
+
+Open the downloaded disk image and install Max in Applications.
+
+![The Max installer with the application and Applications shortcut](images/tutorial/01b2-max-runtime-installer.jpg)
+
+The Max Application setting should point to the installed application:
+
+![Live Settings with the external Max application selected](images/tutorial/01c-max-runtime-settings.jpg)
 
 This selects the runtime that hosts Ode's window and device. There is no Ode setup step in the Max Console or patch editor. After opening Ode, check that text entry and the usual editing shortcuts work before configuring credentials or starting a session.
 
@@ -30,9 +42,23 @@ Open the [Ode releases page](https://github.com/odemusehq/Ode/releases). Downloa
 | Intel Mac | `darwin-x64.ablx` |
 | Windows PC | `win32-x64.ablx` |
 
-In Live, open **Settings → Extensions** and drop the downloaded `.ablx` onto the page, or select it with **Choose file**. Confirm the installation, then restart Live when prompted. Installing a packaged release does not require Developer Mode. After restarting, drag `Ode.amxd` onto an audio track or the Main track in the Set. Main is the final track that receives the combined mix.
+In Live, open **Settings → Extensions** and drop the downloaded `.ablx` onto the page, or select it with **Choose file**. Installing a packaged release does not require Developer Mode, so leave it off. If an older Ode extension is installed, uninstall that entry first; Live currently refuses to install over its existing extension folder.
 
-The [screenshot walkthrough](tutorial.md) shows the download links, macOS Max setup, installation dialogs, a blank Set, and a real request followed into Live's MIDI editor.
+![Choose the Ode package in Live's Extensions settings](images/tutorial/02-live-extensions-settings.jpg)
+
+Live identifies **Ode** by **OdeMuse** before installing it. Check those names, then confirm.
+
+![Confirm the extension name and publisher](images/tutorial/02b-confirm-extension.jpg)
+
+When installation finishes, save any open work and restart Live as requested.
+
+![The installation-success message asking for a restart](images/tutorial/02c-restart-live.jpg)
+
+After restarting, Ode should appear in Installed Extensions. This capture shows version 0.3.1, with Developer Mode still off.
+
+![Ode listed in Installed Extensions](images/tutorial/02d-installed-ode.jpg)
+
+Drag `Ode.amxd` onto an audio track or the Main track in your Set. Main receives the combined mix. Once Ode is open and configured, [make your first song](tutorial.md) walks through a creative session.
 
 Keep **one Ode device per Set**. The extension finds the device through its native controls and pairs with it automatically. Two copies make that pairing ambiguous. If the device is missing or cannot respond, opening Ode from a right-click menu produces an instruction explaining what needs attention.
 
@@ -47,6 +73,8 @@ Choose **Meta** to use the complete listening path described in these guides. In
 Lyrics support has its own provider and model setting. It currently offers Meta models and can reuse the saved Meta key. If you choose a different provider for the main agent, supply a Meta key for lyrics and speech transcription as needed. The [model-role resolver](../src/services/model-roles.ts) determines which credential each role uses.
 
 An installed release reads its persistent Settings, not the repository's `.env` file. That file is for source development; [Development](development.md) explains the optional credential import for developers.
+
+![Ode's Settings panel with Meta selected and the saved key hidden](images/tutorial/07-ode-settings.jpg)
 
 ## Make a first change
 

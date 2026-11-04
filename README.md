@@ -43,7 +43,7 @@ If Live on macOS includes an older Max, install the current version from [Cyclin
 4. Click **Open Ode** on the device. In Ode's **Settings**, choose a provider and model, enter your API key, and save.
 5. Right-click an existing clip, track, or time selection and choose **Ask Ode**. Describe a specific change to try, then inspect and play the result in Live.
 
-The extension is installed once; the device belongs in each Set where you use Ode. Saving it in a Live template makes it available when starting another project. The [getting-started guide](docs/getting-started.md) explains the controls and model settings. The [screenshot walkthrough](docs/tutorial.md) follows installation, the macOS Max setup, a blank Set, a real bass-line request, and the result in Live's MIDI editor.
+The extension is installed once; the device belongs in each Set where you use Ode. Saving it in a Live template makes it available when starting another project. The [getting-started guide](docs/getting-started.md) explains the controls and model settings. The illustrated [song tutorial](docs/tutorial.md) takes a late-night electronic idea through a bass groove, drums, chords, optional lyrics, melody, arrangement and export. Installation and setup screenshots are in [Getting started](docs/getting-started.md).
 
 ## What the current implementation covers
 
@@ -62,7 +62,7 @@ These guides assume programming knowledge and introduce the Ableton concepts the
 | Guide | What it explains |
 | --- | --- |
 | [Getting started](docs/getting-started.md) | Installation, provider setup, and working with Ode in a Set. |
-| [Screenshot walkthrough](docs/tutorial.md) | Installation screens, Max runtime setup, a blank Set, a real MIDI result, and Ode's panels. |
+| [Make your first song](docs/tutorial.md) | A screenshot guide to building a short electronic song, revising it through conversation, and exporting it. |
 | [Architecture](docs/architecture.md) | The application components and the path from a musician's request to a native edit. |
 | [Workflow](docs/workflow.md) | Startup, message acceptance, context preparation, model and tool calls, listening, and completion. |
 | [Tools and permissions](docs/tools.md) | The five tool groups, mutation metadata, agent access, native dispatch, and recovery evidence. |
