@@ -1,8 +1,17 @@
+<a href="https://odemuse.com">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/odemuse-logo-light-text.svg">
+    <img src="docs/images/odemuse-logo-dark-text.svg" alt="OdeMuse" width="420">
+  </picture>
+</a>
+
 # Ode
 
-Ode is an AI co-writer and co-producer for Ableton Live. It works with the musician's project: reading the parts that are already there, discussing a direction, editing notes or sounds, and listening to the result. The musician can continue editing those same parts in Live.
+**Ode** is an AI musician that lives in your digital audio workstation (DAW), the software you use to record, arrange and produce music. It currently supports [Ableton Live](https://www.ableton.com/en/live/) and helps you throughout the music creation process. You can brainstorm a song concept together, draft and revise lyrics, and work out and practise a melody. As the song takes shape, you can move into production: build the instrumental parts, choose sounds, arrange the sections and refine the mix, listening and making changes together in the same project.
 
-Ableton Live is a digital audio workstation, or DAW: an application for recording, arranging, and producing music. A project in Live is called a **Set**. It contains **tracks**, such as drums, bass, and vocals. Tracks hold **clips** containing audio recordings or MIDI notes, and **devices** that generate or process sound. MIDI describes a performance through note pitches, timing, duration, and velocity; an instrument turns those instructions into audio. These are the objects Ode reads and changes.
+**Ode** is the first product of [OdeMuse](https://odemuse.com), whose mission is to use AI to boost the creativity and capabilities of musicians.
+
+A project in Live is called a **Set**. It contains **tracks**, such as drums, bass, and vocals. Tracks hold **clips** containing audio recordings or MIDI notes, and **devices** that generate or process sound. MIDI describes a performance through note pitches, timing, duration, and velocity; an instrument turns those instructions into audio. These are the objects Ode reads and changes.
 
 For example, a musician can right-click a bass clip and ask, “Make this less busy while the singer is singing, but keep the lead-in to the chorus.” Ode receives the clip as context, reads its notes and the surrounding project, and can replace the relevant notes in place. With the Meta provider, it can also capture the passage from Live and receive that recording in the same agent conversation. The musician can hear and inspect the resulting bass part, then give another instruction.
 
