@@ -6,3 +6,7 @@ src/live/extension/dist/
 .DS_Store
 release/
 vendor/
+
+# Local implementation plans
+/docs/plans/
+/plans/
