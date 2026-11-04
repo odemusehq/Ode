@@ -43,7 +43,7 @@ If Live on macOS includes an older Max, install the current version from [Cyclin
 4. Click **Open Ode** on the device. In Ode's **Settings**, choose a provider and model, enter your API key, and save.
 5. Right-click an existing clip, track, or time selection and choose **Ask Ode**. Describe a specific change to try, then inspect and play the result in Live.
 
-The extension is installed once; the device belongs in each Set where you use Ode. Saving it in a Live template makes it available when starting another project. The [getting-started guide](docs/getting-started.md) explains the controls and model settings. The illustrated [song tutorial](docs/tutorial.md) takes a late-night electronic idea through a bass groove, drums, chords, lyrics, vocal melody, arrangement and export. It develops a lyric from a two-line fragment, compares revisions to meaning, rhyme and syllable count, then shows how to edit emphasis, pitches and note lengths. Installation and setup screenshots are in [Getting started](docs/getting-started.md).
+The extension is installed once; the device belongs in each Set where you use Ode. Saving it in a Live template makes it available when starting another project. The [getting-started guide](docs/getting-started.md) explains the controls and model settings. The illustrated [song tutorial](docs/tutorial.md) starts with a sentence entered in Ode, develops it into lyrics through the conversation, and creates a melody guide in Live. You then sing along and work with Ode to fix the wording, accents and notes before adding the accompaniment, arranging and exporting. Installation and setup screenshots are in [Getting started](docs/getting-started.md).
 
 ## What the current implementation covers
 
@@ -62,7 +62,7 @@ These guides assume programming knowledge and introduce the Ableton concepts the
 | Guide | What it explains |
 | --- | --- |
 | [Getting started](docs/getting-started.md) | Installation, provider setup, and working with Ode in a Set. |
-| [Make your first song](docs/tutorial.md) | A screenshot guide to building a short electronic song, revising it through conversation, and exporting it. |
+| [Make your first song](docs/tutorial.md) | Develop lyrics in Ode, sing against a melody guide, revise the words and notes, then produce and export the song. |
 | [Architecture](docs/architecture.md) | The application components and the path from a musician's request to a native edit. |
 | [Workflow](docs/workflow.md) | Startup, message acceptance, context preparation, model and tool calls, listening, and completion. |
 | [Tools and permissions](docs/tools.md) | The five tool groups, mutation metadata, agent access, native dispatch, and recovery evidence. |
